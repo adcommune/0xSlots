@@ -5,7 +5,7 @@
   "scripts": {
     "codegen": "graph codegen",
     "build": "graph codegen && graph build",
-    "deploy:studio": "graph deploy --studio 0xslots",
+    "deploy:studio": "graph deploy --studio 0xslots-arb-sepolia",
     "create:local": "graph create --node http://localhost:8020/ 0xslots",
     "deploy:local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 0xslots"
   },
