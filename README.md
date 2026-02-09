@@ -83,12 +83,12 @@ export ALCHEMY_KEY=<your-alchemy-key>
 
 ### OP Sepolia (11155420)
 
-| Contract | Address |
-|---|---|
-| SlotsHub (proxy) | `0xFdE9B7c9B8448cA5324Be5948BA6643745c3E49e` |
-| Slots impl | `0xF4248df103dA6Eb8f5e0F39127c16bBC2dA58f92` |
-| SlotsStreamSuperApp | `0x993C2a951906B6E8a78718C3Fbb5196249f5c59b` |
-| MetadataModule | `0x3014c378544013864AC4E630b7b4CFA276380E9A` |
+| Contract | Address | Note |
+|---|---|---|
+| SlotsHub (proxy) | `0xFdE9B7c9B8448cA5324Be5948BA6643745c3E49e` | Main entry point |
+| Slots (beacon impl) | `0xF4248df103dA6Eb8f5e0F39127c16bBC2dA58f92` | Cloned per Land |
+| SlotsStreamSuperApp (beacon impl) | `0x993C2a951906B6E8a78718C3Fbb5196249f5c59b` | Tax distributor, cloned per Land |
+| MetadataModule | `0x3014c378544013864AC4E630b7b4CFA276380E9A` | Shared module |
 
 ### Subgraph
 
