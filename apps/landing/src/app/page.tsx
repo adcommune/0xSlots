@@ -37,45 +37,11 @@ export default function Home() {
             View on GitHub
           </a>
           <a
-            href="#how-it-works"
+            href="#use-cases"
             className="rounded-lg border border-gray-200 px-6 py-3 text-sm font-medium text-gray-600 transition hover:border-gray-300 hover:text-gray-900"
           >
-            How it works
+            Use cases
           </a>
-        </div>
-      </section>
-
-      {/* How it works */}
-      <section id="how-it-works" className="mx-auto max-w-5xl px-6 py-20">
-        <h2 className="text-3xl font-bold sm:text-4xl">How slots work</h2>
-        <p className="mt-4 text-gray-500 max-w-2xl text-lg">
-          Three simple rules create an efficient market without any central coordination.
-        </p>
-        <div className="mt-12 grid gap-8 sm:grid-cols-3">
-          <div className="rounded-2xl border border-gray-100 bg-gray-50/50 p-8">
-            <div className="text-3xl font-bold text-gray-200">01</div>
-            <h3 className="mt-4 text-lg font-semibold">Set your price</h3>
-            <p className="mt-2 text-sm text-gray-500 leading-relaxed">
-              You self-assess the value of your slot. This is the price anyone can buy it
-              for — so you&apos;re incentivized to be honest.
-            </p>
-          </div>
-          <div className="rounded-2xl border border-gray-100 bg-gray-50/50 p-8">
-            <div className="text-3xl font-bold text-gray-200">02</div>
-            <h3 className="mt-4 text-lg font-semibold">Stream tax</h3>
-            <p className="mt-2 text-sm text-gray-500 leading-relaxed">
-              Tax flows per-second via Superfluid based on your declared price. Higher
-              price = more tax. No epochs, no manual claims.
-            </p>
-          </div>
-          <div className="rounded-2xl border border-gray-100 bg-gray-50/50 p-8">
-            <div className="text-3xl font-bold text-gray-200">03</div>
-            <h3 className="mt-4 text-lg font-semibold">Always for sale</h3>
-            <p className="mt-2 text-sm text-gray-500 leading-relaxed">
-              Anyone can purchase your slot at the self-assessed price. Ownership
-              transfers atomically. Your stream stops, theirs begins.
-            </p>
-          </div>
         </div>
       </section>
 
@@ -116,7 +82,7 @@ export default function Home() {
       </section>
 
       {/* Use Cases */}
-      <section className="bg-gray-50 py-20">
+      <section id="use-cases" className="bg-gray-50 py-20">
         <div className="mx-auto max-w-5xl px-6">
           <h2 className="text-3xl font-bold sm:text-4xl">Use cases</h2>
           <p className="mt-4 text-gray-500 max-w-2xl text-lg">
