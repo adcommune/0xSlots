@@ -43,6 +43,24 @@ contract AdScript is BaseScript {
         superTokenFactory: 0xe20B9a38E0c96F61d1bA6b42a61512D56Fea1Eb3,
         splitWarehouse: 0x8fb66F38cF86A3d5e8768f8F1754A24A6c661Fb8
       });
+    } else if (chain == DeployementChain.Arbitrum) {
+      deployParams = DeploymentParams({
+        pullSplitFactory: 0x6B9118074aB15142d7524E8c4ea8f62A3Bdb98f1,
+        host: 0xCf8Acb4eF033efF16E8080aed4c7D5B9285D2192,
+        cfav1: 0xe4a0dc18DD1C25bEFBe45E78b03E89f4D54c5e8E,
+        cfav1Forwarder: 0xcfA132E353cB4E398080B9700609bb008eceB125,
+        superTokenFactory: 0x1C21Ead77fd45C84a4c916Db7A6635571b0921ea,
+        splitWarehouse: 0x8fb66F38cF86A3d5e8768f8F1754A24A6c661Fb8
+      });
+    } else if (chain == DeployementChain.Optimism) {
+      deployParams = DeploymentParams({
+        pullSplitFactory: 0x6B9118074aB15142d7524E8c4ea8f62A3Bdb98f1,
+        host: 0x567c4B141ED61923967cA25Ef4906C8781069a10,
+        cfav1: 0x204C6f131bb7F258b2Ea1593f5309911d745571A,
+        cfav1Forwarder: 0xcfA132E353cB4E398080B9700609bb008eceB125,
+        superTokenFactory: 0x8276469A443D5C6B7146BED45e2abCaD3B6adad9,
+        splitWarehouse: 0x8fb66F38cF86A3d5e8768f8F1754A24A6c661Fb8
+      });
     } else if (chain == DeployementChain.OptimismSepolia) {
       deployParams = DeploymentParams({
         pullSplitFactory: 0x5cbA88D55Cec83caD5A105Ad40C8c9aF20bE21d1,

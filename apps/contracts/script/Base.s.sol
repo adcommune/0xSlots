@@ -18,7 +18,9 @@ abstract contract BaseScript is Script {
     Sepolia,
     BaseSepolia,
     OptimismSepolia,
-    Base
+    Base,
+    Arbitrum,
+    Optimism
   }
 
   // @dev The current chain we are deploying to.
@@ -41,6 +43,8 @@ abstract contract BaseScript is Script {
     forks[DeployementChain.BaseSepolia] = "basesepolia";
     forks[DeployementChain.OptimismSepolia] = "optsepolia";
     forks[DeployementChain.Base] = "base";
+    forks[DeployementChain.Arbitrum] = "arbitrum";
+    forks[DeployementChain.Optimism] = "optimism";
   }
 
   modifier broadcast() {
