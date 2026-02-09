@@ -16,5 +16,8 @@
       "name": "v5.5.0",
       "rev": "aa677e9d28ed78fc427ec47ba2baef2030c58e7c"
     }
+  },
+  "lib/protocol-monorepo": {
+    "rev": "40d34958f31b55fa0f9271f07794786c56a01a65"
   }
 }

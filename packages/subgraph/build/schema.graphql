@@ -1,0 +1,102 @@
+# ──────────────────────────────────────────
+# 0xSlots Subgraph Schema (core protocol only)
+# ──────────────────────────────────────────
+
+type Hub @entity {
+  id: ID! # SlotsHub address
+  protocolFeeBps: BigInt!
+  protocolFeeRecipient: Bytes!
+  slotPrice: BigInt!
+  defaultCurrency: Bytes!
+  defaultSlotCount: BigInt!
+  defaultPrice: BigInt!
+  defaultTaxPercentage: BigInt!
+  defaultMaxTaxPercentage: BigInt!
+  defaultMinTaxUpdatePeriod: BigInt!
+  defaultModule: Bytes!
+  lands: [Land!]! @derivedFrom(field: "hub")
+  allowedModules: [Module!]! @derivedFrom(field: "hub")
+  allowedCurrencies: [Currency!]! @derivedFrom(field: "hub")
+}
+
+type Land @entity {
+  id: ID! # Slots contract address
+  hub: Hub!
+  owner: Bytes! # account that opened the land
+  slots: [Slot!]! @derivedFrom(field: "land")
+  createdAt: BigInt!
+  createdTx: Bytes!
+}
+
+type Slot @entity {
+  id: ID! # land-slotId
+  land: Land!
+  slotId: BigInt!
+  occupant: Bytes # current occupant (null = vacant)
+  currency: Bytes!
+  basePrice: BigInt!
+  price: BigInt!
+  taxPercentage: BigInt!
+  maxTaxPercentage: BigInt!
+  minTaxUpdatePeriod: BigInt!
+  module: Bytes
+  active: Boolean!
+  createdAt: BigInt!
+  updatedAt: BigInt!
+  purchases: [SlotPurchase!]! @derivedFrom(field: "slot")
+  priceHistory: [PriceUpdate!]! @derivedFrom(field: "slot")
+  taxUpdates: [TaxRateChange!]! @derivedFrom(field: "slot")
+}
+
+type SlotPurchase @entity(immutable: true) {
+  id: ID! # tx-logIndex
+  slot: Slot!
+  newOccupant: Bytes!
+  timestamp: BigInt!
+  tx: Bytes!
+}
+
+type PriceUpdate @entity(immutable: true) {
+  id: ID! # tx-logIndex
+  slot: Slot!
+  oldPrice: BigInt!
+  newPrice: BigInt!
+  timestamp: BigInt!
+  tx: Bytes!
+}
+
+type TaxRateChange @entity(immutable: true) {
+  id: ID! # tx-logIndex
+  slot: Slot!
+  kind: String! # "proposed" | "confirmed" | "cancelled"
+  oldPercentage: BigInt
+  newPercentage: BigInt
+  confirmableAt: BigInt
+  timestamp: BigInt!
+  tx: Bytes!
+}
+
+type FlowChange @entity(immutable: true) {
+  id: ID! # tx-logIndex
+  from: Bytes!
+  to: Bytes!
+  oldRate: BigInt!
+  newRate: BigInt!
+  operation: String!
+  timestamp: BigInt!
+  tx: Bytes!
+}
+
+type Module @entity {
+  id: ID! # module address
+  hub: Hub!
+  allowed: Boolean!
+  name: String!
+  version: String!
+}
+
+type Currency @entity {
+  id: ID! # currency address
+  hub: Hub!
+  allowed: Boolean!
+}

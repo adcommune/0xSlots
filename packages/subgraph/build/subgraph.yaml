@@ -1,0 +1,77 @@
+specVersion: 1.0.0
+indexerHints:
+  prune: auto
+schema:
+  file: schema.graphql
+dataSources:
+  - kind: ethereum
+    name: SlotsHub
+    network: base-sepolia
+    source:
+      address: "0x7D3f63c85D59d5f962f4575321550b112a9660cb"
+      abi: SlotsHub
+      startBlock: 32744289
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - Hub
+        - Land
+        - Module
+        - Currency
+      abis:
+        - name: SlotsHub
+          file: SlotsHub/SlotsHub.json
+      eventHandlers:
+        - event: HubSettingsUpdated((uint256,address,uint256,address,uint256,uint256,uint256,uint256,uint256,address))
+          handler: handleHubSettingsUpdated
+        - event: LandOpened(indexed address,indexed address)
+          handler: handleLandOpened
+        - event: ModuleAllowedStatusUpdated(indexed address,bool,string,string)
+          handler: handleModuleAllowedStatusUpdated
+        - event: CurrencyAllowedStatusUpdated(indexed address,bool)
+          handler: handleCurrencyAllowedStatusUpdated
+      file: SlotsHub/SlotsHub.wasm
+templates:
+  - kind: ethereum
+    name: Slots
+    network: base-sepolia
+    source:
+      abi: Slots
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - Slot
+        - SlotPurchase
+        - PriceUpdate
+        - TaxRateChange
+        - FlowChange
+      abis:
+        - name: Slots
+          file: Slots/Slots.json
+      eventHandlers:
+        - event: SlotCreated(address,indexed uint256,indexed
+            address,(address,uint256,uint256,uint256,uint256,uint256,address))
+          handler: handleSlotCreated
+        - event: SlotPurchased(address,indexed uint256,indexed address)
+          handler: handleSlotPurchased
+        - event: SlotReleased(address,indexed uint256)
+          handler: handleSlotReleased
+        - event: PriceUpdated(address,indexed uint256,uint256,uint256)
+          handler: handlePriceUpdated
+        - event: TaxRateUpdateProposed(address,indexed uint256,uint256,uint256)
+          handler: handleTaxRateUpdateProposed
+        - event: TaxRateUpdateConfirmed(address,indexed uint256,uint256,uint256)
+          handler: handleTaxRateUpdateConfirmed
+        - event: TaxRateUpdateCancelled(address,indexed uint256)
+          handler: handleTaxRateUpdateCancelled
+        - event: SlotDeactivated(address,indexed uint256)
+          handler: handleSlotDeactivated
+        - event: SlotActivated(address,indexed uint256)
+          handler: handleSlotActivated
+        - event: FlowOperation(indexed address,indexed address,int96,int96,string)
+          handler: handleFlowOperation
+      file: templates/Slots/Slots.wasm
