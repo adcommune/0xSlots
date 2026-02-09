@@ -79,6 +79,23 @@ export ALCHEMY_KEY=<your-alchemy-key>
 ./script/deploy-multichain.sh optimism
 ```
 
+## Testnet Deployments
+
+### OP Sepolia (11155420)
+
+| Contract | Address |
+|---|---|
+| SlotsHub (proxy) | `0xFdE9B7c9B8448cA5324Be5948BA6643745c3E49e` |
+| Slots impl | `0xF4248df103dA6Eb8f5e0F39127c16bBC2dA58f92` |
+| SlotsStreamSuperApp | `0x993C2a951906B6E8a78718C3Fbb5196249f5c59b` |
+| MetadataModule | `0x3014c378544013864AC4E630b7b4CFA276380E9A` |
+
+### Subgraph
+
+| Network | Endpoint |
+|---|---|
+| OP Sepolia | `https://api.studio.thegraph.com/query/958/0-x-slots-opt-sepolia/v0.0.1` |
+
 ## Security
 
 - [Security Audit (2026-02-08)](apps/contracts/Audit/2026-02-08-k-security-audit.md)
