@@ -1,12 +1,54 @@
 import Image from "next/image";
 
+const TOOLS = [
+  { name: "hub_settings", type: "Read", desc: "Get SlotsHub configuration" },
+  { name: "get_land", type: "Read", desc: "Get Land address for an account" },
+  { name: "get_slot", type: "Read", desc: "Get slot details (price, occupant, tax)" },
+  { name: "list_slots", type: "Read", desc: "List all slots in a Land" },
+  { name: "calculate_flow_rate", type: "Read", desc: "Calculate Superfluid tax stream rate" },
+  { name: "query_lands", type: "Subgraph", desc: "List all Lands and their slots" },
+  { name: "query_slot_purchases", type: "Subgraph", desc: "Recent slot purchases" },
+  { name: "query_price_history", type: "Subgraph", desc: "Price history for a slot" },
+  { name: "query_flows", type: "Subgraph", desc: "Recent Superfluid flow changes" },
+  { name: "open_land", type: "Write", desc: "Open a new Land for an account" },
+  { name: "buy_slot", type: "Write", desc: "Buy a slot at listed price" },
+  { name: "release_slot", type: "Write", desc: "Release a slot (stops tax)" },
+  { name: "self_assess", type: "Write", desc: "Update your slot's price" },
+  { name: "propose_tax_update", type: "Write", desc: "Propose new tax rate" },
+  { name: "confirm_tax_update", type: "Write", desc: "Confirm tax update after timelock" },
+];
+
+const CONTRACTS = [
+  { name: "SlotsHub (proxy)", addr: "0xFdE9...c3E49e", note: "Main entry point" },
+  { name: "Slots (beacon impl)", addr: "0xF424...A156", note: "Cloned per Land" },
+  { name: "SlotsStreamSuperApp", addr: "0x993C...5c59b", note: "Tax distributor, per Land" },
+  { name: "MetadataModule", addr: "0x3014...80E9A", note: "Shared module" },
+];
+
+function Badge({ children, variant = "default" }: { children: React.ReactNode; variant?: string }) {
+  const colors: Record<string, string> = {
+    Read: "bg-emerald-100 text-emerald-700",
+    Write: "bg-amber-100 text-amber-700",
+    Subgraph: "bg-blue-100 text-blue-700",
+    default: "bg-gray-100 text-gray-600",
+  };
+  return (
+    <span className={`inline-block rounded-md px-2 py-0.5 text-xs font-medium ${colors[variant] || colors.default}`}>
+      {children}
+    </span>
+  );
+}
+
 export default function Home() {
   return (
     <main className="min-h-screen">
       {/* Nav */}
       <nav className="flex items-center justify-between px-6 py-5 max-w-6xl mx-auto">
         <span className="text-xl font-bold tracking-tight">0xSlots</span>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-5">
+          <a href="#mcp" className="text-sm text-gray-500 hover:text-gray-900 transition">MCP</a>
+          <a href="#architecture" className="text-sm text-gray-500 hover:text-gray-900 transition">Architecture</a>
+          <a href="#deployments" className="text-sm text-gray-500 hover:text-gray-900 transition">Deployments</a>
           <a
             href="https://github.com/adcommune/0xSlots"
             target="_blank"
@@ -32,189 +74,218 @@ export default function Home() {
       </div>
 
       {/* Hero */}
-      <section className="flex flex-col items-center justify-center px-6 pt-16 pb-20 text-center max-w-4xl mx-auto">
+      <section className="flex flex-col items-center justify-center px-6 pt-16 pb-12 text-center max-w-4xl mx-auto">
         <div className="mb-5 inline-block rounded-full border border-gray-200 bg-gray-50 px-4 py-1.5 text-sm text-gray-500">
-          Perpetual onchain slots
+          Harberger tax on Ethereum · Superfluid streaming
         </div>
         <h1 className="text-5xl font-bold tracking-tight sm:text-7xl leading-[1.1]">
-          Every slot has a price.
+          Perpetual Onchain Slots
         </h1>
         <p className="mt-6 max-w-2xl text-lg text-gray-500 sm:text-xl leading-relaxed">
-          0xSlots implements Harberger tax mechanics on Ethereum. Holders set their own
-          price and pay continuous tax via Superfluid streaming. Anyone can buy any slot
-          at the posted price. Resources flow to whoever values them most.
+          Self-assessed pricing. Continuous tax via Superfluid streams. Anyone can buy any slot
+          at the posted price. Ships with an MCP server so AI agents can interact out of the box.
         </p>
         <div className="mt-10 flex gap-4">
+          <a href="#mcp" className="rounded-lg bg-gray-900 text-white px-6 py-3 text-sm font-medium transition hover:bg-gray-800">
+            MCP Tools →
+          </a>
           <a
             href="https://github.com/adcommune/0xSlots"
             target="_blank"
             rel="noopener noreferrer"
-            className="rounded-lg bg-gray-900 text-white px-6 py-3 text-sm font-medium transition hover:bg-gray-800"
-          >
-            View on GitHub
-          </a>
-          <a
-            href="#use-cases"
             className="rounded-lg border border-gray-200 px-6 py-3 text-sm font-medium text-gray-600 transition hover:border-gray-300 hover:text-gray-900"
           >
-            Use cases
+            View Source
           </a>
         </div>
       </section>
 
-      {/* Why it matters */}
-      <section className="mx-auto max-w-5xl px-6 py-20">
-        <h2 className="text-3xl font-bold sm:text-4xl">Why it matters</h2>
-        <div className="mt-12 grid gap-12 sm:grid-cols-2">
-          <div>
-            <h3 className="text-lg font-semibold">No more squatting</h3>
-            <p className="mt-2 text-gray-500 leading-relaxed">
-              Traditional ownership lets people sit on valuable resources without using
-              them. With 0xSlots, holding a resource costs you — so only people who
-              actually value it will hold it.
-            </p>
-          </div>
-          <div>
-            <h3 className="text-lg font-semibold">Price discovery without auctions</h3>
-            <p className="mt-2 text-gray-500 leading-relaxed">
-              Self-assessment creates continuous, honest price discovery. No need for
-              auction houses, order books, or negotiation. The price is always known.
-            </p>
-          </div>
-          <div>
-            <h3 className="text-lg font-semibold">Revenue for creators</h3>
-            <p className="mt-2 text-gray-500 leading-relaxed">
-              Tax revenue streams continuously to the beneficiary — a DAO, a protocol,
-              a creator. It&apos;s a new funding model based on resource usage, not speculation.
-            </p>
-          </div>
-          <div>
-            <h3 className="text-lg font-semibold">Composable primitive</h3>
-            <p className="mt-2 text-gray-500 leading-relaxed">
-              0xSlots doesn&apos;t have opinions about what a slot represents. Plug in
-              modules to give slots meaning — ads, compute, bandwidth, names, anything.
-            </p>
-          </div>
+      {/* How it works — quick explainer */}
+      <section className="mx-auto max-w-5xl px-6 py-16">
+        <h2 className="text-3xl font-bold sm:text-4xl">How it works</h2>
+        <div className="mt-10 grid gap-1">
+          {[
+            { step: "1", title: "Open a Land", desc: "Call openLand() on the Hub. Creates a Slots contract with N slots, each priced and taxed." },
+            { step: "2", title: "Buy a Slot", desc: "Pay the listed price → you're the new occupant. A Superfluid stream starts, paying continuous tax to the land owner." },
+            { step: "3", title: "Set Your Price", desc: "Self-assess: set your slot's price. Higher price = more tax. Lower price = someone else buys it." },
+            { step: "4", title: "Anyone Can Buy", desc: "Every slot is always for sale. If someone pays your price, you're out. No negotiation." },
+          ].map((item) => (
+            <div key={item.step} className="flex gap-6 py-5 border-b border-gray-100">
+              <span className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-gray-900 text-white text-sm font-bold">
+                {item.step}
+              </span>
+              <div>
+                <h3 className="font-semibold">{item.title}</h3>
+                <p className="mt-1 text-gray-500">{item.desc}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* Use Cases */}
-      <section id="use-cases" className="bg-gray-50 py-20">
+      {/* MCP Server */}
+      <section id="mcp" className="bg-gray-50 py-20">
         <div className="mx-auto max-w-5xl px-6">
-          <h2 className="text-3xl font-bold sm:text-4xl">Use cases</h2>
-          <p className="mt-4 text-gray-500 max-w-2xl text-lg">
-            Anywhere scarce positions need fair allocation and continuous pricing.
+          <div className="flex items-center gap-3 mb-2">
+            <h2 className="text-3xl font-bold sm:text-4xl">MCP Server</h2>
+            <Badge variant="default">15 tools</Badge>
+          </div>
+          <p className="text-gray-500 max-w-2xl text-lg">
+            Connect any MCP-compatible agent (Claude, Cursor, custom) to read, write, and query the protocol.
           </p>
-          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              {
-                title: "Onchain ads",
-                desc: "Ad slots on protocols, dApps, or Farcaster frames. The market sets the price, not an ad network. Content managed via the AdLand module.",
-              },
-              {
-                title: "AI agent resources",
-                desc: "Agents compete for compute slots, API access, or bandwidth. No negotiation needed — agents just bid by setting prices programmatically.",
-              },
-              {
-                title: "Domain names",
-                desc: "Prevent squatting through continuous cost of ownership. Names flow to active projects that actually use them.",
-              },
-              {
-                title: "Protocol positions",
-                desc: "Validator slots, oracle positions, or governance seats with Harberger pricing. Hold your seat as long as you pay.",
-              },
-              {
-                title: "Digital real estate",
-                desc: "Virtual land, metaverse plots, or game territories. Perpetual slots that are always contestable.",
-              },
-              {
-                title: "Spectrum & bandwidth",
-                desc: "Allocate scarce network resources — frequency bands, relay slots, priority lanes — to whoever values them most.",
-              },
-            ].map((item) => (
-              <div
-                key={item.title}
-                className="rounded-2xl border border-gray-200 bg-white p-6"
-              >
-                <h3 className="font-semibold">{item.title}</h3>
-                <p className="mt-2 text-sm text-gray-500 leading-relaxed">
-                  {item.desc}
-                </p>
-              </div>
-            ))}
+
+          {/* Quick start */}
+          <div className="mt-8 rounded-xl bg-gray-900 text-gray-100 p-6 font-mono text-sm overflow-x-auto">
+            <div className="text-gray-400"># Claude Desktop / Cursor config</div>
+            <pre>{`{
+  "mcpServers": {
+    "0xslots": {
+      "command": "node",
+      "args": ["packages/mcp/src/index.js"],
+      "env": { "PRIVATE_KEY": "0x..." }
+    }
+  }
+}`}</pre>
+          </div>
+
+          {/* Tool table */}
+          <div className="mt-10 overflow-hidden rounded-xl border border-gray-200 bg-white">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-100 bg-gray-50/50">
+                  <th className="px-4 py-3 text-left font-medium text-gray-500">Tool</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500">Type</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500">Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                {TOOLS.map((tool) => (
+                  <tr key={tool.name} className="border-b border-gray-50 hover:bg-gray-50/50">
+                    <td className="px-4 py-2.5 font-mono text-xs">{tool.name}</td>
+                    <td className="px-4 py-2.5"><Badge variant={tool.type}>{tool.type}</Badge></td>
+                    <td className="px-4 py-2.5 text-gray-500">{tool.desc}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Env vars */}
+          <div className="mt-8">
+            <h3 className="font-semibold mb-3">Environment Variables</h3>
+            <div className="rounded-xl bg-gray-900 text-gray-100 p-6 font-mono text-sm">
+              <div className="text-emerald-400"># Required for write operations</div>
+              <div>PRIVATE_KEY=0x...</div>
+              <div className="mt-3 text-gray-400"># Optional overrides</div>
+              <div>SLOTS_HUB=0xFdE9B7c9B8448cA5324Be5948BA6643745c3E49e</div>
+              <div>RPC_URL=https://sepolia.optimism.io</div>
+              <div>SUBGRAPH_URL=https://api.studio.thegraph.com/query/958/0-x-slots-opt-sepolia/v0.0.1</div>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Architecture */}
-      <section className="mx-auto max-w-5xl px-6 py-20">
+      <section id="architecture" className="mx-auto max-w-5xl px-6 py-20">
         <h2 className="text-3xl font-bold sm:text-4xl">Architecture</h2>
         <p className="mt-4 text-gray-500 max-w-2xl text-lg">
-          A two-layer design that separates the pricing primitive from what slots represent.
+          Two layers. The primitive handles pricing and tax. Modules give slots meaning.
         </p>
         <div className="mt-12 grid gap-6 sm:grid-cols-2">
           <div className="rounded-2xl border-2 border-gray-900 p-8">
-            <div className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-              Layer 1
-            </div>
+            <div className="text-xs font-semibold uppercase tracking-wider text-gray-400">Layer 1</div>
             <h3 className="mt-2 text-xl font-bold">Slot Primitive</h3>
             <p className="mt-3 text-gray-500 leading-relaxed">
-              ERC-721 positions with self-assessed pricing, continuous Superfluid tax
-              streaming, and atomic transfers. Pure mechanics — no opinions about what
-              slots represent.
+              ERC-721-style positions with self-assessed pricing, continuous Superfluid tax
+              streaming, and atomic forced transfers. Pure mechanics.
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
-              {["Harberger.sol", "HarbergerHub.sol", "SuperApp"].map((c) => (
-                <span
-                  key={c}
-                  className="rounded-md bg-gray-100 px-2.5 py-1 text-xs font-mono text-gray-500"
-                >
-                  {c}
-                </span>
+              {["Slots.sol", "SlotsHub.sol", "SlotsStreamSuperApp.sol"].map((c) => (
+                <span key={c} className="rounded-md bg-gray-100 px-2.5 py-1 text-xs font-mono text-gray-500">{c}</span>
               ))}
             </div>
           </div>
           <div className="rounded-2xl border border-gray-200 p-8">
-            <div className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-              Layer 2
-            </div>
+            <div className="text-xs font-semibold uppercase tracking-wider text-gray-400">Layer 2</div>
             <h3 className="mt-2 text-xl font-bold">Modules</h3>
             <p className="mt-3 text-gray-500 leading-relaxed">
               Pluggable contracts that give slots meaning. Modules receive callbacks on
-              transfer, release, and price changes. AdLand adds ad metadata — but any
-              module can be built on top.
+              transfer, release, and price changes. Build an NFT wrapper, ad metadata layer, or anything.
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
-              {["IHarbergerModule", "AdLand", "Your Module"].map((c) => (
-                <span
-                  key={c}
-                  className="rounded-md bg-gray-100 px-2.5 py-1 text-xs font-mono text-gray-500"
-                >
-                  {c}
-                </span>
+              {["ISlotsModule", "MetadataModule", "Your Module"].map((c) => (
+                <span key={c} className="rounded-md bg-gray-100 px-2.5 py-1 text-xs font-mono text-gray-500">{c}</span>
               ))}
             </div>
           </div>
         </div>
       </section>
 
-      {/* Built With */}
+      {/* Deployments */}
+      <section id="deployments" className="bg-gray-50 py-20">
+        <div className="mx-auto max-w-5xl px-6">
+          <h2 className="text-3xl font-bold sm:text-4xl">Testnet Deployments</h2>
+          <p className="mt-2 text-gray-500">OP Sepolia (chain 11155420)</p>
+
+          <div className="mt-8 overflow-hidden rounded-xl border border-gray-200 bg-white">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-100 bg-gray-50/50">
+                  <th className="px-4 py-3 text-left font-medium text-gray-500">Contract</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500">Address</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500">Note</th>
+                </tr>
+              </thead>
+              <tbody>
+                {CONTRACTS.map((c) => (
+                  <tr key={c.name} className="border-b border-gray-50">
+                    <td className="px-4 py-2.5 font-medium">{c.name}</td>
+                    <td className="px-4 py-2.5 font-mono text-xs text-gray-500">{c.addr}</td>
+                    <td className="px-4 py-2.5 text-gray-400">{c.note}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="mt-6">
+            <h3 className="font-semibold mb-2">Subgraph</h3>
+            <code className="text-sm bg-white border border-gray-200 rounded-lg px-3 py-2 inline-block font-mono text-gray-600">
+              https://api.studio.thegraph.com/query/958/0-x-slots-opt-sepolia/v0.0.1
+            </code>
+          </div>
+        </div>
+      </section>
+
+      {/* Use Cases */}
       <section className="mx-auto max-w-5xl px-6 py-20">
-        <h2 className="text-3xl font-bold sm:text-4xl">Built with</h2>
-        <div className="mt-8 flex flex-wrap gap-3">
+        <h2 className="text-3xl font-bold sm:text-4xl">Possible use cases</h2>
+        <p className="mt-4 text-gray-500 max-w-2xl text-lg">
+          Anywhere scarce positions need fair allocation and continuous pricing.
+        </p>
+        <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {[
-            "Superfluid",
-            "ERC-721",
-            "Foundry",
-            "Solidity",
-            "OpenZeppelin",
-          ].map((tech) => (
-            <span
-              key={tech}
-              className="rounded-full border border-gray-200 bg-gray-50 px-5 py-2.5 text-sm text-gray-600"
-            >
-              {tech}
-            </span>
+            { title: "Onchain ads", desc: "Ad slots priced by the market, not ad networks. Content managed via modules." },
+            { title: "AI agent resources", desc: "Agents compete for compute, API access, or bandwidth. No negotiation — just set prices." },
+            { title: "Domain names", desc: "Prevent squatting through continuous cost of ownership." },
+            { title: "Protocol positions", desc: "Validator slots, oracle seats, governance — hold as long as you pay." },
+            { title: "Digital real estate", desc: "Virtual land, metaverse plots — always contestable." },
+            { title: "Spectrum & bandwidth", desc: "Allocate scarce network resources to whoever values them most." },
+          ].map((item) => (
+            <div key={item.title} className="rounded-2xl border border-gray-200 bg-white p-6">
+              <h3 className="font-semibold">{item.title}</h3>
+              <p className="mt-2 text-sm text-gray-500 leading-relaxed">{item.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Built With */}
+      <section className="mx-auto max-w-5xl px-6 py-16">
+        <h2 className="text-2xl font-bold">Built with</h2>
+        <div className="mt-6 flex flex-wrap gap-3">
+          {["Superfluid", "ERC-721", "Foundry", "Solidity", "OpenZeppelin", "The Graph", "MCP", "viem"].map((tech) => (
+            <span key={tech} className="rounded-full border border-gray-200 bg-gray-50 px-5 py-2.5 text-sm text-gray-600">{tech}</span>
           ))}
         </div>
       </section>
@@ -223,7 +294,7 @@ export default function Home() {
       <section className="mx-auto max-w-5xl px-6 py-20 text-center">
         <h2 className="text-3xl font-bold sm:text-4xl">Start building</h2>
         <p className="mt-4 text-gray-500 text-lg">
-          0xSlots is open source. Deploy your own slot market or build a module.
+          Clone the repo, plug in the MCP server, deploy a module.
         </p>
         <div className="mt-8 flex justify-center gap-4">
           <a
@@ -241,12 +312,7 @@ export default function Home() {
       <footer className="border-t border-gray-100 px-6 py-10 text-center">
         <span className="text-sm text-gray-400">
           0xSlots — by{" "}
-          <a
-            href="https://github.com/adcommune"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-gray-500 hover:text-gray-900 transition"
-          >
+          <a href="https://github.com/adcommune" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-gray-900 transition">
             adcommune
           </a>
         </span>

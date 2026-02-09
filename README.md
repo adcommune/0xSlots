@@ -59,6 +59,63 @@ forge build
 forge test
 ```
 
+## MCP Server
+
+An [MCP](https://modelcontextprotocol.io) server for AI agents to interact with the protocol. 15 tools: read state, query the subgraph, buy/release/price slots.
+
+```bash
+cd packages/mcp
+pnpm install
+```
+
+### Tools
+
+| Tool | Type | Description |
+|---|---|---|
+| `hub_settings` | Read | Get SlotsHub configuration |
+| `get_land` | Read | Get Land address for an account |
+| `get_slot` | Read | Get slot details (price, occupant, tax) |
+| `list_slots` | Read | List all slots in a Land |
+| `calculate_flow_rate` | Read | Calculate Superfluid tax stream rate |
+| `query_lands` | Subgraph | List all Lands and their slots |
+| `query_slot_purchases` | Subgraph | Recent slot purchases |
+| `query_price_history` | Subgraph | Price history for a slot |
+| `query_flows` | Subgraph | Recent Superfluid flow changes |
+| `open_land` | Write | Open a new Land for an account |
+| `buy_slot` | Write | Buy a slot at listed price |
+| `release_slot` | Write | Release a slot (stops tax) |
+| `self_assess` | Write | Update your slot's price |
+| `propose_tax_update` | Write | Propose new tax rate |
+| `confirm_tax_update` | Write | Confirm tax update after timelock |
+
+### Configuration
+
+```bash
+# Required for write operations
+export PRIVATE_KEY=0x...
+
+# Optional overrides
+export SLOTS_HUB=0xFdE9B7c9B8448cA5324Be5948BA6643745c3E49e
+export RPC_URL=https://sepolia.optimism.io
+export SUBGRAPH_URL=https://api.studio.thegraph.com/query/958/0-x-slots-opt-sepolia/v0.0.1
+```
+
+### Claude Desktop / Cursor
+
+```json
+{
+  "mcpServers": {
+    "0xslots": {
+      "command": "node",
+      "args": ["packages/mcp/src/index.js"],
+      "env": {
+        "PRIVATE_KEY": "0x..."
+      }
+    }
+  }
+}
+```
+
 ## Deployment
 
 Deploy to Arbitrum, Base, and Optimism mainnets:
