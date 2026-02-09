@@ -4,23 +4,23 @@ pragma solidity ^0.8.4;
 import {console2} from "forge-std/Test.sol";
 import {DSTestFull} from "./DSTestFull.sol";
 import {UUPSProxy} from "../src/lib/UUPSProxy.sol";
-import {HarbergerHub} from "../src/HarbergerHub.sol";
-import {Harberger} from "../src/Harberger.sol";
+import {SlotsHub} from "../src/SlotsHub.sol";
+import {Harberger} from "../src/Slots.sol";
 import {ISuperToken} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperToken.sol";
 import {TestPureSuperToken} from "../src/lib/TestPureSuperToken.sol";
 import {SuperTokenV1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/SuperTokenV1Library.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {HubSettings} from "../src/interfaces/IHarbergerHub.sol";
-import {HarbergerStreamSuperApp} from "../src/HarbergerStreamSuperApp.sol";
+import {HubSettings} from "../src/interfaces/ISlotsHub.sol";
+import {SlotsStreamSuperApp} from "../src/SlotsStreamSuperApp.sol";
 import {MetadataModule} from "../src/modules/MetadataModule.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {HabergerBaseTest} from "./HabergerBaseTest.sol";
 
-contract HarbergerHubTest is HabergerBaseTest {
+contract SlotsHubTest is HabergerBaseTest {
   using SuperTokenV1Library for ISuperToken;
 
   // Base Land Test data:
-  Harberger internal land;
+  Slots internal land;
   address internal landOwner = vm.addr(1);
   address internal landOwner2 = vm.addr(2);
   address internal taxDistributor;
@@ -260,7 +260,7 @@ contract HarbergerHubTest is HabergerBaseTest {
 
   function _openLand(address owner) internal returns (Harberger) {
     vm.prank(owner);
-    return Harberger(harbergerHub.openLand(owner));
+    return Slots(harbergerHub.openLand(owner));
   }
 
   function _flowToDistributor(address account) internal view returns (int96) {

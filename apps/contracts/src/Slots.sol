@@ -4,18 +4,18 @@ pragma solidity ^0.8.20;
 import {ReentrancyGuardUpgradeable} from "@openzeppelin-upgradeable/contracts/security/ReentrancyGuardUpgradeable.sol";
 import {ISuperToken} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperToken.sol";
 import {ISuperfluid} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperfluid.sol";
-import {IHarbergerModule} from "./IHarbergerModule.sol";
+import {ISlotsModule} from "./ISlotsModule.sol";
 import {OwnableUpgradeable} from "@openzeppelin-upgradeable/contracts/access/OwnableUpgradeable.sol";
-import {IHarberger, SlotParams, Slot, TaxUpdate, TaxUpdateStatus, HarbergerArgs, SlotDirective} from "./interfaces/IHarberger.sol";
-import {HarbergerHub} from "./HarbergerHub.sol";
-import {HubSettings} from "./interfaces/IHarbergerHub.sol";
-import {HarbergerStreamSuperApp} from "./HarbergerStreamSuperApp.sol";
+import {ISlots, SlotParams, Slot, TaxUpdate, TaxUpdateStatus, SlotsArgs, SlotDirective} from "./interfaces/ISlots.sol";
+import {SlotsHub} from "./SlotsHub.sol";
+import {HubSettings} from "./interfaces/ISlotsHub.sol";
+import {SlotsStreamSuperApp} from "./SlotsStreamSuperApp.sol";
 import {SuperTokenV1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/SuperTokenV1Library.sol";
 import "@superfluid-finance/ethereum-contracts/contracts/interfaces/agreements/IConstantFlowAgreementV1.sol";
 import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 
-contract Harberger is
-  IHarberger,
+contract Slots is
+  ISlots,
   ReentrancyGuardUpgradeable,
   OwnableUpgradeable
 {
@@ -56,7 +56,7 @@ contract Harberger is
   uint256 public constant THIRTY_DAYS = 30 days;
   uint256 public constant BASIS_POINTS = 10000;
 
-  HarbergerHub public h;
+  SlotsHub public h;
   IConstantFlowAgreementV1 public cfa;
   address public taxDistributorBeacon;
   address public taxDistributor;
@@ -67,7 +67,7 @@ contract Harberger is
   bool public ownershipTransferabilityDisabled;
 
   function initialize(
-    HarbergerArgs memory args,
+    SlotsArgs memory args,
     address account,
     SlotParams[] memory params
   ) public initializer {
@@ -76,7 +76,7 @@ contract Harberger is
     __ReentrancyGuard_init();
     __Ownable_init();
 
-    h = HarbergerHub(args._hub);
+    h = SlotsHub(args._hub);
     // Transfer ownership to the account
     transferOwnership(account);
     nextSlotId = INITIAL_SLOT_ID;
@@ -84,7 +84,7 @@ contract Harberger is
       new BeaconProxy(
         taxDistributorBeacon,
         abi.encodeWithSelector(
-          HarbergerStreamSuperApp.initialize.selector,
+          SlotsStreamSuperApp.initialize.selector,
           ISuperfluid(args._host),
           address(this)
         )
@@ -170,7 +170,7 @@ contract Harberger is
     // Notify module if exists (with gas limit and try/catch to prevent DoS)
     if (slot.module != address(0)) {
       try
-        IHarbergerModule(slot.module).onRelease{gas: MODULE_CALL_GAS_LIMIT}(
+        ISlotsModule(slot.module).onRelease{gas: MODULE_CALL_GAS_LIMIT}(
           slotId,
           previousOccupant
         )
@@ -216,7 +216,7 @@ contract Harberger is
     // Notify module if exists (with gas limit and try/catch to prevent DoS)
     if (slot.module != address(0)) {
       try
-        IHarbergerModule(slot.module).onPriceUpdate{gas: MODULE_CALL_GAS_LIMIT}(
+        ISlotsModule(slot.module).onPriceUpdate{gas: MODULE_CALL_GAS_LIMIT}(
           slotId,
           oldPrice,
           newPrice
@@ -424,7 +424,7 @@ contract Harberger is
     // Notify module if exists (with gas limit and try/catch to prevent DoS)
     if (slot.module != address(0)) {
       try
-        IHarbergerModule(slot.module).onTransfer{gas: MODULE_CALL_GAS_LIMIT}(
+        ISlotsModule(slot.module).onTransfer{gas: MODULE_CALL_GAS_LIMIT}(
           slotId,
           exiter,
           msg.sender

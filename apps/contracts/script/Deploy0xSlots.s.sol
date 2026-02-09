@@ -2,16 +2,16 @@
 pragma solidity ^0.8.20;
 
 import {BaseScript, console2} from "./Base.s.sol";
-import {Harberger} from "../src/Harberger.sol";
-import {HarbergerHub} from "../src/HarbergerHub.sol";
-import {HarbergerStreamSuperApp} from "../src/HarbergerStreamSuperApp.sol";
+import {Slots} from "../src/Slots.sol";
+import {SlotsHub} from "../src/SlotsHub.sol";
+import {SlotsStreamSuperApp} from "../src/SlotsStreamSuperApp.sol";
 import {MetadataModule} from "../src/modules/MetadataModule.sol";
 import {UUPSProxy} from "../src/lib/UUPSProxy.sol";
-import {HubSettings} from "../src/interfaces/IHarbergerHub.sol";
+import {HubSettings} from "../src/interfaces/ISlotsHub.sol";
 
 /**
  * @title Deploy0xSlots
- * @notice Deploys the core 0xSlots protocol: HarbergerHub + MetadataModule
+ * @notice Deploys the core 0xSlots protocol: SlotsHub + MetadataModule
  *         on Arbitrum, Base, and Optimism mainnets.
  *
  * Usage:
@@ -69,17 +69,17 @@ contract Deploy0xSlots is BaseScript {
         console2.log("=== Deploying 0xSlots ===");
 
         // 1. Deploy implementations
-        Harberger harbergerImpl = new Harberger();
-        console2.log("Harberger impl:", address(harbergerImpl));
+        Slots slotsImpl = new Slots();
+        console2.log("Slots impl:", address(slotsImpl));
 
-        HarbergerStreamSuperApp taxDistributorImpl = new HarbergerStreamSuperApp();
+        SlotsStreamSuperApp taxDistributorImpl = new SlotsStreamSuperApp();
         console2.log("TaxDistributor impl:", address(taxDistributorImpl));
 
         MetadataModule metadataModule = new MetadataModule();
         console2.log("MetadataModule:", address(metadataModule));
         _saveDeployment(address(metadataModule), "MetadataModule");
 
-        // 2. Deploy HarbergerHub behind UUPS proxy
+        // 2. Deploy SlotsHub behind UUPS proxy
         HubSettings memory hubSettings = HubSettings({
             protocolFeeBps: 200,              // 2%
             protocolFeeRecipient: msg.sender,
@@ -93,13 +93,13 @@ contract Deploy0xSlots is BaseScript {
             newLandInitialModule: address(metadataModule)
         });
 
-        HarbergerHub hub = HarbergerHub(
+        SlotsHub hub = SlotsHub(
             address(
                 new UUPSProxy(
-                    address(new HarbergerHub()),
+                    address(new SlotsHub()),
                     abi.encodeWithSelector(
-                        HarbergerHub.initialize.selector,
-                        address(harbergerImpl),
+                        SlotsHub.initialize.selector,
+                        address(slotsImpl),
                         address(taxDistributorImpl),
                         sf.host,
                         sf.cfav1,
@@ -111,8 +111,8 @@ contract Deploy0xSlots is BaseScript {
 
         hub.allowModule(address(metadataModule), true);
 
-        console2.log("HarbergerHub proxy:", address(hub));
-        _saveDeployment(address(hub), "HarbergerHub");
+        console2.log("SlotsHub proxy:", address(hub));
+        _saveDeployment(address(hub), "SlotsHub");
 
         console2.log("=== Done ===");
     }

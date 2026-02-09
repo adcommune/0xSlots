@@ -5,22 +5,22 @@ import "@openzeppelin-upgradeable/contracts/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin-upgradeable/contracts/access/AccessControlUpgradeable.sol";
 import "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
-import {IHarbergerHub, HubSettings} from "./interfaces/IHarbergerHub.sol";
-import {Harberger} from "./Harberger.sol";
-import {HarbergerArgs, SlotParams} from "./interfaces/IHarberger.sol";
+import {ISlotsHub, HubSettings} from "./interfaces/ISlotsHub.sol";
+import {Slots} from "./Slots.sol";
+import {SlotsArgs, SlotParams} from "./interfaces/ISlots.sol";
 import {ISuperToken} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperToken.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
-import {IHarbergerModule} from "./IHarbergerModule.sol";
+import {ISlotsModule} from "./ISlotsModule.sol";
 
 /**
  * TODO:
  * - Add whitelisting of: tokens
- * @title HarbergerHub
+ * @title SlotsHub
  * @author nezzar.eth
- * @notice This contract is the main contract for the HarbergerHub system. It is responsible for deploying and managing the Harberger contracts for each account.
+ * @notice This contract is the main contract for the SlotsHub system. It is responsible for deploying and managing the Slots contracts for each account.
  */
-contract HarbergerHub is
-  IHarbergerHub,
+contract SlotsHub is
+  ISlotsHub,
   AccessControlUpgradeable,
   UUPSUpgradeable
 {
@@ -37,10 +37,10 @@ contract HarbergerHub is
 
   address private cfa;
   address private host;
-  address private harbergerBeacon;
+  address private slotsBeacon;
   address private taxDistributorBeacon;
 
-  mapping(address => Harberger) private lands;
+  mapping(address => Slots) private lands;
   mapping(address => bool) private allowedModules;
   mapping(address => bool) private allowedCurrencies;
 
@@ -51,7 +51,7 @@ contract HarbergerHub is
   uint256[20] private __gap;
 
   function initialize(
-    address harbergerInitialImplementation,
+    address slotsInitialImplementation,
     address taxDistributorInitialImplementation,
     address _host,
     address _cfa,
@@ -59,7 +59,7 @@ contract HarbergerHub is
   ) public initializer {
     __AccessControl_init();
     __UUPSUpgradeable_init();
-    harbergerBeacon = _deployUpgradeableBeacon(harbergerInitialImplementation);
+    slotsBeacon = _deployUpgradeableBeacon(slotsInitialImplementation);
     taxDistributorBeacon = _deployUpgradeableBeacon(
       taxDistributorInitialImplementation
     );
@@ -97,7 +97,7 @@ contract HarbergerHub is
     address account,
     SlotParams[] memory params
   ) external payable {
-    if (Harberger(lands[account]).owner() != msg.sender) {
+    if (Slots(lands[account]).owner() != msg.sender) {
       revert UnauthorizedLandExpansion();
     }
     uint256 expected = params.length * _hubSettings.slotPrice;
@@ -105,7 +105,7 @@ contract HarbergerHub is
       revert InvalidPayment(expected, msg.value);
     }
 
-    Harberger(lands[account]).open(params);
+    Slots(lands[account]).open(params);
   }
 
   function openLand(address account) external returns (address land) {
@@ -133,13 +133,13 @@ contract HarbergerHub is
       params[i] = defaultSlotParams;
     }
 
-    lands[account] = Harberger(
+    lands[account] = Slots(
       address(
         new BeaconProxy(
-          harbergerBeacon,
+          slotsBeacon,
           abi.encodeWithSelector(
-            Harberger.initialize.selector,
-            HarbergerArgs({
+            Slots.initialize.selector,
+            SlotsArgs({
               _host: host,
               _cfa: cfa,
               _hub: address(this),
@@ -185,8 +185,8 @@ contract HarbergerHub is
       emit ModuleAllowedStatusUpdated(
         module,
         true,
-        IHarbergerModule(module).name(),
-        IHarbergerModule(module).version()
+        ISlotsModule(module).name(),
+        ISlotsModule(module).version()
       );
     } else {
       allowedModules[module] = false;
@@ -209,7 +209,7 @@ contract HarbergerHub is
   }
 
   function _validateModule(address module) internal view {
-    if (!IERC165(module).supportsInterface(type(IHarbergerModule).interfaceId)) {
+    if (!IERC165(module).supportsInterface(type(ISlotsModule).interfaceId)) {
       revert ModuleNotImplementInterface(module);
     }
   }
@@ -218,10 +218,10 @@ contract HarbergerHub is
    * UPGRADEABILITY METHODS
    */
 
-  function upgradeHarbergerTo(
+  function upgradeSlotsTo(
     address newImplementation
   ) public onlyRole(DEFAULT_ADMIN_ROLE) {
-    UpgradeableBeacon(harbergerBeacon).upgradeTo(newImplementation);
+    UpgradeableBeacon(slotsBeacon).upgradeTo(newImplementation);
   }
 
   function upgradeTaxDistributorTo(

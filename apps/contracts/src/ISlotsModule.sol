@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
-interface IHarbergerModule is IERC165 {
+interface ISlotsModule is IERC165 {
   function name() external view returns (string memory);
 
   function version() external view returns (string memory);

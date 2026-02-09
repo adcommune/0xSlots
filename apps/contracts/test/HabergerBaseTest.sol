@@ -4,12 +4,12 @@ pragma solidity ^0.8.4;
 import {Test} from "forge-std/Test.sol";
 import {SuperTokenV1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/SuperTokenV1Library.sol";
 import {ISuperToken} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperToken.sol";
-import {HarbergerHub} from "../src/HarbergerHub.sol";
+import {SlotsHub} from "../src/SlotsHub.sol";
 import {MetadataModule} from "../src/modules/MetadataModule.sol";
 import {TestPureSuperToken} from "../src/lib/TestPureSuperToken.sol";
-import {Harberger} from "../src/Harberger.sol";
-import {HarbergerStreamSuperApp} from "../src/HarbergerStreamSuperApp.sol";
-import {HubSettings} from "../src/interfaces/IHarbergerHub.sol";
+import {Harberger} from "../src/Slots.sol";
+import {SlotsStreamSuperApp} from "../src/SlotsStreamSuperApp.sol";
+import {HubSettings} from "../src/interfaces/ISlotsHub.sol";
 import {UUPSProxy} from "../src/lib/UUPSProxy.sol";
 import {console2} from "forge-std/Test.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -24,7 +24,7 @@ struct DeploymentParams {
 
 contract HabergerBaseTest is Test {
   using SuperTokenV1Library for ISuperToken;
-  HarbergerHub internal harbergerHub;
+  SlotsHub internal harbergerHub;
   MetadataModule internal metadataModule;
   DeploymentParams internal deployParams;
   TestPureSuperToken internal adToken;
@@ -46,8 +46,8 @@ contract HabergerBaseTest is Test {
       payable(0x24B3E68C5B4A9dBe609426B1b0d6438B02Dc0428)
     );
 
-    Harberger harberger = new Harberger();
-    HarbergerStreamSuperApp taxDistributor = new HarbergerStreamSuperApp();
+    Slots harberger = new Slots();
+    SlotsStreamSuperApp taxDistributor = new SlotsStreamSuperApp();
     vm.label(address(harberger), "harberger");
 
     metadataModule = new MetadataModule();
@@ -67,12 +67,12 @@ contract HabergerBaseTest is Test {
       newLandInitialModule: address(metadataModule)
     });
 
-    HarbergerHub hub = HarbergerHub(
+    SlotsHub hub = SlotsHub(
       address(
         new UUPSProxy(
-          address(new HarbergerHub()),
+          address(new SlotsHub()),
           abi.encodeWithSelector(
-            HarbergerHub.initialize.selector,
+            SlotsHub.initialize.selector,
             address(harberger),
             address(taxDistributor),
             deployParams.host,
@@ -84,7 +84,7 @@ contract HabergerBaseTest is Test {
     );
     vm.label(address(hub), "hub");
 
-    harbergerHub = HarbergerHub(hub);
+    harbergerHub = SlotsHub(hub);
 
     harbergerHub.allowModule(address(metadataModule), true);
     harbergerHub.allowCurrency(address(adToken), true);
@@ -104,14 +104,14 @@ contract HabergerBaseTest is Test {
   }
 
   function _getSlotPrice(
-    Harberger land,
+    Slots land,
     uint256 slotId
   ) internal view returns (uint256) {
     return land.getSlot(slotId).price;
   }
 
   function _allowLandToOperateAdTokenFlowsFor(
-    Harberger land,
+    Slots land,
     address account
   ) internal {
     vm.startPrank(account);
@@ -143,7 +143,7 @@ contract HabergerBaseTest is Test {
     return int96(int256(flowRatePerSecond));
   }
 
-  function _createBuyer(uint256 pk, Harberger land) internal returns (address) {
+  function _createBuyer(uint256 pk, Slots land) internal returns (address) {
     address buyer = vm.addr(pk);
     _allowLandToOperateAdTokenFlowsFor(land, buyer);
     _fundAdToken(buyer, 100 ether);

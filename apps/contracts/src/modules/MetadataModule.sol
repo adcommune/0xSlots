@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {IHarbergerModule} from "../IHarbergerModule.sol";
+import {ISlotsModule} from "../ISlotsModule.sol";
 import {console2} from "forge-std/console2.sol";
 import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
-contract MetadataModule is ERC165, IHarbergerModule {
+contract MetadataModule is ERC165, ISlotsModule {
   function name() external pure returns (string memory) {
     return "MetadataModule";
   }
@@ -79,7 +79,7 @@ contract MetadataModule is ERC165, IHarbergerModule {
     bytes4 interfaceId
   ) public view virtual override(ERC165, IERC165) returns (bool) {
     return
-      interfaceId == type(IHarbergerModule).interfaceId ||
+      interfaceId == type(ISlotsModule).interfaceId ||
       super.supportsInterface(interfaceId);
   }
 }

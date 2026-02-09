@@ -4,10 +4,10 @@ pragma solidity ^0.8.20;
 import {CFASuperAppBase} from "@superfluid-finance/ethereum-contracts/contracts/apps/CFASuperAppBase.sol";
 import {ISuperfluid} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperfluid.sol";
 import {ISuperToken} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperToken.sol";
-import {Harberger} from "./Harberger.sol";
+import {Slots} from "./Slots.sol";
 import {SuperTokenV1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/SuperTokenV1Library.sol";
 import {ISuperfluid} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperfluid.sol";
-import {SlotDirective} from "./interfaces/IHarberger.sol";
+import {SlotDirective} from "./interfaces/ISlots.sol";
 import {CFAv1Forwarder} from "@superfluid-finance/ethereum-contracts/contracts/utils/CFAv1Forwarder.sol";
 import {CFASuperAppBaseUpgradeable} from "./lib/CFASuperAppBaseUpgradeable.sol";
 
@@ -15,7 +15,7 @@ import {CFASuperAppBaseUpgradeable} from "./lib/CFASuperAppBaseUpgradeable.sol";
  * TODO:
  * - Release slots in case of uncontrolled flow deletion
  */
-contract HarbergerStreamSuperApp is CFASuperAppBaseUpgradeable {
+contract SlotsStreamSuperApp is CFASuperAppBaseUpgradeable {
   using SuperTokenV1Library for ISuperToken;
 
   uint256 public constant MAX_SLOTS_PER_USER = 100;
@@ -25,16 +25,16 @@ contract HarbergerStreamSuperApp is CFASuperAppBaseUpgradeable {
 
   error MaxSlotsPerUserExceeded(address user, uint256 currentSlots);
 
-  Harberger public harberger;
+  Slots public slots;
 
   mapping(uint256 => address) public slotOwnership;
   mapping(address => uint256[]) public ownedSlots;
 
   function initialize(
     ISuperfluid host,
-    Harberger harb
+    Slots harb
   ) public reinitializer(1) {
-    harberger = harb;
+    slots = harb;
     __CFASuperAppBaseUpgradeable_init(host);
     selfRegister(true, true, true);
   }
@@ -42,7 +42,7 @@ contract HarbergerStreamSuperApp is CFASuperAppBaseUpgradeable {
   function isAcceptedSuperToken(
     ISuperToken superToken
   ) public view override returns (bool) {
-    return harberger.isCurrencyAllowed(address(superToken));
+    return slots.isCurrencyAllowed(address(superToken));
   }
 
   function onFlowCreated(
@@ -83,7 +83,7 @@ contract HarbergerStreamSuperApp is CFASuperAppBaseUpgradeable {
 
         // Release the calculated slots
         for (uint256 i = 0; i < slotsToRelease.length; i++) {
-          harberger.release(slotsToRelease[i]);
+          slots.release(slotsToRelease[i]);
         }
 
         if (slotsToRelease.length > 0) {
@@ -109,7 +109,7 @@ contract HarbergerStreamSuperApp is CFASuperAppBaseUpgradeable {
     _handleSlotStreamData(sender, ctx);
     for (uint256 i = 0; i < ownedSlots[sender].length; i++) {
       uint256 slotId = ownedSlots[sender][i];
-      harberger.release(slotId);
+      slots.release(slotId);
     }
     delete ownedSlots[sender];
     int96 currentFlowToRecipient = _currentFlowRateToOwner(superToken);
@@ -131,7 +131,7 @@ contract HarbergerStreamSuperApp is CFASuperAppBaseUpgradeable {
   }
 
   function _recipient() internal view returns (address) {
-    return harberger.owner();
+    return slots.owner();
   }
 
   function _decodeSlotStreamData(
@@ -196,7 +196,7 @@ contract HarbergerStreamSuperApp is CFASuperAppBaseUpgradeable {
     int96 owedFlow = 0;
     for (uint256 i = 0; i < ownedSlots[account].length; i++) {
       uint256 slotId = ownedSlots[account][i];
-      int96 slotFlow = harberger.calculateFlowRate(slotId);
+      int96 slotFlow = slots.calculateFlowRate(slotId);
       owedFlow += slotFlow;
     }
     return owedFlow;
@@ -221,7 +221,7 @@ contract HarbergerStreamSuperApp is CFASuperAppBaseUpgradeable {
     // Start from the beginning and count how many slots we can keep
     for (uint256 i = 0; i < totalSlots; i++) {
       uint256 slotId = ownedSlotsArray[i];
-      int96 slotFlow = harberger.calculateFlowRate(slotId);
+      int96 slotFlow = slots.calculateFlowRate(slotId);
 
       if (remainingFlowNeeded + slotFlow <= currentFlow) {
         remainingFlowNeeded += slotFlow;

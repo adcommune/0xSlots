@@ -16,7 +16,7 @@ enum TaxUpdateStatus {
   Confirmed
 }
 
-struct HarbergerArgs {
+struct SlotsArgs {
   address _host;
   address _cfa;
   address _hub;
@@ -53,9 +53,9 @@ struct Slot {
   address module; // Address of the module contract
 }
 
-/// @title IHarberger
-/// @notice Interface for the Harberger contract
-interface IHarberger {
+/// @title ISlots
+/// @notice Interface for the Slots contract
+interface ISlots {
   // Events
   event SlotCreated(
     address landOwner,

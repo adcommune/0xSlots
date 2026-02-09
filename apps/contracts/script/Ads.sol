@@ -2,14 +2,14 @@
 pragma solidity ^0.8.13;
 
 import {BaseScript, console2} from "./Base.s.sol";
-import {Harberger} from "../src/Harberger.sol";
+import {Slots} from "../src/Slots.sol";
 import {TestPureSuperToken} from "../src/lib/TestPureSuperToken.sol";
-import {HarbergerHub} from "../src/HarbergerHub.sol";
+import {SlotsHub} from "../src/SlotsHub.sol";
 import {ISuperToken} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperToken.sol";
 import {PullSplitFactory} from "splits-v2/splitters/pull/PullSplitFactory.sol";
 import {UUPSProxy} from "../src/lib/UUPSProxy.sol";
-import {HubSettings} from "../src/interfaces/IHarbergerHub.sol";
-import {HarbergerStreamSuperApp} from "../src/HarbergerStreamSuperApp.sol";
+import {HubSettings} from "../src/interfaces/ISlotsHub.sol";
+import {SlotsStreamSuperApp} from "../src/SlotsStreamSuperApp.sol";
 import {MetadataModule} from "../src/modules/MetadataModule.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SuperTokenV1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/SuperTokenV1Library.sol";
@@ -138,7 +138,7 @@ contract AdScript is BaseScript {
     _saveDeployment(address(token), "ADToken");
   }
 
-  function deployHarbergerHub(
+  function deploySlotsHub(
     DeployementChain chain
   ) public setupParams(chain) broadcastOn(chain) {
     address adToken = _readDeployment("ADToken");
@@ -147,8 +147,8 @@ contract AdScript is BaseScript {
       adToken = address(0);
     }
 
-    Harberger harberger = new Harberger();
-    HarbergerStreamSuperApp taxDistributor = new HarbergerStreamSuperApp();
+    Slots slots = new Slots();
+    SlotsStreamSuperApp taxDistributor = new SlotsStreamSuperApp();
 
     address metadataModule = _readDeployment("MetadataModule");
 
@@ -165,13 +165,13 @@ contract AdScript is BaseScript {
       newLandInitialModule: address(metadataModule)
     });
 
-    HarbergerHub hub = HarbergerHub(
+    SlotsHub hub = SlotsHub(
       address(
         new UUPSProxy(
-          address(new HarbergerHub()),
+          address(new SlotsHub()),
           abi.encodeWithSelector(
-            HarbergerHub.initialize.selector,
-            address(harberger),
+            SlotsHub.initialize.selector,
+            address(slots),
             address(taxDistributor),
             deployParams.host,
             deployParams.cfav1,
@@ -184,7 +184,7 @@ contract AdScript is BaseScript {
     hub.allowModule(address(metadataModule), true);
     hub.allowCurrency(address(adToken), true);
 
-    _saveDeployment(address(hub), "HarbergerHub");
+    _saveDeployment(address(hub), "SlotsHub");
 
     address land1 = _openLand(0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045);
     _openLand(0x26bBec292e5080ecFD36F38FF1619FF35826b113);
@@ -193,7 +193,7 @@ contract AdScript is BaseScript {
     _dealAdTokens(msg.sender);
     _allowFlowsFor(land1);
     _approveAdTokens(land1, 10_000 ether);
-    Harberger(land1).buy(1);
+    Slots(land1).buy(1);
   }
 
   function openLand(
@@ -204,9 +204,9 @@ contract AdScript is BaseScript {
   }
 
   function _openLand(address account) internal returns (address) {
-    address harbergerHub = _readDeployment("HarbergerHub");
+    address slotsHub = _readDeployment("SlotsHub");
 
-    return HarbergerHub(harbergerHub).openLand(account);
+    return SlotsHub(slotsHub).openLand(account);
   }
 
   function _dealAdTokens(address account) internal {

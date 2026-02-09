@@ -14,7 +14,7 @@ struct HubSettings {
   address newLandInitialModule;
 }
 
-interface IHarbergerHub {
+interface ISlotsHub {
   event HubSettingsUpdated(HubSettings newHubSettings);
   event LandOpened(address indexed land, address indexed account);
   event ModuleAllowedStatusUpdated(
