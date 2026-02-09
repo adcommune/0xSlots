@@ -1,16 +1,24 @@
 {
   "name": "@0xslots/mcp",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
-  "main": "src/index.js",
+  "main": "dist/index.js",
+  "bin": {
+    "0xslots-mcp": "dist/index.js"
+  },
   "scripts": {
-    "start": "node src/index.js",
-    "dev": "node --watch src/index.js"
+    "build": "tsup",
+    "start": "node dist/index.js",
+    "dev": "tsup --watch"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.1",
     "viem": "^2.45.0",
-    "zod": "^4.3.6"
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "tsup": "^8.4.0",
+    "typescript": "^5.7.0"
   }
 }

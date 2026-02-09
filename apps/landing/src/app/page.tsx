@@ -1,21 +1,16 @@
 import Image from "next/image";
 
 const TOOLS = [
-  { name: "hub_settings", type: "Read", desc: "Get SlotsHub configuration" },
-  { name: "get_land", type: "Read", desc: "Get Land address for an account" },
-  { name: "get_slot", type: "Read", desc: "Get slot details (price, occupant, tax)" },
-  { name: "list_slots", type: "Read", desc: "List all slots in a Land" },
-  { name: "calculate_flow_rate", type: "Read", desc: "Calculate Superfluid tax stream rate" },
-  { name: "query_lands", type: "Subgraph", desc: "List all Lands and their slots" },
-  { name: "query_slot_purchases", type: "Subgraph", desc: "Recent slot purchases" },
-  { name: "query_price_history", type: "Subgraph", desc: "Price history for a slot" },
-  { name: "query_flows", type: "Subgraph", desc: "Recent Superfluid flow changes" },
-  { name: "open_land", type: "Write", desc: "Open a new Land for an account" },
-  { name: "buy_slot", type: "Write", desc: "Buy a slot at listed price" },
-  { name: "release_slot", type: "Write", desc: "Release a slot (stops tax)" },
-  { name: "self_assess", type: "Write", desc: "Update your slot's price" },
-  { name: "propose_tax_update", type: "Write", desc: "Propose new tax rate" },
-  { name: "confirm_tax_update", type: "Write", desc: "Confirm tax update after timelock" },
+  { name: "get_hub_info", type: "Read", desc: "Get SlotsHub config (fees, defaults, module)" },
+  { name: "get_land", type: "Read", desc: "Get land details by account (slots count, currency)" },
+  { name: "get_slot", type: "Read", desc: "Get slot details (occupant, price, tax rate)" },
+  { name: "list_lands", type: "Read", desc: "List all lands on the hub" },
+  { name: "list_slots", type: "Read", desc: "List all slots for a given land" },
+  { name: "get_slot_metadata", type: "Read", desc: "Get metadata from MetadataModule" },
+  { name: "purchase_slot", type: "Write", desc: "Buy a slot at listed price" },
+  { name: "update_slot_price", type: "Write", desc: "Change your slot's self-assessed price" },
+  { name: "set_slot_metadata", type: "Write", desc: "Set metadata via MetadataModule" },
+  { name: "create_land", type: "Write", desc: "Create a new land (admin)" },
 ];
 
 const CONTRACTS = [
@@ -128,7 +123,7 @@ export default function Home() {
         <div className="mx-auto max-w-5xl px-6">
           <div className="flex items-center gap-3 mb-2">
             <h2 className="text-3xl font-bold sm:text-4xl">MCP Server</h2>
-            <Badge variant="default">15 tools</Badge>
+            <Badge variant="default">10 tools</Badge>
           </div>
           <p className="text-gray-500 max-w-2xl text-lg">
             Connect any MCP-compatible agent (Claude, Cursor, custom) to read, write, and query the protocol.
@@ -141,7 +136,7 @@ export default function Home() {
   "mcpServers": {
     "0xslots": {
       "command": "node",
-      "args": ["packages/mcp/src/index.js"],
+      "args": ["packages/mcp/dist/index.js"],
       "env": { "PRIVATE_KEY": "0x..." }
     }
   }
@@ -177,9 +172,9 @@ export default function Home() {
               <div className="text-emerald-400"># Required for write operations</div>
               <div>PRIVATE_KEY=0x...</div>
               <div className="mt-3 text-gray-400"># Optional overrides</div>
-              <div>SLOTS_HUB=0xFdE9B7c9B8448cA5324Be5948BA6643745c3E49e</div>
+              <div>SLOTS_HUB_ADDRESS=0xFdE9B7c9B8448cA5324Be5948BA6643745c3E49e</div>
+              <div>METADATA_MODULE_ADDRESS=0x3014c378544013864AC4E630b7b4CFA276380E9A</div>
               <div>RPC_URL=https://sepolia.optimism.io</div>
-              <div>SUBGRAPH_URL=https://api.studio.thegraph.com/query/958/0-x-slots-opt-sepolia/v0.0.1</div>
             </div>
           </div>
         </div>
@@ -253,6 +248,30 @@ export default function Home() {
             <code className="text-sm bg-white border border-gray-200 rounded-lg px-3 py-2 inline-block font-mono text-gray-600">
               https://api.studio.thegraph.com/query/958/0-x-slots-opt-sepolia/v0.0.1
             </code>
+          </div>
+        </div>
+      </section>
+
+      {/* Built for AI Agents */}
+      <section className="mx-auto max-w-5xl px-6 py-20">
+        <h2 className="text-3xl font-bold sm:text-4xl">Built for AI Agents</h2>
+        <p className="mt-4 text-gray-500 max-w-2xl text-lg">
+          0xSlots ships with an MCP server out of the box. Any AI agent that speaks the
+          Model Context Protocol can read onchain state, buy slots, set prices, and manage
+          metadata — no custom integration needed.
+        </p>
+        <div className="mt-10 grid gap-6 sm:grid-cols-3">
+          <div className="rounded-2xl border border-gray-200 bg-white p-6">
+            <h3 className="font-semibold">Read State</h3>
+            <p className="mt-2 text-sm text-gray-500">Query hub config, list lands, inspect slots and metadata — all through structured tool calls.</p>
+          </div>
+          <div className="rounded-2xl border border-gray-200 bg-white p-6">
+            <h3 className="font-semibold">Write Onchain</h3>
+            <p className="mt-2 text-sm text-gray-500">Purchase slots, update prices, set metadata. Agents can autonomously manage Harberger positions.</p>
+          </div>
+          <div className="rounded-2xl border border-gray-200 bg-white p-6">
+            <h3 className="font-semibold">Zero Config</h3>
+            <p className="mt-2 text-sm text-gray-500">Works with Claude Desktop, Cursor, and any MCP client. Just point to the server and add a private key.</p>
           </div>
         </div>
       </section>

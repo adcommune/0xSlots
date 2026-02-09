@@ -61,32 +61,26 @@ forge test
 
 ## MCP Server
 
-An [MCP](https://modelcontextprotocol.io) server for AI agents to interact with the protocol. 15 tools: read state, query the subgraph, buy/release/price slots.
+An [MCP](https://modelcontextprotocol.io) server for AI agents to interact with the protocol. 10 tools for reading state, managing slots, and setting metadata.
 
 ```bash
-cd packages/mcp
-pnpm install
+pnpm --filter @0xslots/mcp build
 ```
 
 ### Tools
 
 | Tool | Type | Description |
 |---|---|---|
-| `hub_settings` | Read | Get SlotsHub configuration |
-| `get_land` | Read | Get Land address for an account |
-| `get_slot` | Read | Get slot details (price, occupant, tax) |
-| `list_slots` | Read | List all slots in a Land |
-| `calculate_flow_rate` | Read | Calculate Superfluid tax stream rate |
-| `query_lands` | Subgraph | List all Lands and their slots |
-| `query_slot_purchases` | Subgraph | Recent slot purchases |
-| `query_price_history` | Subgraph | Price history for a slot |
-| `query_flows` | Subgraph | Recent Superfluid flow changes |
-| `open_land` | Write | Open a new Land for an account |
-| `buy_slot` | Write | Buy a slot at listed price |
-| `release_slot` | Write | Release a slot (stops tax) |
-| `self_assess` | Write | Update your slot's price |
-| `propose_tax_update` | Write | Propose new tax rate |
-| `confirm_tax_update` | Write | Confirm tax update after timelock |
+| `get_hub_info` | Read | Get SlotsHub config (fees, defaults, module) |
+| `get_land` | Read | Get land details by account (slots count, currency, tax) |
+| `get_slot` | Read | Get slot details (occupant, price, tax, metadata) |
+| `list_lands` | Read | List all lands on the hub |
+| `list_slots` | Read | List all slots for a given land |
+| `get_slot_metadata` | Read | Get metadata from MetadataModule |
+| `purchase_slot` | Write | Buy a slot at listed price |
+| `update_slot_price` | Write | Change your slot's self-assessed price |
+| `set_slot_metadata` | Write | Set metadata on a slot via MetadataModule |
+| `create_land` | Write | Create a new land (admin) |
 
 ### Configuration
 
@@ -95,9 +89,9 @@ pnpm install
 export PRIVATE_KEY=0x...
 
 # Optional overrides
-export SLOTS_HUB=0xFdE9B7c9B8448cA5324Be5948BA6643745c3E49e
+export SLOTS_HUB_ADDRESS=0xFdE9B7c9B8448cA5324Be5948BA6643745c3E49e
+export METADATA_MODULE_ADDRESS=0x3014c378544013864AC4E630b7b4CFA276380E9A
 export RPC_URL=https://sepolia.optimism.io
-export SUBGRAPH_URL=https://api.studio.thegraph.com/query/958/0-x-slots-opt-sepolia/v0.0.1
 ```
 
 ### Claude Desktop / Cursor
@@ -107,7 +101,7 @@ export SUBGRAPH_URL=https://api.studio.thegraph.com/query/958/0-x-slots-opt-sepo
   "mcpServers": {
     "0xslots": {
       "command": "node",
-      "args": ["packages/mcp/src/index.js"],
+      "args": ["packages/mcp/dist/index.js"],
       "env": {
         "PRIVATE_KEY": "0x..."
       }
