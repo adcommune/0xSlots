@@ -13,7 +13,6 @@ const TOOLS = [
   { name: "create_land", type: "Write", desc: "Create a new land (admin)" },
 ];
 
-
 export default function Home() {
   return (
     <main className="min-h-screen">
@@ -22,7 +21,8 @@ export default function Home() {
         <span className="text-2xl font-black tracking-tighter uppercase">0xSlots</span>
         <div className="flex items-center gap-6 text-xs font-mono uppercase tracking-widest">
           <a href="#mcp" className="hover:underline">MCP</a>
-                              <a
+          <a href="#why" className="hover:underline">Why</a>
+          <a
             href="https://github.com/adcommune/0xSlots"
             target="_blank"
             rel="noopener noreferrer"
@@ -74,6 +74,53 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Vitalik Quote / Why */}
+      <section id="why" className="px-6 py-16 border-b-4 border-black">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-4xl sm:text-5xl font-black uppercase tracking-tighter">Why This Matters</h2>
+
+          <blockquote className="mt-10 border-l-4 border-black pl-6 py-2">
+            <p className="text-lg leading-relaxed italic">
+              &ldquo;Prediction and decision markets, decentralized governance, quadratic voting, combinatorial auctions, universal barter economy, and all kinds of constructions are all beautiful in theory, but have been greatly hampered in reality by one big constraint: limits to human attention and decision-making power.&rdquo;
+            </p>
+            <p className="text-lg leading-relaxed italic mt-4">
+              &ldquo;LLMs remove that limitation, and massively scale human judgement.&rdquo;
+            </p>
+            <footer className="mt-4 font-mono text-xs uppercase tracking-widest">
+              — <a href="https://vitalik.eth.limo/general/2024/01/30/cryptoai.html" target="_blank" rel="noopener noreferrer" className="underline">Vitalik Buterin</a>, Feb 2026
+            </footer>
+          </blockquote>
+
+          <div className="mt-12 grid gap-0 sm:grid-cols-2">
+            <div className="border-2 border-black p-8">
+              <h3 className="font-black uppercase text-lg">The Problem</h3>
+              <p className="mt-3 text-sm leading-relaxed">
+                Harberger tax is one of the most elegant market mechanisms ever designed — continuous price discovery, zero deadweight loss, no squatting. But it requires constant attention: monitoring prices, reassessing values, responding to bids. Humans can&apos;t do this at scale.
+              </p>
+            </div>
+            <div className="border-2 border-black border-l-0 p-8">
+              <h3 className="font-black uppercase text-lg">The Unlock</h3>
+              <p className="mt-3 text-sm leading-relaxed">
+                AI agents can. They can monitor slot prices 24/7, bid autonomously, self-assess values based on real utility, and manage positions across thousands of slots. 0xSlots gives them the economic infrastructure to do it — onchain, permissionless, with an MCP server out of the box.
+              </p>
+            </div>
+          </div>
+
+          <blockquote className="mt-8 border-l-4 border-black pl-6 py-2">
+            <p className="text-lg leading-relaxed italic">
+              &ldquo;The goal is to enable AIs to interact economically, which makes viable more decentralized AI architectures. Economies not for the sake of economies, but to enable more decentralized authority.&rdquo;
+            </p>
+            <footer className="mt-4 font-mono text-xs uppercase tracking-widest">
+              — Vitalik Buterin
+            </footer>
+          </blockquote>
+
+          <p className="mt-8 max-w-3xl text-lg leading-relaxed">
+            0xSlots is economic infrastructure for autonomous agents. Scarce positions — ad slots, compute access, bandwidth, protocol seats — allocated not by committees or first-come-first-served, but by continuous market mechanisms that agents can operate without human intervention.
+          </p>
+        </div>
+      </section>
+
       {/* How it works */}
       <section className="px-6 py-16 border-b-4 border-black">
         <div className="max-w-5xl mx-auto">
@@ -107,7 +154,7 @@ export default function Home() {
             <span className="font-mono text-xs border-2 border-black px-2 py-1 font-bold">10 TOOLS</span>
           </div>
           <p className="max-w-2xl text-lg">
-            Connect any MCP-compatible agent (Claude, Cursor, custom) to read, write, and query the protocol.
+            Connect any MCP-compatible agent to read, write, and query the protocol.
           </p>
 
           {/* Quick start */}
@@ -145,45 +192,6 @@ export default function Home() {
               </tbody>
             </table>
           </div>
-
-          {/* Env vars */}
-          <div className="mt-8">
-            <h3 className="font-black uppercase text-sm tracking-wider mb-3">Environment Variables</h3>
-            <div className="border-2 border-black bg-black text-white p-6 font-mono text-sm">
-              <div className="text-green-400"># Required for write operations</div>
-              <div>PRIVATE_KEY=0x...</div>
-              <div className="mt-3 text-gray-500"># Optional overrides</div>
-              <div>SLOTS_HUB_ADDRESS=0xFdE9B7c9B8448cA5324Be5948BA6643745c3E49e</div>
-              <div>METADATA_MODULE_ADDRESS=0x3014c378544013864AC4E630b7b4CFA276380E9A</div>
-              <div>RPC_URL=https://sepolia.optimism.io</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-
-
-      {/* Built for AI Agents */}
-      <section className="px-6 py-16 border-b-4 border-black">
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-4xl sm:text-5xl font-black uppercase tracking-tighter">Built for AI Agents</h2>
-          <p className="mt-4 max-w-2xl text-lg">
-            0xSlots ships with an MCP server out of the box. Any AI agent that speaks the
-            Model Context Protocol can read onchain state, buy slots, set prices, and manage
-            metadata — no custom integration needed.
-          </p>
-          <div className="mt-10 grid gap-0 sm:grid-cols-3">
-            {[
-              { title: "Read State", desc: "Query hub config, list lands, inspect slots and metadata — all through structured tool calls." },
-              { title: "Write Onchain", desc: "Purchase slots, update prices, set metadata. Agents can autonomously manage Harberger positions." },
-              { title: "Zero Config", desc: "Works with Claude Desktop, Cursor, and any MCP client. Just point to the server and add a private key." },
-            ].map((item, i) => (
-              <div key={item.title} className={`border-2 border-black p-6 ${i > 0 ? "border-l-0" : ""}`}>
-                <h3 className="font-black uppercase">{item.title}</h3>
-                <p className="mt-2 text-sm">{item.desc}</p>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
@@ -211,7 +219,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
 
       {/* CTA */}
       <section className="px-6 py-20 border-b-4 border-black">
