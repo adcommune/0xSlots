@@ -13,12 +13,6 @@ const TOOLS = [
   { name: "create_land", type: "Write", desc: "Create a new land (admin)" },
 ];
 
-const CONTRACTS = [
-  { name: "SlotsHub (proxy)", addr: "0xFdE9...c3E49e", note: "Main entry point" },
-  { name: "Slots (beacon impl)", addr: "0xF424...A156", note: "Cloned per Land" },
-  { name: "SlotsStreamSuperApp", addr: "0x993C...5c59b", note: "Tax distributor, per Land" },
-  { name: "MetadataModule", addr: "0x3014...80E9A", note: "Shared module" },
-];
 
 export default function Home() {
   return (
@@ -28,9 +22,7 @@ export default function Home() {
         <span className="text-2xl font-black tracking-tighter uppercase">0xSlots</span>
         <div className="flex items-center gap-6 text-xs font-mono uppercase tracking-widest">
           <a href="#mcp" className="hover:underline">MCP</a>
-          <a href="#architecture" className="hover:underline">Arch</a>
-          <a href="#deployments" className="hover:underline">Deploy</a>
-          <a
+                              <a
             href="https://github.com/adcommune/0xSlots"
             target="_blank"
             rel="noopener noreferrer"
@@ -169,98 +161,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Architecture */}
-      <section id="architecture" className="px-6 py-16 border-b-4 border-black">
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-4xl sm:text-5xl font-black uppercase tracking-tighter">Architecture</h2>
-          <p className="mt-4 max-w-2xl text-lg">
-            Two layers. The primitive handles pricing and tax. Modules give slots meaning.
-          </p>
 
-          {/* ASCII diagram */}
-          <div className="mt-10 font-mono text-xs sm:text-sm overflow-x-auto border-2 border-black p-6 bg-white whitespace-pre leading-relaxed">
-{`┌─────────────────────────────────────────────────────────┐
-│  LAYER 2: MODULES                                       │
-│  ┌──────────────┐ ┌──────────────┐ ┌──────────────────┐ │
-│  │ ISlotsModule │ │MetadataModule│ │  Your Module     │ │
-│  └──────┬───────┘ └──────┬───────┘ └────────┬─────────┘ │
-│         │                │                   │           │
-│─────────┴────────────────┴───────────────────┴───────────│
-│  LAYER 1: SLOT PRIMITIVE                                 │
-│  ┌─────────────┐ ┌──────────────┐ ┌────────────────────┐│
-│  │  Slots.sol  │ │ SlotsHub.sol │ │SlotsStreamSuperApp ││
-│  └─────────────┘ └──────────────┘ └────────────────────┘│
-│                                                          │
-│  Self-assessed pricing · Superfluid tax · Forced xfer   │
-└─────────────────────────────────────────────────────────┘`}
-          </div>
-
-          <div className="mt-8 grid gap-0 sm:grid-cols-2">
-            <div className="border-2 border-black p-8">
-              <div className="font-mono text-[10px] uppercase tracking-[0.3em] mb-2">Layer 1</div>
-              <h3 className="text-xl font-black uppercase">Slot Primitive</h3>
-              <p className="mt-3 text-sm leading-relaxed">
-                ERC-721-style positions with self-assessed pricing, continuous Superfluid tax
-                streaming, and atomic forced transfers. Pure mechanics.
-              </p>
-              <div className="mt-6 flex flex-wrap gap-2">
-                {["Slots.sol", "SlotsHub.sol", "SlotsStreamSuperApp.sol"].map((c) => (
-                  <span key={c} className="border border-black px-2 py-1 text-xs font-mono">{c}</span>
-                ))}
-              </div>
-            </div>
-            <div className="border-2 border-black border-l-0 sm:border-l-0 p-8">
-              <div className="font-mono text-[10px] uppercase tracking-[0.3em] mb-2">Layer 2</div>
-              <h3 className="text-xl font-black uppercase">Modules</h3>
-              <p className="mt-3 text-sm leading-relaxed">
-                Pluggable contracts that give slots meaning. Modules receive callbacks on
-                transfer, release, and price changes. Build an NFT wrapper, ad metadata layer, or anything.
-              </p>
-              <div className="mt-6 flex flex-wrap gap-2">
-                {["ISlotsModule", "MetadataModule", "Your Module"].map((c) => (
-                  <span key={c} className="border border-black px-2 py-1 text-xs font-mono">{c}</span>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Deployments */}
-      <section id="deployments" className="px-6 py-16 border-b-4 border-black">
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-4xl sm:text-5xl font-black uppercase tracking-tighter">Testnet Deployments</h2>
-          <p className="mt-2 font-mono text-sm">OP Sepolia · Chain 11155420</p>
-
-          <div className="mt-8 border-2 border-black">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b-2 border-black bg-black text-white">
-                  <th className="px-4 py-3 text-left font-mono text-xs uppercase tracking-wider">Contract</th>
-                  <th className="px-4 py-3 text-left font-mono text-xs uppercase tracking-wider">Address</th>
-                  <th className="px-4 py-3 text-left font-mono text-xs uppercase tracking-wider">Note</th>
-                </tr>
-              </thead>
-              <tbody>
-                {CONTRACTS.map((c) => (
-                  <tr key={c.name} className="border-b border-black">
-                    <td className="px-4 py-2.5 font-bold text-sm">{c.name}</td>
-                    <td className="px-4 py-2.5 font-mono text-xs">{c.addr}</td>
-                    <td className="px-4 py-2.5 text-sm">{c.note}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="mt-6">
-            <h3 className="font-black uppercase text-sm tracking-wider mb-2">Subgraph</h3>
-            <code className="text-sm border-2 border-black px-3 py-2 inline-block font-mono bg-white">
-              https://api.studio.thegraph.com/query/958/0-x-slots-opt-sepolia/v0.0.1
-            </code>
-          </div>
-        </div>
-      </section>
 
       {/* Built for AI Agents */}
       <section className="px-6 py-16 border-b-4 border-black">
@@ -311,17 +212,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Built With */}
-      <section className="px-6 py-12 border-b-4 border-black">
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl font-black uppercase tracking-tighter">Built With</h2>
-          <div className="mt-4 flex flex-wrap gap-0">
-            {["Superfluid", "ERC-721", "Foundry", "Solidity", "OpenZeppelin", "The Graph", "MCP", "viem"].map((tech) => (
-              <span key={tech} className="border-2 border-black px-4 py-2 text-sm font-mono font-bold -ml-[2px] -mt-[2px]">{tech}</span>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* CTA */}
       <section className="px-6 py-20 border-b-4 border-black">

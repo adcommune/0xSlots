@@ -1,6 +1,6 @@
 # 0xSlots
 
-![0xSlots Banner](apps/landing/public/banner.png)
+![0xSlots Banner](banner.png)
 
 **Perpetual Onchain Slots** — Harberger tax mechanics on Ethereum with Superfluid streaming.
 
