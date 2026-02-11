@@ -10,19 +10,19 @@ import {
   type Address,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { optimismSepolia } from "viem/chains";
+import { baseSepolia } from "viem/chains";
 import { SlotsHubABI, SlotsABI, MetadataModuleABI } from "./abi.js";
 
 // ── Config ──────────────────────────────────────────────────────────────────
 
 const SLOTS_HUB = (process.env.SLOTS_HUB_ADDRESS ||
-  "0xFdE9B7c9B8448cA5324Be5948BA6643745c3E49e") as Address;
+  "0x268cfab9ddddf6a326458ae79d55592516f382ef") as Address;
 const METADATA_MODULE = (process.env.METADATA_MODULE_ADDRESS ||
-  "0x3014c378544013864AC4E630b7b4CFA276380E9A") as Address;
-const RPC_URL = process.env.RPC_URL || "https://sepolia.optimism.io";
+  "0x069cbd62d868a7a10d74260b84d42f64c957237c") as Address;
+const RPC_URL = process.env.RPC_URL || "https://base-sepolia.g.alchemy.com/v2/ErvVvkmRVSzU9XLroiX-K";
 const PRIVATE_KEY = process.env.PRIVATE_KEY;
 
-const chain = optimismSepolia;
+const chain = baseSepolia;
 const publicClient = createPublicClient({ chain, transport: http(RPC_URL) });
 
 function getWalletClient() {
@@ -334,6 +334,149 @@ server.tool(
     });
     const receipt = await publicClient.waitForTransactionReceipt({ hash });
     return msg(`Land created! tx: ${hash}\nStatus: ${receipt.status}`);
+  }
+);
+
+// ── ADMIN TOOLS ─────────────────────────────────────────────────────────────
+
+// ── 11. allow_currency ──────────────────────────────────────────────────────
+
+server.tool(
+  "allow_currency",
+  "[Admin] Allow or disallow a SuperToken currency on the hub",
+  {
+    currency: z.string().describe("SuperToken address"),
+    allowed: z.boolean().describe("true to allow, false to disallow"),
+  },
+  async ({ currency, allowed }) => {
+    const wallet = getWalletClient();
+    const hash = await wallet.writeContract({
+      address: SLOTS_HUB,
+      abi: SlotsHubABI,
+      functionName: "allowCurrency",
+      args: [currency as Address, allowed],
+    });
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    return msg(`Currency ${currency} ${allowed ? "allowed" : "disallowed"}! tx: ${hash}\nStatus: ${receipt.status}`);
+  }
+);
+
+// ── 12. allow_module ────────────────────────────────────────────────────────
+
+server.tool(
+  "allow_module",
+  "[Admin] Allow or disallow a module on the hub",
+  {
+    module: z.string().describe("Module contract address"),
+    allowed: z.boolean().describe("true to allow, false to disallow"),
+  },
+  async ({ module, allowed }) => {
+    const wallet = getWalletClient();
+    const hash = await wallet.writeContract({
+      address: SLOTS_HUB,
+      abi: SlotsHubABI,
+      functionName: "allowModule",
+      args: [module as Address, allowed],
+    });
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    return msg(`Module ${module} ${allowed ? "allowed" : "disallowed"}! tx: ${hash}\nStatus: ${receipt.status}`);
+  }
+);
+
+// ── 13. check_currency ──────────────────────────────────────────────────────
+
+server.tool(
+  "check_currency",
+  "Check if a currency is allowed on the hub",
+  { currency: z.string().describe("SuperToken address to check") },
+  async ({ currency }) => {
+    const allowed = await publicClient.readContract({
+      address: SLOTS_HUB,
+      abi: SlotsHubABI,
+      functionName: "isCurrencyAllowed",
+      args: [currency as Address],
+    });
+    return ok({ currency, allowed });
+  }
+);
+
+// ── 14. check_module ────────────────────────────────────────────────────────
+
+server.tool(
+  "check_module",
+  "Check if a module is allowed on the hub",
+  { module: z.string().describe("Module address to check") },
+  async ({ module }) => {
+    const allowed = await publicClient.readContract({
+      address: SLOTS_HUB,
+      abi: SlotsHubABI,
+      functionName: "isModuleAllowed",
+      args: [module as Address],
+    });
+    return ok({ module, allowed });
+  }
+);
+
+// ── 15. update_hub_settings ─────────────────────────────────────────────────
+
+server.tool(
+  "update_hub_settings",
+  "[Admin] Update hub settings (protocol fee, default slot params, etc.)",
+  {
+    protocolFeeBps: z.number().describe("Protocol fee in basis points (e.g. 200 = 2%)"),
+    protocolFeeRecipient: z.string().describe("Address to receive protocol fees"),
+    slotPrice: z.string().describe("Slot price in ETH (e.g. '0.001')"),
+    defaultCurrency: z.string().describe("Default SuperToken for new lands"),
+    defaultSlotCount: z.number().describe("Number of slots for new lands"),
+    defaultPrice: z.string().describe("Default slot price in ETH"),
+    defaultTaxBps: z.number().describe("Default tax in basis points"),
+    maxTaxBps: z.number().describe("Max tax in basis points"),
+    minTaxUpdatePeriod: z.number().describe("Min tax update period in seconds"),
+    defaultModule: z.string().describe("Default module address for new slots"),
+  },
+  async (params) => {
+    const wallet = getWalletClient();
+    const hash = await wallet.writeContract({
+      address: SLOTS_HUB,
+      abi: SlotsHubABI,
+      functionName: "updateHubSettings",
+      args: [{
+        protocolFeeBps: BigInt(params.protocolFeeBps),
+        protocolFeeRecipient: params.protocolFeeRecipient as Address,
+        slotPrice: parseEther(params.slotPrice),
+        newLandInitialCurrency: params.defaultCurrency as Address,
+        newLandInitialAmount: BigInt(params.defaultSlotCount),
+        newLandInitialPrice: parseEther(params.defaultPrice),
+        newLandInitialTaxPercentage: BigInt(params.defaultTaxBps),
+        newLandInitialMaxTaxPercentage: BigInt(params.maxTaxBps),
+        newLandInitialMinTaxUpdatePeriod: BigInt(params.minTaxUpdatePeriod),
+        newLandInitialModule: params.defaultModule as Address,
+      }],
+    });
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    return msg(`Hub settings updated! tx: ${hash}\nStatus: ${receipt.status}`);
+  }
+);
+
+// ── 16. expand_land ─────────────────────────────────────────────────────────
+
+server.tool(
+  "expand_land",
+  "[Admin] Add more slots to an existing land",
+  {
+    account: z.string().describe("Account address whose land to expand"),
+    amount: z.number().describe("Number of slots to add"),
+  },
+  async ({ account, amount }) => {
+    const wallet = getWalletClient();
+    const hash = await wallet.writeContract({
+      address: SLOTS_HUB,
+      abi: SlotsHubABI,
+      functionName: "expandLand",
+      args: [account as Address, BigInt(amount)],
+    });
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    return msg(`Land expanded by ${amount} slots! tx: ${hash}\nStatus: ${receipt.status}`);
   }
 );
 

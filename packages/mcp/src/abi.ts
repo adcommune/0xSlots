@@ -117,6 +117,74 @@ export const SlotsABI = [
     outputs: [],
     stateMutability: "nonpayable",
   },
+  {
+    type: "function",
+    name: "allowCurrency",
+    inputs: [
+      { name: "currency", type: "address" },
+      { name: "allowed", type: "bool" },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "allowModule",
+    inputs: [
+      { name: "module", type: "address" },
+      { name: "allowed", type: "bool" },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "isCurrencyAllowed",
+    inputs: [{ name: "currency", type: "address" }],
+    outputs: [{ type: "bool" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "isModuleAllowed",
+    inputs: [{ name: "module", type: "address" }],
+    outputs: [{ type: "bool" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "updateHubSettings",
+    inputs: [
+      {
+        name: "newSettings",
+        type: "tuple",
+        components: [
+          { name: "protocolFeeBps", type: "uint256" },
+          { name: "protocolFeeRecipient", type: "address" },
+          { name: "slotPrice", type: "uint256" },
+          { name: "newLandInitialCurrency", type: "address" },
+          { name: "newLandInitialAmount", type: "uint256" },
+          { name: "newLandInitialPrice", type: "uint256" },
+          { name: "newLandInitialTaxPercentage", type: "uint256" },
+          { name: "newLandInitialMaxTaxPercentage", type: "uint256" },
+          { name: "newLandInitialMinTaxUpdatePeriod", type: "uint256" },
+          { name: "newLandInitialModule", type: "address" },
+        ],
+      },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "expandLand",
+    inputs: [
+      { name: "account", type: "address" },
+      { name: "amount", type: "uint256" },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
 ] as const;
 
 export const MetadataModuleABI = [
