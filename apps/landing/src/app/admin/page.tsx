@@ -100,10 +100,10 @@ export default async function AdminPage() {
             {[
               ["Protocol Fee", `${(Number(hub.protocolFeeBps) / 100).toFixed(2)}%`],
               ["Fee Recipient", shorten(hub.protocolFeeRecipient)],
-              ["Slot Price", formatWei(hub.slotPrice, hub.defaultCurrency?.symbol)],
+              ["Land Creation Fee", formatWei(hub.slotPrice, hub.defaultCurrency?.symbol)],
               ["Default Currency", hub.defaultCurrency ? `${hub.defaultCurrency.symbol || "?"} · ${hub.defaultCurrency.name || shorten(hub.defaultCurrency.id)}` : "—"],
               ["Default Slot Count", hub.defaultSlotCount],
-              ["Default Price", formatWei(hub.defaultPrice, hub.defaultCurrency?.symbol)],
+              ["Initial Slot Price", formatWei(hub.defaultPrice, hub.defaultCurrency?.symbol)],
               ["Default Tax", `${(Number(hub.defaultTaxPercentage) / 100).toFixed(2)}%`],
               ["Max Tax", `${(Number(hub.defaultMaxTaxPercentage) / 100).toFixed(2)}%`],
               ["Min Tax Update Period", formatSeconds(hub.defaultMinTaxUpdatePeriod)],

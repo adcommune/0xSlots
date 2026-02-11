@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 struct HubSettings {
   uint256 protocolFeeBps;
   address protocolFeeRecipient;
-  uint256 slotPrice;
+  uint256 slotPrice; // TODO: rename to landCreationFee
   address newLandInitialCurrency;
   uint256 newLandInitialAmount;
   uint256 newLandInitialPrice;
