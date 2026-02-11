@@ -1,5 +1,5 @@
 const SUBGRAPH_URL =
-  "https://api.studio.thegraph.com/query/958/0-x-slots-base-sepolia/v0.3.0";
+  "https://api.studio.thegraph.com/query/958/0-x-slots-base-sepolia/v0.4.0";
 
 const QUERY = `{
   hubs(first: 1) {
@@ -7,7 +7,11 @@ const QUERY = `{
     protocolFeeBps
     protocolFeeRecipient
     slotPrice
-    defaultCurrency
+    defaultCurrency {
+      id
+      name
+      symbol
+    }
     defaultSlotCount
     defaultPrice
     defaultTaxPercentage
@@ -93,14 +97,14 @@ export default async function AdminPage() {
         <table className="w-full text-sm">
           <tbody>
             {[
-              ["Protocol Fee", `${hub.protocolFeeBps} bps (${Number(hub.protocolFeeBps) / 100}%)`],
+              ["Protocol Fee", `${(Number(hub.protocolFeeBps) / 100).toFixed(2)}%`],
               ["Fee Recipient", shorten(hub.protocolFeeRecipient)],
               ["Slot Price", formatWei(hub.slotPrice)],
-              ["Default Currency", shorten(hub.defaultCurrency)],
+              ["Default Currency", hub.defaultCurrency ? `${hub.defaultCurrency.symbol || "?"} · ${hub.defaultCurrency.name || shorten(hub.defaultCurrency.id)}` : "—"],
               ["Default Slot Count", hub.defaultSlotCount],
               ["Default Price", formatWei(hub.defaultPrice)],
-              ["Default Tax", `${hub.defaultTaxPercentage} bps`],
-              ["Max Tax", `${hub.defaultMaxTaxPercentage} bps`],
+              ["Default Tax", `${(Number(hub.defaultTaxPercentage) / 100).toFixed(2)}%`],
+              ["Max Tax", `${(Number(hub.defaultMaxTaxPercentage) / 100).toFixed(2)}%`],
               ["Min Tax Update Period", formatSeconds(hub.defaultMinTaxUpdatePeriod)],
               ["Default Module", shorten(hub.defaultModule)],
             ].map(([label, value]) => (
@@ -193,7 +197,7 @@ export default async function AdminPage() {
                       <td className="py-1">#{slot.slotId}</td>
                       <td className="py-1">{slot.occupant ? shorten(slot.occupant) : "—"}</td>
                       <td className="py-1">{formatWei(slot.price)}</td>
-                      <td className="py-1">{slot.taxPercentage} bps</td>
+                      <td className="py-1">{(Number(slot.taxPercentage) / 100).toFixed(2)}%</td>
                       <td className="py-1">{slot.active ? "✓" : "✗"}</td>
                     </tr>
                   ))}

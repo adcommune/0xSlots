@@ -89,17 +89,21 @@ export class Hub extends Entity {
     this.set("slotPrice", Value.fromBigInt(value));
   }
 
-  get defaultCurrency(): Bytes {
+  get defaultCurrency(): string | null {
     let value = this.get("defaultCurrency");
     if (!value || value.kind == ValueKind.NULL) {
-      throw new Error("Cannot return null for a required field.");
+      return null;
     } else {
-      return value.toBytes();
+      return value.toString();
     }
   }
 
-  set defaultCurrency(value: Bytes) {
-    this.set("defaultCurrency", Value.fromBytes(value));
+  set defaultCurrency(value: string | null) {
+    if (!value) {
+      this.unset("defaultCurrency");
+    } else {
+      this.set("defaultCurrency", Value.fromString(<string>value));
+    }
   }
 
   get defaultSlotCount(): BigInt {

@@ -7,7 +7,7 @@ type Hub @entity {
   protocolFeeBps: BigInt!
   protocolFeeRecipient: Bytes!
   slotPrice: BigInt!
-  defaultCurrency: Bytes!
+  defaultCurrency: Currency
   defaultSlotCount: BigInt!
   defaultPrice: BigInt!
   defaultTaxPercentage: BigInt!

@@ -17,7 +17,7 @@ function getOrCreateHub(address: Bytes): Hub {
     hub.protocolFeeBps = BigInt.zero();
     hub.protocolFeeRecipient = Bytes.empty();
     hub.slotPrice = BigInt.zero();
-    hub.defaultCurrency = Bytes.empty();
+    hub.defaultCurrency = null;
     hub.defaultSlotCount = BigInt.zero();
     hub.defaultPrice = BigInt.zero();
     hub.defaultTaxPercentage = BigInt.zero();
@@ -35,7 +35,41 @@ export function handleHubSettingsUpdated(event: HubSettingsUpdated): void {
   hub.protocolFeeBps = settings.protocolFeeBps;
   hub.protocolFeeRecipient = settings.protocolFeeRecipient;
   hub.slotPrice = settings.slotPrice;
-  hub.defaultCurrency = settings.newLandInitialCurrency;
+  // Link defaultCurrency to Currency entity (create if needed)
+  let currencyAddr = settings.newLandInitialCurrency;
+  let currencyId = currencyAddr.toHexString();
+  let currency = Currency.load(currencyId);
+  if (!currency) {
+    currency = new Currency(currencyId);
+    currency.hub = hub.id;
+    currency.allowed = false;
+
+    let token = ERC20.bind(currencyAddr);
+    let nameResult = token.try_name();
+    if (!nameResult.reverted) currency.name = nameResult.value;
+    let symbolResult = token.try_symbol();
+    if (!symbolResult.reverted) currency.symbol = symbolResult.value;
+    let decimalsResult = token.try_decimals();
+    if (!decimalsResult.reverted) currency.decimals = decimalsResult.value;
+
+    let superToken = SuperToken.bind(currencyAddr);
+    let underlyingResult = superToken.try_getUnderlyingToken();
+    if (!underlyingResult.reverted) {
+      currency.underlyingToken = underlyingResult.value;
+      if (underlyingResult.value.toHexString() != "0x0000000000000000000000000000000000000000") {
+        let underlying = ERC20.bind(underlyingResult.value);
+        let uNameResult = underlying.try_name();
+        if (!uNameResult.reverted) currency.underlyingName = uNameResult.value;
+        let uSymbolResult = underlying.try_symbol();
+        if (!uSymbolResult.reverted) currency.underlyingSymbol = uSymbolResult.value;
+        let uDecimalsResult = underlying.try_decimals();
+        if (!uDecimalsResult.reverted) currency.underlyingDecimals = uDecimalsResult.value;
+      }
+    }
+
+    currency.save();
+  }
+  hub.defaultCurrency = currencyId;
   hub.defaultSlotCount = settings.newLandInitialAmount;
   hub.defaultPrice = settings.newLandInitialPrice;
   hub.defaultTaxPercentage = settings.newLandInitialTaxPercentage;
