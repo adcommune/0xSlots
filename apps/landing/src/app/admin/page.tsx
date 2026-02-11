@@ -26,6 +26,7 @@ const QUERY = `{
         id
         slotId
         occupant
+        currency
         price
         taxPercentage
         active
@@ -52,8 +53,8 @@ const QUERY = `{
   }
 }`;
 
-function formatWei(wei: string): string {
-  return (Number(wei) / 1e18).toFixed(6) + " ETH";
+function formatWei(wei: string, symbol?: string): string {
+  return (Number(wei) / 1e18).toFixed(6) + (symbol ? ` ${symbol}` : "");
 }
 
 function shorten(addr: string): string {
@@ -99,10 +100,10 @@ export default async function AdminPage() {
             {[
               ["Protocol Fee", `${(Number(hub.protocolFeeBps) / 100).toFixed(2)}%`],
               ["Fee Recipient", shorten(hub.protocolFeeRecipient)],
-              ["Slot Price", formatWei(hub.slotPrice)],
+              ["Slot Price", formatWei(hub.slotPrice, hub.defaultCurrency?.symbol)],
               ["Default Currency", hub.defaultCurrency ? `${hub.defaultCurrency.symbol || "?"} · ${hub.defaultCurrency.name || shorten(hub.defaultCurrency.id)}` : "—"],
               ["Default Slot Count", hub.defaultSlotCount],
-              ["Default Price", formatWei(hub.defaultPrice)],
+              ["Default Price", formatWei(hub.defaultPrice, hub.defaultCurrency?.symbol)],
               ["Default Tax", `${(Number(hub.defaultTaxPercentage) / 100).toFixed(2)}%`],
               ["Max Tax", `${(Number(hub.defaultMaxTaxPercentage) / 100).toFixed(2)}%`],
               ["Min Tax Update Period", formatSeconds(hub.defaultMinTaxUpdatePeriod)],
@@ -202,7 +203,7 @@ export default async function AdminPage() {
                     <tr key={slot.id} className="border-b border-gray-50">
                       <td className="py-1">#{slot.slotId}</td>
                       <td className="py-1">{slot.occupant ? shorten(slot.occupant) : "—"}</td>
-                      <td className="py-1">{formatWei(slot.price)}</td>
+                      <td className="py-1">{formatWei(slot.price, slot.currency?.symbol)}</td>
                       <td className="py-1">{(Number(slot.taxPercentage) / 100).toFixed(2)}%</td>
                       <td className="py-1">{slot.active ? "✓" : "✗"}</td>
                     </tr>
