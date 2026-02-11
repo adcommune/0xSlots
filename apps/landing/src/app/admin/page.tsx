@@ -129,13 +129,19 @@ export default async function AdminPage() {
             {hub.allowedCurrencies.map((c: any) => (
               <li key={c.id} className="flex items-center gap-2">
                 <span className={`w-2 h-2 rounded-full ${c.allowed ? "bg-green-500" : "bg-red-500"}`} />
-                <code>{shorten(c.id)}</code>
+                <a href={`https://base-sepolia.blockscout.com/token/${c.id}`} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                  <code>{shorten(c.id)}</code>
+                </a>
                 {c.symbol && <span className="font-bold">{c.symbol}</span>}
                 {c.name && <span className="text-gray-400">· {c.name}</span>}
                 {c.decimals != null && <span className="text-gray-300 text-xs">({c.decimals} dec)</span>}
                 {c.underlyingToken && c.underlyingToken !== "0x0000000000000000000000000000000000000000" && (
                   <span className="text-blue-400 text-xs">
-                    → {c.underlyingSymbol || shorten(c.underlyingToken)} {c.underlyingName && `(${c.underlyingName})`}
+                    →{" "}
+                    <a href={`https://base-sepolia.blockscout.com/token/${c.underlyingToken}`} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                      {c.underlyingSymbol || shorten(c.underlyingToken)}
+                    </a>
+                    {c.underlyingName && ` (${c.underlyingName})`}
                   </span>
                 )}
                 {c.underlyingToken === "0x0000000000000000000000000000000000000000" && (
