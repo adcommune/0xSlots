@@ -97,18 +97,135 @@ export default function Docs() {
           </p>
           <div className="mt-10 grid grid-cols-2 lg:grid-cols-3">
             {[
+              { title: "Token Launcher", desc: "Fair token launches without bot sniping. Slots are launch positions — holders self-assess value and pay continuous tax. The market prices hype in real time. Tax streams fund the treasury before launch.", featured: true },
               { title: "Onchain Ads", desc: "Ad slots priced by the market, not ad networks. Content managed via modules." },
               { title: "AI Agent Resources", desc: "Agents compete for compute, API access, or bandwidth. No negotiation — just set prices." },
               { title: "Domain Names", desc: "Prevent squatting through continuous cost of ownership." },
               { title: "Protocol Positions", desc: "Validator slots, oracle seats, governance — hold as long as you pay." },
               { title: "Digital Real Estate", desc: "Virtual land, metaverse plots — always contestable." },
               { title: "Spectrum & Bandwidth", desc: "Allocate scarce network resources to whoever values them most." },
-            ].map((item) => (
-              <div key={item.title} className="border-2 border-black p-5 -mt-[2px] -ml-[2px]">
+            ].map((item: any) => (
+              <div key={item.title} className={`border-2 border-black p-5 -mt-[2px] -ml-[2px] ${item.featured ? "bg-black text-white col-span-2 lg:col-span-1" : ""}`}>
                 <h3 className="font-black uppercase text-sm">{item.title}</h3>
                 <p className="mt-1 text-xs leading-relaxed">{item.desc}</p>
+                {item.featured && (
+                  <a href="#token-launcher" className="mt-2 inline-block text-xs font-mono underline">
+                    Read more ↓
+                  </a>
+                )}
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Token Launcher Deep Dive */}
+      <section id="token-launcher" className="px-6 py-16 border-b-4 border-black">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-4xl sm:text-5xl font-black uppercase tracking-tighter">Token Launcher</h2>
+          <p className="mt-4 max-w-2xl text-lg">
+            Harberger-priced token launches. Fair, continuous, bot-proof.
+          </p>
+
+          {/* How it works */}
+          <div className="mt-10 space-y-8">
+            <div>
+              <h3 className="font-black uppercase text-lg mb-3">How It Works</h3>
+              <p className="text-sm leading-relaxed max-w-2xl">
+                A token launch is a <strong>Land</strong>. Each <strong>Slot</strong> represents a position on the launch curve — an allocation of tokens at a given tier. To hold a slot, you self-assess its value and pay continuous tax via Superfluid streams. Anyone can take your slot by paying your self-assessed price.
+              </p>
+            </div>
+
+            <div className="border-2 border-black bg-black text-white p-6 font-mono text-sm overflow-x-auto">
+              <div className="text-gray-500"># Example: $FAIR token launch</div>
+              <pre>{`Land: $FAIR Token Launch (6 slots, 1M tokens)
+├── Slot 0: 250,000 tokens  ← earliest tier, most valuable
+├── Slot 1: 200,000 tokens
+├── Slot 2: 175,000 tokens
+├── Slot 3: 150,000 tokens
+├── Slot 4: 125,000 tokens
+└── Slot 5: 100,000 tokens  ← latest tier
+
+Pre-launch (7 days):
+  Day 1: Alice claims Slot 0 → assesses $500 → pays ~$0.07/day tax
+  Day 3: Bob outbids → pays Alice $500 → assesses $2,000
+  Day 5: Carol outbids → pays Bob $2,000 → assesses $5,000
+  Day 7: Launch triggers → Carol gets 250K tokens
+         Treasury: ~$15 accumulated tax → seeds liquidity`}</pre>
+            </div>
+
+            {/* Comparison */}
+            <div>
+              <h3 className="font-black uppercase text-lg mb-3">vs Existing Models</h3>
+              <div className="border-2 border-black overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b-2 border-black bg-black text-white">
+                      <th className="px-4 py-3 text-left font-mono uppercase tracking-wider"></th>
+                      <th className="px-4 py-3 text-left font-mono uppercase tracking-wider">pump.fun</th>
+                      <th className="px-4 py-3 text-left font-mono uppercase tracking-wider">Whitelists</th>
+                      <th className="px-4 py-3 text-left font-mono uppercase tracking-wider">0xSlots</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      ["Bot resistance", "❌ Bots win", "✅ Manual", "✅ Harberger"],
+                      ["Price discovery", "Post-launch", "None", "Pre-launch, continuous"],
+                      ["Treasury funding", "Buy fees", "None", "Streaming tax"],
+                      ["Position fairness", "Speed wins", "Connections win", "Conviction wins"],
+                      ["Idle positions", "Dead wallets", "N/A", "Taken over"],
+                      ["Dev accountability", "Zero", "Zero", "Dev pays tax"],
+                    ].map(([label, pump, wl, slots]) => (
+                      <tr key={label} className="border-b border-black">
+                        <td className="px-4 py-2 font-bold">{label}</td>
+                        <td className="px-4 py-2">{pump}</td>
+                        <td className="px-4 py-2">{wl}</td>
+                        <td className="px-4 py-2 font-bold">{slots}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Dev accountability */}
+            <div className="border-2 border-black p-6">
+              <h3 className="font-black uppercase text-lg mb-3">Dev Accountability</h3>
+              <p className="text-sm leading-relaxed max-w-2xl">
+                Creators can reserve slots for themselves (dev allocation). But those slots follow the same Harberger rules — self-assess the value, pay continuous tax. If the dev thinks their own token is worthless (low assessment), anyone can buy the allocation cheap. If they think it{"'"}s valuable, they{"'"}re paying real tax to hold it. <strong>First memecoin where the dev literally can{"'"}t hold a free allocation.</strong>
+              </p>
+            </div>
+
+            {/* Architecture */}
+            <div>
+              <h3 className="font-black uppercase text-lg mb-3">Architecture</h3>
+              <p className="text-sm leading-relaxed max-w-2xl mb-4">
+                No new core contracts. The token launcher is a <strong>module</strong> on the existing 0xSlots primitive.
+              </p>
+              <div className="border-2 border-black bg-black text-white p-6 font-mono text-sm overflow-x-auto">
+                <pre>{`SlotsHub (existing)
+├── openLand() → creates a new token launch
+│   └── Slots.sol (existing) — Harberger-priced positions
+│       └── Module: TokenLauncherModule (new)
+│
+TokenLauncherModule.sol
+├── setTokenConfig(land, name, symbol, supply, allocations[])
+├── launch(land) → deploy token, distribute to holders
+├── claimAllocation(land, slotId) → claim tokens
+└── withdrawTreasury(land) → withdraw accumulated tax`}</pre>
+              </div>
+            </div>
+
+            <div>
+              <a
+                href="https://github.com/adcommune/0xSlots/blob/main/docs/TOKEN_LAUNCHER.md"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="border-2 border-black px-6 py-3 text-sm font-bold uppercase tracking-wider hover:bg-black hover:text-white inline-block"
+              >
+                Full Design Doc →
+              </a>
+            </div>
           </div>
         </div>
       </section>
