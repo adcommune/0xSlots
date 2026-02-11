@@ -96,10 +96,14 @@ type Module @entity {
 }
 
 type Currency @entity {
-  id: ID! # currency address
+  id: ID! # currency address (SuperToken)
   hub: Hub!
   allowed: Boolean!
   name: String
   symbol: String
   decimals: Int
+  underlyingToken: Bytes # address(0) = native wrapper, otherwise ERC-20
+  underlyingName: String
+  underlyingSymbol: String
+  underlyingDecimals: Int
 }

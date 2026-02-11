@@ -1,5 +1,5 @@
 const SUBGRAPH_URL =
-  "https://api.studio.thegraph.com/query/958/0-x-slots-base-sepolia/v0.2.0";
+  "https://api.studio.thegraph.com/query/958/0-x-slots-base-sepolia/v0.3.0";
 
 const QUERY = `{
   hubs(first: 1) {
@@ -40,6 +40,10 @@ const QUERY = `{
       name
       symbol
       decimals
+      underlyingToken
+      underlyingName
+      underlyingSymbol
+      underlyingDecimals
     }
   }
 }`;
@@ -125,6 +129,14 @@ export default async function AdminPage() {
                 {c.symbol && <span className="font-bold">{c.symbol}</span>}
                 {c.name && <span className="text-gray-400">· {c.name}</span>}
                 {c.decimals != null && <span className="text-gray-300 text-xs">({c.decimals} dec)</span>}
+                {c.underlyingToken && c.underlyingToken !== "0x0000000000000000000000000000000000000000" && (
+                  <span className="text-blue-400 text-xs">
+                    → {c.underlyingSymbol || shorten(c.underlyingToken)} {c.underlyingName && `(${c.underlyingName})`}
+                  </span>
+                )}
+                {c.underlyingToken === "0x0000000000000000000000000000000000000000" && (
+                  <span className="text-gray-300 text-xs">· native wrapper</span>
+                )}
               </li>
             ))}
           </ul>

@@ -1,0 +1,14 @@
+[
+  {
+    "type": "function",
+    "name": "getUnderlyingToken",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view"
+  }
+]

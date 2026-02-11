@@ -1218,6 +1218,70 @@ export class Currency extends Entity {
   set decimals(value: i32) {
     this.set("decimals", Value.fromI32(value));
   }
+
+  get underlyingToken(): Bytes | null {
+    let value = this.get("underlyingToken");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set underlyingToken(value: Bytes | null) {
+    if (!value) {
+      this.unset("underlyingToken");
+    } else {
+      this.set("underlyingToken", Value.fromBytes(<Bytes>value));
+    }
+  }
+
+  get underlyingName(): string | null {
+    let value = this.get("underlyingName");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set underlyingName(value: string | null) {
+    if (!value) {
+      this.unset("underlyingName");
+    } else {
+      this.set("underlyingName", Value.fromString(<string>value));
+    }
+  }
+
+  get underlyingSymbol(): string | null {
+    let value = this.get("underlyingSymbol");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set underlyingSymbol(value: string | null) {
+    if (!value) {
+      this.unset("underlyingSymbol");
+    } else {
+      this.set("underlyingSymbol", Value.fromString(<string>value));
+    }
+  }
+
+  get underlyingDecimals(): i32 {
+    let value = this.get("underlyingDecimals");
+    if (!value || value.kind == ValueKind.NULL) {
+      return 0;
+    } else {
+      return value.toI32();
+    }
+  }
+
+  set underlyingDecimals(value: i32) {
+    this.set("underlyingDecimals", Value.fromI32(value));
+  }
 }
 
 export class LandLoader extends Entity {

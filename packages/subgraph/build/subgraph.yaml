@@ -25,6 +25,8 @@ dataSources:
           file: SlotsHub/SlotsHub.json
         - name: ERC20
           file: SlotsHub/ERC20.json
+        - name: SuperToken
+          file: SlotsHub/SuperToken.json
       eventHandlers:
         - event: HubSettingsUpdated((uint256,address,uint256,address,uint256,uint256,uint256,uint256,uint256,address))
           handler: handleHubSettingsUpdated

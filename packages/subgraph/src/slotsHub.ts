@@ -1,5 +1,6 @@
 import { BigInt, Bytes, Address, ethereum } from "@graphprotocol/graph-ts";
 import { ERC20 } from "../generated/SlotsHub/ERC20";
+import { SuperToken } from "../generated/SlotsHub/SuperToken";
 import {
   HubSettingsUpdated,
   LandOpened,
@@ -107,6 +108,33 @@ export function handleCurrencyAllowedStatusUpdated(
     let decimalsResult = token.try_decimals();
     if (!decimalsResult.reverted) {
       currency.decimals = decimalsResult.value;
+    }
+
+    // Fetch underlying token
+    let superToken = SuperToken.bind(event.params.currency);
+    let underlyingResult = superToken.try_getUnderlyingToken();
+    if (!underlyingResult.reverted) {
+      currency.underlyingToken = underlyingResult.value;
+
+      // If underlying is not zero address, fetch its metadata
+      if (underlyingResult.value.toHexString() != "0x0000000000000000000000000000000000000000") {
+        let underlying = ERC20.bind(underlyingResult.value);
+
+        let uNameResult = underlying.try_name();
+        if (!uNameResult.reverted) {
+          currency.underlyingName = uNameResult.value;
+        }
+
+        let uSymbolResult = underlying.try_symbol();
+        if (!uSymbolResult.reverted) {
+          currency.underlyingSymbol = uSymbolResult.value;
+        }
+
+        let uDecimalsResult = underlying.try_decimals();
+        if (!uDecimalsResult.reverted) {
+          currency.underlyingDecimals = uDecimalsResult.value;
+        }
+      }
     }
   }
 

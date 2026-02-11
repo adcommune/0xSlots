@@ -25,6 +25,8 @@ dataSources:
           file: ./abis/SlotsHub.json
         - name: ERC20
           file: ./abis/ERC20.json
+        - name: SuperToken
+          file: ./abis/SuperToken.json
       eventHandlers:
         - event: HubSettingsUpdated((uint256,address,uint256,address,uint256,uint256,uint256,uint256,uint256,address))
           handler: handleHubSettingsUpdated
