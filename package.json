@@ -4,9 +4,15 @@
   "scripts": {
     "build": "turbo build",
     "dev": "turbo dev",
-    "lint": "turbo lint"
+    "dev:landing": "turbo dev --filter=landing",
+    "dev:mcp": "turbo dev --filter=@0xslots/mcp",
+    "lint": "turbo lint",
+    "check": "biome check .",
+    "check:fix": "biome check --fix .",
+    "format": "biome format --fix ."
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.3.14",
     "turbo": "^2"
   },
   "packageManager": "pnpm@9.15.4"

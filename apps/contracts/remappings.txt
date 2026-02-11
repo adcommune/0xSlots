@@ -19,4 +19,4 @@ splits-v2/=lib/splits-contracts-monorepo/packages/splits-v2/src/
 v3-core/=lib/v3-core/contracts
 v3-periphery/=lib/v3-periphery/contracts/
 @solady/contracts=lib/solady/src/
-@split/contract/=lib/splits-contracts-monorepo/packages/splits-v2/src/
+@split/contract/=lib/splits-contracts-monorepo/packages/splits-v2/src/@openzeppelin-v5/contracts/=lib/openzeppelin-contracts/contracts/

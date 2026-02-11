@@ -8,7 +8,7 @@ const jetbrains = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono" }
 export const metadata: Metadata = {
   title: "0xSlots — Perpetual Onchain Slots",
   description:
-    "Every slot has a price. Harberger tax mechanics on Ethereum with Superfluid streaming. Slots are always for sale.",
+    "Onchain slots for every Ethereum address. Earn recurrent revenue through partial common ownership and Superfluid token streaming.",
 };
 
 export default function RootLayout({
