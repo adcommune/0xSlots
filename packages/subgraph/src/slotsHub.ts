@@ -1,4 +1,5 @@
-import { BigInt, Bytes } from "@graphprotocol/graph-ts";
+import { BigInt, Bytes, Address, ethereum } from "@graphprotocol/graph-ts";
+import { ERC20 } from "../generated/SlotsHub/ERC20";
 import {
   HubSettingsUpdated,
   LandOpened,
@@ -88,5 +89,26 @@ export function handleCurrencyAllowedStatusUpdated(
     currency.hub = hub.id;
   }
   currency.allowed = event.params.allowed;
+
+  // Fetch token metadata if not already set
+  if (!currency.name) {
+    let token = ERC20.bind(event.params.currency);
+
+    let nameResult = token.try_name();
+    if (!nameResult.reverted) {
+      currency.name = nameResult.value;
+    }
+
+    let symbolResult = token.try_symbol();
+    if (!symbolResult.reverted) {
+      currency.symbol = symbolResult.value;
+    }
+
+    let decimalsResult = token.try_decimals();
+    if (!decimalsResult.reverted) {
+      currency.decimals = decimalsResult.value;
+    }
+  }
+
   currency.save();
 }

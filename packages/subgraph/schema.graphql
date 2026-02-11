@@ -99,4 +99,7 @@ type Currency @entity {
   id: ID! # currency address
   hub: Hub!
   allowed: Boolean!
+  name: String
+  symbol: String
+  decimals: Int
 }
