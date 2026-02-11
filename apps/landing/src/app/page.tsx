@@ -73,6 +73,61 @@ export default function Home() {
           <SlotsDemo />
         </div>
       </section>
+      {/* Use Cases */}
+      <section className="px-6 py-16 border-b-4 border-black">
+        <div className="max-w-4xl mx-auto">
+          <p className="font-mono text-xs uppercase tracking-[0.3em] mb-8">
+            USE CASES
+          </p>
+          <div className="grid md:grid-cols-2 gap-10">
+            <div>
+              <h3 className="text-lg font-black uppercase mb-3">
+                Token Launcher
+              </h3>
+              <p className="text-sm leading-relaxed">
+                Fair token launches without bot sniping. Each slot is a position
+                in the launch curve — holders self-assess their value and pay
+                continuous tax. Outbid someone? You take their spot. Stop caring?
+                Someone takes yours. The market prices hype in real time, and tax
+                streams fund the token treasury before it even launches.
+              </p>
+            </div>
+            <div>
+              <h3 className="text-lg font-black uppercase mb-3">
+                Ad Space
+              </h3>
+              <p className="text-sm leading-relaxed">
+                Digital billboards, website banners, in-app placements — all
+                Harberger-priced. No more locked annual contracts at stale rates.
+                Advertisers compete continuously for placement, and publishers
+                earn streaming revenue proportional to real demand.
+              </p>
+            </div>
+            <div>
+              <h3 className="text-lg font-black uppercase mb-3">
+                Domain / Name Markets
+              </h3>
+              <p className="text-sm leading-relaxed">
+                Eliminate domain squatting. Names, handles, and identifiers are
+                held under partial common ownership — if you're not using it and
+                someone values it more, they take it. Idle speculation becomes
+                impossible.
+              </p>
+            </div>
+            <div>
+              <h3 className="text-lg font-black uppercase mb-3">
+                AI Agent Resources
+              </h3>
+              <p className="text-sm leading-relaxed">
+                Agents competing for compute, API slots, data feeds, or priority
+                access. Harberger pricing ensures resources flow to whoever
+                values them most — at machine speed, with streaming payments.
+                No negotiation, no downtime.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
       {/* Footer */}
       <footer className="px-6 py-6">
         <div className="max-w-5xl mx-auto flex justify-between items-center font-mono text-xs uppercase tracking-widest">
