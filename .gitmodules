@@ -3,7 +3,7 @@
 	url = https://github.com/foundry-rs/forge-std
 [submodule "apps/contracts/lib/prb-test"]
 	path = apps/contracts/lib/prb-test
-	url = https://github.com/PaulRBerg/prb-test
+	url = https://github.com/PaulRBerg/prb-test.git
 [submodule "apps/contracts/lib/protocol-monorepo"]
 	path = apps/contracts/lib/protocol-monorepo
 	url = https://github.com/superfluid-finance/protocol-monorepo

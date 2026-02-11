@@ -5,7 +5,7 @@ import {console2} from "forge-std/Test.sol";
 import {DSTestFull} from "./DSTestFull.sol";
 import {UUPSProxy} from "../src/lib/UUPSProxy.sol";
 import {SlotsHub} from "../src/SlotsHub.sol";
-import {Harberger} from "../src/Slots.sol";
+import {Slots} from "../src/Slots.sol";
 import {ISuperToken} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperToken.sol";
 import {TestPureSuperToken} from "../src/lib/TestPureSuperToken.sol";
 import {SuperTokenV1Library} from "@superfluid-finance/ethereum-contracts/contracts/apps/SuperTokenV1Library.sol";
@@ -258,7 +258,7 @@ contract SlotsHubTest is HabergerBaseTest {
     //
   }
 
-  function _openLand(address owner) internal returns (Harberger) {
+  function _openLand(address owner) internal returns (Slots) {
     vm.prank(owner);
     return Slots(harbergerHub.openLand(owner));
   }

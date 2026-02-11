@@ -7,7 +7,7 @@ import {ISuperToken} from "@superfluid-finance/ethereum-contracts/contracts/inte
 import {SlotsHub} from "../src/SlotsHub.sol";
 import {MetadataModule} from "../src/modules/MetadataModule.sol";
 import {TestPureSuperToken} from "../src/lib/TestPureSuperToken.sol";
-import {Harberger} from "../src/Slots.sol";
+import {Slots} from "../src/Slots.sol";
 import {SlotsStreamSuperApp} from "../src/SlotsStreamSuperApp.sol";
 import {HubSettings} from "../src/interfaces/ISlotsHub.sol";
 import {UUPSProxy} from "../src/lib/UUPSProxy.sol";

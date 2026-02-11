@@ -40,11 +40,15 @@ contract Deploy0xSlots is BaseScript {
         });
         sfParams[DeployementChain.Arbitrum] = SuperfluidParams({
             host: 0xCf8Acb4eF033efF16E8080aed4c7D5B9285D2192,
-            cfav1: 0xe4a0dc18DD1C25bEFBe45E78b03E89f4D54c5e8E
+            cfav1: 0x731FdBB12944973B500518aea61942381d7e240D
         });
         sfParams[DeployementChain.Optimism] = SuperfluidParams({
             host: 0x567c4B141ED61923967cA25Ef4906C8781069a10,
-            cfav1: 0x204C6f131bb7F258b2Ea1593f5309911d745571A
+            cfav1: 0x204C6f131bb7F258b2Ea1593f5309911d8E458eD
+        });
+        sfParams[DeployementChain.BaseSepolia] = SuperfluidParams({
+            host: 0x109412E3C84f0539b43d39dB691B08c90f58dC7c,
+            cfav1: 0x6836F23d6171D74Ef62FcF776655aBcD2bcd62Ef
         });
     }
 
