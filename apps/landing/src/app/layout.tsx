@@ -19,7 +19,50 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} ${jetbrains.variable} font-sans bg-white text-black`}>
-        {children}
+        <div className="min-h-screen flex flex-col">
+          {/* Nav */}
+          <nav className="flex items-center justify-between px-6 py-4 border-b-4 border-black">
+            <a href="/" className="text-2xl font-black tracking-tighter uppercase">
+              0xSlots
+            </a>
+            <div className="flex items-center gap-6 text-xs font-mono uppercase tracking-widest">
+              <a href="/explorer" className="hover:underline">
+                Explorer
+              </a>
+              <a href="/docs" className="hover:underline">
+                Docs
+              </a>
+              <a
+                href="https://github.com/adcommune/0xSlots"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:underline"
+              >
+                GitHub ↗
+              </a>
+            </div>
+          </nav>
+
+          {/* Main Content */}
+          <main className="flex-1">
+            {children}
+          </main>
+
+          {/* Footer */}
+          <footer className="px-6 py-6 border-t-4 border-black">
+            <div className="max-w-5xl mx-auto flex justify-between items-center font-mono text-xs uppercase tracking-widest">
+              <span>0xSlots</span>
+              <a
+                href="https://github.com/adcommune"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:underline"
+              >
+                adcommune
+              </a>
+            </div>
+          </footer>
+        </div>
       </body>
     </html>
   );

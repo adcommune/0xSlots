@@ -1,0 +1,42 @@
+query GetHub($id: ID!) {
+  hub(id: $id) {
+    id
+    protocolFeeBps
+    protocolFeeRecipient
+    slotPrice
+    defaultCurrency {
+      id
+      name
+      symbol
+      decimals
+    }
+    defaultSlotCount
+    defaultPrice
+    defaultTaxPercentage
+    defaultMaxTaxPercentage
+    defaultMinTaxUpdatePeriod
+    defaultModule
+  }
+}
+
+query GetAllowedModules($hubId: String!) {
+  modules(where: { hub: $hubId, allowed: true }) {
+    id
+    name
+    version
+    allowed
+  }
+}
+
+query GetAllowedCurrencies($hubId: String!) {
+  currencies(where: { hub: $hubId, allowed: true }) {
+    id
+    name
+    symbol
+    decimals
+    underlyingToken
+    underlyingName
+    underlyingSymbol
+    underlyingDecimals
+  }
+}

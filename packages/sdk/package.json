@@ -1,0 +1,44 @@
+{
+  "name": "@0xslots/sdk",
+  "version": "0.1.0",
+  "description": "Type-safe SDK for querying 0xSlots subgraph data",
+  "author": "Nezz",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "codegen": "graphql-codegen --config codegen.yml",
+    "build": "pnpm codegen && tsup",
+    "clean": "rm -rf dist generated",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "pnpm run clean && pnpm run build"
+  },
+  "dependencies": {
+    "graphql": "^16.9.0",
+    "graphql-request": "^7.2.2",
+    "graphql-tag": "^2.12.6"
+  },
+  "devDependencies": {
+    "@graphql-codegen/cli": "^5.0.4",
+    "@graphql-codegen/typescript": "^4.1.3",
+    "@graphql-codegen/typescript-graphql-request": "^6.3.0",
+    "@graphql-codegen/typescript-operations": "^4.4.2",
+    "@types/node": "^20.10.8",
+    "tsup": "^8.0.0",
+    "typescript": "^5.4.4"
+  }
+}

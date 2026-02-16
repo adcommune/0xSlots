@@ -1,0 +1,63 @@
+query GetSlotPurchases($first: Int = 100, $skip: Int = 0, $orderBy: SlotPurchase_orderBy, $orderDirection: OrderDirection, $where: SlotPurchase_filter) {
+  slotPurchases(first: $first, skip: $skip, orderBy: $orderBy, orderDirection: $orderDirection, where: $where) {
+    id
+    slot {
+      id
+      slotId
+      land {
+        id
+      }
+    }
+    newOccupant
+    previousOccupant
+    timestamp
+    blockNumber
+    tx
+  }
+}
+
+query GetLandOpenedEvents($first: Int = 100, $orderBy: LandOpenedEvent_orderBy, $orderDirection: OrderDirection) {
+  landOpenedEvents(first: $first, orderBy: $orderBy, orderDirection: $orderDirection) {
+    id
+    land {
+      id
+    }
+    account
+    timestamp
+    blockNumber
+    tx
+  }
+}
+
+query GetSlotCreatedEvents($landId: Bytes!, $first: Int = 100) {
+  slotCreatedEvents(where: { land: $landId }, first: $first, orderBy: timestamp, orderDirection: desc) {
+    id
+    slot {
+      id
+      slotId
+    }
+    land
+    slotId
+    currency
+    basePrice
+    price
+    taxPercentage
+    timestamp
+    blockNumber
+    tx
+  }
+}
+
+query GetFlowChanges($first: Int = 100, $where: FlowChange_filter) {
+  flowChanges(first: $first, where: $where, orderBy: timestamp, orderDirection: desc) {
+    id
+    from
+    to
+    oldRate
+    newRate
+    operation
+    timestamp
+    blockNumber
+    tx
+  }
+}

@@ -13,7 +13,7 @@
     "format": "biome format --fix .",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "release": "turbo build --filter=@0xslots/contracts && changeset publish"
+    "release": "turbo build --filter=@0xslots/contracts --filter=@0xslots/sdk && changeset publish"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.14",
