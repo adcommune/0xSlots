@@ -40,8 +40,13 @@ Layer 2: Modules
 
 ```
 apps/
-  landing/    — Website (Next.js 15)
-  contracts/  — Solidity contracts (Foundry)
+  landing/       — Website (Next.js 15)
+  contracts/     — Solidity contracts (Foundry)
+
+packages/
+  contracts/     — NPM package (@0xslots/contracts)
+  subgraph/      — The Graph subgraph
+  mcp/           — Model Context Protocol server
 ```
 
 ## Development
@@ -52,62 +57,43 @@ pnpm install
 # Landing page
 pnpm --filter landing dev
 
-# Contracts
+# Contracts package (TypeScript)
+pnpm --filter @0xslots/contracts build
+pnpm --filter @0xslots/contracts dev
+
+# Contracts (Solidity)
 cd apps/contracts
 forge install
 forge build
 forge test
 ```
 
-## MCP Server
+## Publishing Packages
 
-An [MCP](https://modelcontextprotocol.io) server for AI agents to interact with the protocol. 10 tools for reading state, managing slots, and setting metadata.
+This monorepo uses [Changesets](https://github.com/changesets/changesets) for version management and publishing.
 
-```bash
-pnpm --filter @0xslots/mcp build
-```
+### Creating a changeset
 
-### Tools
-
-| Tool | Type | Description |
-|---|---|---|
-| `get_hub_info` | Read | Get SlotsHub config (fees, defaults, module) |
-| `get_land` | Read | Get land details by account (slots count, currency, tax) |
-| `get_slot` | Read | Get slot details (occupant, price, tax, metadata) |
-| `list_lands` | Read | List all lands on the hub |
-| `list_slots` | Read | List all slots for a given land |
-| `get_slot_metadata` | Read | Get metadata from MetadataModule |
-| `purchase_slot` | Write | Buy a slot at listed price |
-| `update_slot_price` | Write | Change your slot's self-assessed price |
-| `set_slot_metadata` | Write | Set metadata on a slot via MetadataModule |
-| `create_land` | Write | Create a new land (admin) |
-
-### Configuration
+When you make changes to `@0xslots/contracts`:
 
 ```bash
-# Required for write operations
-export PRIVATE_KEY=0x...
-
-# Optional overrides
-export SLOTS_HUB_ADDRESS=0xFdE9B7c9B8448cA5324Be5948BA6643745c3E49e
-export METADATA_MODULE_ADDRESS=0x3014c378544013864AC4E630b7b4CFA276380E9A
-export RPC_URL=https://sepolia.optimism.io
+pnpm changeset
 ```
 
-### Claude Desktop / Cursor
+Follow the prompts to:
+1. Select which package changed
+2. Choose the version bump type (patch/minor/major)
+3. Write a summary of the changes
 
-```json
-{
-  "mcpServers": {
-    "0xslots": {
-      "command": "node",
-      "args": ["packages/mcp/dist/index.js"],
-      "env": {
-        "PRIVATE_KEY": "0x..."
-      }
-    }
-  }
-}
+### Publishing to npm
+
+The GitHub Action automatically:
+1. Creates a "Version Packages" PR when changesets are pushed to main
+2. Publishes to npm when the PR is merged
+
+Manual publish:
+```bash
+pnpm release
 ```
 
 ## Deployment

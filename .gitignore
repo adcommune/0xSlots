@@ -6,3 +6,5 @@ dist
 .vercel
 .env
 .env.local
+
+packages/subgraph/build
