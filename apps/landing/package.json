@@ -9,7 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@0xslots/sdk": "^0.2.0",
+    "@0xslots/sdk": "workspace:*",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
