@@ -8,7 +8,17 @@ import {
   CurrencyAllowedStatusUpdated,
 } from "../generated/SlotsHub/SlotsHub";
 import { Slots as SlotsTemplate } from "../generated/templates";
-import { Hub, Land, Module, Currency } from "../generated/schema";
+import {
+  Hub,
+  Land,
+  Module,
+  Currency,
+  LandOpenedEvent,
+} from "../generated/schema";
+
+function eventEntityId(txHash: Bytes, logIndex: BigInt): string {
+  return txHash.toHexString() + "-" + logIndex.toString();
+}
 
 function getOrCreateHub(address: Bytes): Hub {
   let hub = Hub.load(address.toHexString());
@@ -56,14 +66,19 @@ export function handleHubSettingsUpdated(event: HubSettingsUpdated): void {
     let underlyingResult = superToken.try_getUnderlyingToken();
     if (!underlyingResult.reverted) {
       currency.underlyingToken = underlyingResult.value;
-      if (underlyingResult.value.toHexString() != "0x0000000000000000000000000000000000000000") {
+      if (
+        underlyingResult.value.toHexString() !=
+        "0x0000000000000000000000000000000000000000"
+      ) {
         let underlying = ERC20.bind(underlyingResult.value);
         let uNameResult = underlying.try_name();
         if (!uNameResult.reverted) currency.underlyingName = uNameResult.value;
         let uSymbolResult = underlying.try_symbol();
-        if (!uSymbolResult.reverted) currency.underlyingSymbol = uSymbolResult.value;
+        if (!uSymbolResult.reverted)
+          currency.underlyingSymbol = uSymbolResult.value;
         let uDecimalsResult = underlying.try_decimals();
-        if (!uDecimalsResult.reverted) currency.underlyingDecimals = uDecimalsResult.value;
+        if (!uDecimalsResult.reverted)
+          currency.underlyingDecimals = uDecimalsResult.value;
       }
     }
 
@@ -84,19 +99,31 @@ export function handleLandOpened(event: LandOpened): void {
   let hub = getOrCreateHub(event.address);
   hub.save();
 
-  let land = new Land(event.params.land.toHexString());
+  let landId = event.params.land.toHexString();
+  let land = new Land(landId);
   land.hub = hub.id;
   land.owner = event.params.account;
   land.createdAt = event.block.timestamp;
   land.createdTx = event.transaction.hash;
   land.save();
 
+  // Create event entity
+  let landEvent = new LandOpenedEvent(
+    eventEntityId(event.transaction.hash, event.logIndex),
+  );
+  landEvent.land = landId;
+  landEvent.account = event.params.account;
+  landEvent.timestamp = event.block.timestamp;
+  landEvent.blockNumber = event.block.number;
+  landEvent.tx = event.transaction.hash;
+  landEvent.save();
+
   // Start indexing this Slots contract
   SlotsTemplate.create(event.params.land);
 }
 
 export function handleModuleAllowedStatusUpdated(
-  event: ModuleAllowedStatusUpdated
+  event: ModuleAllowedStatusUpdated,
 ): void {
   let hub = getOrCreateHub(event.address);
   hub.save();
@@ -113,7 +140,7 @@ export function handleModuleAllowedStatusUpdated(
 }
 
 export function handleCurrencyAllowedStatusUpdated(
-  event: CurrencyAllowedStatusUpdated
+  event: CurrencyAllowedStatusUpdated,
 ): void {
   let hub = getOrCreateHub(event.address);
   hub.save();
@@ -151,7 +178,10 @@ export function handleCurrencyAllowedStatusUpdated(
       currency.underlyingToken = underlyingResult.value;
 
       // If underlying is not zero address, fetch its metadata
-      if (underlyingResult.value.toHexString() != "0x0000000000000000000000000000000000000000") {
+      if (
+        underlyingResult.value.toHexString() !=
+        "0x0000000000000000000000000000000000000000"
+      ) {
         let underlying = ERC20.bind(underlyingResult.value);
 
         let uNameResult = underlying.try_name();

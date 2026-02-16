@@ -2,7 +2,7 @@
 # 0xSlots Subgraph Schema (core protocol only)
 # ──────────────────────────────────────────
 
-type Hub @entity {
+type Hub @entity(immutable: false) {
   id: ID! # SlotsHub address
   protocolFeeBps: BigInt!
   protocolFeeRecipient: Bytes!
@@ -19,7 +19,7 @@ type Hub @entity {
   allowedCurrencies: [Currency!]! @derivedFrom(field: "hub")
 }
 
-type Land @entity {
+type Land @entity(immutable: false) {
   id: ID! # Slots contract address
   hub: Hub!
   owner: Bytes! # account that opened the land
@@ -28,7 +28,7 @@ type Land @entity {
   createdTx: Bytes!
 }
 
-type Slot @entity {
+type Slot @entity(immutable: false) {
   id: ID! # land-slotId
   land: Land!
   slotId: BigInt!
@@ -43,16 +43,58 @@ type Slot @entity {
   active: Boolean!
   createdAt: BigInt!
   updatedAt: BigInt!
+  createdEvent: SlotCreatedEvent @derivedFrom(field: "slot")
   purchases: [SlotPurchase!]! @derivedFrom(field: "slot")
+  releases: [SlotReleasedEvent!]! @derivedFrom(field: "slot")
   priceHistory: [PriceUpdate!]! @derivedFrom(field: "slot")
   taxUpdates: [TaxRateChange!]! @derivedFrom(field: "slot")
+}
+
+# ──────────────────────────────────────────
+# Event Entities
+# ──────────────────────────────────────────
+
+type LandOpenedEvent @entity(immutable: true) {
+  id: ID! # tx-logIndex
+  land: Land!
+  account: Bytes! # account that opened the land
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  tx: Bytes!
+}
+
+type SlotCreatedEvent @entity(immutable: true) {
+  id: ID! # tx-logIndex
+  slot: Slot!
+  land: Bytes!
+  slotId: BigInt!
+  currency: Bytes!
+  basePrice: BigInt!
+  price: BigInt!
+  taxPercentage: BigInt!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  tx: Bytes!
 }
 
 type SlotPurchase @entity(immutable: true) {
   id: ID! # tx-logIndex
   slot: Slot!
   newOccupant: Bytes!
+  previousOccupant: Bytes
   timestamp: BigInt!
+  blockNumber: BigInt!
+  tx: Bytes!
+}
+
+type SlotReleasedEvent @entity(immutable: true) {
+  id: ID! # tx-logIndex
+  slot: Slot!
+  land: Bytes!
+  slotId: BigInt!
+  previousOccupant: Bytes
+  timestamp: BigInt!
+  blockNumber: BigInt!
   tx: Bytes!
 }
 
@@ -62,6 +104,7 @@ type PriceUpdate @entity(immutable: true) {
   oldPrice: BigInt!
   newPrice: BigInt!
   timestamp: BigInt!
+  blockNumber: BigInt!
   tx: Bytes!
 }
 
@@ -73,6 +116,7 @@ type TaxRateChange @entity(immutable: true) {
   newPercentage: BigInt
   confirmableAt: BigInt
   timestamp: BigInt!
+  blockNumber: BigInt!
   tx: Bytes!
 }
 
@@ -84,10 +128,11 @@ type FlowChange @entity(immutable: true) {
   newRate: BigInt!
   operation: String!
   timestamp: BigInt!
+  blockNumber: BigInt!
   tx: Bytes!
 }
 
-type Module @entity {
+type Module @entity(immutable: false) {
   id: ID! # module address
   hub: Hub!
   allowed: Boolean!
@@ -95,7 +140,7 @@ type Module @entity {
   version: String!
 }
 
-type Currency @entity {
+type Currency @entity(immutable: false) {
   id: ID! # currency address (SuperToken)
   hub: Hub!
   allowed: Boolean!
