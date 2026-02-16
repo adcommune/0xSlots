@@ -1,0 +1,46 @@
+{
+  "name": "@0xslots/contracts",
+  "version": "0.1.0",
+  "description": "Contract ABIs and addresses for 0xSlots protocol",
+  "author": "Nezz",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./abis": {
+      "types": "./dist/abis.d.ts",
+      "import": "./dist/abis.js"
+    },
+    "./addresses": {
+      "types": "./dist/addresses.d.ts",
+      "import": "./dist/addresses.js"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup",
+    "clean": "rm -rf dist",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "pnpm run clean && pnpm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.8",
+    "tsup": "^8.0.0",
+    "tsx": "^4.7.3",
+    "typescript": "^5.4.4"
+  },
+  "dependencies": {
+    "viem": "^2.45.0"
+  }
+}

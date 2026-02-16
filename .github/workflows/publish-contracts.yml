@@ -1,0 +1,48 @@
+name: Publish @0xslots/contracts to npm
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      package:
+        description: 'Package to publish'
+        required: true
+        default: '@0xslots/contracts'
+        type: choice
+        options:
+          - '@0xslots/contracts'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build contracts package
+        run: pnpm --filter @0xslots/contracts build
+
+      - name: Typecheck
+        run: pnpm --filter @0xslots/contracts typecheck
+
+      - name: Publish to npm
+        run: pnpm --filter @0xslots/contracts publish --no-git-checks --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
