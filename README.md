@@ -44,7 +44,8 @@ apps/
   contracts/     — Solidity contracts (Foundry)
 
 packages/
-  contracts/     — NPM package (@0xslots/contracts)
+  contracts/     — Contract ABIs and addresses (@0xslots/contracts)
+  sdk/           — Type-safe subgraph SDK (@0xslots/sdk)
   subgraph/      — The Graph subgraph
   mcp/           — Model Context Protocol server
 ```
@@ -60,6 +61,11 @@ pnpm --filter landing dev
 # Contracts package (TypeScript)
 pnpm --filter @0xslots/contracts build
 pnpm --filter @0xslots/contracts dev
+
+# SDK package (GraphQL + TypeScript)
+pnpm --filter @0xslots/sdk codegen  # Generate types from subgraph
+pnpm --filter @0xslots/sdk build
+pnpm --filter @0xslots/sdk dev
 
 # Contracts (Solidity)
 cd apps/contracts

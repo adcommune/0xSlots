@@ -1,0 +1,41 @@
+query GetLands($first: Int = 100, $skip: Int = 0, $orderBy: Land_orderBy, $orderDirection: OrderDirection) {
+  lands(first: $first, skip: $skip, orderBy: $orderBy, orderDirection: $orderDirection) {
+    id
+    owner
+    hub {
+      id
+    }
+    createdAt
+    createdTx
+  }
+}
+
+query GetLand($id: ID!) {
+  land(id: $id) {
+    id
+    owner
+    hub {
+      id
+    }
+    createdAt
+    createdTx
+    slots {
+      id
+      slotId
+      occupant
+      currency
+      price
+      taxPercentage
+      active
+    }
+  }
+}
+
+query GetLandsByOwner($owner: Bytes!, $first: Int = 100) {
+  lands(where: { owner: $owner }, first: $first) {
+    id
+    owner
+    createdAt
+    createdTx
+  }
+}

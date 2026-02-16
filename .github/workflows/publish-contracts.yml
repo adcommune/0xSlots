@@ -34,7 +34,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build packages
-        run: pnpm build --filter=@0xslots/contracts
+        run: pnpm build --filter=@0xslots/contracts --filter=@0xslots/sdk
 
       - name: Create Release Pull Request or Publish to npm
         id: changesets

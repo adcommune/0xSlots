@@ -2,28 +2,9 @@ import { SlotsDemo } from "@/components/slots-demo";
 
 export default function Home() {
   return (
-    <main className="min-h-screen">
-      {/* Nav */}
-      <nav className="flex items-center justify-between px-6 py-4 border-b-4 border-black">
-        <span className="text-2xl font-black tracking-tighter uppercase">
-          0xSlots
-        </span>
-        <div className="flex items-center gap-6 text-xs font-mono uppercase tracking-widest">
-          <a href="/docs" className="hover:underline">
-            Docs
-          </a>
-          <a
-            href="https://github.com/adcommune/0xSlots"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:underline"
-          >
-            GitHub ↗
-          </a>
-        </div>
-      </nav>
+    <>
       {/* Hero */}
-      <section className="px-6 pt-10 pb-8 border-b-4 border-black flex flex-col lg:flex-row gap-10 lg:gap-16 justify-center items-center">
+      <section className="px-6 pt-10 pb-8 min-h-[85vh] flex flex-col lg:flex-row gap-10 lg:gap-16 justify-center items-center">
         <div className="flex-1 min-w-0">
           <p className="font-mono text-xs uppercase tracking-[0.3em] mb-3">
             ONCHAIN REAL ESTATE
@@ -73,20 +54,6 @@ export default function Home() {
           <SlotsDemo />
         </div>
       </section>
-      {/* Footer */}
-      <footer className="px-6 py-6">
-        <div className="max-w-5xl mx-auto flex justify-between items-center font-mono text-xs uppercase tracking-widest">
-          <span>0xSlots</span>
-          <a
-            href="https://github.com/adcommune"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:underline"
-          >
-            adcommune
-          </a>
-        </div>
-      </footer>
-    </main>
+    </>
   );
 }

@@ -1,0 +1,16 @@
+schema: https://api.studio.thegraph.com/query/958/0-x-slots-base-sepolia/version/latest
+documents: ./src/queries/**/*.graphql
+generates:
+  ./src/generated/graphql.ts:
+    plugins:
+      - typescript
+      - typescript-operations
+      - typescript-graphql-request
+    config:
+      avoidOptionals: false
+      maybeValue: T | null
+      skipTypename: false
+      enumsAsTypes: true
+      scalars:
+        BigInt: string
+        Bytes: string

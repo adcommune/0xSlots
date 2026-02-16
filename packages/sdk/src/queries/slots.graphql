@@ -1,0 +1,87 @@
+query GetSlots($first: Int = 100, $skip: Int = 0, $orderBy: Slot_orderBy, $orderDirection: OrderDirection, $where: Slot_filter) {
+  slots(first: $first, skip: $skip, orderBy: $orderBy, orderDirection: $orderDirection, where: $where) {
+    id
+    land {
+      id
+      owner
+    }
+    slotId
+    occupant
+    currency
+    basePrice
+    price
+    taxPercentage
+    maxTaxPercentage
+    minTaxUpdatePeriod
+    module
+    active
+    createdAt
+    updatedAt
+  }
+}
+
+query GetSlot($id: ID!) {
+  slot(id: $id) {
+    id
+    land {
+      id
+      owner
+    }
+    slotId
+    occupant
+    currency
+    basePrice
+    price
+    taxPercentage
+    maxTaxPercentage
+    minTaxUpdatePeriod
+    module
+    active
+    createdAt
+    updatedAt
+    priceHistory(orderBy: timestamp, orderDirection: desc, first: 10) {
+      id
+      oldPrice
+      newPrice
+      timestamp
+      tx
+    }
+    taxUpdates(orderBy: timestamp, orderDirection: desc, first: 10) {
+      id
+      kind
+      oldPercentage
+      newPercentage
+      confirmableAt
+      timestamp
+      tx
+    }
+  }
+}
+
+query GetSlotsByOccupant($occupant: Bytes!, $first: Int = 100) {
+  slots(where: { occupant: $occupant, active: true }, first: $first) {
+    id
+    land {
+      id
+    }
+    slotId
+    occupant
+    price
+    taxPercentage
+    active
+  }
+}
+
+query GetAvailableSlots($first: Int = 100, $skip: Int = 0) {
+  slots(where: { occupant: null, active: true }, first: $first, skip: $skip, orderBy: price, orderDirection: asc) {
+    id
+    land {
+      id
+      owner
+    }
+    slotId
+    currency
+    price
+    taxPercentage
+  }
+}
