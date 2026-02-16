@@ -1,0 +1,77 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Dev: Landing",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["dev:landing"],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "focus": false,
+        "group": "dev"
+      },
+      "icon": {
+        "id": "browser",
+        "color": "terminal.ansiCyan"
+      },
+      "isBackground": true,
+      "runOptions": {
+        "instanceLimit": 1
+      }
+    },
+    {
+      "label": "Dev: MCP",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["dev:mcp"],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "focus": false,
+        "group": "dev"
+      },
+      "icon": {
+        "id": "plug",
+        "color": "terminal.ansiMagenta"
+      },
+      "isBackground": true,
+      "runOptions": {
+        "instanceLimit": 1
+      }
+    },
+    {
+      "label": "Dev: All",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["dev:all"],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "focus": true
+      },
+      "icon": {
+        "id": "rocket",
+        "color": "terminal.ansiGreen"
+      },
+      "isBackground": true,
+      "runOptions": {
+        "instanceLimit": 1
+      }
+    },
+    {
+      "label": "Dev: Landing + MCP (Split)",
+      "dependsOn": ["Dev: Landing", "Dev: MCP"],
+      "dependsOrder": "parallel",
+      "problemMatcher": [],
+      "icon": {
+        "id": "layers",
+        "color": "terminal.ansiYellow"
+      }
+    }
+  ]
+}

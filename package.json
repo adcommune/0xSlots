@@ -6,6 +6,7 @@
     "dev": "turbo dev",
     "dev:landing": "turbo dev --filter=landing",
     "dev:mcp": "turbo dev --filter=@0xslots/mcp",
+    "dev:all": "turbo dev --filter=landing --filter=@0xslots/mcp",
     "lint": "turbo lint",
     "check": "biome check .",
     "check:fix": "biome check --fix .",
