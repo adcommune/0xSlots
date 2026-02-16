@@ -21,8 +21,8 @@ importers:
   apps/landing:
     dependencies:
       '@0xslots/sdk':
-        specifier: ^0.2.0
-        version: 0.2.0
+        specifier: workspace:*
+        version: link:../../packages/sdk
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -149,9 +149,6 @@ importers:
         version: 0.38.0
 
 packages:
-
-  '@0xslots/sdk@0.2.0':
-    resolution: {integrity: sha512-R2Spx8fkkavOmkjvRbQt+WyncGB+k6PGOAu1/WIujrpecMsXERUGRbTR4gFhtomlbXWrsu/P/ftplCqV0CNrIA==}
 
   '@adraffy/ens-normalize@1.11.1':
     resolution: {integrity: sha512-nhCBV3quEgesuf7c7KYfperqSS14T8bYuvJ8PcLJp6znkZpFc0AuW4qBtr8eKVyPPe/8RSr7sglCWPU5eaxwKQ==}
@@ -4587,12 +4584,6 @@ packages:
     resolution: {integrity: sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==}
 
 snapshots:
-
-  '@0xslots/sdk@0.2.0':
-    dependencies:
-      graphql: 16.11.0
-      graphql-request: 7.4.0(graphql@16.11.0)
-      graphql-tag: 2.12.6(graphql@16.11.0)
 
   '@adraffy/ens-normalize@1.11.1': {}
 

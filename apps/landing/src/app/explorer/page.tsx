@@ -59,6 +59,8 @@ export default async function ExplorerPage() {
     { landOpenedEvents },
     { slotPurchases },
     { slots: releasedSlots },
+    { slotCreatedEvents },
+    { priceUpdates },
   ] = await Promise.all([
     client.getLandOpenedEvents({
       first: 20,
@@ -76,36 +78,78 @@ export default async function ExplorerPage() {
       orderBy: "updatedAt",
       orderDirection: "desc",
     }),
+    client.getSlotCreatedEvents({
+      first: 20,
+      orderBy: "timestamp",
+      orderDirection: "desc",
+    }),
+    client.getPriceUpdates({
+      first: 20,
+      orderBy: "timestamp",
+      orderDirection: "desc",
+    }),
   ]);
 
   // Unify all events into a single array
   const events: UnifiedEvent[] = [];
 
   // Add land opened events
-  landOpenedEvents?.forEach((e) => {
-    events.push({
-      id: e.id,
-      type: "landOpened",
-      timestamp: e.timestamp,
-      tx: e.tx,
-      blockNumber: e.blockNumber,
-      actor: e.account,
-      details: `Land ${shorten(e.land.id)} opened`,
-    });
-  });
+  if (landOpenedEvents) {
+    for (const e of landOpenedEvents) {
+      events.push({
+        id: e.id,
+        type: "landOpened",
+        timestamp: e.timestamp,
+        tx: e.tx,
+        blockNumber: e.blockNumber,
+        actor: e.account,
+        details: `Land ${shorten(e.land.id)} opened`,
+      });
+    }
+  }
 
   // Add slot purchases
-  slotPurchases?.forEach((e) => {
-    events.push({
-      id: e.id,
-      type: "slotPurchased",
-      timestamp: e.timestamp,
-      tx: e.tx,
-      blockNumber: e.blockNumber,
-      actor: e.newOccupant,
-      details: `Slot #${e.slot.slotId} purchased${e.previousOccupant ? ` from ${shorten(e.previousOccupant)}` : ""}`,
-    });
-  });
+  if (slotPurchases) {
+    for (const e of slotPurchases) {
+      events.push({
+        id: e.id,
+        type: "slotPurchased",
+        timestamp: e.timestamp,
+        tx: e.tx,
+        blockNumber: e.blockNumber,
+        actor: e.newOccupant,
+        details: `Slot #${e.slot.slotId} purchased${e.previousOccupant ? ` from ${shorten(e.previousOccupant)}` : ""}`,
+      });
+    }
+  }
+ 
+  // Add slot created events
+  if (slotCreatedEvents) {
+    for (const e of slotCreatedEvents) {
+      events.push({
+        id: e.id,
+        type: "slotCreated",
+        timestamp: e.timestamp,
+        tx: e.tx,
+        blockNumber: e.blockNumber,
+        details: `Slot #${e.slotId} created on ${shorten(e.land)}`,
+      });
+    }
+  }
+
+  // Add price update events
+  if (priceUpdates) {
+    for (const e of priceUpdates) {
+      events.push({
+        id: e.id,
+        type: "priceUpdated",
+        timestamp: e.timestamp,
+        tx: e.tx,
+        blockNumber: e.blockNumber,
+        details: `Slot #${e.slot.slotId} price updated`,
+      });
+    }
+  }
 
   // Sort all events by timestamp
   events.sort((a, b) => Number(b.timestamp) - Number(a.timestamp));

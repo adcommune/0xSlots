@@ -29,8 +29,8 @@ query GetLandOpenedEvents($first: Int = 100, $orderBy: LandOpenedEvent_orderBy, 
   }
 }
 
-query GetSlotCreatedEvents($landId: Bytes!, $first: Int = 100) {
-  slotCreatedEvents(where: { land: $landId }, first: $first, orderBy: timestamp, orderDirection: desc) {
+query GetSlotCreatedEvents($first: Int = 100, $orderBy: SlotCreatedEvent_orderBy, $orderDirection: OrderDirection, $where: SlotCreatedEvent_filter) {
+  slotCreatedEvents(first: $first, orderBy: $orderBy, orderDirection: $orderDirection, where: $where) {
     id
     slot {
       id
@@ -42,6 +42,21 @@ query GetSlotCreatedEvents($landId: Bytes!, $first: Int = 100) {
     basePrice
     price
     taxPercentage
+    timestamp
+    blockNumber
+    tx
+  }
+}
+
+query GetPriceUpdates($first: Int = 100, $orderBy: PriceUpdate_orderBy, $orderDirection: OrderDirection, $where: PriceUpdate_filter) {
+  priceUpdates(first: $first, orderBy: $orderBy, orderDirection: $orderDirection, where: $where) {
+    id
+    slot {
+      id
+      slotId
+    }
+    oldPrice
+    newPrice
     timestamp
     blockNumber
     tx
