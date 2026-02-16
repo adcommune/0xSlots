@@ -1,5 +1,14 @@
 # @0xslots/sdk
 
+## 0.3.0
+
+### Minor Changes
+
+- c66f1a8: Add flexible event queries and price update events
+  - Make `getSlotCreatedEvents` accept optional parameters instead of requiring `landId`
+  - Add `getPriceUpdates` query to fetch price update events
+  - Update all event queries to support flexible filtering with optional `where`, `orderBy`, and `orderDirection` parameters
+
 ## 0.2.0
 
 ### Minor Changes
