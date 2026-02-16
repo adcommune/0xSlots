@@ -13,131 +13,28 @@ Every slot has a price. Holders self-assess and pay continuous tax. Anyone can b
 3. **Always for sale** — Anyone can buy at the posted price, instantly
 4. **No squatting** — Holding costs money, so only active users hold slots
 
-## Architecture
+## NPM Packages
 
-```
-Layer 1: Slot Primitive
-├── Harberger.sol          — ERC-721 slots with self-assessed pricing
-├── HarbergerHub.sol       — Factory & governance (UUPS upgradeable)
-└── HarbergerStreamSuperApp.sol — Superfluid tax streaming
-
-Layer 2: Modules
-├── IHarbergerModule       — Interface for pluggable modules
-├── MetadataModule          — Content/metadata for slots
-└── Your Module             — Build anything on top
-```
-
-## Use cases
-
-- **Onchain ads** — Ad slots priced by the market, not ad networks
-- **AI agent resources** — Compute, API access, bandwidth allocation
-- **Domain names** — Prevent squatting through continuous cost
-- **Protocol positions** — Validator slots, oracle seats, governance
-- **Digital real estate** — Virtual land, metaverse plots
-- **Spectrum & bandwidth** — Scarce network resource allocation
-
-## Monorepo
-
-```
-apps/
-  landing/       — Website (Next.js 15)
-  contracts/     — Solidity contracts (Foundry)
-
-packages/
-  contracts/     — Contract ABIs and addresses (@0xslots/contracts)
-  sdk/           — Type-safe subgraph SDK (@0xslots/sdk)
-  subgraph/      — The Graph subgraph
-  mcp/           — Model Context Protocol server
-```
-
-## Development
-
-```bash
-pnpm install
-
-# Landing page
-pnpm --filter landing dev
-
-# Contracts package (TypeScript)
-pnpm --filter @0xslots/contracts build
-pnpm --filter @0xslots/contracts dev
-
-# SDK package (GraphQL + TypeScript)
-pnpm --filter @0xslots/sdk codegen  # Generate types from subgraph
-pnpm --filter @0xslots/sdk build
-pnpm --filter @0xslots/sdk dev
-
-# Contracts (Solidity)
-cd apps/contracts
-forge install
-forge build
-forge test
-```
-
-## Publishing Packages
-
-This monorepo uses [Changesets](https://github.com/changesets/changesets) for version management and publishing.
-
-### Creating a changeset
-
-When you make changes to `@0xslots/contracts`:
-
-```bash
-pnpm changeset
-```
-
-Follow the prompts to:
-1. Select which package changed
-2. Choose the version bump type (patch/minor/major)
-3. Write a summary of the changes
-
-### Publishing to npm
-
-The GitHub Action automatically:
-1. Creates a "Version Packages" PR when changesets are pushed to main
-2. Publishes to npm when the PR is merged
-
-Manual publish:
-```bash
-pnpm release
-```
-
-## Deployment
-
-Deploy to Arbitrum, Base, and Optimism mainnets:
-
-```bash
-cd apps/contracts
-
-# Set environment variables
-export PK=<your-private-key>
-export ALCHEMY_KEY=<your-alchemy-key>
-
-# Deploy to all chains
-./script/deploy-multichain.sh
-
-# Or deploy to a specific chain
-./script/deploy-multichain.sh arbitrum
-./script/deploy-multichain.sh base
-./script/deploy-multichain.sh optimism
-```
+| Package | Version | Description |
+|---------|---------|-------------|
+| [@0xslots/contracts](https://www.npmjs.com/package/@0xslots/contracts) | [![npm version](https://img.shields.io/npm/v/@0xslots/contracts.svg)](https://www.npmjs.com/package/@0xslots/contracts) | Contract ABIs and addresses for use with viem |
+| [@0xslots/sdk](https://www.npmjs.com/package/@0xslots/sdk) | [![npm version](https://img.shields.io/npm/v/@0xslots/sdk.svg)](https://www.npmjs.com/package/@0xslots/sdk) | Type-safe SDK for querying subgraph data |
 
 ## Testnet Deployments
 
-### OP Sepolia (11155420)
+### Base Sepolia (84532)
 
 | Contract | Address | Note |
 |---|---|---|
-| SlotsHub (proxy) | `0xFdE9B7c9B8448cA5324Be5948BA6643745c3E49e` | Main entry point |
-| Slots (beacon impl) | `0xF4248df103dA6Eb8f5e0F39127c16bBC2dA58f92` | Cloned per Land |
-| SlotsStreamSuperApp (beacon impl) | `0x993C2a951906B6E8a78718C3Fbb5196249f5c59b` | Tax distributor, cloned per Land |
-| MetadataModule | `0x3014c378544013864AC4E630b7b4CFA276380E9A` | Shared module |
+| SlotsHub (proxy) | `0x268cfaB9ddDdF6A326458Ae79d55592516f382eF` | Main entry point |
+| Slots (beacon impl) | Cloned per Land | Created by SlotsHub |
+| SlotsStreamSuperApp (beacon impl) | Cloned per Land | Tax distributor |
 
 ### Subgraph
 
 | Network | Endpoint |
 |---|---|
-| OP Sepolia | `https://api.studio.thegraph.com/query/958/0-x-slots-opt-sepolia/v0.0.1` |
+| Base Sepolia | `https://api.studio.thegraph.com/query/958/0-x-slots-base-sepolia/version/latest` |
 
 ## Security
 
@@ -145,7 +42,7 @@ export ALCHEMY_KEY=<your-alchemy-key>
 
 ## Built with
 
-Superfluid · ERC-721 · Foundry · Solidity · OpenZeppelin
+Superfluid · ERC-721 · Foundry · Solidity · OpenZeppelin · The Graph
 
 ## Links
 
