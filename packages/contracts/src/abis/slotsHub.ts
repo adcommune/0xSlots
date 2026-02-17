@@ -826,5 +826,4 @@ export const slotsHubAbi =
     "name": "UnauthorizedLandExpansion",
     "inputs": []
   }
-]
- as const;
+] as const;

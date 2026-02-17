@@ -40,7 +40,6 @@ query GetSlotCreatedEvents($first: Int = 100, $orderBy: SlotCreatedEvent_orderBy
     slotId
     currency
     basePrice
-    price
     taxPercentage
     timestamp
     blockNumber
@@ -57,20 +56,6 @@ query GetPriceUpdates($first: Int = 100, $orderBy: PriceUpdate_orderBy, $orderDi
     }
     oldPrice
     newPrice
-    timestamp
-    blockNumber
-    tx
-  }
-}
-
-query GetFlowChanges($first: Int = 100, $where: FlowChange_filter) {
-  flowChanges(first: $first, where: $where, orderBy: timestamp, orderDirection: desc) {
-    id
-    from
-    to
-    oldRate
-    newRate
-    operation
     timestamp
     blockNumber
     tx

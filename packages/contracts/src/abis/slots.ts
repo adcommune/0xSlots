@@ -1237,5 +1237,4 @@ export const slotsAbi =
     "name": "UnauthorizedTaxUpdate",
     "inputs": []
   }
-]
- as const;
+] as const;
