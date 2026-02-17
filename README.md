@@ -20,9 +20,17 @@ Every slot has a price. Holders self-assess and pay continuous tax. Anyone can b
 | [@0xslots/contracts](https://www.npmjs.com/package/@0xslots/contracts) | [![npm version](https://img.shields.io/npm/v/@0xslots/contracts.svg)](https://www.npmjs.com/package/@0xslots/contracts) | Contract ABIs and addresses for use with viem |
 | [@0xslots/sdk](https://www.npmjs.com/package/@0xslots/sdk) | [![npm version](https://img.shields.io/npm/v/@0xslots/sdk.svg)](https://www.npmjs.com/package/@0xslots/sdk) | Type-safe SDK for querying subgraph data |
 
-## Testnet Deployments
+## Deployments
 
-### Base Sepolia (84532)
+### Arbitrum (42161)
+
+| Contract | Address | Note |
+|---|---|---|
+| SlotsHub (proxy) | `0x774776d0f693eB7718b67f7938541D5bbB5f92D0` | Main entry point |
+| MetadataModule | `0xe96e9105994A8691338eaf0fDc50c02277949521` | Slot metadata |
+| Default Currency | [USND](https://www.nerite.org/) | Native Superfluid stablecoin |
+
+### Base Sepolia (84532) — Testnet
 
 | Contract | Address | Note |
 |---|---|---|
@@ -30,15 +38,12 @@ Every slot has a price. Holders self-assess and pay continuous tax. Anyone can b
 | Slots (beacon impl) | Cloned per Land | Created by SlotsHub |
 | SlotsStreamSuperApp (beacon impl) | Cloned per Land | Tax distributor |
 
-### Subgraph
+### Subgraphs
 
 | Network | Endpoint |
 |---|---|
+| Arbitrum | `https://api.studio.thegraph.com/query/958/0-x-slots-arb/version/latest` |
 | Base Sepolia | `https://api.studio.thegraph.com/query/958/0-x-slots-base-sepolia/version/latest` |
-
-## Security
-
-- [Security Audit (2026-02-08)](apps/contracts/Audit/2026-02-08-k-security-audit.md)
 
 ## Built with
 
