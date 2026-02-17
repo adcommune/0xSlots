@@ -1,5 +1,12 @@
 # @0xslots/contracts
 
+## 0.3.0
+
+### Minor Changes
+
+- e30c844: add arb
+- 56f8181: Add arbitrum
+
 ## 0.2.0
 
 ### Minor Changes
