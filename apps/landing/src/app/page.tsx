@@ -10,14 +10,14 @@ export default function Home() {
             ONCHAIN REAL ESTATE
           </p>
           <p className="mt-6 max-w-2xl text-base leading-relaxed font-bold">
-            0xSlots grants every Ethereum address, productive onchain real
+            0xSlots grants every Ethereum address productive onchain real
             estate.
           </p>
           <p className="mt-6 max-w-2xl text-base leading-relaxed">
-            Powered by partial common ownership and token streams, slots are
-            never locked, never stagnant. Control is earned, defended, and
-            reallocated through open competition — continuously aligning
-            ownership with real productivity.
+            Powered by partial common ownership and deposit-based Harberger tax,
+            slots are never locked, never stagnant. Control is earned, defended,
+            and reallocated through open competition — using any ERC-20 token as
+            collateral.
           </p>
           <p className="mt-6 max-w-2xl text-base leading-relaxed font-bold">
             No permanent monopolies. No idle assets.
@@ -28,7 +28,8 @@ export default function Home() {
             As AI agents begin transacting, optimizing, and competing
             autonomously, static property models break down. 0xSlots introduces
             infrastructure built for machine-speed markets — fair, contestable,
-            and capital-efficient.
+            and capital-efficient. Escrow deposits settle on-demand, no wrapping
+            or special token types required.
           </p>
           <p className="mt-6 max-w-2xl text-base leading-relaxed font-bold">
             The next property primitive is here.

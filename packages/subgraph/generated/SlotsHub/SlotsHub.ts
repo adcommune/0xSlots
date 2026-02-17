@@ -10,25 +10,65 @@ import {
   BigInt,
 } from "@graphprotocol/graph-ts";
 
-export class LandOpened extends ethereum.Event {
-  get params(): LandOpened__Params {
-    return new LandOpened__Params(this);
+export class AdminChanged extends ethereum.Event {
+  get params(): AdminChanged__Params {
+    return new AdminChanged__Params(this);
   }
 }
 
-export class LandOpened__Params {
-  _event: LandOpened;
+export class AdminChanged__Params {
+  _event: AdminChanged;
 
-  constructor(event: LandOpened) {
+  constructor(event: AdminChanged) {
     this._event = event;
   }
 
-  get land(): Address {
+  get previousAdmin(): Address {
     return this._event.parameters[0].value.toAddress();
   }
 
-  get account(): Address {
+  get newAdmin(): Address {
     return this._event.parameters[1].value.toAddress();
+  }
+}
+
+export class BeaconUpgraded extends ethereum.Event {
+  get params(): BeaconUpgraded__Params {
+    return new BeaconUpgraded__Params(this);
+  }
+}
+
+export class BeaconUpgraded__Params {
+  _event: BeaconUpgraded;
+
+  constructor(event: BeaconUpgraded) {
+    this._event = event;
+  }
+
+  get beacon(): Address {
+    return this._event.parameters[0].value.toAddress();
+  }
+}
+
+export class CurrencyAllowedStatusUpdated extends ethereum.Event {
+  get params(): CurrencyAllowedStatusUpdated__Params {
+    return new CurrencyAllowedStatusUpdated__Params(this);
+  }
+}
+
+export class CurrencyAllowedStatusUpdated__Params {
+  _event: CurrencyAllowedStatusUpdated;
+
+  constructor(event: CurrencyAllowedStatusUpdated) {
+    this._event = event;
+  }
+
+  get currency(): Address {
+    return this._event.parameters[0].value.toAddress();
+  }
+
+  get allowed(): boolean {
+    return this._event.parameters[1].value.toBoolean();
   }
 }
 
@@ -61,36 +101,114 @@ export class HubSettingsUpdatedNewHubSettingsStruct extends ethereum.Tuple {
     return this[1].toAddress();
   }
 
-  get slotPrice(): BigInt {
+  get landCreationFee(): BigInt {
     return this[2].toBigInt();
   }
 
+  get slotExpansionFee(): BigInt {
+    return this[3].toBigInt();
+  }
+
   get newLandInitialCurrency(): Address {
-    return this[3].toAddress();
+    return this[4].toAddress();
   }
 
   get newLandInitialAmount(): BigInt {
-    return this[4].toBigInt();
-  }
-
-  get newLandInitialPrice(): BigInt {
     return this[5].toBigInt();
   }
 
-  get newLandInitialTaxPercentage(): BigInt {
+  get newLandInitialPrice(): BigInt {
     return this[6].toBigInt();
   }
 
-  get newLandInitialMaxTaxPercentage(): BigInt {
+  get newLandInitialTaxPercentage(): BigInt {
     return this[7].toBigInt();
   }
 
-  get newLandInitialMinTaxUpdatePeriod(): BigInt {
+  get newLandInitialMaxTaxPercentage(): BigInt {
     return this[8].toBigInt();
   }
 
+  get newLandInitialMinTaxUpdatePeriod(): BigInt {
+    return this[9].toBigInt();
+  }
+
   get newLandInitialModule(): Address {
-    return this[9].toAddress();
+    return this[10].toAddress();
+  }
+
+  get moduleCallGasLimit(): BigInt {
+    return this[11].toBigInt();
+  }
+
+  get liquidationBountyBps(): BigInt {
+    return this[12].toBigInt();
+  }
+
+  get minDepositSeconds(): BigInt {
+    return this[13].toBigInt();
+  }
+}
+
+export class Initialized extends ethereum.Event {
+  get params(): Initialized__Params {
+    return new Initialized__Params(this);
+  }
+}
+
+export class Initialized__Params {
+  _event: Initialized;
+
+  constructor(event: Initialized) {
+    this._event = event;
+  }
+
+  get version(): i32 {
+    return this._event.parameters[0].value.toI32();
+  }
+}
+
+export class LandExpanded extends ethereum.Event {
+  get params(): LandExpanded__Params {
+    return new LandExpanded__Params(this);
+  }
+}
+
+export class LandExpanded__Params {
+  _event: LandExpanded;
+
+  constructor(event: LandExpanded) {
+    this._event = event;
+  }
+
+  get land(): Address {
+    return this._event.parameters[0].value.toAddress();
+  }
+
+  get newSlotCount(): BigInt {
+    return this._event.parameters[1].value.toBigInt();
+  }
+}
+
+export class LandOpened extends ethereum.Event {
+  get params(): LandOpened__Params {
+    return new LandOpened__Params(this);
+  }
+}
+
+export class LandOpened__Params {
+  _event: LandOpened;
+
+  constructor(event: LandOpened) {
+    this._event = event;
+  }
+
+  get land(): Address {
+    return this._event.parameters[0].value.toAddress();
+  }
+
+  get account(): Address {
+    return this._event.parameters[1].value.toAddress();
   }
 }
 
@@ -124,25 +242,99 @@ export class ModuleAllowedStatusUpdated__Params {
   }
 }
 
-export class CurrencyAllowedStatusUpdated extends ethereum.Event {
-  get params(): CurrencyAllowedStatusUpdated__Params {
-    return new CurrencyAllowedStatusUpdated__Params(this);
+export class RoleAdminChanged extends ethereum.Event {
+  get params(): RoleAdminChanged__Params {
+    return new RoleAdminChanged__Params(this);
   }
 }
 
-export class CurrencyAllowedStatusUpdated__Params {
-  _event: CurrencyAllowedStatusUpdated;
+export class RoleAdminChanged__Params {
+  _event: RoleAdminChanged;
 
-  constructor(event: CurrencyAllowedStatusUpdated) {
+  constructor(event: RoleAdminChanged) {
     this._event = event;
   }
 
-  get currency(): Address {
-    return this._event.parameters[0].value.toAddress();
+  get role(): Bytes {
+    return this._event.parameters[0].value.toBytes();
   }
 
-  get allowed(): boolean {
-    return this._event.parameters[1].value.toBoolean();
+  get previousAdminRole(): Bytes {
+    return this._event.parameters[1].value.toBytes();
+  }
+
+  get newAdminRole(): Bytes {
+    return this._event.parameters[2].value.toBytes();
+  }
+}
+
+export class RoleGranted extends ethereum.Event {
+  get params(): RoleGranted__Params {
+    return new RoleGranted__Params(this);
+  }
+}
+
+export class RoleGranted__Params {
+  _event: RoleGranted;
+
+  constructor(event: RoleGranted) {
+    this._event = event;
+  }
+
+  get role(): Bytes {
+    return this._event.parameters[0].value.toBytes();
+  }
+
+  get account(): Address {
+    return this._event.parameters[1].value.toAddress();
+  }
+
+  get sender(): Address {
+    return this._event.parameters[2].value.toAddress();
+  }
+}
+
+export class RoleRevoked extends ethereum.Event {
+  get params(): RoleRevoked__Params {
+    return new RoleRevoked__Params(this);
+  }
+}
+
+export class RoleRevoked__Params {
+  _event: RoleRevoked;
+
+  constructor(event: RoleRevoked) {
+    this._event = event;
+  }
+
+  get role(): Bytes {
+    return this._event.parameters[0].value.toBytes();
+  }
+
+  get account(): Address {
+    return this._event.parameters[1].value.toAddress();
+  }
+
+  get sender(): Address {
+    return this._event.parameters[2].value.toAddress();
+  }
+}
+
+export class Upgraded extends ethereum.Event {
+  get params(): Upgraded__Params {
+    return new Upgraded__Params(this);
+  }
+}
+
+export class Upgraded__Params {
+  _event: Upgraded;
+
+  constructor(event: Upgraded) {
+    this._event = event;
+  }
+
+  get implementation(): Address {
+    return this._event.parameters[0].value.toAddress();
   }
 }
 
