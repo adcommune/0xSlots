@@ -9,6 +9,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ChainSelector } from "./chain-selector";
+
+const CHAIN_CONFIG = {
+  [SlotsChain.BASE_SEPOLIA]: {
+    name: "Base Sepolia",
+    explorer: "https://sepolia.basescan.org",
+  },
+  [SlotsChain.ARBITRUM]: {
+    name: "Arbitrum",
+    explorer: "https://arbiscan.io",
+  },
+} as const;
 
 function shorten(addr: string): string {
   return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
@@ -49,10 +61,21 @@ function EventBadge({ type }: { type: EventType }) {
   );
 }
 
-export default async function ExplorerPage() {
-  const client = createSlotsClient({
-    chainId: SlotsChain.BASE_SEPOLIA,
-  });
+function parseChain(chain?: string): SlotsChain {
+  if (chain === "arbitrum") return SlotsChain.ARBITRUM;
+  return SlotsChain.BASE_SEPOLIA;
+}
+
+export default async function ExplorerPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ chain?: string }>;
+}) {
+  const { chain: chainParam } = await searchParams;
+  const chainId = parseChain(chainParam);
+  const config = CHAIN_CONFIG[chainId];
+
+  const client = createSlotsClient({ chainId });
 
   // Fetch all event types
   const [
@@ -93,7 +116,6 @@ export default async function ExplorerPage() {
   // Unify all events into a single array
   const events: UnifiedEvent[] = [];
 
-  // Add land opened events
   if (landOpenedEvents) {
     for (const e of landOpenedEvents) {
       events.push({
@@ -108,7 +130,6 @@ export default async function ExplorerPage() {
     }
   }
 
-  // Add slot purchases
   if (slotPurchases) {
     for (const e of slotPurchases) {
       events.push({
@@ -122,8 +143,7 @@ export default async function ExplorerPage() {
       });
     }
   }
- 
-  // Add slot created events
+
   if (slotCreatedEvents) {
     for (const e of slotCreatedEvents) {
       events.push({
@@ -137,7 +157,6 @@ export default async function ExplorerPage() {
     }
   }
 
-  // Add price update events
   if (priceUpdates) {
     for (const e of priceUpdates) {
       events.push({
@@ -151,7 +170,6 @@ export default async function ExplorerPage() {
     }
   }
 
-  // Sort all events by timestamp
   events.sort((a, b) => Number(b.timestamp) - Number(a.timestamp));
 
   return (
@@ -159,12 +177,17 @@ export default async function ExplorerPage() {
       {/* Hero Section */}
       <div className="border-b-4 border-black bg-linear-to-br from-gray-50 to-white">
         <div className="max-w-6xl mx-auto px-6 py-12">
-          <h1 className="text-4xl font-black tracking-tighter uppercase mb-2">
-            Protocol Explorer
-          </h1>
-          <p className="text-gray-500 font-mono text-sm">
-            Base Sepolia · Real-time protocol events
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-black tracking-tighter uppercase mb-2">
+                Protocol Explorer
+              </h1>
+              <p className="text-gray-500 font-mono text-sm">
+                {config.name} · Real-time protocol events
+              </p>
+            </div>
+            <ChainSelector current={chainParam || "base-sepolia"} />
+          </div>
         </div>
       </div>
 
@@ -201,30 +224,17 @@ export default async function ExplorerPage() {
           <Table>
             <TableHeader>
               <TableRow className="border-b-2 border-black hover:bg-transparent">
-                <TableHead className="font-bold uppercase text-xs">
-                  Type
-                </TableHead>
-                <TableHead className="font-bold uppercase text-xs">
-                  Details
-                </TableHead>
-                <TableHead className="font-bold uppercase text-xs">
-                  Actor
-                </TableHead>
-                <TableHead className="font-bold uppercase text-xs">
-                  Time
-                </TableHead>
-                <TableHead className="font-bold uppercase text-xs">
-                  Tx
-                </TableHead>
+                <TableHead className="font-bold uppercase text-xs">Type</TableHead>
+                <TableHead className="font-bold uppercase text-xs">Details</TableHead>
+                <TableHead className="font-bold uppercase text-xs">Actor</TableHead>
+                <TableHead className="font-bold uppercase text-xs">Time</TableHead>
+                <TableHead className="font-bold uppercase text-xs">Tx</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {events.length === 0 ? (
                 <TableRow>
-                  <TableCell
-                    colSpan={5}
-                    className="text-center text-gray-400 py-8"
-                  >
+                  <TableCell colSpan={5} className="text-center text-gray-400 py-8">
                     No events found
                   </TableCell>
                 </TableRow>
@@ -234,13 +244,11 @@ export default async function ExplorerPage() {
                     <TableCell>
                       <EventBadge type={event.type} />
                     </TableCell>
-                    <TableCell className="font-medium">
-                      {event.details}
-                    </TableCell>
+                    <TableCell className="font-medium">{event.details}</TableCell>
                     <TableCell>
                       {event.actor ? (
                         <a
-                          href={`https://sepolia.basescan.org/address/${event.actor}`}
+                          href={`${config.explorer}/address/${event.actor}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="hover:underline text-blue-600"
@@ -259,7 +267,7 @@ export default async function ExplorerPage() {
                     </TableCell>
                     <TableCell>
                       <a
-                        href={`https://sepolia.basescan.org/tx/${event.tx}`}
+                        href={`${config.explorer}/tx/${event.tx}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="hover:underline text-blue-600"
@@ -274,7 +282,6 @@ export default async function ExplorerPage() {
           </Table>
         </div>
 
-        {/* Footer */}
         <div className="mt-8 text-center text-xs text-gray-400 font-mono">
           Powered by @0xslots/sdk · The Graph
         </div>
