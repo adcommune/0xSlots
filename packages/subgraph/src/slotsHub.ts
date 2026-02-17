@@ -1,9 +1,9 @@
-import { BigInt, Bytes, Address, ethereum } from "@graphprotocol/graph-ts";
+import { BigInt, Bytes } from "@graphprotocol/graph-ts";
 import { ERC20 } from "../generated/SlotsHub/ERC20";
-import { SuperToken } from "../generated/SlotsHub/SuperToken";
 import {
   HubSettingsUpdated,
   LandOpened,
+  LandExpanded,
   ModuleAllowedStatusUpdated,
   CurrencyAllowedStatusUpdated,
 } from "../generated/SlotsHub/SlotsHub";
@@ -14,6 +14,7 @@ import {
   Module,
   Currency,
   LandOpenedEvent,
+  LandExpandedEvent,
 } from "../generated/schema";
 
 function eventEntityId(txHash: Bytes, logIndex: BigInt): string {
@@ -26,7 +27,8 @@ function getOrCreateHub(address: Bytes): Hub {
     hub = new Hub(address.toHexString());
     hub.protocolFeeBps = BigInt.zero();
     hub.protocolFeeRecipient = Bytes.empty();
-    hub.slotPrice = BigInt.zero();
+    hub.landCreationFee = BigInt.zero();
+    hub.slotExpansionFee = BigInt.zero();
     hub.defaultCurrency = null;
     hub.defaultSlotCount = BigInt.zero();
     hub.defaultPrice = BigInt.zero();
@@ -34,6 +36,9 @@ function getOrCreateHub(address: Bytes): Hub {
     hub.defaultMaxTaxPercentage = BigInt.zero();
     hub.defaultMinTaxUpdatePeriod = BigInt.zero();
     hub.defaultModule = Bytes.empty();
+    hub.moduleCallGasLimit = BigInt.zero();
+    hub.liquidationBountyBps = BigInt.zero();
+    hub.minDepositSeconds = BigInt.zero();
   }
   return hub;
 }
@@ -44,8 +49,10 @@ export function handleHubSettingsUpdated(event: HubSettingsUpdated): void {
 
   hub.protocolFeeBps = settings.protocolFeeBps;
   hub.protocolFeeRecipient = settings.protocolFeeRecipient;
-  hub.slotPrice = settings.slotPrice;
-  // Link defaultCurrency to Currency entity (create if needed)
+  hub.landCreationFee = settings.landCreationFee;
+  hub.slotExpansionFee = settings.slotExpansionFee;
+
+  // Link defaultCurrency to Currency entity
   let currencyAddr = settings.newLandInitialCurrency;
   let currencyId = currencyAddr.toHexString();
   let currency = Currency.load(currencyId);
@@ -62,26 +69,6 @@ export function handleHubSettingsUpdated(event: HubSettingsUpdated): void {
     let decimalsResult = token.try_decimals();
     if (!decimalsResult.reverted) currency.decimals = decimalsResult.value;
 
-    let superToken = SuperToken.bind(currencyAddr);
-    let underlyingResult = superToken.try_getUnderlyingToken();
-    if (!underlyingResult.reverted) {
-      currency.underlyingToken = underlyingResult.value;
-      if (
-        underlyingResult.value.toHexString() !=
-        "0x0000000000000000000000000000000000000000"
-      ) {
-        let underlying = ERC20.bind(underlyingResult.value);
-        let uNameResult = underlying.try_name();
-        if (!uNameResult.reverted) currency.underlyingName = uNameResult.value;
-        let uSymbolResult = underlying.try_symbol();
-        if (!uSymbolResult.reverted)
-          currency.underlyingSymbol = uSymbolResult.value;
-        let uDecimalsResult = underlying.try_decimals();
-        if (!uDecimalsResult.reverted)
-          currency.underlyingDecimals = uDecimalsResult.value;
-      }
-    }
-
     currency.save();
   }
   hub.defaultCurrency = currencyId;
@@ -91,6 +78,9 @@ export function handleHubSettingsUpdated(event: HubSettingsUpdated): void {
   hub.defaultMaxTaxPercentage = settings.newLandInitialMaxTaxPercentage;
   hub.defaultMinTaxUpdatePeriod = settings.newLandInitialMinTaxUpdatePeriod;
   hub.defaultModule = settings.newLandInitialModule;
+  hub.moduleCallGasLimit = settings.moduleCallGasLimit;
+  hub.liquidationBountyBps = settings.liquidationBountyBps;
+  hub.minDepositSeconds = settings.minDepositSeconds;
 
   hub.save();
 }
@@ -107,7 +97,6 @@ export function handleLandOpened(event: LandOpened): void {
   land.createdTx = event.transaction.hash;
   land.save();
 
-  // Create event entity
   let landEvent = new LandOpenedEvent(
     eventEntityId(event.transaction.hash, event.logIndex),
   );
@@ -120,6 +109,18 @@ export function handleLandOpened(event: LandOpened): void {
 
   // Start indexing this Slots contract
   SlotsTemplate.create(event.params.land);
+}
+
+export function handleLandExpanded(event: LandExpanded): void {
+  let expandEvent = new LandExpandedEvent(
+    eventEntityId(event.transaction.hash, event.logIndex),
+  );
+  expandEvent.land = event.params.land;
+  expandEvent.newSlotCount = event.params.newSlotCount;
+  expandEvent.timestamp = event.block.timestamp;
+  expandEvent.blockNumber = event.block.number;
+  expandEvent.tx = event.transaction.hash;
+  expandEvent.save();
 }
 
 export function handleModuleAllowedStatusUpdated(
@@ -152,54 +153,14 @@ export function handleCurrencyAllowedStatusUpdated(
   }
   currency.allowed = event.params.allowed;
 
-  // Fetch token metadata if not already set
   if (!currency.name) {
     let token = ERC20.bind(event.params.currency);
-
     let nameResult = token.try_name();
-    if (!nameResult.reverted) {
-      currency.name = nameResult.value;
-    }
-
+    if (!nameResult.reverted) currency.name = nameResult.value;
     let symbolResult = token.try_symbol();
-    if (!symbolResult.reverted) {
-      currency.symbol = symbolResult.value;
-    }
-
+    if (!symbolResult.reverted) currency.symbol = symbolResult.value;
     let decimalsResult = token.try_decimals();
-    if (!decimalsResult.reverted) {
-      currency.decimals = decimalsResult.value;
-    }
-
-    // Fetch underlying token
-    let superToken = SuperToken.bind(event.params.currency);
-    let underlyingResult = superToken.try_getUnderlyingToken();
-    if (!underlyingResult.reverted) {
-      currency.underlyingToken = underlyingResult.value;
-
-      // If underlying is not zero address, fetch its metadata
-      if (
-        underlyingResult.value.toHexString() !=
-        "0x0000000000000000000000000000000000000000"
-      ) {
-        let underlying = ERC20.bind(underlyingResult.value);
-
-        let uNameResult = underlying.try_name();
-        if (!uNameResult.reverted) {
-          currency.underlyingName = uNameResult.value;
-        }
-
-        let uSymbolResult = underlying.try_symbol();
-        if (!uSymbolResult.reverted) {
-          currency.underlyingSymbol = uSymbolResult.value;
-        }
-
-        let uDecimalsResult = underlying.try_decimals();
-        if (!uDecimalsResult.reverted) {
-          currency.underlyingDecimals = uDecimalsResult.value;
-        }
-      }
-    }
+    if (!decimalsResult.reverted) currency.decimals = decimalsResult.value;
   }
 
   currency.save();

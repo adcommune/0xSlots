@@ -146,9 +146,6 @@ export class SlotsClient {
   getSlotCreatedEvents(...args: Parameters<ReturnType<typeof getSdk>['GetSlotCreatedEvents']>) {
     return this.sdk.GetSlotCreatedEvents(...args);
   }
-  getFlowChanges(...args: Parameters<ReturnType<typeof getSdk>['GetFlowChanges']>) {
-    return this.sdk.GetFlowChanges(...args);
-  }
   getPriceUpdates(...args: Parameters<ReturnType<typeof getSdk>['GetPriceUpdates']>) {
     return this.sdk.GetPriceUpdates(...args);
   }

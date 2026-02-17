@@ -1,12 +1,13 @@
 # ──────────────────────────────────────────
-# 0xSlots Subgraph Schema (core protocol only)
+# 0xSlots v2 Subgraph Schema (escrow-based, no Superfluid)
 # ──────────────────────────────────────────
 
 type Hub @entity(immutable: false) {
   id: ID! # SlotsHub address
   protocolFeeBps: BigInt!
   protocolFeeRecipient: Bytes!
-  slotPrice: BigInt!
+  landCreationFee: BigInt!
+  slotExpansionFee: BigInt!
   defaultCurrency: Currency
   defaultSlotCount: BigInt!
   defaultPrice: BigInt!
@@ -14,6 +15,9 @@ type Hub @entity(immutable: false) {
   defaultMaxTaxPercentage: BigInt!
   defaultMinTaxUpdatePeriod: BigInt!
   defaultModule: Bytes!
+  moduleCallGasLimit: BigInt!
+  liquidationBountyBps: BigInt!
+  minDepositSeconds: BigInt!
   lands: [Land!]! @derivedFrom(field: "hub")
   allowedModules: [Module!]! @derivedFrom(field: "hub")
   allowedCurrencies: [Currency!]! @derivedFrom(field: "hub")
@@ -46,8 +50,13 @@ type Slot @entity(immutable: false) {
   createdEvent: SlotCreatedEvent @derivedFrom(field: "slot")
   purchases: [SlotPurchase!]! @derivedFrom(field: "slot")
   releases: [SlotReleasedEvent!]! @derivedFrom(field: "slot")
+  liquidations: [SlotLiquidatedEvent!]! @derivedFrom(field: "slot")
   priceHistory: [PriceUpdate!]! @derivedFrom(field: "slot")
   taxUpdates: [TaxRateChange!]! @derivedFrom(field: "slot")
+  deposits: [DepositEvent!]! @derivedFrom(field: "slot")
+  withdrawals: [WithdrawalEvent!]! @derivedFrom(field: "slot")
+  settlements: [SettlementEvent!]! @derivedFrom(field: "slot")
+  taxCollections: [TaxCollectedEvent!]! @derivedFrom(field: "slot")
 }
 
 # ──────────────────────────────────────────
@@ -63,6 +72,15 @@ type LandOpenedEvent @entity(immutable: true) {
   tx: Bytes!
 }
 
+type LandExpandedEvent @entity(immutable: true) {
+  id: ID! # tx-logIndex
+  land: Bytes!
+  newSlotCount: BigInt!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  tx: Bytes!
+}
+
 type SlotCreatedEvent @entity(immutable: true) {
   id: ID! # tx-logIndex
   slot: Slot!
@@ -70,7 +88,6 @@ type SlotCreatedEvent @entity(immutable: true) {
   slotId: BigInt!
   currency: Bytes!
   basePrice: BigInt!
-  price: BigInt!
   taxPercentage: BigInt!
   timestamp: BigInt!
   blockNumber: BigInt!
@@ -81,6 +98,7 @@ type SlotPurchase @entity(immutable: true) {
   id: ID! # tx-logIndex
   slot: Slot!
   newOccupant: Bytes!
+  price: BigInt!
   previousOccupant: Bytes
   timestamp: BigInt!
   blockNumber: BigInt!
@@ -93,6 +111,19 @@ type SlotReleasedEvent @entity(immutable: true) {
   land: Bytes!
   slotId: BigInt!
   previousOccupant: Bytes
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  tx: Bytes!
+}
+
+type SlotLiquidatedEvent @entity(immutable: true) {
+  id: ID! # tx-logIndex
+  slot: Slot!
+  land: Bytes!
+  slotId: BigInt!
+  liquidator: Bytes!
+  occupant: Bytes!
+  bounty: BigInt!
   timestamp: BigInt!
   blockNumber: BigInt!
   tx: Bytes!
@@ -120,13 +151,41 @@ type TaxRateChange @entity(immutable: true) {
   tx: Bytes!
 }
 
-type FlowChange @entity(immutable: true) {
+type DepositEvent @entity(immutable: true) {
   id: ID! # tx-logIndex
-  from: Bytes!
-  to: Bytes!
-  oldRate: BigInt!
-  newRate: BigInt!
-  operation: String!
+  slot: Slot!
+  depositor: Bytes!
+  amount: BigInt!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  tx: Bytes!
+}
+
+type WithdrawalEvent @entity(immutable: true) {
+  id: ID! # tx-logIndex
+  slot: Slot!
+  occupant: Bytes!
+  amount: BigInt!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  tx: Bytes!
+}
+
+type SettlementEvent @entity(immutable: true) {
+  id: ID! # tx-logIndex
+  slot: Slot!
+  taxOwed: BigInt!
+  depositRemaining: BigInt!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  tx: Bytes!
+}
+
+type TaxCollectedEvent @entity(immutable: true) {
+  id: ID! # tx-logIndex
+  slot: Slot!
+  owner: Bytes!
+  amount: BigInt!
   timestamp: BigInt!
   blockNumber: BigInt!
   tx: Bytes!
@@ -141,14 +200,10 @@ type Module @entity(immutable: false) {
 }
 
 type Currency @entity(immutable: false) {
-  id: ID! # currency address (SuperToken)
+  id: ID! # currency address (any ERC-20)
   hub: Hub!
   allowed: Boolean!
   name: String
   symbol: String
   decimals: Int
-  underlyingToken: Bytes # address(0) = native wrapper, otherwise ERC-20
-  underlyingName: String
-  underlyingSymbol: String
-  underlyingDecimals: Int
 }

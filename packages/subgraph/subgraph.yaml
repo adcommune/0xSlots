@@ -8,9 +8,9 @@ dataSources:
     name: SlotsHub
     network: base-sepolia
     source:
-      address: "0x268cfab9ddddf6a326458ae79d55592516f382ef"
+      address: "0x0000000000000000000000000000000000000000"
       abi: SlotsHub
-      startBlock: 37531627
+      startBlock: 0
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -20,18 +20,19 @@ dataSources:
         - Land
         - Module
         - Currency
+        - LandExpandedEvent
       abis:
         - name: SlotsHub
           file: ./abis/SlotsHub.json
         - name: ERC20
           file: ./abis/ERC20.json
-        - name: SuperToken
-          file: ./abis/SuperToken.json
       eventHandlers:
-        - event: HubSettingsUpdated((uint256,address,uint256,address,uint256,uint256,uint256,uint256,uint256,address))
+        - event: HubSettingsUpdated((uint256,address,uint256,uint256,address,uint256,uint256,uint256,uint256,uint256,address,uint256,uint256,uint256))
           handler: handleHubSettingsUpdated
         - event: LandOpened(indexed address,indexed address)
           handler: handleLandOpened
+        - event: LandExpanded(indexed address,uint256)
+          handler: handleLandExpanded
         - event: ModuleAllowedStatusUpdated(indexed address,bool,string,string)
           handler: handleModuleAllowedStatusUpdated
         - event: CurrencyAllowedStatusUpdated(indexed address,bool)
@@ -52,17 +53,23 @@ templates:
         - SlotPurchase
         - PriceUpdate
         - TaxRateChange
-        - FlowChange
+        - SlotLiquidatedEvent
+        - DepositEvent
+        - WithdrawalEvent
+        - SettlementEvent
+        - TaxCollectedEvent
       abis:
         - name: Slots
           file: ./abis/Slots.json
       eventHandlers:
-        - event: SlotCreated(address,indexed uint256,indexed address,(address,uint256,uint256,uint256,uint256,uint256,address))
+        - event: SlotCreated(address,indexed uint256,indexed address,(address,uint256,uint256,uint256,uint256,address))
           handler: handleSlotCreated
-        - event: SlotPurchased(address,indexed uint256,indexed address)
+        - event: SlotPurchased(address,indexed uint256,indexed address,uint256)
           handler: handleSlotPurchased
         - event: SlotReleased(address,indexed uint256)
           handler: handleSlotReleased
+        - event: SlotLiquidated(address,indexed uint256,indexed address,indexed address,uint256)
+          handler: handleSlotLiquidated
         - event: PriceUpdated(address,indexed uint256,uint256,uint256)
           handler: handlePriceUpdated
         - event: TaxRateUpdateProposed(address,indexed uint256,uint256,uint256)
@@ -75,6 +82,12 @@ templates:
           handler: handleSlotDeactivated
         - event: SlotActivated(address,indexed uint256)
           handler: handleSlotActivated
-        - event: FlowOperation(indexed address,indexed address,int96,int96,string)
-          handler: handleFlowOperation
+        - event: Deposited(indexed uint256,indexed address,uint256)
+          handler: handleDeposited
+        - event: Withdrawn(indexed uint256,indexed address,uint256)
+          handler: handleWithdrawn
+        - event: Settled(indexed uint256,uint256,uint256)
+          handler: handleSettled
+        - event: TaxCollected(indexed uint256,indexed address,uint256)
+          handler: handleTaxCollected
       file: ./src/slots.ts

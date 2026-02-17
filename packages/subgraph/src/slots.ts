@@ -3,22 +3,30 @@ import {
   SlotCreated,
   SlotPurchased,
   SlotReleased,
+  SlotLiquidated,
   PriceUpdated,
   TaxRateUpdateProposed,
   TaxRateUpdateConfirmed,
   TaxRateUpdateCancelled,
   SlotDeactivated,
   SlotActivated,
-  FlowOperation,
+  Deposited,
+  Withdrawn,
+  Settled,
+  TaxCollected,
 } from "../generated/templates/Slots/Slots";
 import {
   Slot,
   SlotCreatedEvent,
   SlotPurchase,
   SlotReleasedEvent,
+  SlotLiquidatedEvent,
   PriceUpdate,
   TaxRateChange,
-  FlowChange,
+  DepositEvent,
+  WithdrawalEvent,
+  SettlementEvent,
+  TaxCollectedEvent,
 } from "../generated/schema";
 
 function slotEntityId(land: Bytes, slotId: BigInt): string {
@@ -39,7 +47,7 @@ export function handleSlotCreated(event: SlotCreated): void {
   slot.occupant = null;
   slot.currency = params.currency;
   slot.basePrice = params.basePrice;
-  slot.price = params.price;
+  slot.price = params.basePrice; // v2: price starts at basePrice
   slot.taxPercentage = params.taxPercentage;
   slot.maxTaxPercentage = params.maxTaxPercentage;
   slot.minTaxUpdatePeriod = params.minTaxUpdatePeriod;
@@ -50,7 +58,6 @@ export function handleSlotCreated(event: SlotCreated): void {
 
   slot.save();
 
-  // Create event entity
   let slotEvent = new SlotCreatedEvent(
     eventEntityId(event.transaction.hash, event.logIndex),
   );
@@ -59,7 +66,6 @@ export function handleSlotCreated(event: SlotCreated): void {
   slotEvent.slotId = event.params.slotId;
   slotEvent.currency = params.currency;
   slotEvent.basePrice = params.basePrice;
-  slotEvent.price = params.price;
   slotEvent.taxPercentage = params.taxPercentage;
   slotEvent.timestamp = event.block.timestamp;
   slotEvent.blockNumber = event.block.number;
@@ -82,6 +88,7 @@ export function handleSlotPurchased(event: SlotPurchased): void {
   );
   purchase.slot = id;
   purchase.newOccupant = event.params.newOccupant;
+  purchase.price = event.params.price;
   purchase.previousOccupant = previousOccupant;
   purchase.timestamp = event.block.timestamp;
   purchase.blockNumber = event.block.number;
@@ -99,7 +106,6 @@ export function handleSlotReleased(event: SlotReleased): void {
   slot.updatedAt = event.block.timestamp;
   slot.save();
 
-  // Create event entity
   let releaseEvent = new SlotReleasedEvent(
     eventEntityId(event.transaction.hash, event.logIndex),
   );
@@ -111,6 +117,30 @@ export function handleSlotReleased(event: SlotReleased): void {
   releaseEvent.blockNumber = event.block.number;
   releaseEvent.tx = event.transaction.hash;
   releaseEvent.save();
+}
+
+export function handleSlotLiquidated(event: SlotLiquidated): void {
+  let id = slotEntityId(event.address, event.params.slotId);
+  let slot = Slot.load(id);
+  if (!slot) return;
+
+  slot.occupant = null;
+  slot.updatedAt = event.block.timestamp;
+  slot.save();
+
+  let liqEvent = new SlotLiquidatedEvent(
+    eventEntityId(event.transaction.hash, event.logIndex),
+  );
+  liqEvent.slot = id;
+  liqEvent.land = event.address;
+  liqEvent.slotId = event.params.slotId;
+  liqEvent.liquidator = event.params.liquidator;
+  liqEvent.occupant = event.params.occupant;
+  liqEvent.bounty = event.params.bounty;
+  liqEvent.timestamp = event.block.timestamp;
+  liqEvent.blockNumber = event.block.number;
+  liqEvent.tx = event.transaction.hash;
+  liqEvent.save();
 }
 
 export function handlePriceUpdated(event: PriceUpdated): void {
@@ -217,17 +247,62 @@ export function handleSlotActivated(event: SlotActivated): void {
   slot.save();
 }
 
-export function handleFlowOperation(event: FlowOperation): void {
-  let flow = new FlowChange(
+export function handleDeposited(event: Deposited): void {
+  let id = slotEntityId(event.address, event.params.slotId);
+
+  let dep = new DepositEvent(
     eventEntityId(event.transaction.hash, event.logIndex),
   );
-  flow.from = event.params.from;
-  flow.to = event.params.to;
-  flow.oldRate = event.params.oldRate;
-  flow.newRate = event.params.newRate;
-  flow.operation = event.params.operation;
-  flow.timestamp = event.block.timestamp;
-  flow.blockNumber = event.block.number;
-  flow.tx = event.transaction.hash;
-  flow.save();
+  dep.slot = id;
+  dep.depositor = event.params.depositor;
+  dep.amount = event.params.amount;
+  dep.timestamp = event.block.timestamp;
+  dep.blockNumber = event.block.number;
+  dep.tx = event.transaction.hash;
+  dep.save();
+}
+
+export function handleWithdrawn(event: Withdrawn): void {
+  let id = slotEntityId(event.address, event.params.slotId);
+
+  let wd = new WithdrawalEvent(
+    eventEntityId(event.transaction.hash, event.logIndex),
+  );
+  wd.slot = id;
+  wd.occupant = event.params.occupant;
+  wd.amount = event.params.amount;
+  wd.timestamp = event.block.timestamp;
+  wd.blockNumber = event.block.number;
+  wd.tx = event.transaction.hash;
+  wd.save();
+}
+
+export function handleSettled(event: Settled): void {
+  let id = slotEntityId(event.address, event.params.slotId);
+
+  let settle = new SettlementEvent(
+    eventEntityId(event.transaction.hash, event.logIndex),
+  );
+  settle.slot = id;
+  settle.taxOwed = event.params.taxOwed;
+  settle.depositRemaining = event.params.depositRemaining;
+  settle.timestamp = event.block.timestamp;
+  settle.blockNumber = event.block.number;
+  settle.tx = event.transaction.hash;
+  settle.save();
+}
+
+export function handleTaxCollected(event: TaxCollected): void {
+  let id = slotEntityId(event.address, event.params.slotId);
+
+  let tc = new TaxCollectedEvent(
+    eventEntityId(event.transaction.hash, event.logIndex),
+  );
+  tc.slot = id;
+  tc.owner = event.params.owner;
+  tc.amount = event.params.amount;
+  tc.timestamp = event.block.timestamp;
+  tc.blockNumber = event.block.number;
+  tc.tx = event.transaction.hash;
+  tc.save();
 }

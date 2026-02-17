@@ -1,126 +1,397 @@
 [
   {
-    "anonymous": false,
+    "type": "event",
+    "name": "Deposited",
     "inputs": [
-      { "indexed": false, "name": "landOwner", "type": "address" },
-      { "indexed": true, "name": "slotId", "type": "uint256" },
-      { "indexed": true, "name": "account", "type": "address" },
       {
-        "components": [
-          { "name": "currency", "type": "address" },
-          { "name": "basePrice", "type": "uint256" },
-          { "name": "price", "type": "uint256" },
-          { "name": "taxPercentage", "type": "uint256" },
-          { "name": "maxTaxPercentage", "type": "uint256" },
-          { "name": "minTaxUpdatePeriod", "type": "uint256" },
-          { "name": "module", "type": "address" }
-        ],
-        "indexed": false,
-        "name": "params",
-        "type": "tuple"
+        "name": "slotId",
+        "type": "uint256",
+        "indexed": true
+      },
+      {
+        "name": "depositor",
+        "type": "address",
+        "indexed": true
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "indexed": false
       }
     ],
-    "name": "SlotCreated",
-    "type": "event"
+    "anonymous": false
   },
   {
-    "anonymous": false,
+    "type": "event",
+    "name": "Initialized",
     "inputs": [
-      { "indexed": false, "name": "landOwner", "type": "address" },
-      { "indexed": true, "name": "slotId", "type": "uint256" },
-      { "indexed": true, "name": "newOccupant", "type": "address" }
+      {
+        "name": "version",
+        "type": "uint8",
+        "indexed": false
+      }
     ],
-    "name": "SlotPurchased",
-    "type": "event"
+    "anonymous": false
   },
   {
-    "anonymous": false,
-    "inputs": [
-      { "indexed": false, "name": "landOwner", "type": "address" },
-      { "indexed": true, "name": "slotId", "type": "uint256" }
-    ],
-    "name": "SlotReleased",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      { "indexed": false, "name": "landOwner", "type": "address" },
-      { "indexed": true, "name": "slotId", "type": "uint256" },
-      { "indexed": false, "name": "oldPrice", "type": "uint256" },
-      { "indexed": false, "name": "newPrice", "type": "uint256" }
-    ],
-    "name": "PriceUpdated",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      { "indexed": false, "name": "landOwner", "type": "address" },
-      { "indexed": true, "name": "slotId", "type": "uint256" },
-      { "indexed": false, "name": "newPercentage", "type": "uint256" },
-      { "indexed": false, "name": "confirmableAt", "type": "uint256" }
-    ],
-    "name": "TaxRateUpdateProposed",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      { "indexed": false, "name": "landOwner", "type": "address" },
-      { "indexed": true, "name": "slotId", "type": "uint256" },
-      { "indexed": false, "name": "oldPercentage", "type": "uint256" },
-      { "indexed": false, "name": "newPercentage", "type": "uint256" }
-    ],
-    "name": "TaxRateUpdateConfirmed",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      { "indexed": false, "name": "landOwner", "type": "address" },
-      { "indexed": true, "name": "slotId", "type": "uint256" }
-    ],
-    "name": "TaxRateUpdateCancelled",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      { "indexed": false, "name": "landOwner", "type": "address" },
-      { "indexed": true, "name": "slotId", "type": "uint256" }
-    ],
-    "name": "SlotDeactivated",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      { "indexed": false, "name": "landOwner", "type": "address" },
-      { "indexed": true, "name": "slotId", "type": "uint256" }
-    ],
-    "name": "SlotActivated",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      { "indexed": true, "name": "from", "type": "address" },
-      { "indexed": true, "name": "to", "type": "address" },
-      { "indexed": false, "name": "oldRate", "type": "int96" },
-      { "indexed": false, "name": "newRate", "type": "int96" },
-      { "indexed": false, "name": "operation", "type": "string" }
-    ],
-    "name": "FlowOperation",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      { "indexed": true, "name": "slotId", "type": "uint256" },
-      { "indexed": false, "name": "callbackName", "type": "string" }
-    ],
+    "type": "event",
     "name": "ModuleCallFailed",
-    "type": "event"
+    "inputs": [
+      {
+        "name": "slotId",
+        "type": "uint256",
+        "indexed": true
+      },
+      {
+        "name": "callbackName",
+        "type": "string",
+        "indexed": false
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "OwnershipTransferred",
+    "inputs": [
+      {
+        "name": "previousOwner",
+        "type": "address",
+        "indexed": true
+      },
+      {
+        "name": "newOwner",
+        "type": "address",
+        "indexed": true
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "PriceUpdated",
+    "inputs": [
+      {
+        "name": "landOwner",
+        "type": "address",
+        "indexed": false
+      },
+      {
+        "name": "slotId",
+        "type": "uint256",
+        "indexed": true
+      },
+      {
+        "name": "oldPrice",
+        "type": "uint256",
+        "indexed": false
+      },
+      {
+        "name": "newPrice",
+        "type": "uint256",
+        "indexed": false
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Settled",
+    "inputs": [
+      {
+        "name": "slotId",
+        "type": "uint256",
+        "indexed": true
+      },
+      {
+        "name": "taxOwed",
+        "type": "uint256",
+        "indexed": false
+      },
+      {
+        "name": "depositRemaining",
+        "type": "uint256",
+        "indexed": false
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "SlotActivated",
+    "inputs": [
+      {
+        "name": "landOwner",
+        "type": "address",
+        "indexed": false
+      },
+      {
+        "name": "slotId",
+        "type": "uint256",
+        "indexed": true
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "SlotCreated",
+    "inputs": [
+      {
+        "name": "landOwner",
+        "type": "address",
+        "indexed": false
+      },
+      {
+        "name": "slotId",
+        "type": "uint256",
+        "indexed": true
+      },
+      {
+        "name": "account",
+        "type": "address",
+        "indexed": true
+      },
+      {
+        "name": "params",
+        "type": "tuple",
+        "indexed": false,
+        "components": [
+          {
+            "name": "currency",
+            "type": "address"
+          },
+          {
+            "name": "basePrice",
+            "type": "uint256"
+          },
+          {
+            "name": "taxPercentage",
+            "type": "uint256"
+          },
+          {
+            "name": "maxTaxPercentage",
+            "type": "uint256"
+          },
+          {
+            "name": "minTaxUpdatePeriod",
+            "type": "uint256"
+          },
+          {
+            "name": "module",
+            "type": "address"
+          }
+        ]
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "SlotDeactivated",
+    "inputs": [
+      {
+        "name": "landOwner",
+        "type": "address",
+        "indexed": false
+      },
+      {
+        "name": "slotId",
+        "type": "uint256",
+        "indexed": true
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "SlotLiquidated",
+    "inputs": [
+      {
+        "name": "landOwner",
+        "type": "address",
+        "indexed": false
+      },
+      {
+        "name": "slotId",
+        "type": "uint256",
+        "indexed": true
+      },
+      {
+        "name": "liquidator",
+        "type": "address",
+        "indexed": true
+      },
+      {
+        "name": "occupant",
+        "type": "address",
+        "indexed": true
+      },
+      {
+        "name": "bounty",
+        "type": "uint256",
+        "indexed": false
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "SlotPurchased",
+    "inputs": [
+      {
+        "name": "landOwner",
+        "type": "address",
+        "indexed": false
+      },
+      {
+        "name": "slotId",
+        "type": "uint256",
+        "indexed": true
+      },
+      {
+        "name": "newOccupant",
+        "type": "address",
+        "indexed": true
+      },
+      {
+        "name": "price",
+        "type": "uint256",
+        "indexed": false
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "SlotReleased",
+    "inputs": [
+      {
+        "name": "landOwner",
+        "type": "address",
+        "indexed": false
+      },
+      {
+        "name": "slotId",
+        "type": "uint256",
+        "indexed": true
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "TaxCollected",
+    "inputs": [
+      {
+        "name": "slotId",
+        "type": "uint256",
+        "indexed": true
+      },
+      {
+        "name": "owner",
+        "type": "address",
+        "indexed": true
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "indexed": false
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "TaxRateUpdateCancelled",
+    "inputs": [
+      {
+        "name": "landOwner",
+        "type": "address",
+        "indexed": false
+      },
+      {
+        "name": "slotId",
+        "type": "uint256",
+        "indexed": true
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "TaxRateUpdateConfirmed",
+    "inputs": [
+      {
+        "name": "landOwner",
+        "type": "address",
+        "indexed": false
+      },
+      {
+        "name": "slotId",
+        "type": "uint256",
+        "indexed": true
+      },
+      {
+        "name": "oldPercentage",
+        "type": "uint256",
+        "indexed": false
+      },
+      {
+        "name": "newPercentage",
+        "type": "uint256",
+        "indexed": false
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "TaxRateUpdateProposed",
+    "inputs": [
+      {
+        "name": "landOwner",
+        "type": "address",
+        "indexed": false
+      },
+      {
+        "name": "slotId",
+        "type": "uint256",
+        "indexed": true
+      },
+      {
+        "name": "newPercentage",
+        "type": "uint256",
+        "indexed": false
+      },
+      {
+        "name": "confirmableAt",
+        "type": "uint256",
+        "indexed": false
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Withdrawn",
+    "inputs": [
+      {
+        "name": "slotId",
+        "type": "uint256",
+        "indexed": true
+      },
+      {
+        "name": "occupant",
+        "type": "address",
+        "indexed": true
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "indexed": false
+      }
+    ],
+    "anonymous": false
   }
 ]

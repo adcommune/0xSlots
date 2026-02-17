@@ -10,6 +10,172 @@ import {
   BigInt,
 } from "@graphprotocol/graph-ts";
 
+export class Deposited extends ethereum.Event {
+  get params(): Deposited__Params {
+    return new Deposited__Params(this);
+  }
+}
+
+export class Deposited__Params {
+  _event: Deposited;
+
+  constructor(event: Deposited) {
+    this._event = event;
+  }
+
+  get slotId(): BigInt {
+    return this._event.parameters[0].value.toBigInt();
+  }
+
+  get depositor(): Address {
+    return this._event.parameters[1].value.toAddress();
+  }
+
+  get amount(): BigInt {
+    return this._event.parameters[2].value.toBigInt();
+  }
+}
+
+export class Initialized extends ethereum.Event {
+  get params(): Initialized__Params {
+    return new Initialized__Params(this);
+  }
+}
+
+export class Initialized__Params {
+  _event: Initialized;
+
+  constructor(event: Initialized) {
+    this._event = event;
+  }
+
+  get version(): i32 {
+    return this._event.parameters[0].value.toI32();
+  }
+}
+
+export class ModuleCallFailed extends ethereum.Event {
+  get params(): ModuleCallFailed__Params {
+    return new ModuleCallFailed__Params(this);
+  }
+}
+
+export class ModuleCallFailed__Params {
+  _event: ModuleCallFailed;
+
+  constructor(event: ModuleCallFailed) {
+    this._event = event;
+  }
+
+  get slotId(): BigInt {
+    return this._event.parameters[0].value.toBigInt();
+  }
+
+  get callbackName(): string {
+    return this._event.parameters[1].value.toString();
+  }
+}
+
+export class OwnershipTransferred extends ethereum.Event {
+  get params(): OwnershipTransferred__Params {
+    return new OwnershipTransferred__Params(this);
+  }
+}
+
+export class OwnershipTransferred__Params {
+  _event: OwnershipTransferred;
+
+  constructor(event: OwnershipTransferred) {
+    this._event = event;
+  }
+
+  get previousOwner(): Address {
+    return this._event.parameters[0].value.toAddress();
+  }
+
+  get newOwner(): Address {
+    return this._event.parameters[1].value.toAddress();
+  }
+}
+
+export class PriceUpdated extends ethereum.Event {
+  get params(): PriceUpdated__Params {
+    return new PriceUpdated__Params(this);
+  }
+}
+
+export class PriceUpdated__Params {
+  _event: PriceUpdated;
+
+  constructor(event: PriceUpdated) {
+    this._event = event;
+  }
+
+  get landOwner(): Address {
+    return this._event.parameters[0].value.toAddress();
+  }
+
+  get slotId(): BigInt {
+    return this._event.parameters[1].value.toBigInt();
+  }
+
+  get oldPrice(): BigInt {
+    return this._event.parameters[2].value.toBigInt();
+  }
+
+  get newPrice(): BigInt {
+    return this._event.parameters[3].value.toBigInt();
+  }
+}
+
+export class Settled extends ethereum.Event {
+  get params(): Settled__Params {
+    return new Settled__Params(this);
+  }
+}
+
+export class Settled__Params {
+  _event: Settled;
+
+  constructor(event: Settled) {
+    this._event = event;
+  }
+
+  get slotId(): BigInt {
+    return this._event.parameters[0].value.toBigInt();
+  }
+
+  get taxOwed(): BigInt {
+    return this._event.parameters[1].value.toBigInt();
+  }
+
+  get depositRemaining(): BigInt {
+    return this._event.parameters[2].value.toBigInt();
+  }
+}
+
+export class SlotActivated extends ethereum.Event {
+  get params(): SlotActivated__Params {
+    return new SlotActivated__Params(this);
+  }
+}
+
+export class SlotActivated__Params {
+  _event: SlotActivated;
+
+  constructor(event: SlotActivated) {
+    this._event = event;
+  }
+
+  get landOwner(): Address {
+    return this._event.parameters[0].value.toAddress();
+  }
+
+  get slotId(): BigInt {
+    return this._event.parameters[1].value.toBigInt();
+  }
+}
+
 export class SlotCreated extends ethereum.Event {
   get params(): SlotCreated__Params {
     return new SlotCreated__Params(this);
@@ -51,24 +217,76 @@ export class SlotCreatedParamsStruct extends ethereum.Tuple {
     return this[1].toBigInt();
   }
 
-  get price(): BigInt {
+  get taxPercentage(): BigInt {
     return this[2].toBigInt();
   }
 
-  get taxPercentage(): BigInt {
+  get maxTaxPercentage(): BigInt {
     return this[3].toBigInt();
   }
 
-  get maxTaxPercentage(): BigInt {
+  get minTaxUpdatePeriod(): BigInt {
     return this[4].toBigInt();
   }
 
-  get minTaxUpdatePeriod(): BigInt {
-    return this[5].toBigInt();
+  get module(): Address {
+    return this[5].toAddress();
+  }
+}
+
+export class SlotDeactivated extends ethereum.Event {
+  get params(): SlotDeactivated__Params {
+    return new SlotDeactivated__Params(this);
+  }
+}
+
+export class SlotDeactivated__Params {
+  _event: SlotDeactivated;
+
+  constructor(event: SlotDeactivated) {
+    this._event = event;
   }
 
-  get module(): Address {
-    return this[6].toAddress();
+  get landOwner(): Address {
+    return this._event.parameters[0].value.toAddress();
+  }
+
+  get slotId(): BigInt {
+    return this._event.parameters[1].value.toBigInt();
+  }
+}
+
+export class SlotLiquidated extends ethereum.Event {
+  get params(): SlotLiquidated__Params {
+    return new SlotLiquidated__Params(this);
+  }
+}
+
+export class SlotLiquidated__Params {
+  _event: SlotLiquidated;
+
+  constructor(event: SlotLiquidated) {
+    this._event = event;
+  }
+
+  get landOwner(): Address {
+    return this._event.parameters[0].value.toAddress();
+  }
+
+  get slotId(): BigInt {
+    return this._event.parameters[1].value.toBigInt();
+  }
+
+  get liquidator(): Address {
+    return this._event.parameters[2].value.toAddress();
+  }
+
+  get occupant(): Address {
+    return this._event.parameters[3].value.toAddress();
+  }
+
+  get bounty(): BigInt {
+    return this._event.parameters[4].value.toBigInt();
   }
 }
 
@@ -96,6 +314,10 @@ export class SlotPurchased__Params {
   get newOccupant(): Address {
     return this._event.parameters[2].value.toAddress();
   }
+
+  get price(): BigInt {
+    return this._event.parameters[3].value.toBigInt();
+  }
 }
 
 export class SlotReleased extends ethereum.Event {
@@ -120,16 +342,64 @@ export class SlotReleased__Params {
   }
 }
 
-export class PriceUpdated extends ethereum.Event {
-  get params(): PriceUpdated__Params {
-    return new PriceUpdated__Params(this);
+export class TaxCollected extends ethereum.Event {
+  get params(): TaxCollected__Params {
+    return new TaxCollected__Params(this);
   }
 }
 
-export class PriceUpdated__Params {
-  _event: PriceUpdated;
+export class TaxCollected__Params {
+  _event: TaxCollected;
 
-  constructor(event: PriceUpdated) {
+  constructor(event: TaxCollected) {
+    this._event = event;
+  }
+
+  get slotId(): BigInt {
+    return this._event.parameters[0].value.toBigInt();
+  }
+
+  get owner(): Address {
+    return this._event.parameters[1].value.toAddress();
+  }
+
+  get amount(): BigInt {
+    return this._event.parameters[2].value.toBigInt();
+  }
+}
+
+export class TaxRateUpdateCancelled extends ethereum.Event {
+  get params(): TaxRateUpdateCancelled__Params {
+    return new TaxRateUpdateCancelled__Params(this);
+  }
+}
+
+export class TaxRateUpdateCancelled__Params {
+  _event: TaxRateUpdateCancelled;
+
+  constructor(event: TaxRateUpdateCancelled) {
+    this._event = event;
+  }
+
+  get landOwner(): Address {
+    return this._event.parameters[0].value.toAddress();
+  }
+
+  get slotId(): BigInt {
+    return this._event.parameters[1].value.toBigInt();
+  }
+}
+
+export class TaxRateUpdateConfirmed extends ethereum.Event {
+  get params(): TaxRateUpdateConfirmed__Params {
+    return new TaxRateUpdateConfirmed__Params(this);
+  }
+}
+
+export class TaxRateUpdateConfirmed__Params {
+  _event: TaxRateUpdateConfirmed;
+
+  constructor(event: TaxRateUpdateConfirmed) {
     this._event = event;
   }
 
@@ -141,11 +411,11 @@ export class PriceUpdated__Params {
     return this._event.parameters[1].value.toBigInt();
   }
 
-  get oldPrice(): BigInt {
+  get oldPercentage(): BigInt {
     return this._event.parameters[2].value.toBigInt();
   }
 
-  get newPrice(): BigInt {
+  get newPercentage(): BigInt {
     return this._event.parameters[3].value.toBigInt();
   }
 }
@@ -180,146 +450,16 @@ export class TaxRateUpdateProposed__Params {
   }
 }
 
-export class TaxRateUpdateConfirmed extends ethereum.Event {
-  get params(): TaxRateUpdateConfirmed__Params {
-    return new TaxRateUpdateConfirmed__Params(this);
+export class Withdrawn extends ethereum.Event {
+  get params(): Withdrawn__Params {
+    return new Withdrawn__Params(this);
   }
 }
 
-export class TaxRateUpdateConfirmed__Params {
-  _event: TaxRateUpdateConfirmed;
+export class Withdrawn__Params {
+  _event: Withdrawn;
 
-  constructor(event: TaxRateUpdateConfirmed) {
-    this._event = event;
-  }
-
-  get landOwner(): Address {
-    return this._event.parameters[0].value.toAddress();
-  }
-
-  get slotId(): BigInt {
-    return this._event.parameters[1].value.toBigInt();
-  }
-
-  get oldPercentage(): BigInt {
-    return this._event.parameters[2].value.toBigInt();
-  }
-
-  get newPercentage(): BigInt {
-    return this._event.parameters[3].value.toBigInt();
-  }
-}
-
-export class TaxRateUpdateCancelled extends ethereum.Event {
-  get params(): TaxRateUpdateCancelled__Params {
-    return new TaxRateUpdateCancelled__Params(this);
-  }
-}
-
-export class TaxRateUpdateCancelled__Params {
-  _event: TaxRateUpdateCancelled;
-
-  constructor(event: TaxRateUpdateCancelled) {
-    this._event = event;
-  }
-
-  get landOwner(): Address {
-    return this._event.parameters[0].value.toAddress();
-  }
-
-  get slotId(): BigInt {
-    return this._event.parameters[1].value.toBigInt();
-  }
-}
-
-export class SlotDeactivated extends ethereum.Event {
-  get params(): SlotDeactivated__Params {
-    return new SlotDeactivated__Params(this);
-  }
-}
-
-export class SlotDeactivated__Params {
-  _event: SlotDeactivated;
-
-  constructor(event: SlotDeactivated) {
-    this._event = event;
-  }
-
-  get landOwner(): Address {
-    return this._event.parameters[0].value.toAddress();
-  }
-
-  get slotId(): BigInt {
-    return this._event.parameters[1].value.toBigInt();
-  }
-}
-
-export class SlotActivated extends ethereum.Event {
-  get params(): SlotActivated__Params {
-    return new SlotActivated__Params(this);
-  }
-}
-
-export class SlotActivated__Params {
-  _event: SlotActivated;
-
-  constructor(event: SlotActivated) {
-    this._event = event;
-  }
-
-  get landOwner(): Address {
-    return this._event.parameters[0].value.toAddress();
-  }
-
-  get slotId(): BigInt {
-    return this._event.parameters[1].value.toBigInt();
-  }
-}
-
-export class FlowOperation extends ethereum.Event {
-  get params(): FlowOperation__Params {
-    return new FlowOperation__Params(this);
-  }
-}
-
-export class FlowOperation__Params {
-  _event: FlowOperation;
-
-  constructor(event: FlowOperation) {
-    this._event = event;
-  }
-
-  get from(): Address {
-    return this._event.parameters[0].value.toAddress();
-  }
-
-  get to(): Address {
-    return this._event.parameters[1].value.toAddress();
-  }
-
-  get oldRate(): BigInt {
-    return this._event.parameters[2].value.toBigInt();
-  }
-
-  get newRate(): BigInt {
-    return this._event.parameters[3].value.toBigInt();
-  }
-
-  get operation(): string {
-    return this._event.parameters[4].value.toString();
-  }
-}
-
-export class ModuleCallFailed extends ethereum.Event {
-  get params(): ModuleCallFailed__Params {
-    return new ModuleCallFailed__Params(this);
-  }
-}
-
-export class ModuleCallFailed__Params {
-  _event: ModuleCallFailed;
-
-  constructor(event: ModuleCallFailed) {
+  constructor(event: Withdrawn) {
     this._event = event;
   }
 
@@ -327,8 +467,12 @@ export class ModuleCallFailed__Params {
     return this._event.parameters[0].value.toBigInt();
   }
 
-  get callbackName(): string {
-    return this._event.parameters[1].value.toString();
+  get occupant(): Address {
+    return this._event.parameters[1].value.toAddress();
+  }
+
+  get amount(): BigInt {
+    return this._event.parameters[2].value.toBigInt();
   }
 }
 

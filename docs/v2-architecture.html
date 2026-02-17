@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>0xSlots v2 — Architecture</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0a0a; color: #e0e0e0; font-family: 'Courier New', monospace; padding: 40px; min-height: 100vh; }
+  h1 { font-size: 28px; color: #fff; margin-bottom: 8px; letter-spacing: 2px; }
+  h2 { font-size: 18px; color: #888; margin-bottom: 40px; font-weight: normal; }
+  h3 { font-size: 16px; color: #fff; margin-bottom: 16px; letter-spacing: 1px; border-bottom: 1px solid #333; padding-bottom: 8px; }
+
+  .container { max-width: 1200px; margin: 0 auto; }
+
+  /* Main architecture diagram */
+  .arch { display: flex; flex-direction: column; gap: 32px; margin-bottom: 60px; }
+
+  .row { display: flex; gap: 20px; align-items: stretch; justify-content: center; }
+
+  .box {
+    border: 1px solid #333;
+    padding: 20px;
+    border-radius: 4px;
+    position: relative;
+    min-width: 200px;
+  }
+  .box .label {
+    font-size: 11px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+  .box .name {
+    font-size: 16px;
+    color: #fff;
+    font-weight: bold;
+    margin-bottom: 6px;
+  }
+  .box .desc {
+    font-size: 12px;
+    color: #999;
+    line-height: 1.5;
+  }
+
+  .box.hub { border-color: #4a9eff; background: #4a9eff08; flex: 1; max-width: 500px; }
+  .box.land { border-color: #ff6b4a; background: #ff6b4a08; flex: 1; }
+  .box.slot { border-color: #4aff6b; background: #4aff6b08; min-width: 160px; }
+  .box.escrow { border-color: #ffd74a; background: #ffd74a08; min-width: 160px; }
+  .box.module { border-color: #d74aff; background: #d74aff08; min-width: 160px; }
+  .box.user { border-color: #666; background: #ffffff06; min-width: 140px; text-align: center; }
+
+  .hub .label { color: #4a9eff; }
+  .land .label { color: #ff6b4a; }
+  .slot .label { color: #4aff6b; }
+  .escrow .label { color: #ffd74a; }
+  .module .label { color: #d74aff; }
+
+  /* Arrow connectors */
+  .arrow-down {
+    text-align: center;
+    color: #444;
+    font-size: 20px;
+    line-height: 1;
+    padding: 4px 0;
+  }
+  .arrow-right { color: #444; font-size: 16px; display: flex; align-items: center; padding: 0 4px; }
+
+  /* Flow section */
+  .flows { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 60px; }
+  .flow {
+    border: 1px solid #222;
+    padding: 24px;
+    border-radius: 4px;
+  }
+  .flow h3 { margin-bottom: 20px; }
+  .step {
+    display: flex; gap: 12px; margin-bottom: 12px; align-items: flex-start;
+  }
+  .step-num {
+    background: #222;
+    color: #fff;
+    width: 24px; height: 24px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    font-size: 11px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .step-text { font-size: 13px; line-height: 1.5; color: #ccc; }
+  .step-text code { color: #4aff6b; font-size: 12px; }
+
+  /* Math section */
+  .math {
+    border: 1px solid #222;
+    padding: 24px;
+    border-radius: 4px;
+    margin-bottom: 60px;
+  }
+  .formula {
+    background: #111;
+    border: 1px solid #222;
+    padding: 16px 20px;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #ffd74a;
+    margin: 12px 0;
+    font-family: 'Courier New', monospace;
+  }
+  .formula-note { font-size: 12px; color: #666; margin-top: 4px; }
+
+  /* Settings table */
+  table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+  th { text-align: left; font-size: 12px; color: #666; padding: 8px 12px; border-bottom: 1px solid #222; text-transform: uppercase; letter-spacing: 1px; }
+  td { font-size: 13px; padding: 8px 12px; border-bottom: 1px solid #1a1a1a; }
+  td:first-child { color: #4a9eff; }
+  td:nth-child(2) { color: #999; }
+  td:nth-child(3) { color: #666; font-size: 12px; }
+
+  /* Slot grid inside land */
+  .slot-grid { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
+  .mini-slot {
+    border: 1px solid #4aff6b40;
+    padding: 10px 14px;
+    border-radius: 3px;
+    font-size: 11px;
+    text-align: center;
+    min-width: 80px;
+  }
+  .mini-slot .sid { color: #4aff6b; font-weight: bold; margin-bottom: 4px; }
+  .mini-slot .occ { color: #999; font-size: 10px; }
+  .mini-slot .price { color: #ffd74a; font-size: 10px; }
+  .mini-slot.occupied { border-color: #4aff6b; background: #4aff6b0a; }
+  .mini-slot.vacant { border-color: #333; }
+
+  .tag {
+    display: inline-block;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 2px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+  .tag.new { background: #4aff6b20; color: #4aff6b; }
+  .tag.removed { background: #ff4a4a20; color: #ff4a4a; }
+  .tag.changed { background: #ffd74a20; color: #ffd74a; }
+
+  .section-title {
+    font-size: 20px;
+    color: #fff;
+    margin-bottom: 24px;
+    margin-top: 20px;
+    letter-spacing: 1px;
+  }
+
+  .legend {
+    display: flex; gap: 24px; margin-bottom: 32px; flex-wrap: wrap;
+  }
+  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #999; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 2px; border: 1px solid; }
+  .legend-dot.hub-c { border-color: #4a9eff; background: #4a9eff20; }
+  .legend-dot.land-c { border-color: #ff6b4a; background: #ff6b4a20; }
+  .legend-dot.slot-c { border-color: #4aff6b; background: #4aff6b20; }
+  .legend-dot.esc-c { border-color: #ffd74a; background: #ffd74a20; }
+  .legend-dot.mod-c { border-color: #d74aff; background: #d74aff20; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>0xSlots v2</h1>
+  <h2>Escrow-based Harberger Tax — No Superfluid, No SuperApps, Any ERC-20</h2>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot hub-c"></div> SlotsHub (Factory)</div>
+    <div class="legend-item"><div class="legend-dot land-c"></div> Slots (Per-Land Contract)</div>
+    <div class="legend-item"><div class="legend-dot slot-c"></div> Slot (Position)</div>
+    <div class="legend-item"><div class="legend-dot esc-c"></div> Escrow (Deposit)</div>
+    <div class="legend-item"><div class="legend-dot mod-c"></div> Module (Plugin)</div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- ARCHITECTURE -->
+  <!-- ═══════════════════════════════════════ -->
+
+  <div class="section-title">Contract Architecture</div>
+
+  <div class="arch">
+    <!-- Hub -->
+    <div class="row" style="justify-content: center;">
+      <div class="box hub" style="max-width: 700px;">
+        <div class="label">Factory + Admin</div>
+        <div class="name">SlotsHub.sol</div>
+        <div class="desc">
+          Creates lands via <code>ERC-1167 Clones</code>. Manages protocol settings, currency & module allowlists.<br>
+          One hub per deployment. UUPS upgradeable. AccessControl admin.
+        </div>
+        <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
+          <span style="font-size: 11px; color: #4a9eff; border: 1px solid #4a9eff30; padding: 3px 8px; border-radius: 3px;">openLand()</span>
+          <span style="font-size: 11px; color: #4a9eff; border: 1px solid #4a9eff30; padding: 3px 8px; border-radius: 3px;">expandLand()</span>
+          <span style="font-size: 11px; color: #4a9eff; border: 1px solid #4a9eff30; padding: 3px 8px; border-radius: 3px;">allowCurrency()</span>
+          <span style="font-size: 11px; color: #4a9eff; border: 1px solid #4a9eff30; padding: 3px 8px; border-radius: 3px;">allowModule()</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-down">│<br>clones<br>↓</div>
+
+    <!-- Land (Slots contract) -->
+    <div class="row">
+      <div class="box land" style="flex: 2;">
+        <div class="label">Per-Land Contract (Clone)</div>
+        <div class="name">Slots.sol</div>
+        <div class="desc">
+          Each "land" is a separate Slots contract owned by one account.<br>
+          Contains N slots. Handles all Harberger mechanics: buy, tax, escrow, liquidation.
+        </div>
+
+        <div class="slot-grid">
+          <div class="mini-slot occupied">
+            <div class="sid">Slot #1</div>
+            <div class="occ">bob.eth</div>
+            <div class="price">⬡ 2.0 ETH</div>
+          </div>
+          <div class="mini-slot occupied">
+            <div class="sid">Slot #2</div>
+            <div class="occ">charlie.eth</div>
+            <div class="price">⬡ 1.5 ETH</div>
+          </div>
+          <div class="mini-slot vacant">
+            <div class="sid">Slot #3</div>
+            <div class="occ" style="color: #555;">vacant</div>
+            <div class="price" style="color: #555;">⬡ 1.0 ETH</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 12px; justify-content: center;">
+        <div class="box escrow">
+          <div class="label">Per-Slot</div>
+          <div class="name">Escrow</div>
+          <div class="desc">
+            <code>deposit</code> — occupant's balance<br>
+            <code>lastSettled</code> — timestamp<br>
+            <code>collectedTax</code> — owner's pending<br>
+            <code>pendingTaxUpdate</code>
+          </div>
+        </div>
+        <div class="box module">
+          <div class="label">Optional</div>
+          <div class="name">Module</div>
+          <div class="desc">
+            <code>onTransfer()</code><br>
+            <code>onPriceUpdate()</code><br>
+            <code>onRelease()</code><br>
+            Gas-limited, fail-safe
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- TAX MATH -->
+  <!-- ═══════════════════════════════════════ -->
+
+  <div class="section-title">Tax Math</div>
+
+  <div class="math">
+    <h3>The Entire Protocol in 3 Lines</h3>
+    <div class="formula">
+      taxOwed = price × taxRate × elapsed / (365 days × 10,000)
+    </div>
+    <div class="formula-note">Computed on every state change via _settle(). No streams. No oracles. Just math.</div>
+
+    <div class="formula">
+      if (taxOwed ≥ deposit) → deposit = 0, collectedTax += deposit
+      <br>else → deposit -= taxOwed, collectedTax += taxOwed
+    </div>
+    <div class="formula-note">Escrow drains linearly. When it hits zero, anyone can liquidate.</div>
+
+    <div class="formula">
+      minDeposit = price × taxRate × minDepositSeconds / (365 days × 10,000)
+    </div>
+    <div class="formula-note">Occupants must maintain minimum deposit. Prevents free-ride at zero balance.</div>
+
+    <div style="margin-top: 20px;">
+      <div style="font-size: 13px; color: #999; margin-bottom: 8px;">Example: 1 ETH slot, 1% annual tax, 10 ETH deposit</div>
+      <table>
+        <tr><td>Tax per day</td><td>~0.000274 ETH</td><td>1 × 0.01 / 365</td></tr>
+        <tr><td>Tax per month</td><td>~0.00822 ETH</td><td></td></tr>
+        <tr><td>Time to liquidation</td><td>~1,000 years</td><td>10 / 0.01 × 365 days</td></tr>
+        <tr><td>Liquidation bounty</td><td>5% of collected tax</td><td>Configurable via hub</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- FLOWS -->
+  <!-- ═══════════════════════════════════════ -->
+
+  <div class="section-title">Core Flows</div>
+
+  <div class="flows">
+    <!-- Buy -->
+    <div class="flow">
+      <h3>🔄 Buy a Slot</h3>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-text">Buyer calls <code>buy(slotId, depositAmount)</code></div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-text"><code>_settle()</code> — accrued tax deducted from previous occupant's escrow</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-text">Minimum deposit enforced (must cover <code>minDepositSeconds</code> of tax)</div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-text"><code>price + deposit</code> transferred from buyer to contract in one call</div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-text"><b>First sale:</b> price → owner (minus protocol fee)<br><b>Secondary:</b> price + remaining deposit → previous occupant</div>
+      </div>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-text">Module notified via <code>onTransfer()</code> (gas-limited, fail-safe)</div>
+      </div>
+    </div>
+
+    <!-- Liquidation -->
+    <div class="flow">
+      <h3>💀 Liquidation</h3>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-text">Occupant's escrow runs dry (tax > deposit)</div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-text">Anyone calls <code>liquidate(slotId)</code></div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-text"><code>_settle()</code> confirms insolvency</div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-text">Liquidator receives <b>bounty</b> (% of collected tax)</div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-text">Slot returns to land owner at base price</div>
+      </div>
+    </div>
+
+    <!-- Self-Assess -->
+    <div class="flow">
+      <h3>📊 Self-Assess Price</h3>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-text">Occupant calls <code>selfAssess(slotId, newPrice)</code></div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-text"><code>_settle()</code> — tax at old price resolved first</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-text">New price set. Higher price = higher tax = faster escrow drain</div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-text">Remaining deposit must still cover minimum (prevents exploit)</div>
+      </div>
+      <div class="step">
+        <div class="step-num" style="background: #333;">⚡</div>
+        <div class="step-text" style="color: #ffd74a;">The Harberger dilemma: price too low → someone buys you out. Price too high → tax eats your deposit.</div>
+      </div>
+    </div>
+
+    <!-- Tax Collection -->
+    <div class="flow">
+      <h3>💰 Collect Tax Revenue</h3>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-text">Land owner calls <code>collect(slotId)</code> or <code>collectRange(from, to)</code></div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-text"><code>_settle()</code> moves accrued tax from deposit → collectedTax</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-text">Protocol fee deducted (configurable bps)</div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-text">Remaining tax transferred to land owner</div>
+      </div>
+      <div class="step">
+        <div class="step-num" style="background: #333;">📝</div>
+        <div class="step-text" style="color: #999;">Anyone can trigger settle — tax accrues passively, collection is active</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- HUB SETTINGS -->
+  <!-- ═══════════════════════════════════════ -->
+
+  <div class="section-title">Hub Settings</div>
+
+  <div style="border: 1px solid #222; padding: 24px; border-radius: 4px; margin-bottom: 60px;">
+    <table>
+      <thead>
+        <tr><th>Parameter</th><th>Description</th><th>Example</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>protocolFeeBps</td><td>Fee on tax collection + first sales</td><td>200 (2%)</td></tr>
+        <tr><td>protocolFeeRecipient</td><td>Where protocol fees go</td><td>treasury.eth</td></tr>
+        <tr><td>landCreationFee</td><td>ETH cost to open a land</td><td>0.01 ETH</td></tr>
+        <tr><td>slotExpansionFee</td><td>ETH cost per new slot on expand <span class="tag new">NEW</span></td><td>0.005 ETH</td></tr>
+        <tr><td>moduleCallGasLimit</td><td>Max gas for module callbacks <span class="tag changed">CHANGED</span></td><td>500,000</td></tr>
+        <tr><td>liquidationBountyBps</td><td>% of collected tax → liquidator <span class="tag new">NEW</span></td><td>500 (5%)</td></tr>
+        <tr><td>minDepositSeconds</td><td>Min deposit must cover N seconds of tax <span class="tag new">NEW</span></td><td>604,800 (7 days)</td></tr>
+        <tr><td>newLandInitialCurrency</td><td>Default ERC-20 for new slots</td><td>USDC</td></tr>
+        <tr><td>newLandInitialAmount</td><td>Slots created per new land</td><td>6</td></tr>
+        <tr><td>newLandInitialPrice</td><td>Starting base price</td><td>1 USDC</td></tr>
+        <tr><td>newLandInitialTaxPercentage</td><td>Starting tax rate (bps)</td><td>100 (1%)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- V1 vs V2 -->
+  <!-- ═══════════════════════════════════════ -->
+
+  <div class="section-title">v1 → v2 Changes</div>
+
+  <div style="border: 1px solid #222; padding: 24px; border-radius: 4px; margin-bottom: 40px;">
+    <table>
+      <thead>
+        <tr><th>What</th><th>v1 (Superfluid)</th><th>v2 (Escrow)</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Tax mechanism</td><td>CFA streams (real-time balance)</td><td>deposit -= tax × elapsed</td></tr>
+        <tr><td>Token requirement</td><td>Super Tokens only (wrapped)</td><td>Any ERC-20</td></tr>
+        <tr><td>SuperApp</td><td>Required (whitelisting on some chains)</td><td>None</td></tr>
+        <tr><td>Dependencies</td><td>Superfluid protocol (~10 contracts)</td><td>OpenZeppelin only</td></tr>
+        <tr><td>Liquidation</td><td>Superfluid sentinel bots</td><td>Anyone + bounty incentive</td></tr>
+        <tr><td>Module gas</td><td>100k (callback constraint)</td><td>Configurable (default 500k)</td></tr>
+        <tr><td>Min deposit</td><td>None (stream could be 0)</td><td>Enforced (N seconds of tax)</td></tr>
+        <tr><td>Collect tax</td><td>Automatic via stream</td><td>Manual collect() / collectRange()</td></tr>
+        <tr><td>Chain support</td><td>Superfluid-deployed chains only</td><td>Any EVM chain</td></tr>
+        <tr><td>Contracts</td><td>3 (Slots + Hub + SuperApp)</td><td>2 (Slots + Hub)</td></tr>
+        <tr><td>Complexity</td><td>~1,100 lines + Superfluid SDK</td><td>~450 lines, self-contained</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div style="text-align: center; color: #333; font-size: 12px; padding: 40px 0;">
+    0xSlots v2 — No streams. No wrappers. No whitelisting. Just escrow math.
+  </div>
+
+</div>
+</body>
+</html>
