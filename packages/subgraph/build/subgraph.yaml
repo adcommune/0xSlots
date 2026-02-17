@@ -2,7 +2,7 @@ specVersion: 1.0.0
 indexerHints:
   prune: auto
 schema:
-  file: ./schema.graphql
+  file: schema.graphql
 dataSources:
   - kind: ethereum
     name: SlotsHub
@@ -23,9 +23,9 @@ dataSources:
         - LandExpandedEvent
       abis:
         - name: SlotsHub
-          file: ./abis/SlotsHub.json
+          file: SlotsHub/SlotsHub.json
         - name: ERC20
-          file: ./abis/ERC20.json
+          file: SlotsHub/ERC20.json
       eventHandlers:
         - event: HubSettingsUpdated((uint256,address,uint256,uint256,address,uint256,uint256,uint256,uint256,uint256,address,uint256,uint256,uint256))
           handler: handleHubSettingsUpdated
@@ -37,7 +37,7 @@ dataSources:
           handler: handleModuleAllowedStatusUpdated
         - event: CurrencyAllowedStatusUpdated(indexed address,bool)
           handler: handleCurrencyAllowedStatusUpdated
-      file: ./src/slotsHub.ts
+      file: SlotsHub/SlotsHub.wasm
 templates:
   - kind: ethereum
     name: Slots
@@ -60,9 +60,10 @@ templates:
         - TaxCollectedEvent
       abis:
         - name: Slots
-          file: ./abis/Slots.json
+          file: Slots/Slots.json
       eventHandlers:
-        - event: SlotCreated(address,indexed uint256,indexed address,(address,uint256,uint256,uint256,uint256,address))
+        - event: SlotCreated(address,indexed uint256,indexed
+            address,(address,uint256,uint256,uint256,uint256,address))
           handler: handleSlotCreated
         - event: SlotPurchased(address,indexed uint256,indexed address,uint256)
           handler: handleSlotPurchased
@@ -90,4 +91,4 @@ templates:
           handler: handleSettled
         - event: TaxCollected(indexed uint256,indexed address,uint256)
           handler: handleTaxCollected
-      file: ./src/slots.ts
+      file: templates/Slots/Slots.wasm
