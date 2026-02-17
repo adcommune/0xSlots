@@ -1,6 +1,6 @@
 {
   "name": "@0xslots/sdk",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Type-safe SDK for querying 0xSlots subgraph data",
   "author": "Nezz",
   "license": "MIT",
