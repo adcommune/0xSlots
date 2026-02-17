@@ -3,7 +3,8 @@ query GetHub($id: ID!) {
     id
     protocolFeeBps
     protocolFeeRecipient
-    slotPrice
+    landCreationFee
+    slotExpansionFee
     defaultCurrency {
       id
       name
@@ -16,6 +17,9 @@ query GetHub($id: ID!) {
     defaultMaxTaxPercentage
     defaultMinTaxUpdatePeriod
     defaultModule
+    moduleCallGasLimit
+    liquidationBountyBps
+    minDepositSeconds
   }
 }
 
@@ -34,9 +38,5 @@ query GetAllowedCurrencies($hubId: String!) {
     name
     symbol
     decimals
-    underlyingToken
-    underlyingName
-    underlyingSymbol
-    underlyingDecimals
   }
 }
