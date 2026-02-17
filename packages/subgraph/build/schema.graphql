@@ -1,0 +1,209 @@
+# ──────────────────────────────────────────
+# 0xSlots v2 Subgraph Schema (escrow-based, no Superfluid)
+# ──────────────────────────────────────────
+
+type Hub @entity(immutable: false) {
+  id: ID! # SlotsHub address
+  protocolFeeBps: BigInt!
+  protocolFeeRecipient: Bytes!
+  landCreationFee: BigInt!
+  slotExpansionFee: BigInt!
+  defaultCurrency: Currency
+  defaultSlotCount: BigInt!
+  defaultPrice: BigInt!
+  defaultTaxPercentage: BigInt!
+  defaultMaxTaxPercentage: BigInt!
+  defaultMinTaxUpdatePeriod: BigInt!
+  defaultModule: Bytes!
+  moduleCallGasLimit: BigInt!
+  liquidationBountyBps: BigInt!
+  minDepositSeconds: BigInt!
+  lands: [Land!]! @derivedFrom(field: "hub")
+  allowedModules: [Module!]! @derivedFrom(field: "hub")
+  allowedCurrencies: [Currency!]! @derivedFrom(field: "hub")
+}
+
+type Land @entity(immutable: false) {
+  id: ID! # Slots contract address
+  hub: Hub!
+  owner: Bytes! # account that opened the land
+  slots: [Slot!]! @derivedFrom(field: "land")
+  createdAt: BigInt!
+  createdTx: Bytes!
+}
+
+type Slot @entity(immutable: false) {
+  id: ID! # land-slotId
+  land: Land!
+  slotId: BigInt!
+  occupant: Bytes # current occupant (null = vacant)
+  currency: Bytes!
+  basePrice: BigInt!
+  price: BigInt!
+  taxPercentage: BigInt!
+  maxTaxPercentage: BigInt!
+  minTaxUpdatePeriod: BigInt!
+  module: Bytes
+  active: Boolean!
+  createdAt: BigInt!
+  updatedAt: BigInt!
+  createdEvent: SlotCreatedEvent @derivedFrom(field: "slot")
+  purchases: [SlotPurchase!]! @derivedFrom(field: "slot")
+  releases: [SlotReleasedEvent!]! @derivedFrom(field: "slot")
+  liquidations: [SlotLiquidatedEvent!]! @derivedFrom(field: "slot")
+  priceHistory: [PriceUpdate!]! @derivedFrom(field: "slot")
+  taxUpdates: [TaxRateChange!]! @derivedFrom(field: "slot")
+  deposits: [DepositEvent!]! @derivedFrom(field: "slot")
+  withdrawals: [WithdrawalEvent!]! @derivedFrom(field: "slot")
+  settlements: [SettlementEvent!]! @derivedFrom(field: "slot")
+  taxCollections: [TaxCollectedEvent!]! @derivedFrom(field: "slot")
+}
+
+# ──────────────────────────────────────────
+# Event Entities
+# ──────────────────────────────────────────
+
+type LandOpenedEvent @entity(immutable: true) {
+  id: ID! # tx-logIndex
+  land: Land!
+  account: Bytes! # account that opened the land
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  tx: Bytes!
+}
+
+type LandExpandedEvent @entity(immutable: true) {
+  id: ID! # tx-logIndex
+  land: Bytes!
+  newSlotCount: BigInt!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  tx: Bytes!
+}
+
+type SlotCreatedEvent @entity(immutable: true) {
+  id: ID! # tx-logIndex
+  slot: Slot!
+  land: Bytes!
+  slotId: BigInt!
+  currency: Bytes!
+  basePrice: BigInt!
+  taxPercentage: BigInt!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  tx: Bytes!
+}
+
+type SlotPurchase @entity(immutable: true) {
+  id: ID! # tx-logIndex
+  slot: Slot!
+  newOccupant: Bytes!
+  price: BigInt!
+  previousOccupant: Bytes
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  tx: Bytes!
+}
+
+type SlotReleasedEvent @entity(immutable: true) {
+  id: ID! # tx-logIndex
+  slot: Slot!
+  land: Bytes!
+  slotId: BigInt!
+  previousOccupant: Bytes
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  tx: Bytes!
+}
+
+type SlotLiquidatedEvent @entity(immutable: true) {
+  id: ID! # tx-logIndex
+  slot: Slot!
+  land: Bytes!
+  slotId: BigInt!
+  liquidator: Bytes!
+  occupant: Bytes!
+  bounty: BigInt!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  tx: Bytes!
+}
+
+type PriceUpdate @entity(immutable: true) {
+  id: ID! # tx-logIndex
+  slot: Slot!
+  oldPrice: BigInt!
+  newPrice: BigInt!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  tx: Bytes!
+}
+
+type TaxRateChange @entity(immutable: true) {
+  id: ID! # tx-logIndex
+  slot: Slot!
+  kind: String! # "proposed" | "confirmed" | "cancelled"
+  oldPercentage: BigInt
+  newPercentage: BigInt
+  confirmableAt: BigInt
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  tx: Bytes!
+}
+
+type DepositEvent @entity(immutable: true) {
+  id: ID! # tx-logIndex
+  slot: Slot!
+  depositor: Bytes!
+  amount: BigInt!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  tx: Bytes!
+}
+
+type WithdrawalEvent @entity(immutable: true) {
+  id: ID! # tx-logIndex
+  slot: Slot!
+  occupant: Bytes!
+  amount: BigInt!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  tx: Bytes!
+}
+
+type SettlementEvent @entity(immutable: true) {
+  id: ID! # tx-logIndex
+  slot: Slot!
+  taxOwed: BigInt!
+  depositRemaining: BigInt!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  tx: Bytes!
+}
+
+type TaxCollectedEvent @entity(immutable: true) {
+  id: ID! # tx-logIndex
+  slot: Slot!
+  owner: Bytes!
+  amount: BigInt!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  tx: Bytes!
+}
+
+type Module @entity(immutable: false) {
+  id: ID! # module address
+  hub: Hub!
+  allowed: Boolean!
+  name: String!
+  version: String!
+}
+
+type Currency @entity(immutable: false) {
+  id: ID! # currency address (any ERC-20)
+  hub: Hub!
+  allowed: Boolean!
+  name: String
+  symbol: String
+  decimals: Int
+}

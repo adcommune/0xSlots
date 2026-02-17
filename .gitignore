@@ -7,4 +7,5 @@ dist
 .env
 .env.local
 
-packages/subgraph/build
+packages/subgraph/buildapps/contracts/.env
+apps/contracts/cache/
