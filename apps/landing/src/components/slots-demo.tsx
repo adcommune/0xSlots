@@ -32,14 +32,14 @@ export function SlotsDemo() {
           {truncateAddress(OWNER_ADDRESS)}
         </span>
       </div>
-      {/* Flowing lines */}
+      {/* Static lines */}
       <svg
         viewBox="0 0 320 48"
         className="w-full h-12"
         preserveAspectRatio="none"
         role="img"
       >
-        <title>Flowing connections from address to slots</title>
+        <title>Connections from address to slots</title>
         {LINES.map((line) => (
           <path
             key={line.id}
@@ -47,16 +47,7 @@ export function SlotsDemo() {
             fill="none"
             stroke="black"
             strokeWidth="1.5"
-            strokeDasharray="4 3"
-          >
-            <animate
-              attributeName="stroke-dashoffset"
-              from="0"
-              to="14"
-              dur="1.5s"
-              repeatCount="indefinite"
-            />
-          </path>
+          />
         ))}
       </svg>
       {/* Slots grid */}

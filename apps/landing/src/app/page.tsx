@@ -28,8 +28,7 @@ export default function Home() {
             As AI agents begin transacting, optimizing, and competing
             autonomously, static property models break down. 0xSlots introduces
             infrastructure built for machine-speed markets — fair, contestable,
-            and capital-efficient. Escrow deposits settle on-demand, no wrapping
-            or special token types required.
+            and capital-efficient.
           </p>
           <p className="mt-6 max-w-2xl text-base leading-relaxed font-bold">
             The next property primitive is here.
