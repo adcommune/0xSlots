@@ -31,8 +31,7 @@ type EventType =
   | "slotCreated"
   | "slotPurchased"
   | "slotReleased"
-  | "priceUpdated"
-  | "flowChange";
+  | "priceUpdated";
 
 interface UnifiedEvent {
   id: string;
@@ -51,7 +50,6 @@ function EventBadge({ type }: { type: EventType }) {
     slotPurchased: "Slot Purchased",
     slotReleased: "Slot Released",
     priceUpdated: "Price Updated",
-    flowChange: "Flow Change",
   };
 
   return (
