@@ -10,7 +10,7 @@ dataSources:
     source:
       address: "0x774776d0f693eB7718b67f7938541D5bbB5f92D0"
       abi: SlotsHub
-      startBlock: 24477111
+      startBlock: 433073821
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
