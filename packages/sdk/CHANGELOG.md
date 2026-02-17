@@ -1,5 +1,11 @@
 # @0xslots/sdk
 
+## 0.4.0
+
+### Minor Changes
+
+- 56f8181: Add arbitrum
+
 ## 0.3.0
 
 ### Minor Changes
