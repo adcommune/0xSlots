@@ -8,11 +8,9 @@ dataSources:
     name: SlotsHub
     network: arbitrum-one
     source:
-      # TODO: Replace with actual deployed SlotsHub v2 proxy address
-      address: "0x0000000000000000000000000000000000000000"
+      address: "0x268cfab9ddddf6a326458ae79d55592516f382ef"
       abi: SlotsHub
-      # TODO: Replace with actual deploy block number
-      startBlock: 0
+      startBlock: 433763072
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
