@@ -87,7 +87,7 @@ export function SlotBalance({
       { ...contract, functionName: "taxOwed", args: [BigInt(slotId)] },
       { ...contract, functionName: "secondsUntilLiquidation", args: [BigInt(slotId)] },
     ],
-    query: { enabled: isOccupied },
+    query: { enabled: Boolean(isOccupied) },
   });
 
   if (!isOccupied) {

@@ -121,8 +121,8 @@ export default async function ExplorerPage({
   let modules: any[] = [];
   try {
     const hubId = chainId === SlotsChain.ARBITRUM
-      ? "0x268cfab9ddddf6a326458ae79d55592516f382ef"
-      : "0x21871c87ab8f3616715e34db0474a3b5f186e174";
+      ? "0xa309ea8fef97e51b7c4b81b0aeb44b341bec931f"
+      : "0x47a41aade903e96911dc579c56e26f62f04e3a2c";
     const hubResult = await client.getHub({ id: hubId });
     hubData = hubResult.hub;
     const currResult = await client.getAllowedCurrencies({ hubId });
