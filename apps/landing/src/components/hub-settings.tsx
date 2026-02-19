@@ -2,10 +2,10 @@ function shorten(addr: string): string {
   return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
 }
 
-function formatWei(wei: string): string {
-  const eth = Number(wei) / 1e18;
-  if (eth === 0) return "0";
-  return eth.toFixed(6);
+function formatWei(wei: string, decimals: number = 18): string {
+  const value = Number(wei) / 10 ** decimals;
+  if (value === 0) return "0";
+  return value.toFixed(decimals <= 6 ? decimals : 6);
 }
 
 function formatBps(bps: string | number): string {
@@ -62,7 +62,7 @@ export function HubSettings({ hub, currencies, modules, explorerUrl }: Props) {
     ["Slot Expansion Fee", formatWei(hub.slotExpansionFee)],
     ["Default Currency", hub.defaultCurrency ? `${hub.defaultCurrency.symbol} (${shorten(hub.defaultCurrency.id)})` : "—", hub.defaultCurrency?.id],
     ["Default Slot Count", hub.defaultSlotCount],
-    ["Default Price", `${formatWei(hub.defaultPrice)} ${hub.defaultCurrency?.symbol || ""}`],
+    ["Default Price", `${formatWei(hub.defaultPrice, hub.defaultCurrency?.decimals ?? 18)} ${hub.defaultCurrency?.symbol || ""}`],
     ["Default Tax Rate", formatBps(hub.defaultTaxPercentage)],
     ["Max Tax Rate", formatBps(hub.defaultMaxTaxPercentage)],
     ["Min Tax Update Period", formatSeconds(hub.defaultMinTaxUpdatePeriod)],
