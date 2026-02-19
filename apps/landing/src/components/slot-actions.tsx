@@ -22,23 +22,6 @@ const erc20Abi = [
   { type: "function", name: "allowance", inputs: [{ name: "owner", type: "address" }, { name: "spender", type: "address" }], outputs: [{ name: "", type: "uint256" }], stateMutability: "view" },
 ] as const;
 
-// USND on Arbitrum
-const USND = "0x4ecf61a6c2fab8a047ceb3b3b263b401763e9d49" as Address;
-
-// ERC20 ABI for approve
-const erc20Abi = [
-  {
-    type: "function" as const,
-    name: "approve",
-    inputs: [
-      { name: "spender", type: "address" },
-      { name: "amount", type: "uint256" },
-    ],
-    outputs: [{ name: "", type: "bool" }],
-    stateMutability: "nonpayable" as const,
-  },
-] as const;
-
 interface SlotActionsProps {
   landAddress: string;
   slotIndex: number;
