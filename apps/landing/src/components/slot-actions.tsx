@@ -164,7 +164,9 @@ export function SlotActions({
             disabled={busy}
             onClick={() => {
               const amt = toUnits(depositAmount);
-              approveAndCall(amt, () =>
+              const slotPrice = BigInt(price); // price in wei from subgraph
+              const total = slotPrice + amt;
+              approveAndCall(total, () =>
                 writeContract({
                   address: landAddress as Address,
                   abi: slotsAbi,
