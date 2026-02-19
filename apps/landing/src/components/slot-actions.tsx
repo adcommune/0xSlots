@@ -6,14 +6,20 @@ import { parseEther, type Address } from "viem";
 import { arbitrum } from "wagmi/chains";
 
 const CHAIN_ID = arbitrum.id;
+const USND = "0x4ecf61a6c2fab8a047ceb3b3b263b401763e9d49";
 // Import ABI inline to avoid module resolution issues
 const slotsAbi = [
-  { type: "function", name: "purchaseSlot", inputs: [{ name: "slotId", type: "uint256" }, { name: "depositAmount", type: "uint256" }], outputs: [], stateMutability: "nonpayable" },
+  { type: "function", name: "buy", inputs: [{ name: "slotId", type: "uint256" }, { name: "depositAmount", type: "uint256" }], outputs: [], stateMutability: "nonpayable" },
   { type: "function", name: "selfAssess", inputs: [{ name: "slotId", type: "uint256" }, { name: "newPrice", type: "uint256" }], outputs: [], stateMutability: "nonpayable" },
   { type: "function", name: "deposit", inputs: [{ name: "slotId", type: "uint256" }, { name: "amount", type: "uint256" }], outputs: [], stateMutability: "nonpayable" },
   { type: "function", name: "withdraw", inputs: [{ name: "slotId", type: "uint256" }, { name: "amount", type: "uint256" }], outputs: [], stateMutability: "nonpayable" },
   { type: "function", name: "liquidate", inputs: [{ name: "slotId", type: "uint256" }], outputs: [], stateMutability: "nonpayable" },
-  { type: "function", name: "collectRange", inputs: [{ name: "fromSlot", type: "uint256" }, { name: "toSlot", type: "uint256" }], outputs: [], stateMutability: "nonpayable" },
+  { type: "function", name: "collectRange", inputs: [{ name: "fromId", type: "uint256" }, { name: "toId", type: "uint256" }], outputs: [], stateMutability: "nonpayable" },
+] as const;
+
+const erc20Abi = [
+  { type: "function", name: "approve", inputs: [{ name: "spender", type: "address" }, { name: "amount", type: "uint256" }], outputs: [{ name: "", type: "bool" }], stateMutability: "nonpayable" },
+  { type: "function", name: "allowance", inputs: [{ name: "owner", type: "address" }, { name: "spender", type: "address" }], outputs: [{ name: "", type: "uint256" }], stateMutability: "view" },
 ] as const;
 
 // USND on Arbitrum
@@ -54,7 +60,7 @@ export function SlotActions({
 }: SlotActionsProps) {
   const { address, isConnected, chainId } = useAccount();
   const { switchChain } = useSwitchChain();
-  const { writeContract, data: hash, isPending } = useWriteContract();
+  const { writeContract, writeContractAsync, data: hash, isPending } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   const [newPrice, setNewPrice] = useState("");
@@ -146,12 +152,28 @@ export function SlotActions({
           <button
             disabled={busy}
             onClick={() =>
-              writeContract({
-                address: landAddress as Address,
-                abi: slotsAbi,
-                functionName: "purchaseSlot",
-                args: [BigInt(slotIndex), parseEther(depositAmount || "0")],
-              })
+              (async () => {
+                const amt = parseEther(depositAmount || "0");
+                try {
+                  // Approve USND first
+                  await writeContractAsync({
+                    address: USND as Address,
+                    abi: erc20Abi,
+                    functionName: "approve",
+                    args: [landAddress as Address, amt],
+                  });
+                } catch (e) {
+                  console.error("Approve failed:", e);
+                  return;
+                }
+                // Then buy
+                writeContract({
+                  address: landAddress as Address,
+                  abi: slotsAbi,
+                  functionName: "buy",
+                  args: [BigInt(slotIndex), amt],
+                });
+              })()
             }
             className="border-2 border-black bg-black text-white px-3 py-1 font-mono text-xs uppercase hover:bg-white hover:text-black disabled:opacity-50"
           >
@@ -206,12 +228,26 @@ export function SlotActions({
           <button
             disabled={busy}
             onClick={() =>
-              writeContract({
-                address: landAddress as Address,
-                abi: slotsAbi,
-                functionName: "deposit",
-                args: [BigInt(slotIndex), parseEther(depositAmount || "0")],
-              })
+              (async () => {
+                const amt = parseEther(depositAmount || "0");
+                try {
+                  await writeContractAsync({
+                    address: USND as Address,
+                    abi: erc20Abi,
+                    functionName: "approve",
+                    args: [landAddress as Address, amt],
+                  });
+                } catch (e) {
+                  console.error("Approve failed:", e);
+                  return;
+                }
+                writeContract({
+                  address: landAddress as Address,
+                  abi: slotsAbi,
+                  functionName: "deposit",
+                  args: [BigInt(slotIndex), amt],
+                });
+              })()
             }
             className="border-2 border-black px-3 py-1 font-mono text-xs uppercase hover:bg-black hover:text-white disabled:opacity-50"
           >
