@@ -1,6 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const CHAINS = [
   { value: "base-sepolia", label: "Base Sepolia", icon: "🔵" },
@@ -11,18 +18,26 @@ export function ChainSelector({ current }: { current: string }) {
   const router = useRouter();
 
   return (
-    <select
+    <Select
       value={current}
-      onChange={(e) => {
-        router.push(`/explorer?chain=${e.target.value}`);
+      onValueChange={(value) => {
+        router.push(`/explorer?chain=${value}`);
       }}
-      className="border-2 border-black px-4 py-2 font-mono text-sm font-bold uppercase bg-white cursor-pointer hover:bg-gray-50 focus:outline-none"
     >
-      {CHAINS.map((chain) => (
-        <option key={chain.value} value={chain.value}>
-          {chain.icon} {chain.label}
-        </option>
-      ))}
-    </select>
+      <SelectTrigger className="w-[200px] border-2 border-black font-mono text-sm font-bold uppercase bg-white cursor-pointer rounded-none">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent className="font-mono text-sm rounded-none border-2 border-black">
+        {CHAINS.map((chain) => (
+          <SelectItem
+            key={chain.value}
+            value={chain.value}
+            className="font-mono text-sm font-bold uppercase cursor-pointer"
+          >
+            {chain.icon} {chain.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }
