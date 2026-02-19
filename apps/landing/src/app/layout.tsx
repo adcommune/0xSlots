@@ -28,9 +28,6 @@ export default function RootLayout({
                 0xSlots
               </a>
               <div className="flex items-center gap-6 text-xs font-mono uppercase tracking-widest">
-                <a href="/slots" className="hover:underline">
-                  AdLand
-                </a>
                 <a href="/explorer" className="hover:underline">
                   Explorer
                 </a>
