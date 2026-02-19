@@ -1,4 +1,5 @@
 import { BigInt, Bytes } from "@graphprotocol/graph-ts";
+import { ERC20 } from "../generated/SlotsHub/ERC20";
 import {
   SlotCreated,
   SlotPurchased,
@@ -27,6 +28,7 @@ import {
   WithdrawalEvent,
   SettlementEvent,
   TaxCollectedEvent,
+  Currency,
 } from "../generated/schema";
 
 function slotEntityId(land: Bytes, slotId: BigInt): string {
@@ -42,10 +44,27 @@ export function handleSlotCreated(event: SlotCreated): void {
   let slot = new Slot(id);
   let params = event.params.params;
 
+  let currencyAddr = params.currency;
+  let currencyId = currencyAddr.toHexString();
+  let currency = Currency.load(currencyId);
+  if (!currency) {
+    currency = new Currency(currencyId);
+    currency.hub = event.address.toHexString(); // will be linked properly via land→hub
+    currency.allowed = false;
+    let token = ERC20.bind(currencyAddr);
+    let nameResult = token.try_name();
+    if (!nameResult.reverted) currency.name = nameResult.value;
+    let symbolResult = token.try_symbol();
+    if (!symbolResult.reverted) currency.symbol = symbolResult.value;
+    let decimalsResult = token.try_decimals();
+    if (!decimalsResult.reverted) currency.decimals = decimalsResult.value;
+    currency.save();
+  }
+
   slot.land = event.address.toHexString();
   slot.slotId = event.params.slotId;
   slot.occupant = null;
-  slot.currency = params.currency;
+  slot.currency = currencyId;
   slot.basePrice = params.basePrice;
   slot.price = params.basePrice; // v2: price starts at basePrice
   slot.taxPercentage = params.taxPercentage;

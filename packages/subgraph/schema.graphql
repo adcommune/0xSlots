@@ -37,7 +37,7 @@ type Slot @entity(immutable: false) {
   land: Land!
   slotId: BigInt!
   occupant: Bytes # current occupant (null = vacant)
-  currency: Bytes!
+  currency: Currency!
   basePrice: BigInt!
   price: BigInt!
   taxPercentage: BigInt!

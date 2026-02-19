@@ -2,15 +2,15 @@ specVersion: 1.0.0
 indexerHints:
   prune: auto
 schema:
-  file: schema.graphql
+  file: ./schema.graphql
 dataSources:
   - kind: ethereum
     name: SlotsHub
-    network: arbitrum-one
+    network: base-sepolia
     source:
-      address: "0xa309ea8fef97e51b7c4b81b0aeb44b341bec931f"
+      address: "0x47a41aade903e96911dc579c56e26f62f04e3a2c"
       abi: SlotsHub
-      startBlock: 433782651
+      startBlock: 37873185
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -23,9 +23,9 @@ dataSources:
         - LandExpandedEvent
       abis:
         - name: SlotsHub
-          file: SlotsHub/SlotsHub.json
+          file: ./abis/SlotsHub.json
         - name: ERC20
-          file: SlotsHub/ERC20.json
+          file: ./abis/ERC20.json
       eventHandlers:
         - event: HubSettingsUpdated((uint256,address,uint256,uint256,address,uint256,uint256,uint256,uint256,uint256,address,uint256,uint256,uint256))
           handler: handleHubSettingsUpdated
@@ -37,11 +37,11 @@ dataSources:
           handler: handleModuleAllowedStatusUpdated
         - event: CurrencyAllowedStatusUpdated(indexed address,bool)
           handler: handleCurrencyAllowedStatusUpdated
-      file: SlotsHub/SlotsHub.wasm
+      file: ./src/slotsHub.ts
 templates:
   - kind: ethereum
     name: Slots
-    network: arbitrum-one
+    network: base-sepolia
     source:
       abi: Slots
     mapping:
@@ -60,10 +60,9 @@ templates:
         - TaxCollectedEvent
       abis:
         - name: Slots
-          file: Slots/Slots.json
+          file: ./abis/Slots.json
       eventHandlers:
-        - event: SlotCreated(address,indexed uint256,indexed
-            address,(address,uint256,uint256,uint256,uint256,address))
+        - event: SlotCreated(address,indexed uint256,indexed address,(address,uint256,uint256,uint256,uint256,address))
           handler: handleSlotCreated
         - event: SlotPurchased(address,indexed uint256,indexed address,uint256)
           handler: handleSlotPurchased
@@ -91,4 +90,4 @@ templates:
           handler: handleSettled
         - event: TaxCollected(indexed uint256,indexed address,uint256)
           handler: handleTaxCollected
-      file: templates/Slots/Slots.wasm
+      file: ./src/slots.ts
