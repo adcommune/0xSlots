@@ -23,7 +23,7 @@ query GetLand($id: ID!) {
       id
       slotId
       occupant
-      currency
+      currency { id name symbol decimals }
       price
       taxPercentage
       active

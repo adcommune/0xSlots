@@ -14,7 +14,7 @@ contract Slots is ISlotsEvents, ReentrancyGuardUpgradeable, OwnableUpgradeable {
   using SafeERC20 for IERC20;
 
   uint256 public constant BASIS_POINTS = 10_000;
-  uint256 public constant YEAR = 365 days;
+  uint256 public constant MONTH = 30 days;
 
   error OnlyHub();
   error SlotNotActive(uint256 slotId);
@@ -310,7 +310,7 @@ contract Slots is ISlotsEvents, ReentrancyGuardUpgradeable, OwnableUpgradeable {
     SlotEscrow storage esc = escrows[slotId];
     if (slot.occupant == owner() || slot.occupant == address(0)) return 0;
     uint256 elapsed = block.timestamp - esc.lastSettled;
-    return (slot.price * slot.taxPercentage * elapsed) / (YEAR * BASIS_POINTS);
+    return (slot.price * slot.taxPercentage * elapsed) / (MONTH * BASIS_POINTS);
   }
 
   function secondsUntilLiquidation(uint256 slotId) public view returns (uint256) {
@@ -319,7 +319,7 @@ contract Slots is ISlotsEvents, ReentrancyGuardUpgradeable, OwnableUpgradeable {
     if (slot.occupant == owner() || slot.occupant == address(0)) return type(uint256).max;
     uint256 owed = taxOwed(slotId);
     uint256 remaining = esc.deposit > owed ? esc.deposit - owed : 0;
-    uint256 ratePerSec = (slot.price * slot.taxPercentage) / (YEAR * BASIS_POINTS);
+    uint256 ratePerSec = (slot.price * slot.taxPercentage) / (MONTH * BASIS_POINTS);
     if (ratePerSec == 0) return type(uint256).max;
     return remaining / ratePerSec;
   }
@@ -357,7 +357,7 @@ contract Slots is ISlotsEvents, ReentrancyGuardUpgradeable, OwnableUpgradeable {
     uint256 elapsed = block.timestamp - esc.lastSettled;
     if (elapsed == 0) return;
 
-    uint256 owed = (slot.price * slot.taxPercentage * elapsed) / (YEAR * BASIS_POINTS);
+    uint256 owed = (slot.price * slot.taxPercentage * elapsed) / (MONTH * BASIS_POINTS);
 
     if (owed >= esc.deposit) {
       esc.collectedTax += esc.deposit;
@@ -388,7 +388,7 @@ contract Slots is ISlotsEvents, ReentrancyGuardUpgradeable, OwnableUpgradeable {
     uint256 minSecs = hub.hubSettings().minDepositSeconds;
     if (minSecs == 0) return 0;
     Slot storage slot = slots[slotId];
-    return (slot.price * slot.taxPercentage * minSecs) / (YEAR * BASIS_POINTS);
+    return (slot.price * slot.taxPercentage * minSecs) / (MONTH * BASIS_POINTS);
   }
 
   function _enforceMinDeposit(uint256 slotId, uint256 depositAmount) internal view {

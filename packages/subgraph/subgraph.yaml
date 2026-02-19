@@ -6,11 +6,11 @@ schema:
 dataSources:
   - kind: ethereum
     name: SlotsHub
-    network: base-sepolia
+    network: arbitrum-one
     source:
-      address: "0x21871C87aB8f3616715E34db0474A3b5f186E174"
+      address: "0xa309ea8fef97e51b7c4b81b0aeb44b341bec931f"
       abi: SlotsHub
-      startBlock: 37791201
+      startBlock: 433782651
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -41,7 +41,7 @@ dataSources:
 templates:
   - kind: ethereum
     name: Slots
-    network: base-sepolia
+    network: arbitrum-one
     source:
       abi: Slots
     mapping:

@@ -436,17 +436,17 @@ export class Slot extends Entity {
     }
   }
 
-  get currency(): Bytes {
+  get currency(): string {
     let value = this.get("currency");
     if (!value || value.kind == ValueKind.NULL) {
       throw new Error("Cannot return null for a required field.");
     } else {
-      return value.toBytes();
+      return value.toString();
     }
   }
 
-  set currency(value: Bytes) {
-    this.set("currency", Value.fromBytes(value));
+  set currency(value: string) {
+    this.set("currency", Value.fromString(value));
   }
 
   get basePrice(): BigInt {

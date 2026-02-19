@@ -7,7 +7,7 @@ query GetSlots($first: Int = 100, $skip: Int = 0, $orderBy: Slot_orderBy, $order
     }
     slotId
     occupant
-    currency
+    currency { id name symbol decimals }
     basePrice
     price
     taxPercentage
@@ -29,7 +29,7 @@ query GetSlot($id: ID!) {
     }
     slotId
     occupant
-    currency
+    currency { id name symbol decimals }
     basePrice
     price
     taxPercentage
@@ -80,7 +80,7 @@ query GetAvailableSlots($first: Int = 100, $skip: Int = 0) {
       owner
     }
     slotId
-    currency
+    currency { id name symbol decimals }
     price
     taxPercentage
   }
