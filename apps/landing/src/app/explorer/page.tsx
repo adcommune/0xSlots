@@ -11,6 +11,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ConnectButton } from "@/components/connect-button";
+import { ExplorerTabs } from "@/components/explorer-tabs";
+import { HubSettings } from "@/components/hub-settings";
 import { ChainSelector } from "./chain-selector";
 
 const CHAIN_CONFIG = {
@@ -112,6 +114,22 @@ export default async function ExplorerPage({
       orderDirection: "desc",
     }),
   ]);
+
+  // Fetch hub settings
+  let hubData: any = null;
+  let currencies: any[] = [];
+  let modules: any[] = [];
+  try {
+    const hubId = chainId === SlotsChain.ARBITRUM
+      ? "0x268cfab9ddddf6a326458ae79d55592516f382ef"
+      : "0x21871c87ab8f3616715e34db0474a3b5f186e174";
+    const hubResult = await client.getHub({ id: hubId });
+    hubData = hubResult.hub;
+    const currResult = await client.getAllowedCurrencies({ hubId });
+    currencies = currResult.currencies || [];
+    const modResult = await client.getAllowedModules({ hubId });
+    modules = modResult.modules || [];
+  } catch {}
 
   // Fetch lands and slots
   let lands: any[] = [];
@@ -234,12 +252,12 @@ export default async function ExplorerPage({
           </div>
         </div>
 
-        {/* Lands & Slots */}
-        {lands.length > 0 && (
-          <div className="mb-8 space-y-4">
-            <h2 className="text-lg font-bold uppercase tracking-tight border-b-2 border-black pb-2">
-              Lands
-            </h2>
+        <ExplorerTabs tabs={[
+          {
+            id: "lands",
+            label: "Lands",
+            content: lands.length > 0 ? (
+          <div className="space-y-4">
             {lands.map((land: any) => {
               const landSlots = slotsByLand.get(land.id) || [];
               const occupied = landSlots.filter(
@@ -299,8 +317,17 @@ export default async function ExplorerPage({
               );
             })}
           </div>
-        )}
-
+        ) : (
+          <div className="border-2 border-black p-12 text-center">
+            <p className="font-mono text-sm text-gray-500">NO LANDS FOUND</p>
+          </div>
+        ),
+          },
+          {
+            id: "events",
+            label: "Events",
+            content: (
+        <div>
         {/* Events Table */}
         <div className="border-2 border-black">
           <div className="bg-gray-50 border-b-2 border-black p-4">
@@ -368,6 +395,23 @@ export default async function ExplorerPage({
             </TableBody>
           </Table>
         </div>
+
+        </div>
+            ),
+          },
+          {
+            id: "settings",
+            label: "Hub Settings",
+            content: (
+              <HubSettings
+                hub={hubData}
+                currencies={currencies}
+                modules={modules}
+                explorerUrl={config.explorer}
+              />
+            ),
+          },
+        ]} />
 
         <div className="mt-8 text-center text-xs text-gray-400 font-mono">
           Powered by @0xslots/sdk · The Graph
