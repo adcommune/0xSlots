@@ -39,7 +39,7 @@ contract DeployV2 is BaseScript {
             slotExpansionFee: 0,                    // free for testnet
             newLandInitialCurrency: address(0),     // set after allowCurrency
             newLandInitialAmount: 6,
-            newLandInitialPrice: 0.001 ether,
+            newLandInitialPrice: 1e6,              // 1 USDC (6 decimals)
             newLandInitialTaxPercentage: 100,       // 1%
             newLandInitialMaxTaxPercentage: 1000,   // 10%
             newLandInitialMinTaxUpdatePeriod: 7 days,
