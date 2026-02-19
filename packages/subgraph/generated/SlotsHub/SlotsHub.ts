@@ -338,8 +338,830 @@ export class Upgraded__Params {
   }
 }
 
+export class SlotsHub__hubSettingsResultValue0Struct extends ethereum.Tuple {
+  get protocolFeeBps(): BigInt {
+    return this[0].toBigInt();
+  }
+
+  get protocolFeeRecipient(): Address {
+    return this[1].toAddress();
+  }
+
+  get landCreationFee(): BigInt {
+    return this[2].toBigInt();
+  }
+
+  get slotExpansionFee(): BigInt {
+    return this[3].toBigInt();
+  }
+
+  get newLandInitialCurrency(): Address {
+    return this[4].toAddress();
+  }
+
+  get newLandInitialAmount(): BigInt {
+    return this[5].toBigInt();
+  }
+
+  get newLandInitialPrice(): BigInt {
+    return this[6].toBigInt();
+  }
+
+  get newLandInitialTaxPercentage(): BigInt {
+    return this[7].toBigInt();
+  }
+
+  get newLandInitialMaxTaxPercentage(): BigInt {
+    return this[8].toBigInt();
+  }
+
+  get newLandInitialMinTaxUpdatePeriod(): BigInt {
+    return this[9].toBigInt();
+  }
+
+  get newLandInitialModule(): Address {
+    return this[10].toAddress();
+  }
+
+  get moduleCallGasLimit(): BigInt {
+    return this[11].toBigInt();
+  }
+
+  get liquidationBountyBps(): BigInt {
+    return this[12].toBigInt();
+  }
+
+  get minDepositSeconds(): BigInt {
+    return this[13].toBigInt();
+  }
+}
+
 export class SlotsHub extends ethereum.SmartContract {
   static bind(address: Address): SlotsHub {
     return new SlotsHub("SlotsHub", address);
+  }
+
+  DEFAULT_ADMIN_ROLE(): Bytes {
+    let result = super.call(
+      "DEFAULT_ADMIN_ROLE",
+      "DEFAULT_ADMIN_ROLE():(bytes32)",
+      [],
+    );
+
+    return result[0].toBytes();
+  }
+
+  try_DEFAULT_ADMIN_ROLE(): ethereum.CallResult<Bytes> {
+    let result = super.tryCall(
+      "DEFAULT_ADMIN_ROLE",
+      "DEFAULT_ADMIN_ROLE():(bytes32)",
+      [],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBytes());
+  }
+
+  getRoleAdmin(role: Bytes): Bytes {
+    let result = super.call("getRoleAdmin", "getRoleAdmin(bytes32):(bytes32)", [
+      ethereum.Value.fromFixedBytes(role),
+    ]);
+
+    return result[0].toBytes();
+  }
+
+  try_getRoleAdmin(role: Bytes): ethereum.CallResult<Bytes> {
+    let result = super.tryCall(
+      "getRoleAdmin",
+      "getRoleAdmin(bytes32):(bytes32)",
+      [ethereum.Value.fromFixedBytes(role)],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBytes());
+  }
+
+  hasRole(role: Bytes, account: Address): boolean {
+    let result = super.call("hasRole", "hasRole(bytes32,address):(bool)", [
+      ethereum.Value.fromFixedBytes(role),
+      ethereum.Value.fromAddress(account),
+    ]);
+
+    return result[0].toBoolean();
+  }
+
+  try_hasRole(role: Bytes, account: Address): ethereum.CallResult<boolean> {
+    let result = super.tryCall("hasRole", "hasRole(bytes32,address):(bool)", [
+      ethereum.Value.fromFixedBytes(role),
+      ethereum.Value.fromAddress(account),
+    ]);
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBoolean());
+  }
+
+  hubSettings(): SlotsHub__hubSettingsResultValue0Struct {
+    let result = super.call(
+      "hubSettings",
+      "hubSettings():((uint256,address,uint256,uint256,address,uint256,uint256,uint256,uint256,uint256,address,uint256,uint256,uint256))",
+      [],
+    );
+
+    return changetype<SlotsHub__hubSettingsResultValue0Struct>(
+      result[0].toTuple(),
+    );
+  }
+
+  try_hubSettings(): ethereum.CallResult<SlotsHub__hubSettingsResultValue0Struct> {
+    let result = super.tryCall(
+      "hubSettings",
+      "hubSettings():((uint256,address,uint256,uint256,address,uint256,uint256,uint256,uint256,uint256,address,uint256,uint256,uint256))",
+      [],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(
+      changetype<SlotsHub__hubSettingsResultValue0Struct>(value[0].toTuple()),
+    );
+  }
+
+  isCurrencyAllowed(currency: Address): boolean {
+    let result = super.call(
+      "isCurrencyAllowed",
+      "isCurrencyAllowed(address):(bool)",
+      [ethereum.Value.fromAddress(currency)],
+    );
+
+    return result[0].toBoolean();
+  }
+
+  try_isCurrencyAllowed(currency: Address): ethereum.CallResult<boolean> {
+    let result = super.tryCall(
+      "isCurrencyAllowed",
+      "isCurrencyAllowed(address):(bool)",
+      [ethereum.Value.fromAddress(currency)],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBoolean());
+  }
+
+  isModuleAllowed(module: Address): boolean {
+    let result = super.call(
+      "isModuleAllowed",
+      "isModuleAllowed(address):(bool)",
+      [ethereum.Value.fromAddress(module)],
+    );
+
+    return result[0].toBoolean();
+  }
+
+  try_isModuleAllowed(module: Address): ethereum.CallResult<boolean> {
+    let result = super.tryCall(
+      "isModuleAllowed",
+      "isModuleAllowed(address):(bool)",
+      [ethereum.Value.fromAddress(module)],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBoolean());
+  }
+
+  lands(param0: Address): Address {
+    let result = super.call("lands", "lands(address):(address)", [
+      ethereum.Value.fromAddress(param0),
+    ]);
+
+    return result[0].toAddress();
+  }
+
+  try_lands(param0: Address): ethereum.CallResult<Address> {
+    let result = super.tryCall("lands", "lands(address):(address)", [
+      ethereum.Value.fromAddress(param0),
+    ]);
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toAddress());
+  }
+
+  proxiableUUID(): Bytes {
+    let result = super.call("proxiableUUID", "proxiableUUID():(bytes32)", []);
+
+    return result[0].toBytes();
+  }
+
+  try_proxiableUUID(): ethereum.CallResult<Bytes> {
+    let result = super.tryCall(
+      "proxiableUUID",
+      "proxiableUUID():(bytes32)",
+      [],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBytes());
+  }
+
+  slotsImplementation(): Address {
+    let result = super.call(
+      "slotsImplementation",
+      "slotsImplementation():(address)",
+      [],
+    );
+
+    return result[0].toAddress();
+  }
+
+  try_slotsImplementation(): ethereum.CallResult<Address> {
+    let result = super.tryCall(
+      "slotsImplementation",
+      "slotsImplementation():(address)",
+      [],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toAddress());
+  }
+
+  supportsInterface(interfaceId: Bytes): boolean {
+    let result = super.call(
+      "supportsInterface",
+      "supportsInterface(bytes4):(bool)",
+      [ethereum.Value.fromFixedBytes(interfaceId)],
+    );
+
+    return result[0].toBoolean();
+  }
+
+  try_supportsInterface(interfaceId: Bytes): ethereum.CallResult<boolean> {
+    let result = super.tryCall(
+      "supportsInterface",
+      "supportsInterface(bytes4):(bool)",
+      [ethereum.Value.fromFixedBytes(interfaceId)],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBoolean());
+  }
+}
+
+export class AllowCurrencyCall extends ethereum.Call {
+  get inputs(): AllowCurrencyCall__Inputs {
+    return new AllowCurrencyCall__Inputs(this);
+  }
+
+  get outputs(): AllowCurrencyCall__Outputs {
+    return new AllowCurrencyCall__Outputs(this);
+  }
+}
+
+export class AllowCurrencyCall__Inputs {
+  _call: AllowCurrencyCall;
+
+  constructor(call: AllowCurrencyCall) {
+    this._call = call;
+  }
+
+  get currency(): Address {
+    return this._call.inputValues[0].value.toAddress();
+  }
+
+  get allowed(): boolean {
+    return this._call.inputValues[1].value.toBoolean();
+  }
+}
+
+export class AllowCurrencyCall__Outputs {
+  _call: AllowCurrencyCall;
+
+  constructor(call: AllowCurrencyCall) {
+    this._call = call;
+  }
+}
+
+export class AllowModuleCall extends ethereum.Call {
+  get inputs(): AllowModuleCall__Inputs {
+    return new AllowModuleCall__Inputs(this);
+  }
+
+  get outputs(): AllowModuleCall__Outputs {
+    return new AllowModuleCall__Outputs(this);
+  }
+}
+
+export class AllowModuleCall__Inputs {
+  _call: AllowModuleCall;
+
+  constructor(call: AllowModuleCall) {
+    this._call = call;
+  }
+
+  get module(): Address {
+    return this._call.inputValues[0].value.toAddress();
+  }
+
+  get allowed(): boolean {
+    return this._call.inputValues[1].value.toBoolean();
+  }
+}
+
+export class AllowModuleCall__Outputs {
+  _call: AllowModuleCall;
+
+  constructor(call: AllowModuleCall) {
+    this._call = call;
+  }
+}
+
+export class ExpandLandCall extends ethereum.Call {
+  get inputs(): ExpandLandCall__Inputs {
+    return new ExpandLandCall__Inputs(this);
+  }
+
+  get outputs(): ExpandLandCall__Outputs {
+    return new ExpandLandCall__Outputs(this);
+  }
+}
+
+export class ExpandLandCall__Inputs {
+  _call: ExpandLandCall;
+
+  constructor(call: ExpandLandCall) {
+    this._call = call;
+  }
+
+  get account(): Address {
+    return this._call.inputValues[0].value.toAddress();
+  }
+
+  get params(): Array<ExpandLandCallParamsStruct> {
+    return this._call.inputValues[1].value.toTupleArray<ExpandLandCallParamsStruct>();
+  }
+}
+
+export class ExpandLandCall__Outputs {
+  _call: ExpandLandCall;
+
+  constructor(call: ExpandLandCall) {
+    this._call = call;
+  }
+}
+
+export class ExpandLandCallParamsStruct extends ethereum.Tuple {
+  get currency(): Address {
+    return this[0].toAddress();
+  }
+
+  get basePrice(): BigInt {
+    return this[1].toBigInt();
+  }
+
+  get taxPercentage(): BigInt {
+    return this[2].toBigInt();
+  }
+
+  get maxTaxPercentage(): BigInt {
+    return this[3].toBigInt();
+  }
+
+  get minTaxUpdatePeriod(): BigInt {
+    return this[4].toBigInt();
+  }
+
+  get module(): Address {
+    return this[5].toAddress();
+  }
+}
+
+export class GrantRoleCall extends ethereum.Call {
+  get inputs(): GrantRoleCall__Inputs {
+    return new GrantRoleCall__Inputs(this);
+  }
+
+  get outputs(): GrantRoleCall__Outputs {
+    return new GrantRoleCall__Outputs(this);
+  }
+}
+
+export class GrantRoleCall__Inputs {
+  _call: GrantRoleCall;
+
+  constructor(call: GrantRoleCall) {
+    this._call = call;
+  }
+
+  get role(): Bytes {
+    return this._call.inputValues[0].value.toBytes();
+  }
+
+  get account(): Address {
+    return this._call.inputValues[1].value.toAddress();
+  }
+}
+
+export class GrantRoleCall__Outputs {
+  _call: GrantRoleCall;
+
+  constructor(call: GrantRoleCall) {
+    this._call = call;
+  }
+}
+
+export class InitializeCall extends ethereum.Call {
+  get inputs(): InitializeCall__Inputs {
+    return new InitializeCall__Inputs(this);
+  }
+
+  get outputs(): InitializeCall__Outputs {
+    return new InitializeCall__Outputs(this);
+  }
+}
+
+export class InitializeCall__Inputs {
+  _call: InitializeCall;
+
+  constructor(call: InitializeCall) {
+    this._call = call;
+  }
+
+  get _slotsImpl(): Address {
+    return this._call.inputValues[0].value.toAddress();
+  }
+
+  get settings(): InitializeCallSettingsStruct {
+    return changetype<InitializeCallSettingsStruct>(
+      this._call.inputValues[1].value.toTuple(),
+    );
+  }
+}
+
+export class InitializeCall__Outputs {
+  _call: InitializeCall;
+
+  constructor(call: InitializeCall) {
+    this._call = call;
+  }
+}
+
+export class InitializeCallSettingsStruct extends ethereum.Tuple {
+  get protocolFeeBps(): BigInt {
+    return this[0].toBigInt();
+  }
+
+  get protocolFeeRecipient(): Address {
+    return this[1].toAddress();
+  }
+
+  get landCreationFee(): BigInt {
+    return this[2].toBigInt();
+  }
+
+  get slotExpansionFee(): BigInt {
+    return this[3].toBigInt();
+  }
+
+  get newLandInitialCurrency(): Address {
+    return this[4].toAddress();
+  }
+
+  get newLandInitialAmount(): BigInt {
+    return this[5].toBigInt();
+  }
+
+  get newLandInitialPrice(): BigInt {
+    return this[6].toBigInt();
+  }
+
+  get newLandInitialTaxPercentage(): BigInt {
+    return this[7].toBigInt();
+  }
+
+  get newLandInitialMaxTaxPercentage(): BigInt {
+    return this[8].toBigInt();
+  }
+
+  get newLandInitialMinTaxUpdatePeriod(): BigInt {
+    return this[9].toBigInt();
+  }
+
+  get newLandInitialModule(): Address {
+    return this[10].toAddress();
+  }
+
+  get moduleCallGasLimit(): BigInt {
+    return this[11].toBigInt();
+  }
+
+  get liquidationBountyBps(): BigInt {
+    return this[12].toBigInt();
+  }
+
+  get minDepositSeconds(): BigInt {
+    return this[13].toBigInt();
+  }
+}
+
+export class OpenLandCall extends ethereum.Call {
+  get inputs(): OpenLandCall__Inputs {
+    return new OpenLandCall__Inputs(this);
+  }
+
+  get outputs(): OpenLandCall__Outputs {
+    return new OpenLandCall__Outputs(this);
+  }
+}
+
+export class OpenLandCall__Inputs {
+  _call: OpenLandCall;
+
+  constructor(call: OpenLandCall) {
+    this._call = call;
+  }
+
+  get account(): Address {
+    return this._call.inputValues[0].value.toAddress();
+  }
+}
+
+export class OpenLandCall__Outputs {
+  _call: OpenLandCall;
+
+  constructor(call: OpenLandCall) {
+    this._call = call;
+  }
+
+  get land(): Address {
+    return this._call.outputValues[0].value.toAddress();
+  }
+}
+
+export class RenounceRoleCall extends ethereum.Call {
+  get inputs(): RenounceRoleCall__Inputs {
+    return new RenounceRoleCall__Inputs(this);
+  }
+
+  get outputs(): RenounceRoleCall__Outputs {
+    return new RenounceRoleCall__Outputs(this);
+  }
+}
+
+export class RenounceRoleCall__Inputs {
+  _call: RenounceRoleCall;
+
+  constructor(call: RenounceRoleCall) {
+    this._call = call;
+  }
+
+  get role(): Bytes {
+    return this._call.inputValues[0].value.toBytes();
+  }
+
+  get account(): Address {
+    return this._call.inputValues[1].value.toAddress();
+  }
+}
+
+export class RenounceRoleCall__Outputs {
+  _call: RenounceRoleCall;
+
+  constructor(call: RenounceRoleCall) {
+    this._call = call;
+  }
+}
+
+export class RevokeRoleCall extends ethereum.Call {
+  get inputs(): RevokeRoleCall__Inputs {
+    return new RevokeRoleCall__Inputs(this);
+  }
+
+  get outputs(): RevokeRoleCall__Outputs {
+    return new RevokeRoleCall__Outputs(this);
+  }
+}
+
+export class RevokeRoleCall__Inputs {
+  _call: RevokeRoleCall;
+
+  constructor(call: RevokeRoleCall) {
+    this._call = call;
+  }
+
+  get role(): Bytes {
+    return this._call.inputValues[0].value.toBytes();
+  }
+
+  get account(): Address {
+    return this._call.inputValues[1].value.toAddress();
+  }
+}
+
+export class RevokeRoleCall__Outputs {
+  _call: RevokeRoleCall;
+
+  constructor(call: RevokeRoleCall) {
+    this._call = call;
+  }
+}
+
+export class UpdateHubSettingsCall extends ethereum.Call {
+  get inputs(): UpdateHubSettingsCall__Inputs {
+    return new UpdateHubSettingsCall__Inputs(this);
+  }
+
+  get outputs(): UpdateHubSettingsCall__Outputs {
+    return new UpdateHubSettingsCall__Outputs(this);
+  }
+}
+
+export class UpdateHubSettingsCall__Inputs {
+  _call: UpdateHubSettingsCall;
+
+  constructor(call: UpdateHubSettingsCall) {
+    this._call = call;
+  }
+
+  get newSettings(): UpdateHubSettingsCallNewSettingsStruct {
+    return changetype<UpdateHubSettingsCallNewSettingsStruct>(
+      this._call.inputValues[0].value.toTuple(),
+    );
+  }
+}
+
+export class UpdateHubSettingsCall__Outputs {
+  _call: UpdateHubSettingsCall;
+
+  constructor(call: UpdateHubSettingsCall) {
+    this._call = call;
+  }
+}
+
+export class UpdateHubSettingsCallNewSettingsStruct extends ethereum.Tuple {
+  get protocolFeeBps(): BigInt {
+    return this[0].toBigInt();
+  }
+
+  get protocolFeeRecipient(): Address {
+    return this[1].toAddress();
+  }
+
+  get landCreationFee(): BigInt {
+    return this[2].toBigInt();
+  }
+
+  get slotExpansionFee(): BigInt {
+    return this[3].toBigInt();
+  }
+
+  get newLandInitialCurrency(): Address {
+    return this[4].toAddress();
+  }
+
+  get newLandInitialAmount(): BigInt {
+    return this[5].toBigInt();
+  }
+
+  get newLandInitialPrice(): BigInt {
+    return this[6].toBigInt();
+  }
+
+  get newLandInitialTaxPercentage(): BigInt {
+    return this[7].toBigInt();
+  }
+
+  get newLandInitialMaxTaxPercentage(): BigInt {
+    return this[8].toBigInt();
+  }
+
+  get newLandInitialMinTaxUpdatePeriod(): BigInt {
+    return this[9].toBigInt();
+  }
+
+  get newLandInitialModule(): Address {
+    return this[10].toAddress();
+  }
+
+  get moduleCallGasLimit(): BigInt {
+    return this[11].toBigInt();
+  }
+
+  get liquidationBountyBps(): BigInt {
+    return this[12].toBigInt();
+  }
+
+  get minDepositSeconds(): BigInt {
+    return this[13].toBigInt();
+  }
+}
+
+export class UpgradeToCall extends ethereum.Call {
+  get inputs(): UpgradeToCall__Inputs {
+    return new UpgradeToCall__Inputs(this);
+  }
+
+  get outputs(): UpgradeToCall__Outputs {
+    return new UpgradeToCall__Outputs(this);
+  }
+}
+
+export class UpgradeToCall__Inputs {
+  _call: UpgradeToCall;
+
+  constructor(call: UpgradeToCall) {
+    this._call = call;
+  }
+
+  get newImplementation(): Address {
+    return this._call.inputValues[0].value.toAddress();
+  }
+}
+
+export class UpgradeToCall__Outputs {
+  _call: UpgradeToCall;
+
+  constructor(call: UpgradeToCall) {
+    this._call = call;
+  }
+}
+
+export class UpgradeToAndCallCall extends ethereum.Call {
+  get inputs(): UpgradeToAndCallCall__Inputs {
+    return new UpgradeToAndCallCall__Inputs(this);
+  }
+
+  get outputs(): UpgradeToAndCallCall__Outputs {
+    return new UpgradeToAndCallCall__Outputs(this);
+  }
+}
+
+export class UpgradeToAndCallCall__Inputs {
+  _call: UpgradeToAndCallCall;
+
+  constructor(call: UpgradeToAndCallCall) {
+    this._call = call;
+  }
+
+  get newImplementation(): Address {
+    return this._call.inputValues[0].value.toAddress();
+  }
+
+  get data(): Bytes {
+    return this._call.inputValues[1].value.toBytes();
+  }
+}
+
+export class UpgradeToAndCallCall__Outputs {
+  _call: UpgradeToAndCallCall;
+
+  constructor(call: UpgradeToAndCallCall) {
+    this._call = call;
+  }
+}
+
+export class WithdrawETHCall extends ethereum.Call {
+  get inputs(): WithdrawETHCall__Inputs {
+    return new WithdrawETHCall__Inputs(this);
+  }
+
+  get outputs(): WithdrawETHCall__Outputs {
+    return new WithdrawETHCall__Outputs(this);
+  }
+}
+
+export class WithdrawETHCall__Inputs {
+  _call: WithdrawETHCall;
+
+  constructor(call: WithdrawETHCall) {
+    this._call = call;
+  }
+
+  get to(): Address {
+    return this._call.inputValues[0].value.toAddress();
+  }
+}
+
+export class WithdrawETHCall__Outputs {
+  _call: WithdrawETHCall;
+
+  constructor(call: WithdrawETHCall) {
+    this._call = call;
   }
 }

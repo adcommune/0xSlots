@@ -69,6 +69,7 @@ interface ISlotsEvents {
   event TaxRateUpdateProposed(address landOwner, uint256 indexed slotId, uint256 newPercentage, uint256 confirmableAt);
   event TaxRateUpdateConfirmed(address landOwner, uint256 indexed slotId, uint256 oldPercentage, uint256 newPercentage);
   event TaxRateUpdateCancelled(address landOwner, uint256 indexed slotId);
+  event SlotSettingsUpdated(address landOwner, uint256 indexed slotId, uint256 basePrice, address currency, uint256 maxTaxPercentage, address module);
   event SlotDeactivated(address landOwner, uint256 indexed slotId);
   event SlotActivated(address landOwner, uint256 indexed slotId);
   event Deposited(uint256 indexed slotId, address indexed depositor, uint256 amount);

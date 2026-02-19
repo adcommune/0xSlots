@@ -42,6 +42,7 @@ contract Slots is ISlotsEvents, ReentrancyGuardUpgradeable, OwnableUpgradeable {
   error NothingToWithdraw();
   error InvalidRange();
   error OnlyOccupant();
+  error CurrencyChangeWhileOccupied();
 
   event ModuleCallFailed(uint256 indexed slotId, string callbackName);
 
@@ -264,6 +265,45 @@ contract Slots is ISlotsEvents, ReentrancyGuardUpgradeable, OwnableUpgradeable {
     if (esc.pendingTaxUpdate.status != TaxUpdateStatus.Pending) revert NoTaxUpdatePending();
     esc.pendingTaxUpdate = TaxUpdate(0, 0, TaxUpdateStatus.None);
     emit TaxRateUpdateCancelled(owner(), slotId);
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // SLOT SETTINGS (LAND OWNER)
+  // ══════════════════════════════════════════════════════════════
+
+  function updateSlotSettings(
+    uint256 slotId,
+    uint256 newBasePrice,
+    address newCurrency,
+    uint256 newMaxTaxPercentage,
+    address newModule
+  ) external {
+    if (msg.sender != owner()) revert UnauthorizedTaxUpdate();
+    Slot storage slot = slots[slotId];
+    if (slot.occupant == address(0)) revert SlotNotExist(slotId);
+
+    bool isVacant = slot.occupant == owner();
+
+    if (newBasePrice > 0) {
+      slot.basePrice = newBasePrice;
+      if (isVacant) slot.price = newBasePrice;
+    }
+
+    if (newCurrency != address(0) && newCurrency != address(slot.currency)) {
+      if (!isVacant) revert CurrencyChangeWhileOccupied();
+      if (!hub.isCurrencyAllowed(newCurrency)) revert CurrencyNotAllowed(newCurrency);
+      slot.currency = IERC20(newCurrency);
+    }
+
+    if (newMaxTaxPercentage > 0) {
+      slot.maxTaxPercentage = newMaxTaxPercentage;
+    }
+
+    if (newModule != slot.module) {
+      slot.module = newModule;
+    }
+
+    emit SlotSettingsUpdated(owner(), slotId, slot.basePrice, address(slot.currency), slot.maxTaxPercentage, slot.module);
   }
 
   // ══════════════════════════════════════════════════════════════

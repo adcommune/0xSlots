@@ -11,6 +11,7 @@ import {
   TaxRateUpdateCancelled,
   SlotDeactivated,
   SlotActivated,
+  SlotSettingsUpdated,
   Deposited,
   Withdrawn,
   Settled,
@@ -324,4 +325,26 @@ export function handleTaxCollected(event: TaxCollected): void {
   tc.blockNumber = event.block.number;
   tc.tx = event.transaction.hash;
   tc.save();
+}
+
+export function handleSlotSettingsUpdated(event: SlotSettingsUpdated): void {
+  let id = slotEntityId(event.address, event.params.slotId);
+  let slot = Slot.load(id);
+  if (!slot) return;
+
+  slot.basePrice = event.params.basePrice;
+  slot.maxTaxPercentage = event.params.maxTaxPercentage;
+  slot.module = event.params.module;
+
+  // Update currency
+  let currencyAddr = event.params.currency;
+  slot.currency = currencyAddr.toHexString();
+
+  // Update price to basePrice if vacant (occupant == land owner)
+  if (slot.occupant === null) {
+    slot.price = event.params.basePrice;
+  }
+
+  slot.updatedAt = event.block.timestamp;
+  slot.save();
 }
