@@ -146,7 +146,7 @@ export default async function LandPage({
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-500">TAX RATE</span>
-                      <span>{Number(slot.taxPercentage) / 100}%/yr</span>
+                      <span>{Number(slot.taxPercentage) / 100}%/mo</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-500">STATUS</span>
