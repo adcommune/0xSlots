@@ -342,6 +342,44 @@ export class SlotReleased__Params {
   }
 }
 
+export class SlotSettingsUpdated extends ethereum.Event {
+  get params(): SlotSettingsUpdated__Params {
+    return new SlotSettingsUpdated__Params(this);
+  }
+}
+
+export class SlotSettingsUpdated__Params {
+  _event: SlotSettingsUpdated;
+
+  constructor(event: SlotSettingsUpdated) {
+    this._event = event;
+  }
+
+  get landOwner(): Address {
+    return this._event.parameters[0].value.toAddress();
+  }
+
+  get slotId(): BigInt {
+    return this._event.parameters[1].value.toBigInt();
+  }
+
+  get basePrice(): BigInt {
+    return this._event.parameters[2].value.toBigInt();
+  }
+
+  get currency(): Address {
+    return this._event.parameters[3].value.toAddress();
+  }
+
+  get maxTaxPercentage(): BigInt {
+    return this._event.parameters[4].value.toBigInt();
+  }
+
+  get module(): Address {
+    return this._event.parameters[5].value.toAddress();
+  }
+}
+
 export class TaxCollected extends ethereum.Event {
   get params(): TaxCollected__Params {
     return new TaxCollected__Params(this);
@@ -476,8 +514,1297 @@ export class Withdrawn__Params {
   }
 }
 
+export class Slots__escrowsResultPendingTaxUpdateStruct extends ethereum.Tuple {
+  get newRate(): BigInt {
+    return this[0].toBigInt();
+  }
+
+  get proposedAt(): BigInt {
+    return this[1].toBigInt();
+  }
+
+  get status(): i32 {
+    return this[2].toI32();
+  }
+}
+
+export class Slots__escrowsResult {
+  value0: BigInt;
+  value1: BigInt;
+  value2: BigInt;
+  value3: Slots__escrowsResultPendingTaxUpdateStruct;
+
+  constructor(
+    value0: BigInt,
+    value1: BigInt,
+    value2: BigInt,
+    value3: Slots__escrowsResultPendingTaxUpdateStruct,
+  ) {
+    this.value0 = value0;
+    this.value1 = value1;
+    this.value2 = value2;
+    this.value3 = value3;
+  }
+
+  toMap(): TypedMap<string, ethereum.Value> {
+    let map = new TypedMap<string, ethereum.Value>();
+    map.set("value0", ethereum.Value.fromUnsignedBigInt(this.value0));
+    map.set("value1", ethereum.Value.fromUnsignedBigInt(this.value1));
+    map.set("value2", ethereum.Value.fromUnsignedBigInt(this.value2));
+    map.set("value3", ethereum.Value.fromTuple(this.value3));
+    return map;
+  }
+
+  getDeposit(): BigInt {
+    return this.value0;
+  }
+
+  getLastSettled(): BigInt {
+    return this.value1;
+  }
+
+  getCollectedTax(): BigInt {
+    return this.value2;
+  }
+
+  getPendingTaxUpdate(): Slots__escrowsResultPendingTaxUpdateStruct {
+    return this.value3;
+  }
+}
+
+export class Slots__getEscrowResultValue0Struct extends ethereum.Tuple {
+  get deposit(): BigInt {
+    return this[0].toBigInt();
+  }
+
+  get lastSettled(): BigInt {
+    return this[1].toBigInt();
+  }
+
+  get collectedTax(): BigInt {
+    return this[2].toBigInt();
+  }
+
+  get pendingTaxUpdate(): Slots__getEscrowResultValue0PendingTaxUpdateStruct {
+    return changetype<Slots__getEscrowResultValue0PendingTaxUpdateStruct>(
+      this[3].toTuple(),
+    );
+  }
+}
+
+export class Slots__getEscrowResultValue0PendingTaxUpdateStruct extends ethereum.Tuple {
+  get newRate(): BigInt {
+    return this[0].toBigInt();
+  }
+
+  get proposedAt(): BigInt {
+    return this[1].toBigInt();
+  }
+
+  get status(): i32 {
+    return this[2].toI32();
+  }
+}
+
+export class Slots__getPendingTaxUpdateResult {
+  value0: BigInt;
+  value1: BigInt;
+  value2: i32;
+
+  constructor(value0: BigInt, value1: BigInt, value2: i32) {
+    this.value0 = value0;
+    this.value1 = value1;
+    this.value2 = value2;
+  }
+
+  toMap(): TypedMap<string, ethereum.Value> {
+    let map = new TypedMap<string, ethereum.Value>();
+    map.set("value0", ethereum.Value.fromUnsignedBigInt(this.value0));
+    map.set("value1", ethereum.Value.fromUnsignedBigInt(this.value1));
+    map.set(
+      "value2",
+      ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(this.value2)),
+    );
+    return map;
+  }
+
+  getValue0(): BigInt {
+    return this.value0;
+  }
+
+  getValue1(): BigInt {
+    return this.value1;
+  }
+
+  getValue2(): i32 {
+    return this.value2;
+  }
+}
+
+export class Slots__getSlotResultValue0Struct extends ethereum.Tuple {
+  get currency(): Address {
+    return this[0].toAddress();
+  }
+
+  get occupant(): Address {
+    return this[1].toAddress();
+  }
+
+  get basePrice(): BigInt {
+    return this[2].toBigInt();
+  }
+
+  get price(): BigInt {
+    return this[3].toBigInt();
+  }
+
+  get active(): boolean {
+    return this[4].toBoolean();
+  }
+
+  get taxPercentage(): BigInt {
+    return this[5].toBigInt();
+  }
+
+  get maxTaxPercentage(): BigInt {
+    return this[6].toBigInt();
+  }
+
+  get minTaxUpdatePeriod(): BigInt {
+    return this[7].toBigInt();
+  }
+
+  get module(): Address {
+    return this[8].toAddress();
+  }
+}
+
+export class Slots__openInputParamsStruct extends ethereum.Tuple {
+  get currency(): Address {
+    return this[0].toAddress();
+  }
+
+  get basePrice(): BigInt {
+    return this[1].toBigInt();
+  }
+
+  get taxPercentage(): BigInt {
+    return this[2].toBigInt();
+  }
+
+  get maxTaxPercentage(): BigInt {
+    return this[3].toBigInt();
+  }
+
+  get minTaxUpdatePeriod(): BigInt {
+    return this[4].toBigInt();
+  }
+
+  get module(): Address {
+    return this[5].toAddress();
+  }
+}
+
+export class Slots__slotsResult {
+  value0: Address;
+  value1: Address;
+  value2: BigInt;
+  value3: BigInt;
+  value4: boolean;
+  value5: BigInt;
+  value6: BigInt;
+  value7: BigInt;
+  value8: Address;
+
+  constructor(
+    value0: Address,
+    value1: Address,
+    value2: BigInt,
+    value3: BigInt,
+    value4: boolean,
+    value5: BigInt,
+    value6: BigInt,
+    value7: BigInt,
+    value8: Address,
+  ) {
+    this.value0 = value0;
+    this.value1 = value1;
+    this.value2 = value2;
+    this.value3 = value3;
+    this.value4 = value4;
+    this.value5 = value5;
+    this.value6 = value6;
+    this.value7 = value7;
+    this.value8 = value8;
+  }
+
+  toMap(): TypedMap<string, ethereum.Value> {
+    let map = new TypedMap<string, ethereum.Value>();
+    map.set("value0", ethereum.Value.fromAddress(this.value0));
+    map.set("value1", ethereum.Value.fromAddress(this.value1));
+    map.set("value2", ethereum.Value.fromUnsignedBigInt(this.value2));
+    map.set("value3", ethereum.Value.fromUnsignedBigInt(this.value3));
+    map.set("value4", ethereum.Value.fromBoolean(this.value4));
+    map.set("value5", ethereum.Value.fromUnsignedBigInt(this.value5));
+    map.set("value6", ethereum.Value.fromUnsignedBigInt(this.value6));
+    map.set("value7", ethereum.Value.fromUnsignedBigInt(this.value7));
+    map.set("value8", ethereum.Value.fromAddress(this.value8));
+    return map;
+  }
+
+  getCurrency(): Address {
+    return this.value0;
+  }
+
+  getOccupant(): Address {
+    return this.value1;
+  }
+
+  getBasePrice(): BigInt {
+    return this.value2;
+  }
+
+  getPrice(): BigInt {
+    return this.value3;
+  }
+
+  getActive(): boolean {
+    return this.value4;
+  }
+
+  getTaxPercentage(): BigInt {
+    return this.value5;
+  }
+
+  getMaxTaxPercentage(): BigInt {
+    return this.value6;
+  }
+
+  getMinTaxUpdatePeriod(): BigInt {
+    return this.value7;
+  }
+
+  getModule(): Address {
+    return this.value8;
+  }
+}
+
 export class Slots extends ethereum.SmartContract {
   static bind(address: Address): Slots {
     return new Slots("Slots", address);
+  }
+
+  BASIS_POINTS(): BigInt {
+    let result = super.call("BASIS_POINTS", "BASIS_POINTS():(uint256)", []);
+
+    return result[0].toBigInt();
+  }
+
+  try_BASIS_POINTS(): ethereum.CallResult<BigInt> {
+    let result = super.tryCall("BASIS_POINTS", "BASIS_POINTS():(uint256)", []);
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
+  MONTH(): BigInt {
+    let result = super.call("MONTH", "MONTH():(uint256)", []);
+
+    return result[0].toBigInt();
+  }
+
+  try_MONTH(): ethereum.CallResult<BigInt> {
+    let result = super.tryCall("MONTH", "MONTH():(uint256)", []);
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
+  escrows(param0: BigInt): Slots__escrowsResult {
+    let result = super.call(
+      "escrows",
+      "escrows(uint256):(uint256,uint256,uint256,(uint256,uint256,uint8))",
+      [ethereum.Value.fromUnsignedBigInt(param0)],
+    );
+
+    return new Slots__escrowsResult(
+      result[0].toBigInt(),
+      result[1].toBigInt(),
+      result[2].toBigInt(),
+      changetype<Slots__escrowsResultPendingTaxUpdateStruct>(
+        result[3].toTuple(),
+      ),
+    );
+  }
+
+  try_escrows(param0: BigInt): ethereum.CallResult<Slots__escrowsResult> {
+    let result = super.tryCall(
+      "escrows",
+      "escrows(uint256):(uint256,uint256,uint256,(uint256,uint256,uint8))",
+      [ethereum.Value.fromUnsignedBigInt(param0)],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(
+      new Slots__escrowsResult(
+        value[0].toBigInt(),
+        value[1].toBigInt(),
+        value[2].toBigInt(),
+        changetype<Slots__escrowsResultPendingTaxUpdateStruct>(
+          value[3].toTuple(),
+        ),
+      ),
+    );
+  }
+
+  getEscrow(slotId: BigInt): Slots__getEscrowResultValue0Struct {
+    let result = super.call(
+      "getEscrow",
+      "getEscrow(uint256):((uint256,uint256,uint256,(uint256,uint256,uint8)))",
+      [ethereum.Value.fromUnsignedBigInt(slotId)],
+    );
+
+    return changetype<Slots__getEscrowResultValue0Struct>(result[0].toTuple());
+  }
+
+  try_getEscrow(
+    slotId: BigInt,
+  ): ethereum.CallResult<Slots__getEscrowResultValue0Struct> {
+    let result = super.tryCall(
+      "getEscrow",
+      "getEscrow(uint256):((uint256,uint256,uint256,(uint256,uint256,uint8)))",
+      [ethereum.Value.fromUnsignedBigInt(slotId)],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(
+      changetype<Slots__getEscrowResultValue0Struct>(value[0].toTuple()),
+    );
+  }
+
+  getModule(slotId: BigInt): Address {
+    let result = super.call("getModule", "getModule(uint256):(address)", [
+      ethereum.Value.fromUnsignedBigInt(slotId),
+    ]);
+
+    return result[0].toAddress();
+  }
+
+  try_getModule(slotId: BigInt): ethereum.CallResult<Address> {
+    let result = super.tryCall("getModule", "getModule(uint256):(address)", [
+      ethereum.Value.fromUnsignedBigInt(slotId),
+    ]);
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toAddress());
+  }
+
+  getOccupant(slotId: BigInt): Address {
+    let result = super.call("getOccupant", "getOccupant(uint256):(address)", [
+      ethereum.Value.fromUnsignedBigInt(slotId),
+    ]);
+
+    return result[0].toAddress();
+  }
+
+  try_getOccupant(slotId: BigInt): ethereum.CallResult<Address> {
+    let result = super.tryCall(
+      "getOccupant",
+      "getOccupant(uint256):(address)",
+      [ethereum.Value.fromUnsignedBigInt(slotId)],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toAddress());
+  }
+
+  getPendingTaxUpdate(slotId: BigInt): Slots__getPendingTaxUpdateResult {
+    let result = super.call(
+      "getPendingTaxUpdate",
+      "getPendingTaxUpdate(uint256):(uint256,uint256,uint8)",
+      [ethereum.Value.fromUnsignedBigInt(slotId)],
+    );
+
+    return new Slots__getPendingTaxUpdateResult(
+      result[0].toBigInt(),
+      result[1].toBigInt(),
+      result[2].toI32(),
+    );
+  }
+
+  try_getPendingTaxUpdate(
+    slotId: BigInt,
+  ): ethereum.CallResult<Slots__getPendingTaxUpdateResult> {
+    let result = super.tryCall(
+      "getPendingTaxUpdate",
+      "getPendingTaxUpdate(uint256):(uint256,uint256,uint8)",
+      [ethereum.Value.fromUnsignedBigInt(slotId)],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(
+      new Slots__getPendingTaxUpdateResult(
+        value[0].toBigInt(),
+        value[1].toBigInt(),
+        value[2].toI32(),
+      ),
+    );
+  }
+
+  getSlot(slotId: BigInt): Slots__getSlotResultValue0Struct {
+    let result = super.call(
+      "getSlot",
+      "getSlot(uint256):((address,address,uint256,uint256,bool,uint256,uint256,uint256,address))",
+      [ethereum.Value.fromUnsignedBigInt(slotId)],
+    );
+
+    return changetype<Slots__getSlotResultValue0Struct>(result[0].toTuple());
+  }
+
+  try_getSlot(
+    slotId: BigInt,
+  ): ethereum.CallResult<Slots__getSlotResultValue0Struct> {
+    let result = super.tryCall(
+      "getSlot",
+      "getSlot(uint256):((address,address,uint256,uint256,bool,uint256,uint256,uint256,address))",
+      [ethereum.Value.fromUnsignedBigInt(slotId)],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(
+      changetype<Slots__getSlotResultValue0Struct>(value[0].toTuple()),
+    );
+  }
+
+  hub(): Address {
+    let result = super.call("hub", "hub():(address)", []);
+
+    return result[0].toAddress();
+  }
+
+  try_hub(): ethereum.CallResult<Address> {
+    let result = super.tryCall("hub", "hub():(address)", []);
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toAddress());
+  }
+
+  isInsolvent(slotId: BigInt): boolean {
+    let result = super.call("isInsolvent", "isInsolvent(uint256):(bool)", [
+      ethereum.Value.fromUnsignedBigInt(slotId),
+    ]);
+
+    return result[0].toBoolean();
+  }
+
+  try_isInsolvent(slotId: BigInt): ethereum.CallResult<boolean> {
+    let result = super.tryCall("isInsolvent", "isInsolvent(uint256):(bool)", [
+      ethereum.Value.fromUnsignedBigInt(slotId),
+    ]);
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBoolean());
+  }
+
+  nextSlotId(): BigInt {
+    let result = super.call("nextSlotId", "nextSlotId():(uint256)", []);
+
+    return result[0].toBigInt();
+  }
+
+  try_nextSlotId(): ethereum.CallResult<BigInt> {
+    let result = super.tryCall("nextSlotId", "nextSlotId():(uint256)", []);
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
+  open(params: Array<Slots__openInputParamsStruct>): Array<BigInt> {
+    let result = super.call(
+      "open",
+      "open((address,uint256,uint256,uint256,uint256,address)[]):(uint256[])",
+      [ethereum.Value.fromTupleArray(params)],
+    );
+
+    return result[0].toBigIntArray();
+  }
+
+  try_open(
+    params: Array<Slots__openInputParamsStruct>,
+  ): ethereum.CallResult<Array<BigInt>> {
+    let result = super.tryCall(
+      "open",
+      "open((address,uint256,uint256,uint256,uint256,address)[]):(uint256[])",
+      [ethereum.Value.fromTupleArray(params)],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigIntArray());
+  }
+
+  owner(): Address {
+    let result = super.call("owner", "owner():(address)", []);
+
+    return result[0].toAddress();
+  }
+
+  try_owner(): ethereum.CallResult<Address> {
+    let result = super.tryCall("owner", "owner():(address)", []);
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toAddress());
+  }
+
+  secondsUntilLiquidation(slotId: BigInt): BigInt {
+    let result = super.call(
+      "secondsUntilLiquidation",
+      "secondsUntilLiquidation(uint256):(uint256)",
+      [ethereum.Value.fromUnsignedBigInt(slotId)],
+    );
+
+    return result[0].toBigInt();
+  }
+
+  try_secondsUntilLiquidation(slotId: BigInt): ethereum.CallResult<BigInt> {
+    let result = super.tryCall(
+      "secondsUntilLiquidation",
+      "secondsUntilLiquidation(uint256):(uint256)",
+      [ethereum.Value.fromUnsignedBigInt(slotId)],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
+  slots(param0: BigInt): Slots__slotsResult {
+    let result = super.call(
+      "slots",
+      "slots(uint256):(address,address,uint256,uint256,bool,uint256,uint256,uint256,address)",
+      [ethereum.Value.fromUnsignedBigInt(param0)],
+    );
+
+    return new Slots__slotsResult(
+      result[0].toAddress(),
+      result[1].toAddress(),
+      result[2].toBigInt(),
+      result[3].toBigInt(),
+      result[4].toBoolean(),
+      result[5].toBigInt(),
+      result[6].toBigInt(),
+      result[7].toBigInt(),
+      result[8].toAddress(),
+    );
+  }
+
+  try_slots(param0: BigInt): ethereum.CallResult<Slots__slotsResult> {
+    let result = super.tryCall(
+      "slots",
+      "slots(uint256):(address,address,uint256,uint256,bool,uint256,uint256,uint256,address)",
+      [ethereum.Value.fromUnsignedBigInt(param0)],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(
+      new Slots__slotsResult(
+        value[0].toAddress(),
+        value[1].toAddress(),
+        value[2].toBigInt(),
+        value[3].toBigInt(),
+        value[4].toBoolean(),
+        value[5].toBigInt(),
+        value[6].toBigInt(),
+        value[7].toBigInt(),
+        value[8].toAddress(),
+      ),
+    );
+  }
+
+  taxOwed(slotId: BigInt): BigInt {
+    let result = super.call("taxOwed", "taxOwed(uint256):(uint256)", [
+      ethereum.Value.fromUnsignedBigInt(slotId),
+    ]);
+
+    return result[0].toBigInt();
+  }
+
+  try_taxOwed(slotId: BigInt): ethereum.CallResult<BigInt> {
+    let result = super.tryCall("taxOwed", "taxOwed(uint256):(uint256)", [
+      ethereum.Value.fromUnsignedBigInt(slotId),
+    ]);
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+}
+
+export class ActivateSlotCall extends ethereum.Call {
+  get inputs(): ActivateSlotCall__Inputs {
+    return new ActivateSlotCall__Inputs(this);
+  }
+
+  get outputs(): ActivateSlotCall__Outputs {
+    return new ActivateSlotCall__Outputs(this);
+  }
+}
+
+export class ActivateSlotCall__Inputs {
+  _call: ActivateSlotCall;
+
+  constructor(call: ActivateSlotCall) {
+    this._call = call;
+  }
+
+  get slotId(): BigInt {
+    return this._call.inputValues[0].value.toBigInt();
+  }
+}
+
+export class ActivateSlotCall__Outputs {
+  _call: ActivateSlotCall;
+
+  constructor(call: ActivateSlotCall) {
+    this._call = call;
+  }
+}
+
+export class BuyCall extends ethereum.Call {
+  get inputs(): BuyCall__Inputs {
+    return new BuyCall__Inputs(this);
+  }
+
+  get outputs(): BuyCall__Outputs {
+    return new BuyCall__Outputs(this);
+  }
+}
+
+export class BuyCall__Inputs {
+  _call: BuyCall;
+
+  constructor(call: BuyCall) {
+    this._call = call;
+  }
+
+  get slotId(): BigInt {
+    return this._call.inputValues[0].value.toBigInt();
+  }
+
+  get depositAmount(): BigInt {
+    return this._call.inputValues[1].value.toBigInt();
+  }
+}
+
+export class BuyCall__Outputs {
+  _call: BuyCall;
+
+  constructor(call: BuyCall) {
+    this._call = call;
+  }
+}
+
+export class CancelTaxRateUpdateCall extends ethereum.Call {
+  get inputs(): CancelTaxRateUpdateCall__Inputs {
+    return new CancelTaxRateUpdateCall__Inputs(this);
+  }
+
+  get outputs(): CancelTaxRateUpdateCall__Outputs {
+    return new CancelTaxRateUpdateCall__Outputs(this);
+  }
+}
+
+export class CancelTaxRateUpdateCall__Inputs {
+  _call: CancelTaxRateUpdateCall;
+
+  constructor(call: CancelTaxRateUpdateCall) {
+    this._call = call;
+  }
+
+  get slotId(): BigInt {
+    return this._call.inputValues[0].value.toBigInt();
+  }
+}
+
+export class CancelTaxRateUpdateCall__Outputs {
+  _call: CancelTaxRateUpdateCall;
+
+  constructor(call: CancelTaxRateUpdateCall) {
+    this._call = call;
+  }
+}
+
+export class CollectCall extends ethereum.Call {
+  get inputs(): CollectCall__Inputs {
+    return new CollectCall__Inputs(this);
+  }
+
+  get outputs(): CollectCall__Outputs {
+    return new CollectCall__Outputs(this);
+  }
+}
+
+export class CollectCall__Inputs {
+  _call: CollectCall;
+
+  constructor(call: CollectCall) {
+    this._call = call;
+  }
+
+  get slotId(): BigInt {
+    return this._call.inputValues[0].value.toBigInt();
+  }
+}
+
+export class CollectCall__Outputs {
+  _call: CollectCall;
+
+  constructor(call: CollectCall) {
+    this._call = call;
+  }
+}
+
+export class CollectRangeCall extends ethereum.Call {
+  get inputs(): CollectRangeCall__Inputs {
+    return new CollectRangeCall__Inputs(this);
+  }
+
+  get outputs(): CollectRangeCall__Outputs {
+    return new CollectRangeCall__Outputs(this);
+  }
+}
+
+export class CollectRangeCall__Inputs {
+  _call: CollectRangeCall;
+
+  constructor(call: CollectRangeCall) {
+    this._call = call;
+  }
+
+  get fromId(): BigInt {
+    return this._call.inputValues[0].value.toBigInt();
+  }
+
+  get toId(): BigInt {
+    return this._call.inputValues[1].value.toBigInt();
+  }
+}
+
+export class CollectRangeCall__Outputs {
+  _call: CollectRangeCall;
+
+  constructor(call: CollectRangeCall) {
+    this._call = call;
+  }
+}
+
+export class ConfirmTaxRateUpdateCall extends ethereum.Call {
+  get inputs(): ConfirmTaxRateUpdateCall__Inputs {
+    return new ConfirmTaxRateUpdateCall__Inputs(this);
+  }
+
+  get outputs(): ConfirmTaxRateUpdateCall__Outputs {
+    return new ConfirmTaxRateUpdateCall__Outputs(this);
+  }
+}
+
+export class ConfirmTaxRateUpdateCall__Inputs {
+  _call: ConfirmTaxRateUpdateCall;
+
+  constructor(call: ConfirmTaxRateUpdateCall) {
+    this._call = call;
+  }
+
+  get slotId(): BigInt {
+    return this._call.inputValues[0].value.toBigInt();
+  }
+}
+
+export class ConfirmTaxRateUpdateCall__Outputs {
+  _call: ConfirmTaxRateUpdateCall;
+
+  constructor(call: ConfirmTaxRateUpdateCall) {
+    this._call = call;
+  }
+}
+
+export class DeactivateSlotCall extends ethereum.Call {
+  get inputs(): DeactivateSlotCall__Inputs {
+    return new DeactivateSlotCall__Inputs(this);
+  }
+
+  get outputs(): DeactivateSlotCall__Outputs {
+    return new DeactivateSlotCall__Outputs(this);
+  }
+}
+
+export class DeactivateSlotCall__Inputs {
+  _call: DeactivateSlotCall;
+
+  constructor(call: DeactivateSlotCall) {
+    this._call = call;
+  }
+
+  get slotId(): BigInt {
+    return this._call.inputValues[0].value.toBigInt();
+  }
+}
+
+export class DeactivateSlotCall__Outputs {
+  _call: DeactivateSlotCall;
+
+  constructor(call: DeactivateSlotCall) {
+    this._call = call;
+  }
+}
+
+export class DepositCall extends ethereum.Call {
+  get inputs(): DepositCall__Inputs {
+    return new DepositCall__Inputs(this);
+  }
+
+  get outputs(): DepositCall__Outputs {
+    return new DepositCall__Outputs(this);
+  }
+}
+
+export class DepositCall__Inputs {
+  _call: DepositCall;
+
+  constructor(call: DepositCall) {
+    this._call = call;
+  }
+
+  get slotId(): BigInt {
+    return this._call.inputValues[0].value.toBigInt();
+  }
+
+  get amount(): BigInt {
+    return this._call.inputValues[1].value.toBigInt();
+  }
+}
+
+export class DepositCall__Outputs {
+  _call: DepositCall;
+
+  constructor(call: DepositCall) {
+    this._call = call;
+  }
+}
+
+export class InitializeCall extends ethereum.Call {
+  get inputs(): InitializeCall__Inputs {
+    return new InitializeCall__Inputs(this);
+  }
+
+  get outputs(): InitializeCall__Outputs {
+    return new InitializeCall__Outputs(this);
+  }
+}
+
+export class InitializeCall__Inputs {
+  _call: InitializeCall;
+
+  constructor(call: InitializeCall) {
+    this._call = call;
+  }
+
+  get _hub(): Address {
+    return this._call.inputValues[0].value.toAddress();
+  }
+
+  get account(): Address {
+    return this._call.inputValues[1].value.toAddress();
+  }
+
+  get params(): Array<InitializeCallParamsStruct> {
+    return this._call.inputValues[2].value.toTupleArray<InitializeCallParamsStruct>();
+  }
+}
+
+export class InitializeCall__Outputs {
+  _call: InitializeCall;
+
+  constructor(call: InitializeCall) {
+    this._call = call;
+  }
+}
+
+export class InitializeCallParamsStruct extends ethereum.Tuple {
+  get currency(): Address {
+    return this[0].toAddress();
+  }
+
+  get basePrice(): BigInt {
+    return this[1].toBigInt();
+  }
+
+  get taxPercentage(): BigInt {
+    return this[2].toBigInt();
+  }
+
+  get maxTaxPercentage(): BigInt {
+    return this[3].toBigInt();
+  }
+
+  get minTaxUpdatePeriod(): BigInt {
+    return this[4].toBigInt();
+  }
+
+  get module(): Address {
+    return this[5].toAddress();
+  }
+}
+
+export class LiquidateCall extends ethereum.Call {
+  get inputs(): LiquidateCall__Inputs {
+    return new LiquidateCall__Inputs(this);
+  }
+
+  get outputs(): LiquidateCall__Outputs {
+    return new LiquidateCall__Outputs(this);
+  }
+}
+
+export class LiquidateCall__Inputs {
+  _call: LiquidateCall;
+
+  constructor(call: LiquidateCall) {
+    this._call = call;
+  }
+
+  get slotId(): BigInt {
+    return this._call.inputValues[0].value.toBigInt();
+  }
+}
+
+export class LiquidateCall__Outputs {
+  _call: LiquidateCall;
+
+  constructor(call: LiquidateCall) {
+    this._call = call;
+  }
+}
+
+export class OpenCall extends ethereum.Call {
+  get inputs(): OpenCall__Inputs {
+    return new OpenCall__Inputs(this);
+  }
+
+  get outputs(): OpenCall__Outputs {
+    return new OpenCall__Outputs(this);
+  }
+}
+
+export class OpenCall__Inputs {
+  _call: OpenCall;
+
+  constructor(call: OpenCall) {
+    this._call = call;
+  }
+
+  get params(): Array<OpenCallParamsStruct> {
+    return this._call.inputValues[0].value.toTupleArray<OpenCallParamsStruct>();
+  }
+}
+
+export class OpenCall__Outputs {
+  _call: OpenCall;
+
+  constructor(call: OpenCall) {
+    this._call = call;
+  }
+
+  get value0(): Array<BigInt> {
+    return this._call.outputValues[0].value.toBigIntArray();
+  }
+}
+
+export class OpenCallParamsStruct extends ethereum.Tuple {
+  get currency(): Address {
+    return this[0].toAddress();
+  }
+
+  get basePrice(): BigInt {
+    return this[1].toBigInt();
+  }
+
+  get taxPercentage(): BigInt {
+    return this[2].toBigInt();
+  }
+
+  get maxTaxPercentage(): BigInt {
+    return this[3].toBigInt();
+  }
+
+  get minTaxUpdatePeriod(): BigInt {
+    return this[4].toBigInt();
+  }
+
+  get module(): Address {
+    return this[5].toAddress();
+  }
+}
+
+export class ProposeTaxRateUpdateCall extends ethereum.Call {
+  get inputs(): ProposeTaxRateUpdateCall__Inputs {
+    return new ProposeTaxRateUpdateCall__Inputs(this);
+  }
+
+  get outputs(): ProposeTaxRateUpdateCall__Outputs {
+    return new ProposeTaxRateUpdateCall__Outputs(this);
+  }
+}
+
+export class ProposeTaxRateUpdateCall__Inputs {
+  _call: ProposeTaxRateUpdateCall;
+
+  constructor(call: ProposeTaxRateUpdateCall) {
+    this._call = call;
+  }
+
+  get slotId(): BigInt {
+    return this._call.inputValues[0].value.toBigInt();
+  }
+
+  get newPct(): BigInt {
+    return this._call.inputValues[1].value.toBigInt();
+  }
+}
+
+export class ProposeTaxRateUpdateCall__Outputs {
+  _call: ProposeTaxRateUpdateCall;
+
+  constructor(call: ProposeTaxRateUpdateCall) {
+    this._call = call;
+  }
+}
+
+export class ReleaseCall extends ethereum.Call {
+  get inputs(): ReleaseCall__Inputs {
+    return new ReleaseCall__Inputs(this);
+  }
+
+  get outputs(): ReleaseCall__Outputs {
+    return new ReleaseCall__Outputs(this);
+  }
+}
+
+export class ReleaseCall__Inputs {
+  _call: ReleaseCall;
+
+  constructor(call: ReleaseCall) {
+    this._call = call;
+  }
+
+  get slotId(): BigInt {
+    return this._call.inputValues[0].value.toBigInt();
+  }
+}
+
+export class ReleaseCall__Outputs {
+  _call: ReleaseCall;
+
+  constructor(call: ReleaseCall) {
+    this._call = call;
+  }
+}
+
+export class RenounceOwnershipCall extends ethereum.Call {
+  get inputs(): RenounceOwnershipCall__Inputs {
+    return new RenounceOwnershipCall__Inputs(this);
+  }
+
+  get outputs(): RenounceOwnershipCall__Outputs {
+    return new RenounceOwnershipCall__Outputs(this);
+  }
+}
+
+export class RenounceOwnershipCall__Inputs {
+  _call: RenounceOwnershipCall;
+
+  constructor(call: RenounceOwnershipCall) {
+    this._call = call;
+  }
+}
+
+export class RenounceOwnershipCall__Outputs {
+  _call: RenounceOwnershipCall;
+
+  constructor(call: RenounceOwnershipCall) {
+    this._call = call;
+  }
+}
+
+export class SelfAssessCall extends ethereum.Call {
+  get inputs(): SelfAssessCall__Inputs {
+    return new SelfAssessCall__Inputs(this);
+  }
+
+  get outputs(): SelfAssessCall__Outputs {
+    return new SelfAssessCall__Outputs(this);
+  }
+}
+
+export class SelfAssessCall__Inputs {
+  _call: SelfAssessCall;
+
+  constructor(call: SelfAssessCall) {
+    this._call = call;
+  }
+
+  get slotId(): BigInt {
+    return this._call.inputValues[0].value.toBigInt();
+  }
+
+  get newPrice(): BigInt {
+    return this._call.inputValues[1].value.toBigInt();
+  }
+}
+
+export class SelfAssessCall__Outputs {
+  _call: SelfAssessCall;
+
+  constructor(call: SelfAssessCall) {
+    this._call = call;
+  }
+}
+
+export class TransferOwnershipCall extends ethereum.Call {
+  get inputs(): TransferOwnershipCall__Inputs {
+    return new TransferOwnershipCall__Inputs(this);
+  }
+
+  get outputs(): TransferOwnershipCall__Outputs {
+    return new TransferOwnershipCall__Outputs(this);
+  }
+}
+
+export class TransferOwnershipCall__Inputs {
+  _call: TransferOwnershipCall;
+
+  constructor(call: TransferOwnershipCall) {
+    this._call = call;
+  }
+
+  get newOwner(): Address {
+    return this._call.inputValues[0].value.toAddress();
+  }
+}
+
+export class TransferOwnershipCall__Outputs {
+  _call: TransferOwnershipCall;
+
+  constructor(call: TransferOwnershipCall) {
+    this._call = call;
+  }
+}
+
+export class UpdateSlotSettingsCall extends ethereum.Call {
+  get inputs(): UpdateSlotSettingsCall__Inputs {
+    return new UpdateSlotSettingsCall__Inputs(this);
+  }
+
+  get outputs(): UpdateSlotSettingsCall__Outputs {
+    return new UpdateSlotSettingsCall__Outputs(this);
+  }
+}
+
+export class UpdateSlotSettingsCall__Inputs {
+  _call: UpdateSlotSettingsCall;
+
+  constructor(call: UpdateSlotSettingsCall) {
+    this._call = call;
+  }
+
+  get slotId(): BigInt {
+    return this._call.inputValues[0].value.toBigInt();
+  }
+
+  get newBasePrice(): BigInt {
+    return this._call.inputValues[1].value.toBigInt();
+  }
+
+  get newCurrency(): Address {
+    return this._call.inputValues[2].value.toAddress();
+  }
+
+  get newMaxTaxPercentage(): BigInt {
+    return this._call.inputValues[3].value.toBigInt();
+  }
+
+  get newModule(): Address {
+    return this._call.inputValues[4].value.toAddress();
+  }
+}
+
+export class UpdateSlotSettingsCall__Outputs {
+  _call: UpdateSlotSettingsCall;
+
+  constructor(call: UpdateSlotSettingsCall) {
+    this._call = call;
+  }
+}
+
+export class WithdrawCall extends ethereum.Call {
+  get inputs(): WithdrawCall__Inputs {
+    return new WithdrawCall__Inputs(this);
+  }
+
+  get outputs(): WithdrawCall__Outputs {
+    return new WithdrawCall__Outputs(this);
+  }
+}
+
+export class WithdrawCall__Inputs {
+  _call: WithdrawCall;
+
+  constructor(call: WithdrawCall) {
+    this._call = call;
+  }
+
+  get slotId(): BigInt {
+    return this._call.inputValues[0].value.toBigInt();
+  }
+
+  get amount(): BigInt {
+    return this._call.inputValues[1].value.toBigInt();
+  }
+}
+
+export class WithdrawCall__Outputs {
+  _call: WithdrawCall;
+
+  constructor(call: WithdrawCall) {
+    this._call = call;
   }
 }

@@ -8,9 +8,9 @@ dataSources:
     name: SlotsHub
     network: arbitrum-one
     source:
-      address: "0xa309ea8fef97e51b7c4b81b0aeb44b341bec931f"
+      address: "0x50b9111b44cf2f8eb5a2b21bf58dcf7cba583dd3"
       abi: SlotsHub
-      startBlock: 433782651
+      startBlock: 433788857
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -83,6 +83,8 @@ templates:
           handler: handleSlotDeactivated
         - event: SlotActivated(address,indexed uint256)
           handler: handleSlotActivated
+        - event: SlotSettingsUpdated(address,indexed uint256,uint256,address,uint256,address)
+          handler: handleSlotSettingsUpdated
         - event: Deposited(indexed uint256,indexed address,uint256)
           handler: handleDeposited
         - event: Withdrawn(indexed uint256,indexed address,uint256)
