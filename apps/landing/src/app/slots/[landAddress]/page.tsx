@@ -175,6 +175,9 @@ export default async function LandPage({
                       occupant={slot.occupant}
                       price={slot.price}
                       landOwner={land.owner}
+                      currencyAddress={slot.currency.id}
+                      currencyDecimals={slot.currency.decimals ?? 6}
+                      currencySymbol={slot.currency.symbol ?? "???"}
                     />
                   </div>
                 </div>

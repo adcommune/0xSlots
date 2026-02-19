@@ -2,12 +2,11 @@
 
 import { useState } from "react";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useSwitchChain } from "wagmi";
-import { parseEther, type Address } from "viem";
+import { parseUnits, type Address } from "viem";
 import { arbitrum } from "wagmi/chains";
 
 const CHAIN_ID = arbitrum.id;
-const USND = "0x4ecf61a6c2fab8a047ceb3b3b263b401763e9d49";
-// Import ABI inline to avoid module resolution issues
+
 const slotsAbi = [
   { type: "function", name: "buy", inputs: [{ name: "slotId", type: "uint256" }, { name: "depositAmount", type: "uint256" }], outputs: [], stateMutability: "nonpayable" },
   { type: "function", name: "selfAssess", inputs: [{ name: "slotId", type: "uint256" }, { name: "newPrice", type: "uint256" }], outputs: [], stateMutability: "nonpayable" },
@@ -19,7 +18,6 @@ const slotsAbi = [
 
 const erc20Abi = [
   { type: "function", name: "approve", inputs: [{ name: "spender", type: "address" }, { name: "amount", type: "uint256" }], outputs: [{ name: "", type: "bool" }], stateMutability: "nonpayable" },
-  { type: "function", name: "allowance", inputs: [{ name: "owner", type: "address" }, { name: "spender", type: "address" }], outputs: [{ name: "", type: "uint256" }], stateMutability: "view" },
 ] as const;
 
 interface SlotActionsProps {
@@ -30,6 +28,9 @@ interface SlotActionsProps {
   price: string;
   landOwner: string;
   isLandOwnerPanel?: boolean;
+  currencyAddress?: string;
+  currencyDecimals?: number;
+  currencySymbol?: string;
 }
 
 export function SlotActions({
@@ -40,6 +41,9 @@ export function SlotActions({
   price,
   landOwner,
   isLandOwnerPanel,
+  currencyAddress,
+  currencyDecimals = 6,
+  currencySymbol = "USDC",
 }: SlotActionsProps) {
   const { address, isConnected, chainId } = useAccount();
   const { switchChain } = useSwitchChain();
@@ -56,6 +60,30 @@ export function SlotActions({
   const isOccupant = address?.toLowerCase() === occupant?.toLowerCase();
   const wrongChain = chainId !== CHAIN_ID;
   const busy = isPending || isConfirming;
+
+  function toUnits(value: string): bigint {
+    try {
+      return parseUnits(value || "0", currencyDecimals);
+    } catch {
+      return 0n;
+    }
+  }
+
+  async function approveAndCall(amount: bigint, fn: () => void) {
+    if (!currencyAddress) return;
+    try {
+      await writeContractAsync({
+        address: currencyAddress as Address,
+        abi: erc20Abi,
+        functionName: "approve",
+        args: [landAddress as Address, amount],
+      });
+    } catch (e) {
+      console.error("Approve failed:", e);
+      return;
+    }
+    fn();
+  }
 
   if (!isConnected) {
     return (
@@ -123,10 +151,10 @@ export function SlotActions({
       {(!isOccupied || !isOccupant) && (
         <div className="flex gap-2 items-end">
           <div className="flex-1">
-            <label className="font-mono text-xs text-gray-500 block mb-1">DEPOSIT AMT</label>
+            <label className="font-mono text-xs text-gray-500 block mb-1">DEPOSIT ({currencySymbol})</label>
             <input
               type="text"
-              placeholder="0.01"
+              placeholder="1.00"
               value={depositAmount}
               onChange={(e) => setDepositAmount(e.target.value)}
               className="border-2 border-black px-2 py-1 font-mono text-xs w-full"
@@ -134,30 +162,17 @@ export function SlotActions({
           </div>
           <button
             disabled={busy}
-            onClick={() =>
-              (async () => {
-                const amt = parseEther(depositAmount || "0");
-                try {
-                  // Approve USND first
-                  await writeContractAsync({
-                    address: USND as Address,
-                    abi: erc20Abi,
-                    functionName: "approve",
-                    args: [landAddress as Address, amt],
-                  });
-                } catch (e) {
-                  console.error("Approve failed:", e);
-                  return;
-                }
-                // Then buy
+            onClick={() => {
+              const amt = toUnits(depositAmount);
+              approveAndCall(amt, () =>
                 writeContract({
                   address: landAddress as Address,
                   abi: slotsAbi,
                   functionName: "buy",
                   args: [BigInt(slotIndex), amt],
-                });
-              })()
-            }
+                })
+              );
+            }}
             className="border-2 border-black bg-black text-white px-3 py-1 font-mono text-xs uppercase hover:bg-white hover:text-black disabled:opacity-50"
           >
             {busy ? "..." : "BUY"}
@@ -169,10 +184,10 @@ export function SlotActions({
       {isOccupant && (
         <div className="flex gap-2 items-end">
           <div className="flex-1">
-            <label className="font-mono text-xs text-gray-500 block mb-1">NEW PRICE</label>
+            <label className="font-mono text-xs text-gray-500 block mb-1">NEW PRICE ({currencySymbol})</label>
             <input
               type="text"
-              placeholder="0.01"
+              placeholder="1.00"
               value={newPrice}
               onChange={(e) => setNewPrice(e.target.value)}
               className="border-2 border-black px-2 py-1 font-mono text-xs w-full"
@@ -185,7 +200,7 @@ export function SlotActions({
                 address: landAddress as Address,
                 abi: slotsAbi,
                 functionName: "selfAssess",
-                args: [BigInt(slotIndex), parseEther(newPrice || "0")],
+                args: [BigInt(slotIndex), toUnits(newPrice)],
               })
             }
             className="border-2 border-black px-3 py-1 font-mono text-xs uppercase hover:bg-black hover:text-white disabled:opacity-50"
@@ -199,10 +214,10 @@ export function SlotActions({
       {isOccupant && (
         <div className="flex gap-2 items-end">
           <div className="flex-1">
-            <label className="font-mono text-xs text-gray-500 block mb-1">ADD DEPOSIT</label>
+            <label className="font-mono text-xs text-gray-500 block mb-1">ADD DEPOSIT ({currencySymbol})</label>
             <input
               type="text"
-              placeholder="0.01"
+              placeholder="1.00"
               value={depositAmount}
               onChange={(e) => setDepositAmount(e.target.value)}
               className="border-2 border-black px-2 py-1 font-mono text-xs w-full"
@@ -210,28 +225,17 @@ export function SlotActions({
           </div>
           <button
             disabled={busy}
-            onClick={() =>
-              (async () => {
-                const amt = parseEther(depositAmount || "0");
-                try {
-                  await writeContractAsync({
-                    address: USND as Address,
-                    abi: erc20Abi,
-                    functionName: "approve",
-                    args: [landAddress as Address, amt],
-                  });
-                } catch (e) {
-                  console.error("Approve failed:", e);
-                  return;
-                }
+            onClick={() => {
+              const amt = toUnits(depositAmount);
+              approveAndCall(amt, () =>
                 writeContract({
                   address: landAddress as Address,
                   abi: slotsAbi,
                   functionName: "deposit",
                   args: [BigInt(slotIndex), amt],
-                });
-              })()
-            }
+                })
+              );
+            }}
             className="border-2 border-black px-3 py-1 font-mono text-xs uppercase hover:bg-black hover:text-white disabled:opacity-50"
           >
             {busy ? "..." : "DEPOSIT"}
@@ -243,10 +247,10 @@ export function SlotActions({
       {isOccupant && (
         <div className="flex gap-2 items-end">
           <div className="flex-1">
-            <label className="font-mono text-xs text-gray-500 block mb-1">WITHDRAW AMT</label>
+            <label className="font-mono text-xs text-gray-500 block mb-1">WITHDRAW ({currencySymbol})</label>
             <input
               type="text"
-              placeholder="0.01"
+              placeholder="1.00"
               value={withdrawAmount}
               onChange={(e) => setWithdrawAmount(e.target.value)}
               className="border-2 border-black px-2 py-1 font-mono text-xs w-full"
@@ -259,7 +263,7 @@ export function SlotActions({
                 address: landAddress as Address,
                 abi: slotsAbi,
                 functionName: "withdraw",
-                args: [BigInt(slotIndex), parseEther(withdrawAmount || "0")],
+                args: [BigInt(slotIndex), toUnits(withdrawAmount)],
               })
             }
             className="border-2 border-black px-3 py-1 font-mono text-xs uppercase hover:bg-black hover:text-white disabled:opacity-50"
