@@ -1,5 +1,6 @@
 import { createSlotsClient, SlotsChain } from "@0xslots/sdk";
 import { formatDistanceToNow } from "date-fns";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -9,6 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ConnectButton } from "@/components/connect-button";
 import { ChainSelector } from "./chain-selector";
 
 const CHAIN_CONFIG = {
@@ -111,6 +113,23 @@ export default async function ExplorerPage({
     }),
   ]);
 
+  // Fetch lands and slots
+  let lands: any[] = [];
+  let allSlots: any[] = [];
+  try {
+    const landsResult = await client.getLands({ first: 50, orderBy: "createdAt" as any, orderDirection: "desc" as any });
+    lands = landsResult.lands || [];
+    const slotsResult = await client.getSlots({ first: 200, orderBy: "slotId" as any, orderDirection: "asc" as any });
+    allSlots = slotsResult.slots || [];
+  } catch {}
+
+  const slotsByLand = new Map<string, any[]>();
+  for (const slot of allSlots) {
+    const landId = slot.land.id;
+    if (!slotsByLand.has(landId)) slotsByLand.set(landId, []);
+    slotsByLand.get(landId)!.push(slot);
+  }
+
   // Unify all events into a single array
   const events: UnifiedEvent[] = [];
 
@@ -184,7 +203,10 @@ export default async function ExplorerPage({
                 {config.name} · Real-time protocol events
               </p>
             </div>
-            <ChainSelector current={chainParam || "base-sepolia"} />
+            <div className="flex items-center gap-4">
+              <ChainSelector current={chainParam || "base-sepolia"} />
+              <ConnectButton />
+            </div>
           </div>
         </div>
       </div>
@@ -211,6 +233,73 @@ export default async function ExplorerPage({
             <div className="text-3xl font-black">{releasedSlots?.length || 0}</div>
           </div>
         </div>
+
+        {/* Lands & Slots */}
+        {lands.length > 0 && (
+          <div className="mb-8 space-y-4">
+            <h2 className="text-lg font-bold uppercase tracking-tight border-b-2 border-black pb-2">
+              Lands
+            </h2>
+            {lands.map((land: any) => {
+              const landSlots = slotsByLand.get(land.id) || [];
+              const occupied = landSlots.filter(
+                (s: any) => s.occupant && s.occupant !== "0x0000000000000000000000000000000000000000"
+              );
+              return (
+                <Link
+                  key={land.id}
+                  href={`/slots/${land.id}`}
+                  className="block border-2 border-black hover:bg-gray-50 transition-colors"
+                >
+                  <div className="border-b-2 border-black bg-gray-50 px-6 py-3 flex items-center justify-between">
+                    <div>
+                      <span className="font-mono text-[10px] text-gray-500">LAND</span>
+                      <h3 className="font-black text-sm tracking-tight">{shorten(land.id)}</h3>
+                    </div>
+                    <div className="text-right font-mono text-[10px]">
+                      <div className="text-gray-500">OWNER</div>
+                      <div>{shorten(land.owner)}</div>
+                    </div>
+                  </div>
+                  <div className="px-6 py-3">
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {landSlots.map((slot: any) => {
+                        const isOccupied = slot.occupant && slot.occupant !== "0x0000000000000000000000000000000000000000";
+                        return (
+                          <div
+                            key={slot.id}
+                            className={`w-9 h-9 border-2 border-black flex items-center justify-center font-mono text-xs font-bold ${
+                              isOccupied ? "bg-black text-white" : "bg-white text-black"
+                            }`}
+                            title={`Slot #${slot.slotId} — ${isOccupied ? shorten(slot.occupant) : "VACANT"}`}
+                          >
+                            {slot.slotId}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="grid grid-cols-3 gap-4 font-mono text-xs">
+                      <div>
+                        <span className="text-gray-500">SLOTS</span>
+                        <div className="font-bold">{landSlots.length}</div>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">OCCUPIED</span>
+                        <div className="font-bold">{occupied.length}/{landSlots.length}</div>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">TAX RATE</span>
+                        <div className="font-bold">
+                          {landSlots[0] ? `${Number(landSlots[0].taxPercentage) / 100}%` : "—"}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
 
         {/* Events Table */}
         <div className="border-2 border-black">
