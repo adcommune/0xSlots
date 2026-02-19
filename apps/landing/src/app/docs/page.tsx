@@ -1,6 +1,15 @@
+import { HarbergerExplainer } from "@/components/harberger-explainer";
+
 export default function Docs() {
   return (
     <>
+      {/* Harberger Tax Explainer */}
+      <section className="px-6 py-16 border-b-4 border-black">
+        <div className="max-w-5xl mx-auto">
+          <HarbergerExplainer />
+        </div>
+      </section>
+
       {/* Use Cases */}
       <section className="px-6 py-16 border-b-4 border-black">
         <div className="max-w-5xl mx-auto">

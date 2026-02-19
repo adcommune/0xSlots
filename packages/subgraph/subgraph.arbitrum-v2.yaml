@@ -1,0 +1,95 @@
+specVersion: 1.0.0
+indexerHints:
+  prune: auto
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: SlotsHub
+    network: arbitrum-one
+    source:
+      # TODO: Replace with actual deployed SlotsHub v2 proxy address
+      address: "0x0000000000000000000000000000000000000000"
+      abi: SlotsHub
+      # TODO: Replace with actual deploy block number
+      startBlock: 0
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - Hub
+        - Land
+        - Module
+        - Currency
+        - LandExpandedEvent
+      abis:
+        - name: SlotsHub
+          file: ./abis/SlotsHub.json
+        - name: ERC20
+          file: ./abis/ERC20.json
+      eventHandlers:
+        - event: HubSettingsUpdated((uint256,address,uint256,uint256,address,uint256,uint256,uint256,uint256,uint256,address,uint256,uint256,uint256))
+          handler: handleHubSettingsUpdated
+        - event: LandOpened(indexed address,indexed address)
+          handler: handleLandOpened
+        - event: LandExpanded(indexed address,uint256)
+          handler: handleLandExpanded
+        - event: ModuleAllowedStatusUpdated(indexed address,bool,string,string)
+          handler: handleModuleAllowedStatusUpdated
+        - event: CurrencyAllowedStatusUpdated(indexed address,bool)
+          handler: handleCurrencyAllowedStatusUpdated
+      file: ./src/slotsHub.ts
+templates:
+  - kind: ethereum
+    name: Slots
+    network: arbitrum-one
+    source:
+      abi: Slots
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - Slot
+        - SlotPurchase
+        - PriceUpdate
+        - TaxRateChange
+        - SlotLiquidatedEvent
+        - DepositEvent
+        - WithdrawalEvent
+        - SettlementEvent
+        - TaxCollectedEvent
+      abis:
+        - name: Slots
+          file: ./abis/Slots.json
+      eventHandlers:
+        - event: SlotCreated(address,indexed uint256,indexed address,(address,uint256,uint256,uint256,uint256,address))
+          handler: handleSlotCreated
+        - event: SlotPurchased(address,indexed uint256,indexed address,uint256)
+          handler: handleSlotPurchased
+        - event: SlotReleased(address,indexed uint256)
+          handler: handleSlotReleased
+        - event: SlotLiquidated(address,indexed uint256,indexed address,indexed address,uint256)
+          handler: handleSlotLiquidated
+        - event: PriceUpdated(address,indexed uint256,uint256,uint256)
+          handler: handlePriceUpdated
+        - event: TaxRateUpdateProposed(address,indexed uint256,uint256,uint256)
+          handler: handleTaxRateUpdateProposed
+        - event: TaxRateUpdateConfirmed(address,indexed uint256,uint256,uint256)
+          handler: handleTaxRateUpdateConfirmed
+        - event: TaxRateUpdateCancelled(address,indexed uint256)
+          handler: handleTaxRateUpdateCancelled
+        - event: SlotDeactivated(address,indexed uint256)
+          handler: handleSlotDeactivated
+        - event: SlotActivated(address,indexed uint256)
+          handler: handleSlotActivated
+        - event: Deposited(indexed uint256,indexed address,uint256)
+          handler: handleDeposited
+        - event: Withdrawn(indexed uint256,indexed address,uint256)
+          handler: handleWithdrawn
+        - event: Settled(indexed uint256,uint256,uint256)
+          handler: handleSettled
+        - event: TaxCollected(indexed uint256,indexed address,uint256)
+          handler: handleTaxCollected
+      file: ./src/slots.ts
