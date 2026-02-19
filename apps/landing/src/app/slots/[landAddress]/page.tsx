@@ -82,7 +82,8 @@ export default async function LandPage({
             .map((slot: any) => {
               const isOccupied =
                 slot.occupant &&
-                slot.occupant !== "0x0000000000000000000000000000000000000000";
+                slot.occupant !== "0x0000000000000000000000000000000000000000" &&
+                slot.occupant.toLowerCase() !== land.owner.toLowerCase();
               const currency = {
                 name: slot.currency.name ?? "Unknown",
                 symbol: slot.currency.symbol ?? "???",
