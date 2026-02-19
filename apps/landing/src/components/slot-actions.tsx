@@ -1,8 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { useAccount, useWriteContract, useWaitForTransactionReceipt, useSwitchChain } from "wagmi";
 import { parseEther, type Address } from "viem";
+import { arbitrum } from "wagmi/chains";
+
+const CHAIN_ID = arbitrum.id;
 // Import ABI inline to avoid module resolution issues
 const slotsAbi = [
   { type: "function", name: "purchaseSlot", inputs: [{ name: "slotId", type: "uint256" }, { name: "depositAmount", type: "uint256" }], outputs: [], stateMutability: "nonpayable" },
@@ -49,7 +52,8 @@ export function SlotActions({
   landOwner,
   isLandOwnerPanel,
 }: SlotActionsProps) {
-  const { address, isConnected } = useAccount();
+  const { address, isConnected, chainId } = useAccount();
+  const { switchChain } = useSwitchChain();
   const { writeContract, data: hash, isPending } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
@@ -61,11 +65,23 @@ export function SlotActions({
 
   const isOwner = address?.toLowerCase() === landOwner.toLowerCase();
   const isOccupant = address?.toLowerCase() === occupant?.toLowerCase();
+  const wrongChain = chainId !== CHAIN_ID;
   const busy = isPending || isConfirming;
 
   if (!isConnected) {
     return (
       <p className="font-mono text-xs text-gray-400">CONNECT WALLET TO INTERACT</p>
+    );
+  }
+
+  if (wrongChain) {
+    return (
+      <button
+        onClick={() => switchChain({ chainId: CHAIN_ID })}
+        className="w-full font-mono text-xs bg-red-900 border border-red-500 text-red-300 px-3 py-2 hover:bg-red-800"
+      >
+        SWITCH TO ARBITRUM
+      </button>
     );
   }
 
