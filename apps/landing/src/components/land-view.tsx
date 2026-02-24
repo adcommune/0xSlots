@@ -564,6 +564,23 @@ export function LandView({ landId, landOwner, slots }: LandViewProps) {
                             </button>
                           </div>
                         </div>
+
+                        {/* Release */}
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={() =>
+                            writeContract({
+                              address: landId as Address,
+                              abi: slotsAbi,
+                              functionName: "release",
+                              args: [BigInt(selected.slotId)],
+                            })
+                          }
+                          className="w-full border-2 border-red-600 text-red-600 px-3 py-1.5 font-mono text-xs uppercase hover:bg-red-600 hover:text-white disabled:opacity-50"
+                        >
+                          {busy ? "..." : "RELEASE SLOT"}
+                        </button>
                       </div>
                     )}
 
