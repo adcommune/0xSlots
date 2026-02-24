@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers";
+import { ConnectButton } from "@/components/connect-button";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const jetbrains = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono" });
@@ -31,9 +32,6 @@ export default function RootLayout({
                 <a href="/explorer" className="hover:underline">
                   Explorer
                 </a>
-                <a href="/docs" className="hover:underline">
-                  Docs
-                </a>
                 <a
                   href="https://github.com/adcommune/0xSlots"
                   target="_blank"
@@ -42,6 +40,7 @@ export default function RootLayout({
                 >
                   GitHub ↗
                 </a>
+                <ConnectButton />
               </div>
             </nav>
 

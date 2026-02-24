@@ -2,6 +2,7 @@ import { createSlotsClient, GetLandQuery, SlotsChain } from "@0xslots/sdk";
 import { ConnectButton } from "@/components/connect-button";
 import { SlotActions } from "@/components/slot-actions";
 import { SlotBalance } from "@/components/slot-balance";
+import { EnsName } from "@/components/ens-name";
 
 function shorten(addr: string): string {
   return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
@@ -57,7 +58,7 @@ export default async function LandPage({
           <div className="flex items-center justify-between">
             <div>
               <a
-                href="/slots"
+                href="/explorer"
                 className="font-mono text-xs text-gray-500 hover:underline"
               >
                 ← AdLand
@@ -66,7 +67,8 @@ export default async function LandPage({
                 Land {shorten(land.id)}
               </h1>
               <p className="font-mono text-xs text-gray-500 mt-1">
-                OWNER: {land.owner} · {slots.length} SLOTS
+                OWNER: <EnsName address={land.owner} showAvatar /> ·{" "}
+                {slots.length} SLOTS
               </p>
             </div>
             <ConnectButton />
@@ -82,7 +84,8 @@ export default async function LandPage({
             .map((slot: any) => {
               const isOccupied =
                 slot.occupant &&
-                slot.occupant !== "0x0000000000000000000000000000000000000000" &&
+                slot.occupant !==
+                  "0x0000000000000000000000000000000000000000" &&
                 slot.occupant.toLowerCase() !== land.owner.toLowerCase();
               const currency = {
                 name: slot.currency.name ?? "Unknown",
@@ -117,9 +120,11 @@ export default async function LandPage({
                     {isOccupied && (
                       <div className="flex justify-between">
                         <span className="text-gray-500">OCCUPANT</span>
-                        <span className="font-bold">
-                          {shorten(slot.occupant)}
-                        </span>
+                        <EnsName
+                          address={slot.occupant}
+                          className="font-bold"
+                          showAvatar
+                        />
                       </div>
                     )}
                     <div className="flex justify-between">

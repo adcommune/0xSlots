@@ -5,7 +5,7 @@ import { useState, type ReactNode } from "react";
 interface Tab {
   id: string;
   label: string;
-  content: ReactNode;
+  content: () => ReactNode;
 }
 
 export function ExplorerTabs({ tabs }: { tabs: Tab[] }) {
@@ -28,7 +28,7 @@ export function ExplorerTabs({ tabs }: { tabs: Tab[] }) {
           </button>
         ))}
       </div>
-      {tabs.find((t) => t.id === active)?.content}
+      {tabs.find((t) => t.id === active)?.content()}
     </div>
   );
 }
