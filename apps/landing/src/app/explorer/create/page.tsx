@@ -15,26 +15,8 @@ import { normalize } from "viem/ens";
 import { mainnet } from "wagmi/chains";
 import { parseChain } from "@/lib/config";
 import { useHubSettings, useLandsByOwner, HUB_IDS } from "@/app/explorer/hooks";
-
-const openLandAbi = [
-  {
-    type: "function",
-    name: "openLand",
-    inputs: [{ name: "account", type: "address" }],
-    outputs: [{ name: "land", type: "address" }],
-    stateMutability: "payable",
-  },
-] as const;
-
-function formatWei(wei: string, decimals: number = 18): string {
-  const value = Number(wei) / 10 ** decimals;
-  if (value === 0) return "0";
-  return value.toFixed(decimals <= 6 ? decimals : 6);
-}
-
-function formatBps(bps: string | number): string {
-  return `${Number(bps) / 100}%`;
-}
+import { slotsHubAbi } from "@0xslots/contracts";
+import { formatWei, formatBps } from "@/utils";
 
 function CreateContent() {
   const searchParams = useSearchParams();
@@ -44,11 +26,11 @@ function CreateContent() {
   const hubAddress = HUB_IDS[chainId];
 
   const { data: hubData, isLoading } = useHubSettings(chainId);
-  const hub = hubData?.hub as any;
+  const hub = hubData?.hub;
 
   const { address, isConnected, chainId: walletChainId } = useAccount();
-  const { switchChain } = useSwitchChain();
-  const { writeContract, data: hash, isPending } = useWriteContract();
+  const { mutate: switchChain } = useSwitchChain();
+  const { mutate: writeContract, data: hash, isPending } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash,
   });
@@ -81,7 +63,7 @@ function CreateContent() {
   const { error: simulateError, isLoading: isSimulating } = useSimulateContract(
     {
       address: hubAddress as Address,
-      abi: openLandAbi,
+      abi: slotsHubAbi,
       functionName: "openLand",
       args: canSimulate ? [targetAddress as Address] : undefined,
       value: hub ? BigInt(hub.landCreationFee) : undefined,
@@ -115,7 +97,7 @@ function CreateContent() {
     if (!isValidTarget || !hub) return;
     writeContract({
       address: hubAddress as Address,
-      abi: openLandAbi,
+      abi: slotsHubAbi,
       functionName: "openLand",
       args: [targetAddress as Address],
       value: BigInt(hub.landCreationFee),

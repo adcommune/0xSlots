@@ -27,3 +27,13 @@ export function formatDuration(totalSeconds: number): string {
   if (mins > 0) return `${mins}m`;
   return `${totalSeconds}s`;
 }
+
+export function formatWei(wei: string, decimals: number = 18): string {
+  const value = Number(wei) / 10 ** decimals;
+  if (value === 0) return "0";
+  return value.toFixed(decimals <= 6 ? decimals : 6);
+}
+
+export function formatBps(bps: string | number): string {
+  return `${Number(bps) / 100}%`;
+}

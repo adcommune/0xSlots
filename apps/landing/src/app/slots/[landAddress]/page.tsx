@@ -2,10 +2,7 @@ import { createSlotsClient, GetLandQuery, SlotsChain } from "@0xslots/sdk";
 import { ConnectButton } from "@/components/connect-button";
 import { EnsName } from "@/components/ens-name";
 import { LandView } from "@/components/land-view";
-
-function shorten(addr: string): string {
-  return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
-}
+import { truncateAddress } from "@/utils";
 
 export default async function LandPage({
   params,
@@ -73,7 +70,7 @@ export default async function LandPage({
                 ← Explorer
               </a>
               <h1 className="text-xl font-black tracking-tighter uppercase leading-tight">
-                Land {shorten(land.id)}
+                Land {truncateAddress(land.id)}
               </h1>
               <p className="font-mono text-[10px] flex flex-row gap-1.5 items-center text-gray-400">
                 <EnsName address={land.owner} showAvatar /> · {slots.length}{" "}

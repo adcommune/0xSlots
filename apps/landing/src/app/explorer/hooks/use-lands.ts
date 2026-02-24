@@ -12,8 +12,8 @@ export function useLands(chainId: SlotsChain) {
     queryFn: async () => {
       const result = await client.getLands({
         first: 50,
-        orderBy: "createdAt" as any,
-        orderDirection: "desc" as any,
+        orderBy: "createdAt",
+        orderDirection: "desc",
       });
       return result.lands ?? [];
     },
