@@ -20,6 +20,9 @@ importers:
 
   apps/landing:
     dependencies:
+      '@0xslots/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       '@0xslots/sdk':
         specifier: workspace:*
         version: link:../../packages/sdk
