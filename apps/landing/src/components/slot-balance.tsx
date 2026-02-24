@@ -2,6 +2,7 @@
 
 import { useReadContracts } from "wagmi";
 import { type Address } from "viem";
+import { formatBalance, formatDuration } from "@/utils";
 
 const slotsViewAbi = [
   {
@@ -52,24 +53,6 @@ interface SlotBalanceProps {
   isOccupied: boolean;
   currencySymbol: string;
   currencyDecimals: number;
-}
-
-function formatBalance(value: bigint, decimals: number): string {
-  const num = Number(value) / 10 ** decimals;
-  if (num === 0) return "0";
-  if (num < 0.0001) return "<0.0001";
-  return num.toFixed(decimals <= 6 ? decimals : 6);
-}
-
-function formatDuration(totalSeconds: number): string {
-  if (totalSeconds >= 2 ** 128) return "∞";
-  const days = Math.floor(totalSeconds / 86400);
-  const hours = Math.floor((totalSeconds % 86400) / 3600);
-  const mins = Math.floor((totalSeconds % 3600) / 60);
-  if (days > 0) return `${days}d ${hours}h`;
-  if (hours > 0) return `${hours}h ${mins}m`;
-  if (mins > 0) return `${mins}m`;
-  return `${totalSeconds}s`;
 }
 
 export function SlotBalance({
