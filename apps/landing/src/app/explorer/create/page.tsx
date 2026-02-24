@@ -62,8 +62,8 @@ function CreateContent() {
     chainId: mainnet.id,
   });
 
-  const resolvedCustom = isEns ? ensResolvedAddress ?? "" : customInput;
-  const targetAddress = useCustom ? resolvedCustom : address ?? "";
+  const resolvedCustom = isEns ? (ensResolvedAddress ?? "") : customInput;
+  const targetAddress = useCustom ? resolvedCustom : (address ?? "");
   const isValidTarget = isAddress(targetAddress);
 
   const { data: existingLands } = useLandsByOwner(
@@ -72,24 +72,31 @@ function CreateContent() {
   );
   const ownerHasLand = (existingLands?.length ?? 0) > 0;
 
-  const canSimulate = isConnected && isValidTarget && !ownerHasLand && !!hub && walletChainId === (chainId as number);
-  const { error: simulateError, isLoading: isSimulating } = useSimulateContract({
-    address: hubAddress as Address,
-    abi: openLandAbi,
-    functionName: "openLand",
-    args: canSimulate ? [targetAddress as Address] : undefined,
-    value: hub ? BigInt(hub.landCreationFee) : undefined,
-    query: { enabled: canSimulate },
-  });
+  const canSimulate =
+    isConnected &&
+    isValidTarget &&
+    !ownerHasLand &&
+    !!hub &&
+    walletChainId === (chainId as number);
+  const { error: simulateError, isLoading: isSimulating } = useSimulateContract(
+    {
+      address: hubAddress as Address,
+      abi: openLandAbi,
+      functionName: "openLand",
+      args: canSimulate ? [targetAddress as Address] : undefined,
+      value: hub ? BigInt(hub.landCreationFee) : undefined,
+      query: { enabled: canSimulate },
+    },
+  );
 
   if (simulateError) {
     console.error("[openLand simulation]", simulateError);
   }
 
   const simErrorMessage = simulateError
-    ? (simulateError.cause as any)?.reason ??
+    ? ((simulateError.cause as any)?.reason ??
       (simulateError.cause as any)?.shortMessage ??
-      simulateError.message
+      simulateError.message)
     : null;
 
   const wrongChain = walletChainId !== (chainId as number);
@@ -193,7 +200,9 @@ function CreateContent() {
                       <span className="font-mono text-xs text-gray-500 uppercase">
                         {label}
                       </span>
-                      <span className="font-mono text-xs font-bold">{value}</span>
+                      <span className="font-mono text-xs font-bold">
+                        {value}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -315,7 +324,9 @@ function CreateContent() {
                     </div>
                     <div className="flex justify-between font-mono text-xs">
                       <span className="text-gray-500">Tax Rate</span>
-                      <span className="font-bold">{formatBps(hub.defaultTaxPercentage)}</span>
+                      <span className="font-bold">
+                        {formatBps(hub.defaultTaxPercentage)}
+                      </span>
                     </div>
                     <div className="flex justify-between font-mono text-xs">
                       <span className="text-gray-500">Owner</span>
@@ -350,7 +361,7 @@ function CreateContent() {
                       </div>
                     ) : wrongChain ? (
                       <button
-                        onClick={() => switchChain({ chainId: chainId as number })}
+                        onClick={() => switchChain({ chainId: chainId })}
                         className="w-full font-mono text-xs bg-red-900 border-2 border-red-500 text-red-300 px-4 py-3 hover:bg-red-800 uppercase tracking-widest"
                       >
                         Switch Chain
@@ -374,17 +385,22 @@ function CreateContent() {
                           </div>
                         )}
                         <button
-                          disabled={busy || !isValidTarget || !!simulateError || isSimulating}
+                          disabled={
+                            busy ||
+                            !isValidTarget ||
+                            !!simulateError ||
+                            isSimulating
+                          }
                           onClick={handleCreate}
                           className="w-full border-4 border-black bg-black text-white px-4 py-3 font-mono text-xs uppercase tracking-widest font-bold hover:bg-white hover:text-black transition-colors disabled:opacity-50"
                         >
                           {isPending
                             ? "CONFIRM IN WALLET..."
                             : isConfirming
-                            ? "CONFIRMING..."
-                            : isSimulating
-                            ? "SIMULATING..."
-                            : "CREATE LAND"}
+                              ? "CONFIRMING..."
+                              : isSimulating
+                                ? "SIMULATING..."
+                                : "CREATE LAND"}
                         </button>
                       </>
                     )}
