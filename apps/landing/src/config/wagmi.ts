@@ -1,12 +1,16 @@
-import { http, createConfig } from "wagmi";
-import { arbitrum } from "wagmi/chains";
-import { injected } from "wagmi/connectors";
+import { http, createConfig, injected } from "wagmi";
+import { mainnet, arbitrum, baseSepolia } from "wagmi/chains";
+import { walletConnect } from "wagmi/connectors";
 
 export const config = createConfig({
-  chains: [arbitrum],
-  connectors: [injected()],
+  chains: [arbitrum, baseSepolia, mainnet],
+  connectors: [injected(), walletConnect({})],
   transports: {
-    [arbitrum.id]: http("https://arb-mainnet.g.alchemy.com/v2/4XrtaFg8OqFaNxv45MreCFT3ekifcxWm"),
+    [mainnet.id]: http(),
+    [baseSepolia.id]: http("https://sepolia.base.org"),
+    [arbitrum.id]: http(
+      "https://arb-mainnet.g.alchemy.com/v2/4XrtaFg8OqFaNxv45MreCFT3ekifcxWm",
+    ),
   },
 });
 

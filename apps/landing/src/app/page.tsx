@@ -35,18 +35,12 @@ export default function Home() {
           </p>
           <div className="mt-6 flex gap-4">
             <a
-              href="/docs"
-              className="border-2 border-black bg-black text-white px-6 py-3 text-sm font-bold uppercase tracking-wider hover:bg-white hover:text-black"
-            >
-              Docs →
-            </a>
-            <a
               href="https://github.com/adcommune/0xSlots"
               target="_blank"
               rel="noopener noreferrer"
-              className="border-2 border-black px-6 py-3 text-sm font-bold uppercase tracking-wider hover:bg-black hover:text-white"
+              className="border-2 border-black bg-black text-white px-6 py-3 text-sm font-bold uppercase tracking-wider hover:bg-white hover:text-black"
             >
-              Source Code
+              Source Code →
             </a>
           </div>
         </div>
