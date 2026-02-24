@@ -66,7 +66,7 @@ export default async function LandPage({
               <h1 className="text-2xl font-black tracking-tighter uppercase mt-2">
                 Land {shorten(land.id)}
               </h1>
-              <p className="font-mono text-xs text-gray-500 mt-1">
+              <p className="font-mono text-xs flex flex-row gap-2 items-center text-gray-500 mt-1">
                 OWNER: <EnsName address={land.owner} showAvatar /> ·{" "}
                 {slots.length} SLOTS
               </p>
