@@ -1,18 +1,18 @@
 "use client";
 
+import { slotsAbi } from "@0xslots/contracts";
 import { useState } from "react";
+import { erc20Abi, parseUnits, type Address } from "viem";
 import {
   useAccount,
-  useWriteContract,
-  useWaitForTransactionReceipt,
-  useSwitchChain,
   useReadContracts,
+  useSwitchChain,
+  useWaitForTransactionReceipt,
+  useWriteContract,
 } from "wagmi";
-import { erc20Abi, parseUnits, type Address } from "viem";
 import { arbitrum } from "wagmi/chains";
 import { EnsName } from "@/components/ens-name";
-import { formatPrice, formatBalance, formatDuration } from "@/utils";
-import { slotsAbi } from "@0xslots/contracts";
+import { formatBalance, formatDuration, formatPrice } from "@/utils";
 
 const CHAIN_ID = arbitrum.id;
 

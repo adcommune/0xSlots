@@ -1,11 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import type { SlotsChain } from "@0xslots/sdk";
+import Link from "next/link";
+import { EnsName } from "@/components/ens-name";
+import { truncateAddress } from "@/utils";
 import { useLand } from "../hooks";
 import { SlotCell } from "./SlotCell";
-import { truncateAddress } from "@/utils";
-import { EnsName } from "@/components/ens-name";
 
 interface LandCardProps {
   chainId: SlotsChain;

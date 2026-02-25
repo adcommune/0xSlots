@@ -1,7 +1,7 @@
 "use client";
 
-import { formatDistanceToNow } from "date-fns";
 import type { SlotsChain } from "@0xslots/sdk";
+import { formatDistanceToNow } from "date-fns";
 import {
   Table,
   TableBody,
@@ -10,10 +10,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { CHAIN_CONFIG } from "@/lib/config";
+import { truncateAddress } from "@/utils";
 import { useExplorerEvents } from "../hooks";
 import EventBadge from "./EventBadge";
-import { truncateAddress } from "@/utils";
-import { CHAIN_CONFIG } from "@/lib/config";
 
 export function EventsTab({ chainId }: { chainId: SlotsChain }) {
   const { data, isLoading } = useExplorerEvents(chainId);
@@ -51,9 +51,7 @@ export function EventsTab({ chainId }: { chainId: SlotsChain }) {
             <TableHead className="font-bold uppercase text-xs">
               Details
             </TableHead>
-            <TableHead className="font-bold uppercase text-xs">
-              Actor
-            </TableHead>
+            <TableHead className="font-bold uppercase text-xs">Actor</TableHead>
             <TableHead className="font-bold uppercase text-xs">Time</TableHead>
             <TableHead className="font-bold uppercase text-xs">Tx</TableHead>
           </TableRow>
@@ -61,10 +59,7 @@ export function EventsTab({ chainId }: { chainId: SlotsChain }) {
         <TableBody>
           {events.length === 0 ? (
             <TableRow>
-              <TableCell
-                colSpan={5}
-                className="text-center text-gray-400 py-8"
-              >
+              <TableCell colSpan={5} className="text-center text-gray-400 py-8">
                 No events found
               </TableCell>
             </TableRow>

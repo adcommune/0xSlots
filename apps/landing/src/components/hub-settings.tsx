@@ -26,7 +26,12 @@ interface HubData {
   protocolFeeRecipient: string;
   landCreationFee: string;
   slotExpansionFee: string;
-  defaultCurrency: { id: string; name: string; symbol: string; decimals: number } | null;
+  defaultCurrency: {
+    id: string;
+    name: string;
+    symbol: string;
+    decimals: number;
+  } | null;
   defaultSlotCount: string;
   defaultPrice: string;
   defaultTaxPercentage: string;
@@ -57,12 +62,25 @@ export function HubSettings({ hub, currencies, modules, explorerUrl }: Props) {
   const rows: [string, string, string?][] = [
     ["Hub Address", shorten(hub.id), hub.id],
     ["Protocol Fee", formatBps(hub.protocolFeeBps)],
-    ["Fee Recipient", shorten(hub.protocolFeeRecipient), hub.protocolFeeRecipient],
+    [
+      "Fee Recipient",
+      shorten(hub.protocolFeeRecipient),
+      hub.protocolFeeRecipient,
+    ],
     ["Land Creation Fee", formatWei(hub.landCreationFee)],
     ["Slot Expansion Fee", formatWei(hub.slotExpansionFee)],
-    ["Default Currency", hub.defaultCurrency ? `${hub.defaultCurrency.symbol} (${shorten(hub.defaultCurrency.id)})` : "—", hub.defaultCurrency?.id],
+    [
+      "Default Currency",
+      hub.defaultCurrency
+        ? `${hub.defaultCurrency.symbol} (${shorten(hub.defaultCurrency.id)})`
+        : "—",
+      hub.defaultCurrency?.id,
+    ],
     ["Default Slot Count", hub.defaultSlotCount],
-    ["Default Price", `${formatWei(hub.defaultPrice, hub.defaultCurrency?.decimals ?? 18)} ${hub.defaultCurrency?.symbol || ""}`],
+    [
+      "Default Price",
+      `${formatWei(hub.defaultPrice, hub.defaultCurrency?.decimals ?? 18)} ${hub.defaultCurrency?.symbol || ""}`,
+    ],
     ["Default Tax Rate", formatBps(hub.defaultTaxPercentage)],
     ["Max Tax Rate", formatBps(hub.defaultMaxTaxPercentage)],
     ["Min Tax Update Period", formatSeconds(hub.defaultMinTaxUpdatePeriod)],
@@ -76,12 +94,19 @@ export function HubSettings({ hub, currencies, modules, explorerUrl }: Props) {
       {/* Settings Table */}
       <div className="border-2 border-black">
         <div className="bg-gray-50 border-b-2 border-black p-4">
-          <h2 className="text-lg font-bold uppercase tracking-tight">Hub Configuration</h2>
+          <h2 className="text-lg font-bold uppercase tracking-tight">
+            Hub Configuration
+          </h2>
         </div>
         <div className="divide-y divide-gray-200">
           {rows.map(([label, value, fullAddr]) => (
-            <div key={label} className="flex items-center justify-between px-6 py-3">
-              <span className="font-mono text-xs text-gray-500 uppercase">{label}</span>
+            <div
+              key={label}
+              className="flex items-center justify-between px-6 py-3"
+            >
+              <span className="font-mono text-xs text-gray-500 uppercase">
+                {label}
+              </span>
               {fullAddr ? (
                 <a
                   href={`${explorerUrl}/address/${fullAddr}`}
@@ -102,14 +127,19 @@ export function HubSettings({ hub, currencies, modules, explorerUrl }: Props) {
       {/* Allowed Currencies */}
       <div className="border-2 border-black">
         <div className="bg-gray-50 border-b-2 border-black p-4">
-          <h2 className="text-sm font-bold uppercase tracking-tight">Allowed Currencies</h2>
+          <h2 className="text-sm font-bold uppercase tracking-tight">
+            Allowed Currencies
+          </h2>
         </div>
         {currencies.length === 0 ? (
           <p className="p-6 font-mono text-xs text-gray-400">None</p>
         ) : (
           <div className="divide-y divide-gray-200">
             {currencies.map((c) => (
-              <div key={c.id} className="flex items-center justify-between px-6 py-3">
+              <div
+                key={c.id}
+                className="flex items-center justify-between px-6 py-3"
+              >
                 <span className="font-mono text-xs font-bold">{c.symbol}</span>
                 <a
                   href={`${explorerUrl}/address/${c.id}`}
@@ -128,15 +158,22 @@ export function HubSettings({ hub, currencies, modules, explorerUrl }: Props) {
       {/* Allowed Modules */}
       <div className="border-2 border-black">
         <div className="bg-gray-50 border-b-2 border-black p-4">
-          <h2 className="text-sm font-bold uppercase tracking-tight">Allowed Modules</h2>
+          <h2 className="text-sm font-bold uppercase tracking-tight">
+            Allowed Modules
+          </h2>
         </div>
         {modules.length === 0 ? (
           <p className="p-6 font-mono text-xs text-gray-400">None</p>
         ) : (
           <div className="divide-y divide-gray-200">
             {modules.map((m) => (
-              <div key={m.id} className="flex items-center justify-between px-6 py-3">
-                <span className="font-mono text-xs font-bold">{m.name} v{m.version}</span>
+              <div
+                key={m.id}
+                className="flex items-center justify-between px-6 py-3"
+              >
+                <span className="font-mono text-xs font-bold">
+                  {m.name} v{m.version}
+                </span>
                 <a
                   href={`${explorerUrl}/address/${m.id}`}
                   target="_blank"

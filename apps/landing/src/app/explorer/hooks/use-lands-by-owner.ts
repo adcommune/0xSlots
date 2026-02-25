@@ -1,10 +1,13 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import type { SlotsChain } from "@0xslots/sdk";
+import { useQuery } from "@tanstack/react-query";
 import { useSlotsClient } from "./use-slots-client";
 
-export function useLandsByOwner(chainId: SlotsChain, owner: string | undefined) {
+export function useLandsByOwner(
+  chainId: SlotsChain,
+  owner: string | undefined,
+) {
   const client = useSlotsClient(chainId);
 
   return useQuery({

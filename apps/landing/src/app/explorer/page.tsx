@@ -1,14 +1,14 @@
 "use client";
 
-import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { ExplorerTabs } from "@/components/explorer-tabs";
+import { CHAIN_CONFIG, parseChain } from "@/lib/config";
 import { ChainSelector } from "./chain-selector";
-import { StatsGrid } from "./components/StatsGrid";
-import { LandsTab } from "./components/LandsTab";
 import { EventsTab } from "./components/EventsTab";
 import { HubSettingsTab } from "./components/HubSettingsTab";
-import { CHAIN_CONFIG, parseChain } from "@/lib/config";
+import { LandsTab } from "./components/LandsTab";
+import { StatsGrid } from "./components/StatsGrid";
 
 function ExplorerContent() {
   const searchParams = useSearchParams();
@@ -48,7 +48,6 @@ function ExplorerContent() {
       </div>
 
       <div className="max-w-6xl mx-auto px-6 py-4">
-
         <ExplorerTabs
           tabs={[
             {

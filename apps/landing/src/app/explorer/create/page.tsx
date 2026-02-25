@@ -1,22 +1,22 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { slotsHubAbi } from "@0xslots/contracts";
 import { useSearchParams, useRouter } from "next/navigation";
-import {
-  useAccount,
-  useWriteContract,
-  useWaitForTransactionReceipt,
-  useSwitchChain,
-  useEnsAddress,
-  useSimulateContract,
-} from "wagmi";
+import { Suspense, useEffect, useState } from "react";
 import { isAddress, type Address } from "viem";
 import { normalize } from "viem/ens";
+import {
+  useAccount,
+  useEnsAddress,
+  useSimulateContract,
+  useSwitchChain,
+  useWaitForTransactionReceipt,
+  useWriteContract,
+} from "wagmi";
 import { mainnet } from "wagmi/chains";
-import { parseChain } from "@/lib/config";
 import { useHubSettings, useLandsByOwner, HUB_IDS } from "@/app/explorer/hooks";
-import { slotsHubAbi } from "@0xslots/contracts";
-import { formatWei, formatBps } from "@/utils";
+import { parseChain } from "@/lib/config";
+import { formatBps, formatWei } from "@/utils";
 
 function CreateContent() {
   const searchParams = useSearchParams();
