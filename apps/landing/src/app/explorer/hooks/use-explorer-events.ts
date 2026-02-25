@@ -1,10 +1,10 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import type { SlotsChain, SlotsClient } from "@0xslots/sdk";
-import { useSlotsClient } from "./use-slots-client";
-import { truncateAddress } from "@/utils";
+import { useQuery } from "@tanstack/react-query";
 import type { EventType } from "@/types";
+import { truncateAddress } from "@/utils";
+import { useSlotsClient } from "./use-slots-client";
 
 export interface UnifiedEvent {
   id: string;

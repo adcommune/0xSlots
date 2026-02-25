@@ -5,7 +5,14 @@ import { ConnectButton as RainbowConnectButton } from "@rainbow-me/rainbowkit";
 export function ConnectButton() {
   return (
     <RainbowConnectButton.Custom>
-      {({ account, chain, openAccountModal, openChainModal, openConnectModal, mounted }) => {
+      {({
+        account,
+        chain,
+        openAccountModal,
+        openChainModal,
+        openConnectModal,
+        mounted,
+      }) => {
         const connected = mounted && account && chain;
 
         return (

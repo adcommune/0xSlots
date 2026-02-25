@@ -1,9 +1,9 @@
 "use client";
 
 import type { SlotsChain } from "@0xslots/sdk";
-import { useHubSettings } from "../hooks";
 import { HubSettings } from "@/components/hub-settings";
 import { CHAIN_CONFIG } from "@/lib/config";
+import { useHubSettings } from "../hooks";
 
 export function HubSettingsTab({ chainId }: { chainId: SlotsChain }) {
   const { data, isLoading } = useHubSettings(chainId);

@@ -1,7 +1,7 @@
 "use client";
 
-import { useReadContracts } from "wagmi";
 import { type Address } from "viem";
+import { useReadContracts } from "wagmi";
 import { formatBalance, formatDuration } from "@/utils";
 
 const slotsViewAbi = [
@@ -62,13 +62,20 @@ export function SlotBalance({
   currencySymbol,
   currencyDecimals,
 }: SlotBalanceProps) {
-  const contract = { address: landAddress as Address, abi: slotsViewAbi } as const;
+  const contract = {
+    address: landAddress as Address,
+    abi: slotsViewAbi,
+  } as const;
 
   const { data, isLoading } = useReadContracts({
     contracts: [
       { ...contract, functionName: "getEscrow", args: [BigInt(slotId)] },
       { ...contract, functionName: "taxOwed", args: [BigInt(slotId)] },
-      { ...contract, functionName: "secondsUntilLiquidation", args: [BigInt(slotId)] },
+      {
+        ...contract,
+        functionName: "secondsUntilLiquidation",
+        args: [BigInt(slotId)],
+      },
     ],
     query: { enabled: Boolean(isOccupied) },
   });
@@ -115,11 +122,15 @@ export function SlotBalance({
     <div className="space-y-2 font-mono text-xs">
       <div className="flex justify-between">
         <span className="text-gray-500">DEPOSIT</span>
-        <span>{formatBalance(deposit, currencyDecimals)} {currencySymbol}</span>
+        <span>
+          {formatBalance(deposit, currencyDecimals)} {currencySymbol}
+        </span>
       </div>
       <div className="flex justify-between">
         <span className="text-gray-500">TAX OWED</span>
-        <span>{formatBalance(owed, currencyDecimals)} {currencySymbol}</span>
+        <span>
+          {formatBalance(owed, currencyDecimals)} {currencySymbol}
+        </span>
       </div>
       <div className="flex justify-between">
         <span className="text-gray-500">BALANCE</span>

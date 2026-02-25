@@ -1,9 +1,9 @@
 "use client";
 
-import { useEnsName, useEnsAvatar } from "wagmi";
-import { mainnet } from "wagmi/chains";
 import type { Address } from "viem";
 import { normalize } from "viem/ens";
+import { useEnsAvatar, useEnsName } from "wagmi";
+import { mainnet } from "wagmi/chains";
 import { truncateAddress } from "@/utils";
 
 interface EnsNameProps {
@@ -27,7 +27,10 @@ export function EnsName({ address, className, showAvatar }: EnsNameProps) {
 
   if (showAvatar) {
     return (
-      <span className={`inline-flex items-center gap-1.5 ${className ?? ""}`} title={address}>
+      <span
+        className={`inline-flex items-center gap-1.5 ${className ?? ""}`}
+        title={address}
+      >
         {avatarUrl ? (
           <img
             src={avatarUrl}

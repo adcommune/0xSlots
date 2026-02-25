@@ -1,7 +1,7 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import { SlotsChain } from "@0xslots/sdk";
+import { useQuery } from "@tanstack/react-query";
 import { useSlotsClient } from "./use-slots-client";
 
 export const HUB_IDS: Record<SlotsChain, string> = {

@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import { Providers } from "@/components/providers";
 import { ConnectButton } from "@/components/connect-button";
+import { Providers } from "@/components/providers";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const jetbrains = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono" });
+const jetbrains = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+});
 
 export const metadata: Metadata = {
   title: "0xSlots — Perpetual Onchain Slots",
@@ -20,12 +23,17 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${jetbrains.variable} font-sans bg-white text-black`}>
+      <body
+        className={`${inter.variable} ${jetbrains.variable} font-sans bg-white text-black`}
+      >
         <Providers>
           <div className="min-h-screen flex flex-col">
             {/* Nav */}
             <nav className="flex items-center justify-between px-6 py-4 border-b-4 border-black">
-              <a href="/" className="text-2xl font-black tracking-tighter uppercase">
+              <a
+                href="/"
+                className="text-2xl font-black tracking-tighter uppercase"
+              >
                 0xSlots
               </a>
               <div className="flex items-center gap-6 text-xs font-mono uppercase tracking-widest">
@@ -45,9 +53,7 @@ export default function RootLayout({
             </nav>
 
             {/* Main Content */}
-            <main className="flex-1">
-              {children}
-            </main>
+            <main className="flex-1">{children}</main>
 
             {/* Footer */}
             <footer className="px-6 py-6 border-t-4 border-black">

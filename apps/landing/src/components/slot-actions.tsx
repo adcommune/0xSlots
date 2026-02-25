@@ -1,23 +1,88 @@
 "use client";
 
 import { useState } from "react";
-import { useAccount, useWriteContract, useWaitForTransactionReceipt, useSwitchChain } from "wagmi";
-import { parseUnits, type Address } from "viem";
+import { type Address, parseUnits } from "viem";
+import {
+  useAccount,
+  useSwitchChain,
+  useWaitForTransactionReceipt,
+  useWriteContract,
+} from "wagmi";
 import { arbitrum } from "wagmi/chains";
 
 const CHAIN_ID = arbitrum.id;
 
 const slotsAbi = [
-  { type: "function", name: "buy", inputs: [{ name: "slotId", type: "uint256" }, { name: "depositAmount", type: "uint256" }], outputs: [], stateMutability: "nonpayable" },
-  { type: "function", name: "selfAssess", inputs: [{ name: "slotId", type: "uint256" }, { name: "newPrice", type: "uint256" }], outputs: [], stateMutability: "nonpayable" },
-  { type: "function", name: "deposit", inputs: [{ name: "slotId", type: "uint256" }, { name: "amount", type: "uint256" }], outputs: [], stateMutability: "nonpayable" },
-  { type: "function", name: "withdraw", inputs: [{ name: "slotId", type: "uint256" }, { name: "amount", type: "uint256" }], outputs: [], stateMutability: "nonpayable" },
-  { type: "function", name: "liquidate", inputs: [{ name: "slotId", type: "uint256" }], outputs: [], stateMutability: "nonpayable" },
-  { type: "function", name: "collectRange", inputs: [{ name: "fromId", type: "uint256" }, { name: "toId", type: "uint256" }], outputs: [], stateMutability: "nonpayable" },
+  {
+    type: "function",
+    name: "buy",
+    inputs: [
+      { name: "slotId", type: "uint256" },
+      { name: "depositAmount", type: "uint256" },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "selfAssess",
+    inputs: [
+      { name: "slotId", type: "uint256" },
+      { name: "newPrice", type: "uint256" },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "deposit",
+    inputs: [
+      { name: "slotId", type: "uint256" },
+      { name: "amount", type: "uint256" },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "withdraw",
+    inputs: [
+      { name: "slotId", type: "uint256" },
+      { name: "amount", type: "uint256" },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "liquidate",
+    inputs: [{ name: "slotId", type: "uint256" }],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "collectRange",
+    inputs: [
+      { name: "fromId", type: "uint256" },
+      { name: "toId", type: "uint256" },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
 ] as const;
 
 const erc20Abi = [
-  { type: "function", name: "approve", inputs: [{ name: "spender", type: "address" }, { name: "amount", type: "uint256" }], outputs: [{ name: "", type: "bool" }], stateMutability: "nonpayable" },
+  {
+    type: "function",
+    name: "approve",
+    inputs: [
+      { name: "spender", type: "address" },
+      { name: "amount", type: "uint256" },
+    ],
+    outputs: [{ name: "", type: "bool" }],
+    stateMutability: "nonpayable",
+  },
 ] as const;
 
 interface SlotActionsProps {
@@ -47,8 +112,15 @@ export function SlotActions({
 }: SlotActionsProps) {
   const { address, isConnected, chainId } = useAccount();
   const { switchChain } = useSwitchChain();
-  const { writeContract, writeContractAsync, data: hash, isPending } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+  const {
+    writeContract,
+    writeContractAsync,
+    data: hash,
+    isPending,
+  } = useWriteContract();
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
+    hash,
+  });
 
   const [newPrice, setNewPrice] = useState("");
   const [depositAmount, setDepositAmount] = useState("");
@@ -87,7 +159,9 @@ export function SlotActions({
 
   if (!isConnected) {
     return (
-      <p className="font-mono text-xs text-gray-400">CONNECT WALLET TO INTERACT</p>
+      <p className="font-mono text-xs text-gray-400">
+        CONNECT WALLET TO INTERACT
+      </p>
     );
   }
 
@@ -108,7 +182,9 @@ export function SlotActions({
       <div className="space-y-3">
         <div className="flex gap-2 items-end">
           <div>
-            <label className="font-mono text-xs text-gray-500 block mb-1">FROM SLOT</label>
+            <label className="font-mono text-xs text-gray-500 block mb-1">
+              FROM SLOT
+            </label>
             <input
               type="number"
               value={collectFrom}
@@ -117,7 +193,9 @@ export function SlotActions({
             />
           </div>
           <div>
-            <label className="font-mono text-xs text-gray-500 block mb-1">TO SLOT</label>
+            <label className="font-mono text-xs text-gray-500 block mb-1">
+              TO SLOT
+            </label>
             <input
               type="number"
               value={collectTo}
@@ -140,7 +218,9 @@ export function SlotActions({
             {busy ? "..." : "COLLECT TAX"}
           </button>
         </div>
-        {isSuccess && <p className="font-mono text-xs text-green-600">✓ TX CONFIRMED</p>}
+        {isSuccess && (
+          <p className="font-mono text-xs text-green-600">✓ TX CONFIRMED</p>
+        )}
       </div>
     );
   }
@@ -151,7 +231,9 @@ export function SlotActions({
       {(!isOccupied || !isOccupant) && (
         <div className="flex gap-2 items-end">
           <div className="flex-1">
-            <label className="font-mono text-xs text-gray-500 block mb-1">DEPOSIT ({currencySymbol})</label>
+            <label className="font-mono text-xs text-gray-500 block mb-1">
+              DEPOSIT ({currencySymbol})
+            </label>
             <input
               type="text"
               placeholder="1.00"
@@ -172,7 +254,7 @@ export function SlotActions({
                   abi: slotsAbi,
                   functionName: "buy",
                   args: [BigInt(slotIndex), amt],
-                })
+                }),
               );
             }}
             className="border-2 border-black bg-black text-white px-3 py-1 font-mono text-xs uppercase hover:bg-white hover:text-black disabled:opacity-50"
@@ -186,7 +268,9 @@ export function SlotActions({
       {isOccupant && (
         <div className="flex gap-2 items-end">
           <div className="flex-1">
-            <label className="font-mono text-xs text-gray-500 block mb-1">NEW PRICE ({currencySymbol})</label>
+            <label className="font-mono text-xs text-gray-500 block mb-1">
+              NEW PRICE ({currencySymbol})
+            </label>
             <input
               type="text"
               placeholder="1.00"
@@ -216,7 +300,9 @@ export function SlotActions({
       {isOccupant && (
         <div className="flex gap-2 items-end">
           <div className="flex-1">
-            <label className="font-mono text-xs text-gray-500 block mb-1">ADD DEPOSIT ({currencySymbol})</label>
+            <label className="font-mono text-xs text-gray-500 block mb-1">
+              ADD DEPOSIT ({currencySymbol})
+            </label>
             <input
               type="text"
               placeholder="1.00"
@@ -235,7 +321,7 @@ export function SlotActions({
                   abi: slotsAbi,
                   functionName: "deposit",
                   args: [BigInt(slotIndex), amt],
-                })
+                }),
               );
             }}
             className="border-2 border-black px-3 py-1 font-mono text-xs uppercase hover:bg-black hover:text-white disabled:opacity-50"
@@ -249,7 +335,9 @@ export function SlotActions({
       {isOccupant && (
         <div className="flex gap-2 items-end">
           <div className="flex-1">
-            <label className="font-mono text-xs text-gray-500 block mb-1">WITHDRAW ({currencySymbol})</label>
+            <label className="font-mono text-xs text-gray-500 block mb-1">
+              WITHDRAW ({currencySymbol})
+            </label>
             <input
               type="text"
               placeholder="1.00"
@@ -293,7 +381,9 @@ export function SlotActions({
         </button>
       )}
 
-      {isSuccess && <p className="font-mono text-xs text-green-600">✓ TX CONFIRMED</p>}
+      {isSuccess && (
+        <p className="font-mono text-xs text-green-600">✓ TX CONFIRMED</p>
+      )}
     </div>
   );
 }

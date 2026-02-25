@@ -28,18 +28,30 @@ export function StatsGrid({ chainId }: { chainId: SlotsChain }) {
   return (
     <div className="flex items-center gap-5">
       <div className="flex items-center gap-1.5">
-        <span className="font-mono text-[10px] uppercase text-gray-500">Lands</span>
-        <span className="font-mono text-sm font-black">{counts.totalLands}</span>
+        <span className="font-mono text-[10px] uppercase text-gray-500">
+          Lands
+        </span>
+        <span className="font-mono text-sm font-black">
+          {counts.totalLands}
+        </span>
       </div>
       <div className="w-px h-3 bg-gray-300" />
       <div className="flex items-center gap-1.5">
-        <span className="font-mono text-[10px] uppercase text-gray-500">Purchases</span>
-        <span className="font-mono text-sm font-black">{counts.slotPurchases}</span>
+        <span className="font-mono text-[10px] uppercase text-gray-500">
+          Purchases
+        </span>
+        <span className="font-mono text-sm font-black">
+          {counts.slotPurchases}
+        </span>
       </div>
       <div className="w-px h-3 bg-gray-300" />
       <div className="flex items-center gap-1.5">
-        <span className="font-mono text-[10px] uppercase text-gray-500">Available</span>
-        <span className="font-mono text-sm font-black">{counts.availableSlots}</span>
+        <span className="font-mono text-[10px] uppercase text-gray-500">
+          Available
+        </span>
+        <span className="font-mono text-sm font-black">
+          {counts.availableSlots}
+        </span>
       </div>
     </div>
   );

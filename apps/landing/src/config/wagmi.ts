@@ -1,6 +1,6 @@
 import { getDefaultConfig } from "@rainbow-me/rainbowkit";
 import { http } from "wagmi";
-import { mainnet, arbitrum, baseSepolia } from "wagmi/chains";
+import { arbitrum, baseSepolia, mainnet } from "wagmi/chains";
 
 export const config = getDefaultConfig({
   appName: "0xSlots",
@@ -11,7 +11,7 @@ export const config = getDefaultConfig({
     [baseSepolia.id]: http("https://sepolia.base.org"),
     [arbitrum.id]: http("wss://arbitrum.drpc.org"),
   },
-  ssr: true
+  ssr: true,
 });
 
 declare module "wagmi" {
