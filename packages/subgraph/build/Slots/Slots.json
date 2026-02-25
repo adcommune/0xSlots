@@ -1286,17 +1286,6 @@
   },
   {
     "type": "error",
-    "name": "CurrencyNotAllowed",
-    "inputs": [
-      {
-        "name": "currency",
-        "type": "address",
-        "internalType": "address"
-      }
-    ]
-  },
-  {
-    "type": "error",
     "name": "InsufficientDeposit",
     "inputs": []
   },

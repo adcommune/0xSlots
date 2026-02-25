@@ -1,829 +1,966 @@
-export const slotsHubAbi = 
-[
+export const slotsHubAbi = [
   {
-    "type": "receive",
-    "stateMutability": "payable"
+    type: "receive",
+    stateMutability: "payable",
   },
   {
-    "type": "function",
-    "name": "DEFAULT_ADMIN_ROLE",
-    "inputs": [],
-    "outputs": [
+    type: "function",
+    name: "DEFAULT_ADMIN_ROLE",
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "bytes32"
-      }
+        name: "",
+        type: "bytes32",
+        internalType: "bytes32",
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: "view",
   },
   {
-    "type": "function",
-    "name": "allowCurrency",
-    "inputs": [
+    type: "function",
+    name: "allowModule",
+    inputs: [
       {
-        "name": "currency",
-        "type": "address"
+        name: "module",
+        type: "address",
+        internalType: "address",
       },
       {
-        "name": "allowed",
-        "type": "bool"
-      }
+        name: "allowed",
+        type: "bool",
+        internalType: "bool",
+      },
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    outputs: [],
+    stateMutability: "nonpayable",
   },
   {
-    "type": "function",
-    "name": "allowModule",
-    "inputs": [
+    type: "function",
+    name: "beacon",
+    inputs: [],
+    outputs: [
       {
-        "name": "module",
-        "type": "address"
+        name: "",
+        type: "address",
+        internalType: "contract UpgradeableBeacon",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "expandLand",
+    inputs: [
+      {
+        name: "account",
+        type: "address",
+        internalType: "address",
       },
       {
-        "name": "allowed",
-        "type": "bool"
-      }
+        name: "params",
+        type: "tuple[]",
+        internalType: "struct SlotParams[]",
+        components: [
+          {
+            name: "currency",
+            type: "address",
+            internalType: "contract IERC20",
+          },
+          {
+            name: "basePrice",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "taxPercentage",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "maxTaxPercentage",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "minTaxUpdatePeriod",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "module",
+            type: "address",
+            internalType: "address",
+          },
+        ],
+      },
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    outputs: [],
+    stateMutability: "payable",
   },
   {
-    "type": "function",
-    "name": "expandLand",
-    "inputs": [
+    type: "function",
+    name: "getRoleAdmin",
+    inputs: [
       {
-        "name": "account",
-        "type": "address"
+        name: "role",
+        type: "bytes32",
+        internalType: "bytes32",
+      },
+    ],
+    outputs: [
+      {
+        name: "",
+        type: "bytes32",
+        internalType: "bytes32",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "grantRole",
+    inputs: [
+      {
+        name: "role",
+        type: "bytes32",
+        internalType: "bytes32",
       },
       {
-        "name": "params",
-        "type": "tuple[]",
-        "components": [
-          {
-            "name": "currency",
-            "type": "address"
-          },
-          {
-            "name": "basePrice",
-            "type": "uint256"
-          },
-          {
-            "name": "taxPercentage",
-            "type": "uint256"
-          },
-          {
-            "name": "maxTaxPercentage",
-            "type": "uint256"
-          },
-          {
-            "name": "minTaxUpdatePeriod",
-            "type": "uint256"
-          },
-          {
-            "name": "module",
-            "type": "address"
-          }
-        ]
-      }
+        name: "account",
+        type: "address",
+        internalType: "address",
+      },
     ],
-    "outputs": [],
-    "stateMutability": "payable"
+    outputs: [],
+    stateMutability: "nonpayable",
   },
   {
-    "type": "function",
-    "name": "getRoleAdmin",
-    "inputs": [
+    type: "function",
+    name: "hasRole",
+    inputs: [
       {
-        "name": "role",
-        "type": "bytes32"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "grantRole",
-    "inputs": [
-      {
-        "name": "role",
-        "type": "bytes32"
+        name: "role",
+        type: "bytes32",
+        internalType: "bytes32",
       },
       {
-        "name": "account",
-        "type": "address"
-      }
+        name: "account",
+        type: "address",
+        internalType: "address",
+      },
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    outputs: [
+      {
+        name: "",
+        type: "bool",
+        internalType: "bool",
+      },
+    ],
+    stateMutability: "view",
   },
   {
-    "type": "function",
-    "name": "hasRole",
-    "inputs": [
+    type: "function",
+    name: "hubSettings",
+    inputs: [],
+    outputs: [
       {
-        "name": "role",
-        "type": "bytes32"
+        name: "",
+        type: "tuple",
+        internalType: "struct HubSettings",
+        components: [
+          {
+            name: "protocolFeeBps",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "protocolFeeRecipient",
+            type: "address",
+            internalType: "address",
+          },
+          {
+            name: "landCreationFee",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "slotExpansionFee",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "newLandInitialCurrency",
+            type: "address",
+            internalType: "address",
+          },
+          {
+            name: "newLandInitialAmount",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "newLandInitialPrice",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "newLandInitialTaxPercentage",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "newLandInitialMaxTaxPercentage",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "newLandInitialMinTaxUpdatePeriod",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "newLandInitialModule",
+            type: "address",
+            internalType: "address",
+          },
+          {
+            name: "moduleCallGasLimit",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "liquidationBountyBps",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "minDepositSeconds",
+            type: "uint256",
+            internalType: "uint256",
+          },
+        ],
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "initialize",
+    inputs: [
+      {
+        name: "_slotsImpl",
+        type: "address",
+        internalType: "address",
       },
       {
-        "name": "account",
-        "type": "address"
-      }
+        name: "settings",
+        type: "tuple",
+        internalType: "struct HubSettings",
+        components: [
+          {
+            name: "protocolFeeBps",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "protocolFeeRecipient",
+            type: "address",
+            internalType: "address",
+          },
+          {
+            name: "landCreationFee",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "slotExpansionFee",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "newLandInitialCurrency",
+            type: "address",
+            internalType: "address",
+          },
+          {
+            name: "newLandInitialAmount",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "newLandInitialPrice",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "newLandInitialTaxPercentage",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "newLandInitialMaxTaxPercentage",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "newLandInitialMinTaxUpdatePeriod",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "newLandInitialModule",
+            type: "address",
+            internalType: "address",
+          },
+          {
+            name: "moduleCallGasLimit",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "liquidationBountyBps",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "minDepositSeconds",
+            type: "uint256",
+            internalType: "uint256",
+          },
+        ],
+      },
     ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view"
+    outputs: [],
+    stateMutability: "nonpayable",
   },
   {
-    "type": "function",
-    "name": "hubSettings",
-    "inputs": [],
-    "outputs": [
+    type: "function",
+    name: "isModuleAllowed",
+    inputs: [
       {
-        "name": "",
-        "type": "tuple",
-        "components": [
-          {
-            "name": "protocolFeeBps",
-            "type": "uint256"
-          },
-          {
-            "name": "protocolFeeRecipient",
-            "type": "address"
-          },
-          {
-            "name": "landCreationFee",
-            "type": "uint256"
-          },
-          {
-            "name": "slotExpansionFee",
-            "type": "uint256"
-          },
-          {
-            "name": "newLandInitialCurrency",
-            "type": "address"
-          },
-          {
-            "name": "newLandInitialAmount",
-            "type": "uint256"
-          },
-          {
-            "name": "newLandInitialPrice",
-            "type": "uint256"
-          },
-          {
-            "name": "newLandInitialTaxPercentage",
-            "type": "uint256"
-          },
-          {
-            "name": "newLandInitialMaxTaxPercentage",
-            "type": "uint256"
-          },
-          {
-            "name": "newLandInitialMinTaxUpdatePeriod",
-            "type": "uint256"
-          },
-          {
-            "name": "newLandInitialModule",
-            "type": "address"
-          },
-          {
-            "name": "moduleCallGasLimit",
-            "type": "uint256"
-          },
-          {
-            "name": "liquidationBountyBps",
-            "type": "uint256"
-          },
-          {
-            "name": "minDepositSeconds",
-            "type": "uint256"
-          }
-        ]
-      }
+        name: "module",
+        type: "address",
+        internalType: "address",
+      },
     ],
-    "stateMutability": "view"
+    outputs: [
+      {
+        name: "",
+        type: "bool",
+        internalType: "bool",
+      },
+    ],
+    stateMutability: "view",
   },
   {
-    "type": "function",
-    "name": "initialize",
-    "inputs": [
+    type: "function",
+    name: "lands",
+    inputs: [
       {
-        "name": "_slotsImpl",
-        "type": "address"
+        name: "",
+        type: "address",
+        internalType: "address",
+      },
+    ],
+    outputs: [
+      {
+        name: "",
+        type: "address",
+        internalType: "address",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "openLand",
+    inputs: [
+      {
+        name: "account",
+        type: "address",
+        internalType: "address",
+      },
+    ],
+    outputs: [
+      {
+        name: "land",
+        type: "address",
+        internalType: "address",
+      },
+    ],
+    stateMutability: "payable",
+  },
+  {
+    type: "function",
+    name: "openLandCustom",
+    inputs: [
+      {
+        name: "account",
+        type: "address",
+        internalType: "address",
       },
       {
-        "name": "settings",
-        "type": "tuple",
-        "components": [
+        name: "params",
+        type: "tuple[]",
+        internalType: "struct SlotParams[]",
+        components: [
           {
-            "name": "protocolFeeBps",
-            "type": "uint256"
+            name: "currency",
+            type: "address",
+            internalType: "contract IERC20",
           },
           {
-            "name": "protocolFeeRecipient",
-            "type": "address"
+            name: "basePrice",
+            type: "uint256",
+            internalType: "uint256",
           },
           {
-            "name": "landCreationFee",
-            "type": "uint256"
+            name: "taxPercentage",
+            type: "uint256",
+            internalType: "uint256",
           },
           {
-            "name": "slotExpansionFee",
-            "type": "uint256"
+            name: "maxTaxPercentage",
+            type: "uint256",
+            internalType: "uint256",
           },
           {
-            "name": "newLandInitialCurrency",
-            "type": "address"
+            name: "minTaxUpdatePeriod",
+            type: "uint256",
+            internalType: "uint256",
           },
           {
-            "name": "newLandInitialAmount",
-            "type": "uint256"
+            name: "module",
+            type: "address",
+            internalType: "address",
           },
-          {
-            "name": "newLandInitialPrice",
-            "type": "uint256"
-          },
-          {
-            "name": "newLandInitialTaxPercentage",
-            "type": "uint256"
-          },
-          {
-            "name": "newLandInitialMaxTaxPercentage",
-            "type": "uint256"
-          },
-          {
-            "name": "newLandInitialMinTaxUpdatePeriod",
-            "type": "uint256"
-          },
-          {
-            "name": "newLandInitialModule",
-            "type": "address"
-          },
-          {
-            "name": "moduleCallGasLimit",
-            "type": "uint256"
-          },
-          {
-            "name": "liquidationBountyBps",
-            "type": "uint256"
-          },
-          {
-            "name": "minDepositSeconds",
-            "type": "uint256"
-          }
-        ]
-      }
+        ],
+      },
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    outputs: [
+      {
+        name: "land",
+        type: "address",
+        internalType: "address",
+      },
+    ],
+    stateMutability: "payable",
   },
   {
-    "type": "function",
-    "name": "isCurrencyAllowed",
-    "inputs": [
+    type: "function",
+    name: "proxiableUUID",
+    inputs: [],
+    outputs: [
       {
-        "name": "currency",
-        "type": "address"
-      }
+        name: "",
+        type: "bytes32",
+        internalType: "bytes32",
+      },
     ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view"
+    stateMutability: "view",
   },
   {
-    "type": "function",
-    "name": "isModuleAllowed",
-    "inputs": [
+    type: "function",
+    name: "renounceRole",
+    inputs: [
       {
-        "name": "module",
-        "type": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "lands",
-    "inputs": [
-      {
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "openLand",
-    "inputs": [
-      {
-        "name": "account",
-        "type": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "land",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "payable"
-  },
-  {
-    "type": "function",
-    "name": "proxiableUUID",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "renounceRole",
-    "inputs": [
-      {
-        "name": "role",
-        "type": "bytes32"
+        name: "role",
+        type: "bytes32",
+        internalType: "bytes32",
       },
       {
-        "name": "account",
-        "type": "address"
-      }
+        name: "account",
+        type: "address",
+        internalType: "address",
+      },
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    outputs: [],
+    stateMutability: "nonpayable",
   },
   {
-    "type": "function",
-    "name": "revokeRole",
-    "inputs": [
+    type: "function",
+    name: "revokeRole",
+    inputs: [
       {
-        "name": "role",
-        "type": "bytes32"
+        name: "role",
+        type: "bytes32",
+        internalType: "bytes32",
       },
       {
-        "name": "account",
-        "type": "address"
-      }
+        name: "account",
+        type: "address",
+        internalType: "address",
+      },
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    outputs: [],
+    stateMutability: "nonpayable",
   },
   {
-    "type": "function",
-    "name": "slotsImplementation",
-    "inputs": [],
-    "outputs": [
+    type: "function",
+    name: "supportsInterface",
+    inputs: [
       {
-        "name": "",
-        "type": "address"
-      }
+        name: "interfaceId",
+        type: "bytes4",
+        internalType: "bytes4",
+      },
     ],
-    "stateMutability": "view"
+    outputs: [
+      {
+        name: "",
+        type: "bool",
+        internalType: "bool",
+      },
+    ],
+    stateMutability: "view",
   },
   {
-    "type": "function",
-    "name": "supportsInterface",
-    "inputs": [
+    type: "function",
+    name: "updateHubSettings",
+    inputs: [
       {
-        "name": "interfaceId",
-        "type": "bytes4"
-      }
+        name: "newSettings",
+        type: "tuple",
+        internalType: "struct HubSettings",
+        components: [
+          {
+            name: "protocolFeeBps",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "protocolFeeRecipient",
+            type: "address",
+            internalType: "address",
+          },
+          {
+            name: "landCreationFee",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "slotExpansionFee",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "newLandInitialCurrency",
+            type: "address",
+            internalType: "address",
+          },
+          {
+            name: "newLandInitialAmount",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "newLandInitialPrice",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "newLandInitialTaxPercentage",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "newLandInitialMaxTaxPercentage",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "newLandInitialMinTaxUpdatePeriod",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "newLandInitialModule",
+            type: "address",
+            internalType: "address",
+          },
+          {
+            name: "moduleCallGasLimit",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "liquidationBountyBps",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "minDepositSeconds",
+            type: "uint256",
+            internalType: "uint256",
+          },
+        ],
+      },
     ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view"
+    outputs: [],
+    stateMutability: "nonpayable",
   },
   {
-    "type": "function",
-    "name": "updateHubSettings",
-    "inputs": [
+    type: "function",
+    name: "upgradeSlotsImplementation",
+    inputs: [
       {
-        "name": "newSettings",
-        "type": "tuple",
-        "components": [
-          {
-            "name": "protocolFeeBps",
-            "type": "uint256"
-          },
-          {
-            "name": "protocolFeeRecipient",
-            "type": "address"
-          },
-          {
-            "name": "landCreationFee",
-            "type": "uint256"
-          },
-          {
-            "name": "slotExpansionFee",
-            "type": "uint256"
-          },
-          {
-            "name": "newLandInitialCurrency",
-            "type": "address"
-          },
-          {
-            "name": "newLandInitialAmount",
-            "type": "uint256"
-          },
-          {
-            "name": "newLandInitialPrice",
-            "type": "uint256"
-          },
-          {
-            "name": "newLandInitialTaxPercentage",
-            "type": "uint256"
-          },
-          {
-            "name": "newLandInitialMaxTaxPercentage",
-            "type": "uint256"
-          },
-          {
-            "name": "newLandInitialMinTaxUpdatePeriod",
-            "type": "uint256"
-          },
-          {
-            "name": "newLandInitialModule",
-            "type": "address"
-          },
-          {
-            "name": "moduleCallGasLimit",
-            "type": "uint256"
-          },
-          {
-            "name": "liquidationBountyBps",
-            "type": "uint256"
-          },
-          {
-            "name": "minDepositSeconds",
-            "type": "uint256"
-          }
-        ]
-      }
+        name: "newImpl",
+        type: "address",
+        internalType: "address",
+      },
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    outputs: [],
+    stateMutability: "nonpayable",
   },
   {
-    "type": "function",
-    "name": "upgradeTo",
-    "inputs": [
+    type: "function",
+    name: "upgradeTo",
+    inputs: [
       {
-        "name": "newImplementation",
-        "type": "address"
-      }
+        name: "newImplementation",
+        type: "address",
+        internalType: "address",
+      },
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    outputs: [],
+    stateMutability: "nonpayable",
   },
   {
-    "type": "function",
-    "name": "upgradeToAndCall",
-    "inputs": [
+    type: "function",
+    name: "upgradeToAndCall",
+    inputs: [
       {
-        "name": "newImplementation",
-        "type": "address"
+        name: "newImplementation",
+        type: "address",
+        internalType: "address",
       },
       {
-        "name": "data",
-        "type": "bytes"
-      }
+        name: "data",
+        type: "bytes",
+        internalType: "bytes",
+      },
     ],
-    "outputs": [],
-    "stateMutability": "payable"
+    outputs: [],
+    stateMutability: "payable",
   },
   {
-    "type": "function",
-    "name": "withdrawETH",
-    "inputs": [
+    type: "function",
+    name: "withdrawETH",
+    inputs: [
       {
-        "name": "to",
-        "type": "address"
-      }
+        name: "to",
+        type: "address",
+        internalType: "address",
+      },
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    outputs: [],
+    stateMutability: "nonpayable",
   },
   {
-    "type": "event",
-    "name": "AdminChanged",
-    "inputs": [
+    type: "event",
+    name: "AdminChanged",
+    inputs: [
       {
-        "name": "previousAdmin",
-        "type": "address",
-        "indexed": false
+        name: "previousAdmin",
+        type: "address",
+        indexed: false,
+        internalType: "address",
       },
       {
-        "name": "newAdmin",
-        "type": "address",
-        "indexed": false
-      }
+        name: "newAdmin",
+        type: "address",
+        indexed: false,
+        internalType: "address",
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "BeaconUpgraded",
-    "inputs": [
+    type: "event",
+    name: "BeaconUpgraded",
+    inputs: [
       {
-        "name": "beacon",
-        "type": "address",
-        "indexed": true
-      }
+        name: "beacon",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "CurrencyAllowedStatusUpdated",
-    "inputs": [
+    type: "event",
+    name: "HubSettingsUpdated",
+    inputs: [
       {
-        "name": "currency",
-        "type": "address",
-        "indexed": true
+        name: "newHubSettings",
+        type: "tuple",
+        indexed: false,
+        internalType: "struct HubSettings",
+        components: [
+          {
+            name: "protocolFeeBps",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "protocolFeeRecipient",
+            type: "address",
+            internalType: "address",
+          },
+          {
+            name: "landCreationFee",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "slotExpansionFee",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "newLandInitialCurrency",
+            type: "address",
+            internalType: "address",
+          },
+          {
+            name: "newLandInitialAmount",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "newLandInitialPrice",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "newLandInitialTaxPercentage",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "newLandInitialMaxTaxPercentage",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "newLandInitialMinTaxUpdatePeriod",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "newLandInitialModule",
+            type: "address",
+            internalType: "address",
+          },
+          {
+            name: "moduleCallGasLimit",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "liquidationBountyBps",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "minDepositSeconds",
+            type: "uint256",
+            internalType: "uint256",
+          },
+        ],
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "Initialized",
+    inputs: [
+      {
+        name: "version",
+        type: "uint8",
+        indexed: false,
+        internalType: "uint8",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "LandExpanded",
+    inputs: [
+      {
+        name: "land",
+        type: "address",
+        indexed: true,
+        internalType: "address",
       },
       {
-        "name": "allowed",
-        "type": "bool",
-        "indexed": false
-      }
+        name: "newSlotCount",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "HubSettingsUpdated",
-    "inputs": [
+    type: "event",
+    name: "LandOpened",
+    inputs: [
       {
-        "name": "newHubSettings",
-        "type": "tuple",
-        "indexed": false,
-        "components": [
-          {
-            "name": "protocolFeeBps",
-            "type": "uint256"
-          },
-          {
-            "name": "protocolFeeRecipient",
-            "type": "address"
-          },
-          {
-            "name": "landCreationFee",
-            "type": "uint256"
-          },
-          {
-            "name": "slotExpansionFee",
-            "type": "uint256"
-          },
-          {
-            "name": "newLandInitialCurrency",
-            "type": "address"
-          },
-          {
-            "name": "newLandInitialAmount",
-            "type": "uint256"
-          },
-          {
-            "name": "newLandInitialPrice",
-            "type": "uint256"
-          },
-          {
-            "name": "newLandInitialTaxPercentage",
-            "type": "uint256"
-          },
-          {
-            "name": "newLandInitialMaxTaxPercentage",
-            "type": "uint256"
-          },
-          {
-            "name": "newLandInitialMinTaxUpdatePeriod",
-            "type": "uint256"
-          },
-          {
-            "name": "newLandInitialModule",
-            "type": "address"
-          },
-          {
-            "name": "moduleCallGasLimit",
-            "type": "uint256"
-          },
-          {
-            "name": "liquidationBountyBps",
-            "type": "uint256"
-          },
-          {
-            "name": "minDepositSeconds",
-            "type": "uint256"
-          }
-        ]
-      }
+        name: "land",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "account",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "Initialized",
-    "inputs": [
+    type: "event",
+    name: "ModuleAllowedStatusUpdated",
+    inputs: [
       {
-        "name": "version",
-        "type": "uint8",
-        "indexed": false
-      }
+        name: "module",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "allowed",
+        type: "bool",
+        indexed: false,
+        internalType: "bool",
+      },
+      {
+        name: "name",
+        type: "string",
+        indexed: false,
+        internalType: "string",
+      },
+      {
+        name: "version",
+        type: "string",
+        indexed: false,
+        internalType: "string",
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "LandExpanded",
-    "inputs": [
+    type: "event",
+    name: "RoleAdminChanged",
+    inputs: [
       {
-        "name": "land",
-        "type": "address",
-        "indexed": true
+        name: "role",
+        type: "bytes32",
+        indexed: true,
+        internalType: "bytes32",
       },
       {
-        "name": "newSlotCount",
-        "type": "uint256",
-        "indexed": false
-      }
+        name: "previousAdminRole",
+        type: "bytes32",
+        indexed: true,
+        internalType: "bytes32",
+      },
+      {
+        name: "newAdminRole",
+        type: "bytes32",
+        indexed: true,
+        internalType: "bytes32",
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "LandOpened",
-    "inputs": [
+    type: "event",
+    name: "RoleGranted",
+    inputs: [
       {
-        "name": "land",
-        "type": "address",
-        "indexed": true
+        name: "role",
+        type: "bytes32",
+        indexed: true,
+        internalType: "bytes32",
       },
       {
-        "name": "account",
-        "type": "address",
-        "indexed": true
-      }
+        name: "account",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "sender",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "ModuleAllowedStatusUpdated",
-    "inputs": [
+    type: "event",
+    name: "RoleRevoked",
+    inputs: [
       {
-        "name": "module",
-        "type": "address",
-        "indexed": true
+        name: "role",
+        type: "bytes32",
+        indexed: true,
+        internalType: "bytes32",
       },
       {
-        "name": "allowed",
-        "type": "bool",
-        "indexed": false
+        name: "account",
+        type: "address",
+        indexed: true,
+        internalType: "address",
       },
       {
-        "name": "name",
-        "type": "string",
-        "indexed": false
+        name: "sender",
+        type: "address",
+        indexed: true,
+        internalType: "address",
       },
-      {
-        "name": "version",
-        "type": "string",
-        "indexed": false
-      }
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "RoleAdminChanged",
-    "inputs": [
+    type: "event",
+    name: "Upgraded",
+    inputs: [
       {
-        "name": "role",
-        "type": "bytes32",
-        "indexed": true
+        name: "implementation",
+        type: "address",
+        indexed: true,
+        internalType: "address",
       },
-      {
-        "name": "previousAdminRole",
-        "type": "bytes32",
-        "indexed": true
-      },
-      {
-        "name": "newAdminRole",
-        "type": "bytes32",
-        "indexed": true
-      }
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "RoleGranted",
-    "inputs": [
-      {
-        "name": "role",
-        "type": "bytes32",
-        "indexed": true
-      },
-      {
-        "name": "account",
-        "type": "address",
-        "indexed": true
-      },
-      {
-        "name": "sender",
-        "type": "address",
-        "indexed": true
-      }
-    ],
-    "anonymous": false
+    type: "error",
+    name: "InsufficientPayment",
+    inputs: [],
   },
   {
-    "type": "event",
-    "name": "RoleRevoked",
-    "inputs": [
-      {
-        "name": "role",
-        "type": "bytes32",
-        "indexed": true
-      },
-      {
-        "name": "account",
-        "type": "address",
-        "indexed": true
-      },
-      {
-        "name": "sender",
-        "type": "address",
-        "indexed": true
-      }
-    ],
-    "anonymous": false
+    type: "error",
+    name: "InvalidFeeRecipient",
+    inputs: [],
   },
   {
-    "type": "event",
-    "name": "Upgraded",
-    "inputs": [
-      {
-        "name": "implementation",
-        "type": "address",
-        "indexed": true
-      }
-    ],
-    "anonymous": false
+    type: "error",
+    name: "LandAlreadyExists",
+    inputs: [],
   },
   {
-    "type": "error",
-    "name": "InsufficientPayment",
-    "inputs": []
+    type: "error",
+    name: "UnauthorizedLandExpansion",
+    inputs: [],
   },
-  {
-    "type": "error",
-    "name": "InvalidFeeRecipient",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "LandAlreadyExists",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "UnauthorizedLandExpansion",
-    "inputs": []
-  }
 ] as const;

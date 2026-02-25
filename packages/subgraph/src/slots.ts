@@ -51,7 +51,6 @@ export function handleSlotCreated(event: SlotCreated): void {
   if (!currency) {
     currency = new Currency(currencyId);
     currency.hub = event.address.toHexString(); // will be linked properly via land→hub
-    currency.allowed = false;
     let token = ERC20.bind(currencyAddr);
     let nameResult = token.try_name();
     if (!nameResult.reverted) currency.name = nameResult.value;

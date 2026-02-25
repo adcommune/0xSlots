@@ -5,7 +5,6 @@ import {
   LandOpened,
   LandExpanded,
   ModuleAllowedStatusUpdated,
-  CurrencyAllowedStatusUpdated,
 } from "../generated/SlotsHub/SlotsHub";
 import { Slots as SlotsTemplate } from "../generated/templates";
 import {
@@ -59,8 +58,6 @@ export function handleHubSettingsUpdated(event: HubSettingsUpdated): void {
   if (!currency) {
     currency = new Currency(currencyId);
     currency.hub = hub.id;
-    currency.allowed = false;
-
     let token = ERC20.bind(currencyAddr);
     let nameResult = token.try_name();
     if (!nameResult.reverted) currency.name = nameResult.value;
@@ -140,28 +137,4 @@ export function handleModuleAllowedStatusUpdated(
   module.save();
 }
 
-export function handleCurrencyAllowedStatusUpdated(
-  event: CurrencyAllowedStatusUpdated,
-): void {
-  let hub = getOrCreateHub(event.address);
-  hub.save();
-
-  let currency = Currency.load(event.params.currency.toHexString());
-  if (!currency) {
-    currency = new Currency(event.params.currency.toHexString());
-    currency.hub = hub.id;
-  }
-  currency.allowed = event.params.allowed;
-
-  if (!currency.name) {
-    let token = ERC20.bind(event.params.currency);
-    let nameResult = token.try_name();
-    if (!nameResult.reverted) currency.name = nameResult.value;
-    let symbolResult = token.try_symbol();
-    if (!symbolResult.reverted) currency.symbol = symbolResult.value;
-    let decimalsResult = token.try_decimals();
-    if (!decimalsResult.reverted) currency.decimals = decimalsResult.value;
-  }
-
-  currency.save();
-}
+// Currency allowlist removed — any ERC-20 is accepted

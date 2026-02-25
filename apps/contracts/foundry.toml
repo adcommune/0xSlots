@@ -22,8 +22,8 @@ optimism = "https://opt-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}"
 sepolia = { key = "${API_KEY_ETHERSCAN}" }
 base = { key = "9M1V7SVCC9PHZSUQ69NJNG1YWN9QTUP9JP" }
 optsepolia = { key = "${API_KEY_ETHERSCAN}" }
-basesepolia = { key = "${API_KEY_ETHERSCAN}" }
-arbitrum = { key = "${API_KEY_ARBISCAN}" }
+basesepolia = { key = "${API_KEY_ETHERSCAN}", url = "https://api-sepolia.basescan.org/api", chain = 84532 }
+arbitrum = { key = "${API_KEY_ARBISCAN}", url = "https://api.arbiscan.io/api", chain = 42161 }
 optimism = { key = "${API_KEY_OPSCAN}" }
 
 

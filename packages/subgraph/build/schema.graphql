@@ -20,7 +20,7 @@ type Hub @entity(immutable: false) {
   minDepositSeconds: BigInt!
   lands: [Land!]! @derivedFrom(field: "hub")
   allowedModules: [Module!]! @derivedFrom(field: "hub")
-  allowedCurrencies: [Currency!]! @derivedFrom(field: "hub")
+  currencies: [Currency!]! @derivedFrom(field: "hub")
 }
 
 type Land @entity(immutable: false) {
@@ -202,7 +202,6 @@ type Module @entity(immutable: false) {
 type Currency @entity(immutable: false) {
   id: ID! # currency address (any ERC-20)
   hub: Hub!
-  allowed: Boolean!
   name: String
   symbol: String
   decimals: Int

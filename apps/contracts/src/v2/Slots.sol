@@ -30,7 +30,6 @@ contract Slots is ISlotsEvents, ReentrancyGuardUpgradeable, OwnableUpgradeable {
   error TaxUpdatePeriodNotPassed(uint256 currentTime, uint256 requiredTime);
   error CannotBuyFromYourself();
   error ModuleNotAllowed(address module);
-  error CurrencyNotAllowed(address currency);
   error InvalidTaxPercentage();
   error SlotMustBeUnoccupied(uint256 slotId);
   error SlotAlreadyActive(uint256 slotId);
@@ -291,7 +290,6 @@ contract Slots is ISlotsEvents, ReentrancyGuardUpgradeable, OwnableUpgradeable {
 
     if (newCurrency != address(0) && newCurrency != address(slot.currency)) {
       if (!isVacant) revert CurrencyChangeWhileOccupied();
-      if (!hub.isCurrencyAllowed(newCurrency)) revert CurrencyNotAllowed(newCurrency);
       slot.currency = IERC20(newCurrency);
     }
 
@@ -454,7 +452,6 @@ contract Slots is ISlotsEvents, ReentrancyGuardUpgradeable, OwnableUpgradeable {
   function _createSlot(uint256 slotId, address occupant, SlotParams memory params) internal {
     if (slots[slotId].occupant != address(0)) revert SlotAlreadyExists(slotId);
     if (!hub.isModuleAllowed(params.module)) revert ModuleNotAllowed(params.module);
-    if (!hub.isCurrencyAllowed(address(params.currency))) revert CurrencyNotAllowed(address(params.currency));
     if (params.basePrice == 0) revert InvalidPrice();
     if (params.taxPercentage == 0 || params.taxPercentage > params.maxTaxPercentage) revert InvalidTaxPercentage();
 

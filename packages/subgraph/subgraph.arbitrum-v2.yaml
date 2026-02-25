@@ -8,9 +8,9 @@ dataSources:
     name: SlotsHub
     network: arbitrum-one
     source:
-      address: "0x50b9111b44cf2f8eb5a2b21bf58dcf7cba583dd3"
+      address: "0xf46bB96B7D978170F75Dd8bc39578a771E03b325"
       abi: SlotsHub
-      startBlock: 433788857
+      startBlock: 435868354
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -35,8 +35,6 @@ dataSources:
           handler: handleLandExpanded
         - event: ModuleAllowedStatusUpdated(indexed address,bool,string,string)
           handler: handleModuleAllowedStatusUpdated
-        - event: CurrencyAllowedStatusUpdated(indexed address,bool)
-          handler: handleCurrencyAllowedStatusUpdated
       file: ./src/slotsHub.ts
 templates:
   - kind: ethereum

@@ -6,11 +6,11 @@ schema:
 dataSources:
   - kind: ethereum
     name: SlotsHub
-    network: arbitrum-one
+    network: base-sepolia
     source:
-      address: "0x50b9111b44cf2f8eb5a2b21bf58dcf7cba583dd3"
+      address: "0xc9D6BDAf9e807Be880509B05c5C5216Ff1c63603"
       abi: SlotsHub
-      startBlock: 433788857
+      startBlock: 38133214
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -35,13 +35,11 @@ dataSources:
           handler: handleLandExpanded
         - event: ModuleAllowedStatusUpdated(indexed address,bool,string,string)
           handler: handleModuleAllowedStatusUpdated
-        - event: CurrencyAllowedStatusUpdated(indexed address,bool)
-          handler: handleCurrencyAllowedStatusUpdated
       file: SlotsHub/SlotsHub.wasm
 templates:
   - kind: ethereum
     name: Slots
-    network: arbitrum-one
+    network: base-sepolia
     source:
       abi: Slots
     mapping:

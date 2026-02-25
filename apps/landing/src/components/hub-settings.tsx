@@ -45,12 +45,11 @@ interface HubData {
 
 interface Props {
   hub: HubData | null;
-  currencies: { id: string; name: string; symbol: string; decimals: number }[];
   modules: { id: string; name: string; version: string }[];
   explorerUrl: string;
 }
 
-export function HubSettings({ hub, currencies, modules, explorerUrl }: Props) {
+export function HubSettings({ hub, modules, explorerUrl }: Props) {
   if (!hub) {
     return (
       <div className="border-2 border-black p-12 text-center">
@@ -122,37 +121,6 @@ export function HubSettings({ hub, currencies, modules, explorerUrl }: Props) {
             </div>
           ))}
         </div>
-      </div>
-
-      {/* Allowed Currencies */}
-      <div className="border-2 border-black">
-        <div className="bg-gray-50 border-b-2 border-black p-4">
-          <h2 className="text-sm font-bold uppercase tracking-tight">
-            Allowed Currencies
-          </h2>
-        </div>
-        {currencies.length === 0 ? (
-          <p className="p-6 font-mono text-xs text-gray-400">None</p>
-        ) : (
-          <div className="divide-y divide-gray-200">
-            {currencies.map((c) => (
-              <div
-                key={c.id}
-                className="flex items-center justify-between px-6 py-3"
-              >
-                <span className="font-mono text-xs font-bold">{c.symbol}</span>
-                <a
-                  href={`${explorerUrl}/address/${c.id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-mono text-xs text-blue-600 hover:underline"
-                >
-                  {shorten(c.id)}
-                </a>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* Allowed Modules */}

@@ -83,7 +83,6 @@ contract SlotsV2Test is Test {
 
     hub = new SlotsHub();
     hub.initialize(address(slotsImpl), settings);
-    hub.allowCurrency(address(token), true);
     hub.allowModule(address(module), true);
 
     // Fund users
@@ -99,7 +98,7 @@ contract SlotsV2Test is Test {
 
   /// @dev Calculate minimum deposit for a slot (1 ETH at 1% for MIN_DEPOSIT_SECONDS)
   function _minDeposit() internal pure returns (uint256) {
-    return (1 ether * 100 * MIN_DEPOSIT_SECONDS) / (365 days * 10_000);
+    return (1 ether * 100 * MIN_DEPOSIT_SECONDS) / (30 days * 10_000);
   }
 
   // ═══════════════════════════════════════════════════
@@ -110,6 +109,28 @@ contract SlotsV2Test is Test {
     Slots land = _openLand(alice);
     assertEq(land.owner(), alice);
     assertEq(land.nextSlotId(), 4); // 3 slots created
+  }
+
+  function test_openLandCustom() public {
+    SlotParams[] memory params = new SlotParams[](2);
+    for (uint256 i = 0; i < 2; i++) {
+      params[i] = SlotParams({
+        currency: IERC20(address(token)),
+        basePrice: 5 ether,
+        taxPercentage: 200,
+        maxTaxPercentage: 2000,
+        minTaxUpdatePeriod: 3 days,
+        module: address(0)
+      });
+    }
+
+    address land = hub.openLandCustom(alice, params);
+    Slots slots_ = Slots(land);
+    assertEq(slots_.owner(), alice);
+    assertEq(slots_.nextSlotId(), 3); // 2 custom slots
+    (, , uint256 basePrice, , , uint256 taxPct, , , ) = slots_.slots(1);
+    assertEq(basePrice, 5 ether);
+    assertEq(taxPct, 200);
   }
 
   function test_cannotOpenLandTwice() public {

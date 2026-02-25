@@ -249,12 +249,8 @@ export class Hub extends Entity {
     );
   }
 
-  get allowedCurrencies(): CurrencyLoader {
-    return new CurrencyLoader(
-      "Hub",
-      this.get("id")!.toString(),
-      "allowedCurrencies",
-    );
+  get currencies(): CurrencyLoader {
+    return new CurrencyLoader("Hub", this.get("id")!.toString(), "currencies");
   }
 }
 
@@ -2367,19 +2363,6 @@ export class Currency extends Entity {
 
   set hub(value: string) {
     this.set("hub", Value.fromString(value));
-  }
-
-  get allowed(): boolean {
-    let value = this.get("allowed");
-    if (!value || value.kind == ValueKind.NULL) {
-      return false;
-    } else {
-      return value.toBoolean();
-    }
-  }
-
-  set allowed(value: boolean) {
-    this.set("allowed", Value.fromBoolean(value));
   }
 
   get name(): string | null {
