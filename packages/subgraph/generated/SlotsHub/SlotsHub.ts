@@ -50,28 +50,6 @@ export class BeaconUpgraded__Params {
   }
 }
 
-export class CurrencyAllowedStatusUpdated extends ethereum.Event {
-  get params(): CurrencyAllowedStatusUpdated__Params {
-    return new CurrencyAllowedStatusUpdated__Params(this);
-  }
-}
-
-export class CurrencyAllowedStatusUpdated__Params {
-  _event: CurrencyAllowedStatusUpdated;
-
-  constructor(event: CurrencyAllowedStatusUpdated) {
-    this._event = event;
-  }
-
-  get currency(): Address {
-    return this._event.parameters[0].value.toAddress();
-  }
-
-  get allowed(): boolean {
-    return this._event.parameters[1].value.toBoolean();
-  }
-}
-
 export class HubSettingsUpdated extends ethereum.Event {
   get params(): HubSettingsUpdated__Params {
     return new HubSettingsUpdated__Params(this);
@@ -424,6 +402,21 @@ export class SlotsHub extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toBytes());
   }
 
+  beacon(): Address {
+    let result = super.call("beacon", "beacon():(address)", []);
+
+    return result[0].toAddress();
+  }
+
+  try_beacon(): ethereum.CallResult<Address> {
+    let result = super.tryCall("beacon", "beacon():(address)", []);
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toAddress());
+  }
+
   getRoleAdmin(role: Bytes): Bytes {
     let result = super.call("getRoleAdmin", "getRoleAdmin(bytes32):(bytes32)", [
       ethereum.Value.fromFixedBytes(role),
@@ -493,29 +486,6 @@ export class SlotsHub extends ethereum.SmartContract {
     );
   }
 
-  isCurrencyAllowed(currency: Address): boolean {
-    let result = super.call(
-      "isCurrencyAllowed",
-      "isCurrencyAllowed(address):(bool)",
-      [ethereum.Value.fromAddress(currency)],
-    );
-
-    return result[0].toBoolean();
-  }
-
-  try_isCurrencyAllowed(currency: Address): ethereum.CallResult<boolean> {
-    let result = super.tryCall(
-      "isCurrencyAllowed",
-      "isCurrencyAllowed(address):(bool)",
-      [ethereum.Value.fromAddress(currency)],
-    );
-    if (result.reverted) {
-      return new ethereum.CallResult();
-    }
-    let value = result.value;
-    return ethereum.CallResult.fromValue(value[0].toBoolean());
-  }
-
   isModuleAllowed(module: Address): boolean {
     let result = super.call(
       "isModuleAllowed",
@@ -577,29 +547,6 @@ export class SlotsHub extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toBytes());
   }
 
-  slotsImplementation(): Address {
-    let result = super.call(
-      "slotsImplementation",
-      "slotsImplementation():(address)",
-      [],
-    );
-
-    return result[0].toAddress();
-  }
-
-  try_slotsImplementation(): ethereum.CallResult<Address> {
-    let result = super.tryCall(
-      "slotsImplementation",
-      "slotsImplementation():(address)",
-      [],
-    );
-    if (result.reverted) {
-      return new ethereum.CallResult();
-    }
-    let value = result.value;
-    return ethereum.CallResult.fromValue(value[0].toAddress());
-  }
-
   supportsInterface(interfaceId: Bytes): boolean {
     let result = super.call(
       "supportsInterface",
@@ -621,40 +568,6 @@ export class SlotsHub extends ethereum.SmartContract {
     }
     let value = result.value;
     return ethereum.CallResult.fromValue(value[0].toBoolean());
-  }
-}
-
-export class AllowCurrencyCall extends ethereum.Call {
-  get inputs(): AllowCurrencyCall__Inputs {
-    return new AllowCurrencyCall__Inputs(this);
-  }
-
-  get outputs(): AllowCurrencyCall__Outputs {
-    return new AllowCurrencyCall__Outputs(this);
-  }
-}
-
-export class AllowCurrencyCall__Inputs {
-  _call: AllowCurrencyCall;
-
-  constructor(call: AllowCurrencyCall) {
-    this._call = call;
-  }
-
-  get currency(): Address {
-    return this._call.inputValues[0].value.toAddress();
-  }
-
-  get allowed(): boolean {
-    return this._call.inputValues[1].value.toBoolean();
-  }
-}
-
-export class AllowCurrencyCall__Outputs {
-  _call: AllowCurrencyCall;
-
-  constructor(call: AllowCurrencyCall) {
-    this._call = call;
   }
 }
 
@@ -914,6 +827,70 @@ export class OpenLandCall__Outputs {
   }
 }
 
+export class OpenLandCustomCall extends ethereum.Call {
+  get inputs(): OpenLandCustomCall__Inputs {
+    return new OpenLandCustomCall__Inputs(this);
+  }
+
+  get outputs(): OpenLandCustomCall__Outputs {
+    return new OpenLandCustomCall__Outputs(this);
+  }
+}
+
+export class OpenLandCustomCall__Inputs {
+  _call: OpenLandCustomCall;
+
+  constructor(call: OpenLandCustomCall) {
+    this._call = call;
+  }
+
+  get account(): Address {
+    return this._call.inputValues[0].value.toAddress();
+  }
+
+  get params(): Array<OpenLandCustomCallParamsStruct> {
+    return this._call.inputValues[1].value.toTupleArray<OpenLandCustomCallParamsStruct>();
+  }
+}
+
+export class OpenLandCustomCall__Outputs {
+  _call: OpenLandCustomCall;
+
+  constructor(call: OpenLandCustomCall) {
+    this._call = call;
+  }
+
+  get land(): Address {
+    return this._call.outputValues[0].value.toAddress();
+  }
+}
+
+export class OpenLandCustomCallParamsStruct extends ethereum.Tuple {
+  get currency(): Address {
+    return this[0].toAddress();
+  }
+
+  get basePrice(): BigInt {
+    return this[1].toBigInt();
+  }
+
+  get taxPercentage(): BigInt {
+    return this[2].toBigInt();
+  }
+
+  get maxTaxPercentage(): BigInt {
+    return this[3].toBigInt();
+  }
+
+  get minTaxUpdatePeriod(): BigInt {
+    return this[4].toBigInt();
+  }
+
+  get module(): Address {
+    return this[5].toAddress();
+  }
+}
+
 export class RenounceRoleCall extends ethereum.Call {
   get inputs(): RenounceRoleCall__Inputs {
     return new RenounceRoleCall__Inputs(this);
@@ -1069,6 +1046,36 @@ export class UpdateHubSettingsCallNewSettingsStruct extends ethereum.Tuple {
 
   get minDepositSeconds(): BigInt {
     return this[13].toBigInt();
+  }
+}
+
+export class UpgradeSlotsImplementationCall extends ethereum.Call {
+  get inputs(): UpgradeSlotsImplementationCall__Inputs {
+    return new UpgradeSlotsImplementationCall__Inputs(this);
+  }
+
+  get outputs(): UpgradeSlotsImplementationCall__Outputs {
+    return new UpgradeSlotsImplementationCall__Outputs(this);
+  }
+}
+
+export class UpgradeSlotsImplementationCall__Inputs {
+  _call: UpgradeSlotsImplementationCall;
+
+  constructor(call: UpgradeSlotsImplementationCall) {
+    this._call = call;
+  }
+
+  get newImpl(): Address {
+    return this._call.inputValues[0].value.toAddress();
+  }
+}
+
+export class UpgradeSlotsImplementationCall__Outputs {
+  _call: UpgradeSlotsImplementationCall;
+
+  constructor(call: UpgradeSlotsImplementationCall) {
+    this._call = call;
   }
 }
 

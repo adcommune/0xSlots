@@ -30,7 +30,6 @@ export function HubSettingsTab({ chainId }: { chainId: SlotsChain }) {
   return (
     <HubSettings
       hub={(data?.hub as any) ?? null}
-      currencies={(data?.currencies as any[]) ?? []}
       modules={(data?.modules as any[]) ?? []}
       explorerUrl={config.explorer}
     />

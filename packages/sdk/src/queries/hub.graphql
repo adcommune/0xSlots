@@ -31,12 +31,3 @@ query GetAllowedModules($hubId: String!) {
     allowed
   }
 }
-
-query GetAllowedCurrencies($hubId: String!) {
-  currencies(where: { hub: $hubId, allowed: true }) {
-    id
-    name
-    symbol
-    decimals
-  }
-}

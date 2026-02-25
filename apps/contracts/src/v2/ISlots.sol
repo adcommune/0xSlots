@@ -83,5 +83,4 @@ interface IHubEvents {
   event LandOpened(address indexed land, address indexed account);
   event LandExpanded(address indexed land, uint256 newSlotCount);
   event ModuleAllowedStatusUpdated(address indexed module, bool allowed, string name, string version);
-  event CurrencyAllowedStatusUpdated(address indexed currency, bool allowed);
 }

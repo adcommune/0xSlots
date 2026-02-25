@@ -1,9 +1,9 @@
 "use client";
 
-import { slotsHubAbi } from "@0xslots/contracts";
-import { useSearchParams, useRouter } from "next/navigation";
+import { slotsHubAbi, slotsHubAddress } from "@0xslots/contracts";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
-import { isAddress, type Address } from "viem";
+import { type Address, isAddress } from "viem";
 import { normalize } from "viem/ens";
 import {
   useAccount,
@@ -14,7 +14,7 @@ import {
   useWriteContract,
 } from "wagmi";
 import { mainnet } from "wagmi/chains";
-import { useHubSettings, useLandsByOwner, HUB_IDS } from "@/app/explorer/hooks";
+import { useHubSettings, useLandsByOwner } from "@/app/explorer/hooks";
 import { parseChain } from "@/lib/config";
 import { formatBps, formatWei } from "@/utils";
 
@@ -23,7 +23,7 @@ function CreateContent() {
   const router = useRouter();
   const chainParam = searchParams.get("chain") ?? undefined;
   const chainId = parseChain(chainParam);
-  const hubAddress = HUB_IDS[chainId];
+  const hubAddress = slotsHubAddress[chainId];
 
   const { data: hubData, isLoading } = useHubSettings(chainId);
   const hub = hubData?.hub;

@@ -107,10 +107,6 @@ export class SlotsClient {
   getAllowedModules(...args: Parameters<ReturnType<typeof getSdk>['GetAllowedModules']>) {
     return this.sdk.GetAllowedModules(...args);
   }
-  getAllowedCurrencies(...args: Parameters<ReturnType<typeof getSdk>['GetAllowedCurrencies']>) {
-    return this.sdk.GetAllowedCurrencies(...args);
-  }
-
   // Land queries
   getLands(...args: Parameters<ReturnType<typeof getSdk>['GetLands']>) {
     return this.sdk.GetLands(...args);

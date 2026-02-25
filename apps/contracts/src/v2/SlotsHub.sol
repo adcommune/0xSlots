@@ -4,7 +4,8 @@ pragma solidity ^0.8.20;
 import {UUPSUpgradeable} from "@openzeppelin-upgradeable/contracts/proxy/utils/UUPSUpgradeable.sol";
 import {AccessControlUpgradeable} from "@openzeppelin-upgradeable/contracts/access/AccessControlUpgradeable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
+import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
+import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import {Slots} from "./Slots.sol";
 import {HubSettings, SlotParams, IHubEvents} from "./ISlots.sol";
 
@@ -17,12 +18,10 @@ contract SlotsHub is IHubEvents, UUPSUpgradeable, AccessControlUpgradeable {
   error LandAlreadyExists();
 
   HubSettings internal _hubSettings;
-  address public slotsImplementation;
+  UpgradeableBeacon public beacon;
 
   mapping(address => address) public lands; // account => land address
   mapping(address => bool) internal _allowedModules;
-  mapping(address => bool) internal _allowedCurrencies;
-
   function initialize(
     address _slotsImpl,
     HubSettings memory settings
@@ -31,7 +30,7 @@ contract SlotsHub is IHubEvents, UUPSUpgradeable, AccessControlUpgradeable {
     __AccessControl_init();
     _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
 
-    slotsImplementation = _slotsImpl;
+    beacon = new UpgradeableBeacon(_slotsImpl);
 
     if (settings.protocolFeeRecipient == address(0)) revert InvalidFeeRecipient();
     _hubSettings = settings;
@@ -44,6 +43,24 @@ contract SlotsHub is IHubEvents, UUPSUpgradeable, AccessControlUpgradeable {
   // ══════════════════════════════════════════════════════════════
   // LAND MANAGEMENT
   // ══════════════════════════════════════════════════════════════
+
+  /// @notice Create a new land with custom slot params
+  function openLandCustom(address account, SlotParams[] memory params) external payable returns (address land) {
+    if (lands[account] != address(0)) revert LandAlreadyExists();
+
+    HubSettings memory s = _hubSettings;
+    if (s.landCreationFee > 0) {
+      if (msg.value < s.landCreationFee) revert InsufficientPayment();
+    }
+
+    land = address(new BeaconProxy(
+      address(beacon),
+      abi.encodeCall(Slots.initialize, (payable(address(this)), account, params))
+    ));
+    lands[account] = land;
+
+    emit LandOpened(land, account);
+  }
 
   /// @notice Create a new land for an account with default slots
   function openLand(address account) external payable returns (address land) {
@@ -69,8 +86,10 @@ contract SlotsHub is IHubEvents, UUPSUpgradeable, AccessControlUpgradeable {
       params[i] = defaultParam;
     }
 
-    land = Clones.clone(slotsImplementation);
-    Slots(land).initialize(payable(address(this)), account, params);
+    land = address(new BeaconProxy(
+      address(beacon),
+      abi.encodeCall(Slots.initialize, (payable(address(this)), account, params))
+    ));
     lands[account] = land;
 
     emit LandOpened(land, account);
@@ -93,6 +112,11 @@ contract SlotsHub is IHubEvents, UUPSUpgradeable, AccessControlUpgradeable {
   // SETTINGS
   // ══════════════════════════════════════════════════════════════
 
+  /// @notice Upgrade Slots implementation for all lands
+  function upgradeSlotsImplementation(address newImpl) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    beacon.upgradeTo(newImpl);
+  }
+
   function updateHubSettings(HubSettings memory newSettings) public onlyRole(DEFAULT_ADMIN_ROLE) {
     if (newSettings.protocolFeeRecipient == address(0)) revert InvalidFeeRecipient();
     _hubSettings = newSettings;
@@ -106,15 +130,6 @@ contract SlotsHub is IHubEvents, UUPSUpgradeable, AccessControlUpgradeable {
   // ══════════════════════════════════════════════════════════════
   // ALLOWLISTS
   // ══════════════════════════════════════════════════════════════
-
-  function isCurrencyAllowed(address currency) public view returns (bool) {
-    return _allowedCurrencies[currency];
-  }
-
-  function allowCurrency(address currency, bool allowed) external onlyRole(DEFAULT_ADMIN_ROLE) {
-    _allowedCurrencies[currency] = allowed;
-    emit CurrencyAllowedStatusUpdated(currency, allowed);
-  }
 
   function isModuleAllowed(address module) public view returns (bool) {
     if (module == address(0)) return true; // No module is always allowed
