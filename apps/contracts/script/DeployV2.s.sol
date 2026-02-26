@@ -37,13 +37,6 @@ contract DeployV2 is BaseScript {
             protocolFeeRecipient: msg.sender,
             landCreationFee: 0,                     // free for testnet
             slotExpansionFee: 0,                    // free for testnet
-            newLandInitialCurrency: address(0),     // set after allowCurrency
-            newLandInitialAmount: 6,
-            newLandInitialPrice: 1e6,              // 1 USDC (6 decimals)
-            newLandInitialTaxPercentage: 100,       // 1%
-            newLandInitialMaxTaxPercentage: 1000,   // 10%
-            newLandInitialMinTaxUpdatePeriod: 7 days,
-            newLandInitialModule: address(0),
             moduleCallGasLimit: 500_000,
             liquidationBountyBps: 500,              // 5%
             minDepositSeconds: 86400                // 1 day minimum deposit

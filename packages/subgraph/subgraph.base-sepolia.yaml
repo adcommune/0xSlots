@@ -27,7 +27,7 @@ dataSources:
         - name: ERC20
           file: ./abis/ERC20.json
       eventHandlers:
-        - event: HubSettingsUpdated((uint256,address,uint256,uint256,address,uint256,uint256,uint256,uint256,uint256,address,uint256,uint256,uint256))
+        - event: HubSettingsUpdated((uint256,address,uint256,uint256,uint256,uint256,uint256))
           handler: handleHubSettingsUpdated
         - event: LandOpened(indexed address,indexed address)
           handler: handleLandOpened

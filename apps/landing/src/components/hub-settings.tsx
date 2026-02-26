@@ -26,18 +26,6 @@ interface HubData {
   protocolFeeRecipient: string;
   landCreationFee: string;
   slotExpansionFee: string;
-  defaultCurrency: {
-    id: string;
-    name: string;
-    symbol: string;
-    decimals: number;
-  } | null;
-  defaultSlotCount: string;
-  defaultPrice: string;
-  defaultTaxPercentage: string;
-  defaultMaxTaxPercentage: string;
-  defaultMinTaxUpdatePeriod: string;
-  defaultModule: string | null;
   moduleCallGasLimit: string;
   liquidationBountyBps: string;
   minDepositSeconds: string;
@@ -60,29 +48,14 @@ export function HubSettings({ hub, modules, explorerUrl }: Props) {
 
   const rows: [string, string, string?][] = [
     ["Hub Address", shorten(hub.id), hub.id],
-    ["Protocol Fee", formatBps(hub.protocolFeeBps)],
+    ["Protocol Fee (on tax)", formatBps(hub.protocolFeeBps)],
     [
       "Fee Recipient",
       shorten(hub.protocolFeeRecipient),
       hub.protocolFeeRecipient,
     ],
-    ["Land Creation Fee", formatWei(hub.landCreationFee)],
-    ["Slot Expansion Fee", formatWei(hub.slotExpansionFee)],
-    [
-      "Default Currency",
-      hub.defaultCurrency
-        ? `${hub.defaultCurrency.symbol} (${shorten(hub.defaultCurrency.id)})`
-        : "—",
-      hub.defaultCurrency?.id,
-    ],
-    ["Default Slot Count", hub.defaultSlotCount],
-    [
-      "Default Price",
-      `${formatWei(hub.defaultPrice, hub.defaultCurrency?.decimals ?? 18)} ${hub.defaultCurrency?.symbol || ""}`,
-    ],
-    ["Default Tax Rate", formatBps(hub.defaultTaxPercentage)],
-    ["Max Tax Rate", formatBps(hub.defaultMaxTaxPercentage)],
-    ["Min Tax Update Period", formatSeconds(hub.defaultMinTaxUpdatePeriod)],
+    ["Land Creation Fee", `${formatWei(hub.landCreationFee)} ETH`],
+    ["Slot Expansion Fee", `${formatWei(hub.slotExpansionFee)} ETH`],
     ["Module Call Gas Limit", Number(hub.moduleCallGasLimit).toLocaleString()],
     ["Liquidation Bounty", formatBps(hub.liquidationBountyBps)],
     ["Min Deposit Duration", formatSeconds(hub.minDepositSeconds)],
@@ -90,11 +63,10 @@ export function HubSettings({ hub, modules, explorerUrl }: Props) {
 
   return (
     <div className="space-y-6">
-      {/* Settings Table */}
       <div className="border-2 border-black">
         <div className="bg-gray-50 border-b-2 border-black p-4">
           <h2 className="text-lg font-bold uppercase tracking-tight">
-            Hub Configuration
+            Protocol Settings
           </h2>
         </div>
         <div className="divide-y divide-gray-200">
@@ -123,7 +95,6 @@ export function HubSettings({ hub, modules, explorerUrl }: Props) {
         </div>
       </div>
 
-      {/* Allowed Modules */}
       <div className="border-2 border-black">
         <div className="bg-gray-50 border-b-2 border-black p-4">
           <h2 className="text-sm font-bold uppercase tracking-tight">

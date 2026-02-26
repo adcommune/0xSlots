@@ -48,13 +48,6 @@ struct HubSettings {
   address protocolFeeRecipient;
   uint256 landCreationFee;
   uint256 slotExpansionFee;
-  address newLandInitialCurrency;
-  uint256 newLandInitialAmount;
-  uint256 newLandInitialPrice;
-  uint256 newLandInitialTaxPercentage;
-  uint256 newLandInitialMaxTaxPercentage;
-  uint256 newLandInitialMinTaxUpdatePeriod;
-  address newLandInitialModule;
   uint256 moduleCallGasLimit;
   uint256 liquidationBountyBps; // e.g. 500 = 5% of remaining deposit goes to liquidator
   uint256 minDepositSeconds; // minimum deposit to cover N seconds of tax

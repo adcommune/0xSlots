@@ -5,18 +5,6 @@ query GetHub($id: ID!) {
     protocolFeeRecipient
     landCreationFee
     slotExpansionFee
-    defaultCurrency {
-      id
-      name
-      symbol
-      decimals
-    }
-    defaultSlotCount
-    defaultPrice
-    defaultTaxPercentage
-    defaultMaxTaxPercentage
-    defaultMinTaxUpdatePeriod
-    defaultModule
     moduleCallGasLimit
     liquidationBountyBps
     minDepositSeconds

@@ -8,13 +8,6 @@ type Hub @entity(immutable: false) {
   protocolFeeRecipient: Bytes!
   landCreationFee: BigInt!
   slotExpansionFee: BigInt!
-  defaultCurrency: Currency
-  defaultSlotCount: BigInt!
-  defaultPrice: BigInt!
-  defaultTaxPercentage: BigInt!
-  defaultMaxTaxPercentage: BigInt!
-  defaultMinTaxUpdatePeriod: BigInt!
-  defaultModule: Bytes!
   moduleCallGasLimit: BigInt!
   liquidationBountyBps: BigInt!
   minDepositSeconds: BigInt!

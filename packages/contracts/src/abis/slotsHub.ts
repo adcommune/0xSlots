@@ -1,966 +1,817 @@
 export const slotsHubAbi = [
   {
-    type: "receive",
-    stateMutability: "payable",
+    "type": "receive",
+    "stateMutability": "payable"
   },
   {
-    type: "function",
-    name: "DEFAULT_ADMIN_ROLE",
-    inputs: [],
-    outputs: [
+    "type": "function",
+    "name": "DEFAULT_ADMIN_ROLE",
+    "inputs": [],
+    "outputs": [
       {
-        name: "",
-        type: "bytes32",
-        internalType: "bytes32",
-      },
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
     ],
-    stateMutability: "view",
+    "stateMutability": "view"
   },
   {
-    type: "function",
-    name: "allowModule",
-    inputs: [
+    "type": "function",
+    "name": "allowModule",
+    "inputs": [
       {
-        name: "module",
-        type: "address",
-        internalType: "address",
+        "name": "module",
+        "type": "address",
+        "internalType": "address"
       },
       {
-        name: "allowed",
-        type: "bool",
-        internalType: "bool",
-      },
+        "name": "allowed",
+        "type": "bool",
+        "internalType": "bool"
+      }
     ],
-    outputs: [],
-    stateMutability: "nonpayable",
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
-    type: "function",
-    name: "beacon",
-    inputs: [],
-    outputs: [
+    "type": "function",
+    "name": "beacon",
+    "inputs": [],
+    "outputs": [
       {
-        name: "",
-        type: "address",
-        internalType: "contract UpgradeableBeacon",
-      },
+        "name": "",
+        "type": "address",
+        "internalType": "contract UpgradeableBeacon"
+      }
     ],
-    stateMutability: "view",
+    "stateMutability": "view"
   },
   {
-    type: "function",
-    name: "expandLand",
-    inputs: [
+    "type": "function",
+    "name": "expandLand",
+    "inputs": [
       {
-        name: "account",
-        type: "address",
-        internalType: "address",
+        "name": "account",
+        "type": "address",
+        "internalType": "address"
       },
       {
-        name: "params",
-        type: "tuple[]",
-        internalType: "struct SlotParams[]",
-        components: [
+        "name": "params",
+        "type": "tuple[]",
+        "internalType": "struct SlotParams[]",
+        "components": [
           {
-            name: "currency",
-            type: "address",
-            internalType: "contract IERC20",
+            "name": "currency",
+            "type": "address",
+            "internalType": "contract IERC20"
           },
           {
-            name: "basePrice",
-            type: "uint256",
-            internalType: "uint256",
+            "name": "basePrice",
+            "type": "uint256",
+            "internalType": "uint256"
           },
           {
-            name: "taxPercentage",
-            type: "uint256",
-            internalType: "uint256",
+            "name": "taxPercentage",
+            "type": "uint256",
+            "internalType": "uint256"
           },
           {
-            name: "maxTaxPercentage",
-            type: "uint256",
-            internalType: "uint256",
+            "name": "maxTaxPercentage",
+            "type": "uint256",
+            "internalType": "uint256"
           },
           {
-            name: "minTaxUpdatePeriod",
-            type: "uint256",
-            internalType: "uint256",
+            "name": "minTaxUpdatePeriod",
+            "type": "uint256",
+            "internalType": "uint256"
           },
           {
-            name: "module",
-            type: "address",
-            internalType: "address",
-          },
-        ],
-      },
+            "name": "module",
+            "type": "address",
+            "internalType": "address"
+          }
+        ]
+      }
     ],
-    outputs: [],
-    stateMutability: "payable",
+    "outputs": [],
+    "stateMutability": "payable"
   },
   {
-    type: "function",
-    name: "getRoleAdmin",
-    inputs: [
+    "type": "function",
+    "name": "getRoleAdmin",
+    "inputs": [
       {
-        name: "role",
-        type: "bytes32",
-        internalType: "bytes32",
-      },
+        "name": "role",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
     ],
-    outputs: [
+    "outputs": [
       {
-        name: "",
-        type: "bytes32",
-        internalType: "bytes32",
-      },
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
     ],
-    stateMutability: "view",
+    "stateMutability": "view"
   },
   {
-    type: "function",
-    name: "grantRole",
-    inputs: [
+    "type": "function",
+    "name": "grantRole",
+    "inputs": [
       {
-        name: "role",
-        type: "bytes32",
-        internalType: "bytes32",
+        "name": "role",
+        "type": "bytes32",
+        "internalType": "bytes32"
       },
       {
-        name: "account",
-        type: "address",
-        internalType: "address",
-      },
+        "name": "account",
+        "type": "address",
+        "internalType": "address"
+      }
     ],
-    outputs: [],
-    stateMutability: "nonpayable",
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
-    type: "function",
-    name: "hasRole",
-    inputs: [
+    "type": "function",
+    "name": "hasRole",
+    "inputs": [
       {
-        name: "role",
-        type: "bytes32",
-        internalType: "bytes32",
+        "name": "role",
+        "type": "bytes32",
+        "internalType": "bytes32"
       },
       {
-        name: "account",
-        type: "address",
-        internalType: "address",
-      },
+        "name": "account",
+        "type": "address",
+        "internalType": "address"
+      }
     ],
-    outputs: [
+    "outputs": [
       {
-        name: "",
-        type: "bool",
-        internalType: "bool",
-      },
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
     ],
-    stateMutability: "view",
+    "stateMutability": "view"
   },
   {
-    type: "function",
-    name: "hubSettings",
-    inputs: [],
-    outputs: [
+    "type": "function",
+    "name": "hubSettings",
+    "inputs": [],
+    "outputs": [
       {
-        name: "",
-        type: "tuple",
-        internalType: "struct HubSettings",
-        components: [
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct HubSettings",
+        "components": [
           {
-            name: "protocolFeeBps",
-            type: "uint256",
-            internalType: "uint256",
+            "name": "protocolFeeBps",
+            "type": "uint256",
+            "internalType": "uint256"
           },
           {
-            name: "protocolFeeRecipient",
-            type: "address",
-            internalType: "address",
+            "name": "protocolFeeRecipient",
+            "type": "address",
+            "internalType": "address"
           },
           {
-            name: "landCreationFee",
-            type: "uint256",
-            internalType: "uint256",
+            "name": "landCreationFee",
+            "type": "uint256",
+            "internalType": "uint256"
           },
           {
-            name: "slotExpansionFee",
-            type: "uint256",
-            internalType: "uint256",
+            "name": "slotExpansionFee",
+            "type": "uint256",
+            "internalType": "uint256"
           },
           {
-            name: "newLandInitialCurrency",
-            type: "address",
-            internalType: "address",
+            "name": "moduleCallGasLimit",
+            "type": "uint256",
+            "internalType": "uint256"
           },
           {
-            name: "newLandInitialAmount",
-            type: "uint256",
-            internalType: "uint256",
+            "name": "liquidationBountyBps",
+            "type": "uint256",
+            "internalType": "uint256"
           },
           {
-            name: "newLandInitialPrice",
-            type: "uint256",
-            internalType: "uint256",
-          },
-          {
-            name: "newLandInitialTaxPercentage",
-            type: "uint256",
-            internalType: "uint256",
-          },
-          {
-            name: "newLandInitialMaxTaxPercentage",
-            type: "uint256",
-            internalType: "uint256",
-          },
-          {
-            name: "newLandInitialMinTaxUpdatePeriod",
-            type: "uint256",
-            internalType: "uint256",
-          },
-          {
-            name: "newLandInitialModule",
-            type: "address",
-            internalType: "address",
-          },
-          {
-            name: "moduleCallGasLimit",
-            type: "uint256",
-            internalType: "uint256",
-          },
-          {
-            name: "liquidationBountyBps",
-            type: "uint256",
-            internalType: "uint256",
-          },
-          {
-            name: "minDepositSeconds",
-            type: "uint256",
-            internalType: "uint256",
-          },
-        ],
-      },
+            "name": "minDepositSeconds",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
     ],
-    stateMutability: "view",
+    "stateMutability": "view"
   },
   {
-    type: "function",
-    name: "initialize",
-    inputs: [
+    "type": "function",
+    "name": "initialize",
+    "inputs": [
       {
-        name: "_slotsImpl",
-        type: "address",
-        internalType: "address",
+        "name": "_slotsImpl",
+        "type": "address",
+        "internalType": "address"
       },
       {
-        name: "settings",
-        type: "tuple",
-        internalType: "struct HubSettings",
-        components: [
+        "name": "settings",
+        "type": "tuple",
+        "internalType": "struct HubSettings",
+        "components": [
           {
-            name: "protocolFeeBps",
-            type: "uint256",
-            internalType: "uint256",
+            "name": "protocolFeeBps",
+            "type": "uint256",
+            "internalType": "uint256"
           },
           {
-            name: "protocolFeeRecipient",
-            type: "address",
-            internalType: "address",
+            "name": "protocolFeeRecipient",
+            "type": "address",
+            "internalType": "address"
           },
           {
-            name: "landCreationFee",
-            type: "uint256",
-            internalType: "uint256",
+            "name": "landCreationFee",
+            "type": "uint256",
+            "internalType": "uint256"
           },
           {
-            name: "slotExpansionFee",
-            type: "uint256",
-            internalType: "uint256",
+            "name": "slotExpansionFee",
+            "type": "uint256",
+            "internalType": "uint256"
           },
           {
-            name: "newLandInitialCurrency",
-            type: "address",
-            internalType: "address",
+            "name": "moduleCallGasLimit",
+            "type": "uint256",
+            "internalType": "uint256"
           },
           {
-            name: "newLandInitialAmount",
-            type: "uint256",
-            internalType: "uint256",
+            "name": "liquidationBountyBps",
+            "type": "uint256",
+            "internalType": "uint256"
           },
           {
-            name: "newLandInitialPrice",
-            type: "uint256",
-            internalType: "uint256",
-          },
-          {
-            name: "newLandInitialTaxPercentage",
-            type: "uint256",
-            internalType: "uint256",
-          },
-          {
-            name: "newLandInitialMaxTaxPercentage",
-            type: "uint256",
-            internalType: "uint256",
-          },
-          {
-            name: "newLandInitialMinTaxUpdatePeriod",
-            type: "uint256",
-            internalType: "uint256",
-          },
-          {
-            name: "newLandInitialModule",
-            type: "address",
-            internalType: "address",
-          },
-          {
-            name: "moduleCallGasLimit",
-            type: "uint256",
-            internalType: "uint256",
-          },
-          {
-            name: "liquidationBountyBps",
-            type: "uint256",
-            internalType: "uint256",
-          },
-          {
-            name: "minDepositSeconds",
-            type: "uint256",
-            internalType: "uint256",
-          },
-        ],
-      },
+            "name": "minDepositSeconds",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
     ],
-    outputs: [],
-    stateMutability: "nonpayable",
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
-    type: "function",
-    name: "isModuleAllowed",
-    inputs: [
+    "type": "function",
+    "name": "isModuleAllowed",
+    "inputs": [
       {
-        name: "module",
-        type: "address",
-        internalType: "address",
-      },
+        "name": "module",
+        "type": "address",
+        "internalType": "address"
+      }
     ],
-    outputs: [
+    "outputs": [
       {
-        name: "",
-        type: "bool",
-        internalType: "bool",
-      },
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
     ],
-    stateMutability: "view",
+    "stateMutability": "view"
   },
   {
-    type: "function",
-    name: "lands",
-    inputs: [
+    "type": "function",
+    "name": "lands",
+    "inputs": [
       {
-        name: "",
-        type: "address",
-        internalType: "address",
-      },
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
     ],
-    outputs: [
+    "outputs": [
       {
-        name: "",
-        type: "address",
-        internalType: "address",
-      },
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
     ],
-    stateMutability: "view",
+    "stateMutability": "view"
   },
   {
-    type: "function",
-    name: "openLand",
-    inputs: [
+    "type": "function",
+    "name": "openLand",
+    "inputs": [
       {
-        name: "account",
-        type: "address",
-        internalType: "address",
+        "name": "account",
+        "type": "address",
+        "internalType": "address"
       },
-    ],
-    outputs: [
       {
-        name: "land",
-        type: "address",
-        internalType: "address",
+        "name": "param",
+        "type": "tuple",
+        "internalType": "struct SlotParams",
+        "components": [
+          {
+            "name": "currency",
+            "type": "address",
+            "internalType": "contract IERC20"
+          },
+          {
+            "name": "basePrice",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "taxPercentage",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "maxTaxPercentage",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "minTaxUpdatePeriod",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "module",
+            "type": "address",
+            "internalType": "address"
+          }
+        ]
       },
+      {
+        "name": "count",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
     ],
-    stateMutability: "payable",
+    "outputs": [
+      {
+        "name": "land",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "payable"
   },
   {
-    type: "function",
-    name: "openLandCustom",
-    inputs: [
+    "type": "function",
+    "name": "proxiableUUID",
+    "inputs": [],
+    "outputs": [
       {
-        name: "account",
-        type: "address",
-        internalType: "address",
-      },
-      {
-        name: "params",
-        type: "tuple[]",
-        internalType: "struct SlotParams[]",
-        components: [
-          {
-            name: "currency",
-            type: "address",
-            internalType: "contract IERC20",
-          },
-          {
-            name: "basePrice",
-            type: "uint256",
-            internalType: "uint256",
-          },
-          {
-            name: "taxPercentage",
-            type: "uint256",
-            internalType: "uint256",
-          },
-          {
-            name: "maxTaxPercentage",
-            type: "uint256",
-            internalType: "uint256",
-          },
-          {
-            name: "minTaxUpdatePeriod",
-            type: "uint256",
-            internalType: "uint256",
-          },
-          {
-            name: "module",
-            type: "address",
-            internalType: "address",
-          },
-        ],
-      },
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
     ],
-    outputs: [
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "renounceRole",
+    "inputs": [
       {
-        name: "land",
-        type: "address",
-        internalType: "address",
+        "name": "role",
+        "type": "bytes32",
+        "internalType": "bytes32"
       },
+      {
+        "name": "account",
+        "type": "address",
+        "internalType": "address"
+      }
     ],
-    stateMutability: "payable",
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
-    type: "function",
-    name: "proxiableUUID",
-    inputs: [],
-    outputs: [
+    "type": "function",
+    "name": "revokeRole",
+    "inputs": [
       {
-        name: "",
-        type: "bytes32",
-        internalType: "bytes32",
+        "name": "role",
+        "type": "bytes32",
+        "internalType": "bytes32"
       },
+      {
+        "name": "account",
+        "type": "address",
+        "internalType": "address"
+      }
     ],
-    stateMutability: "view",
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
-    type: "function",
-    name: "renounceRole",
-    inputs: [
+    "type": "function",
+    "name": "supportsInterface",
+    "inputs": [
       {
-        name: "role",
-        type: "bytes32",
-        internalType: "bytes32",
-      },
-      {
-        name: "account",
-        type: "address",
-        internalType: "address",
-      },
+        "name": "interfaceId",
+        "type": "bytes4",
+        "internalType": "bytes4"
+      }
     ],
-    outputs: [],
-    stateMutability: "nonpayable",
-  },
-  {
-    type: "function",
-    name: "revokeRole",
-    inputs: [
+    "outputs": [
       {
-        name: "role",
-        type: "bytes32",
-        internalType: "bytes32",
-      },
-      {
-        name: "account",
-        type: "address",
-        internalType: "address",
-      },
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
     ],
-    outputs: [],
-    stateMutability: "nonpayable",
+    "stateMutability": "view"
   },
   {
-    type: "function",
-    name: "supportsInterface",
-    inputs: [
+    "type": "function",
+    "name": "updateHubSettings",
+    "inputs": [
       {
-        name: "interfaceId",
-        type: "bytes4",
-        internalType: "bytes4",
-      },
+        "name": "newSettings",
+        "type": "tuple",
+        "internalType": "struct HubSettings",
+        "components": [
+          {
+            "name": "protocolFeeBps",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "protocolFeeRecipient",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "landCreationFee",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "slotExpansionFee",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "moduleCallGasLimit",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "liquidationBountyBps",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "minDepositSeconds",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
     ],
-    outputs: [
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "upgradeSlotsImplementation",
+    "inputs": [
       {
-        name: "",
-        type: "bool",
-        internalType: "bool",
-      },
+        "name": "newImpl",
+        "type": "address",
+        "internalType": "address"
+      }
     ],
-    stateMutability: "view",
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
-    type: "function",
-    name: "updateHubSettings",
-    inputs: [
+    "type": "function",
+    "name": "upgradeTo",
+    "inputs": [
       {
-        name: "newSettings",
-        type: "tuple",
-        internalType: "struct HubSettings",
-        components: [
-          {
-            name: "protocolFeeBps",
-            type: "uint256",
-            internalType: "uint256",
-          },
-          {
-            name: "protocolFeeRecipient",
-            type: "address",
-            internalType: "address",
-          },
-          {
-            name: "landCreationFee",
-            type: "uint256",
-            internalType: "uint256",
-          },
-          {
-            name: "slotExpansionFee",
-            type: "uint256",
-            internalType: "uint256",
-          },
-          {
-            name: "newLandInitialCurrency",
-            type: "address",
-            internalType: "address",
-          },
-          {
-            name: "newLandInitialAmount",
-            type: "uint256",
-            internalType: "uint256",
-          },
-          {
-            name: "newLandInitialPrice",
-            type: "uint256",
-            internalType: "uint256",
-          },
-          {
-            name: "newLandInitialTaxPercentage",
-            type: "uint256",
-            internalType: "uint256",
-          },
-          {
-            name: "newLandInitialMaxTaxPercentage",
-            type: "uint256",
-            internalType: "uint256",
-          },
-          {
-            name: "newLandInitialMinTaxUpdatePeriod",
-            type: "uint256",
-            internalType: "uint256",
-          },
-          {
-            name: "newLandInitialModule",
-            type: "address",
-            internalType: "address",
-          },
-          {
-            name: "moduleCallGasLimit",
-            type: "uint256",
-            internalType: "uint256",
-          },
-          {
-            name: "liquidationBountyBps",
-            type: "uint256",
-            internalType: "uint256",
-          },
-          {
-            name: "minDepositSeconds",
-            type: "uint256",
-            internalType: "uint256",
-          },
-        ],
-      },
+        "name": "newImplementation",
+        "type": "address",
+        "internalType": "address"
+      }
     ],
-    outputs: [],
-    stateMutability: "nonpayable",
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
-    type: "function",
-    name: "upgradeSlotsImplementation",
-    inputs: [
+    "type": "function",
+    "name": "upgradeToAndCall",
+    "inputs": [
       {
-        name: "newImpl",
-        type: "address",
-        internalType: "address",
+        "name": "newImplementation",
+        "type": "address",
+        "internalType": "address"
       },
+      {
+        "name": "data",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
     ],
-    outputs: [],
-    stateMutability: "nonpayable",
+    "outputs": [],
+    "stateMutability": "payable"
   },
   {
-    type: "function",
-    name: "upgradeTo",
-    inputs: [
+    "type": "function",
+    "name": "withdrawETH",
+    "inputs": [
       {
-        name: "newImplementation",
-        type: "address",
-        internalType: "address",
-      },
+        "name": "to",
+        "type": "address",
+        "internalType": "address"
+      }
     ],
-    outputs: [],
-    stateMutability: "nonpayable",
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
-    type: "function",
-    name: "upgradeToAndCall",
-    inputs: [
+    "type": "event",
+    "name": "AdminChanged",
+    "inputs": [
       {
-        name: "newImplementation",
-        type: "address",
-        internalType: "address",
+        "name": "previousAdmin",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
       },
       {
-        name: "data",
-        type: "bytes",
-        internalType: "bytes",
-      },
+        "name": "newAdmin",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      }
     ],
-    outputs: [],
-    stateMutability: "payable",
+    "anonymous": false
   },
   {
-    type: "function",
-    name: "withdrawETH",
-    inputs: [
+    "type": "event",
+    "name": "BeaconUpgraded",
+    "inputs": [
       {
-        name: "to",
-        type: "address",
-        internalType: "address",
-      },
+        "name": "beacon",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
     ],
-    outputs: [],
-    stateMutability: "nonpayable",
+    "anonymous": false
   },
   {
-    type: "event",
-    name: "AdminChanged",
-    inputs: [
+    "type": "event",
+    "name": "HubSettingsUpdated",
+    "inputs": [
       {
-        name: "previousAdmin",
-        type: "address",
-        indexed: false,
-        internalType: "address",
-      },
-      {
-        name: "newAdmin",
-        type: "address",
-        indexed: false,
-        internalType: "address",
-      },
-    ],
-    anonymous: false,
-  },
-  {
-    type: "event",
-    name: "BeaconUpgraded",
-    inputs: [
-      {
-        name: "beacon",
-        type: "address",
-        indexed: true,
-        internalType: "address",
-      },
-    ],
-    anonymous: false,
-  },
-  {
-    type: "event",
-    name: "HubSettingsUpdated",
-    inputs: [
-      {
-        name: "newHubSettings",
-        type: "tuple",
-        indexed: false,
-        internalType: "struct HubSettings",
-        components: [
+        "name": "newHubSettings",
+        "type": "tuple",
+        "indexed": false,
+        "internalType": "struct HubSettings",
+        "components": [
           {
-            name: "protocolFeeBps",
-            type: "uint256",
-            internalType: "uint256",
+            "name": "protocolFeeBps",
+            "type": "uint256",
+            "internalType": "uint256"
           },
           {
-            name: "protocolFeeRecipient",
-            type: "address",
-            internalType: "address",
+            "name": "protocolFeeRecipient",
+            "type": "address",
+            "internalType": "address"
           },
           {
-            name: "landCreationFee",
-            type: "uint256",
-            internalType: "uint256",
+            "name": "landCreationFee",
+            "type": "uint256",
+            "internalType": "uint256"
           },
           {
-            name: "slotExpansionFee",
-            type: "uint256",
-            internalType: "uint256",
+            "name": "slotExpansionFee",
+            "type": "uint256",
+            "internalType": "uint256"
           },
           {
-            name: "newLandInitialCurrency",
-            type: "address",
-            internalType: "address",
+            "name": "moduleCallGasLimit",
+            "type": "uint256",
+            "internalType": "uint256"
           },
           {
-            name: "newLandInitialAmount",
-            type: "uint256",
-            internalType: "uint256",
+            "name": "liquidationBountyBps",
+            "type": "uint256",
+            "internalType": "uint256"
           },
           {
-            name: "newLandInitialPrice",
-            type: "uint256",
-            internalType: "uint256",
-          },
-          {
-            name: "newLandInitialTaxPercentage",
-            type: "uint256",
-            internalType: "uint256",
-          },
-          {
-            name: "newLandInitialMaxTaxPercentage",
-            type: "uint256",
-            internalType: "uint256",
-          },
-          {
-            name: "newLandInitialMinTaxUpdatePeriod",
-            type: "uint256",
-            internalType: "uint256",
-          },
-          {
-            name: "newLandInitialModule",
-            type: "address",
-            internalType: "address",
-          },
-          {
-            name: "moduleCallGasLimit",
-            type: "uint256",
-            internalType: "uint256",
-          },
-          {
-            name: "liquidationBountyBps",
-            type: "uint256",
-            internalType: "uint256",
-          },
-          {
-            name: "minDepositSeconds",
-            type: "uint256",
-            internalType: "uint256",
-          },
-        ],
-      },
+            "name": "minDepositSeconds",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
     ],
-    anonymous: false,
+    "anonymous": false
   },
   {
-    type: "event",
-    name: "Initialized",
-    inputs: [
+    "type": "event",
+    "name": "Initialized",
+    "inputs": [
       {
-        name: "version",
-        type: "uint8",
-        indexed: false,
-        internalType: "uint8",
-      },
+        "name": "version",
+        "type": "uint8",
+        "indexed": false,
+        "internalType": "uint8"
+      }
     ],
-    anonymous: false,
+    "anonymous": false
   },
   {
-    type: "event",
-    name: "LandExpanded",
-    inputs: [
+    "type": "event",
+    "name": "LandExpanded",
+    "inputs": [
       {
-        name: "land",
-        type: "address",
-        indexed: true,
-        internalType: "address",
+        "name": "land",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
       },
       {
-        name: "newSlotCount",
-        type: "uint256",
-        indexed: false,
-        internalType: "uint256",
-      },
+        "name": "newSlotCount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
     ],
-    anonymous: false,
+    "anonymous": false
   },
   {
-    type: "event",
-    name: "LandOpened",
-    inputs: [
+    "type": "event",
+    "name": "LandOpened",
+    "inputs": [
       {
-        name: "land",
-        type: "address",
-        indexed: true,
-        internalType: "address",
+        "name": "land",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
       },
       {
-        name: "account",
-        type: "address",
-        indexed: true,
-        internalType: "address",
-      },
+        "name": "account",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
     ],
-    anonymous: false,
+    "anonymous": false
   },
   {
-    type: "event",
-    name: "ModuleAllowedStatusUpdated",
-    inputs: [
+    "type": "event",
+    "name": "ModuleAllowedStatusUpdated",
+    "inputs": [
       {
-        name: "module",
-        type: "address",
-        indexed: true,
-        internalType: "address",
+        "name": "module",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
       },
       {
-        name: "allowed",
-        type: "bool",
-        indexed: false,
-        internalType: "bool",
+        "name": "allowed",
+        "type": "bool",
+        "indexed": false,
+        "internalType": "bool"
       },
       {
-        name: "name",
-        type: "string",
-        indexed: false,
-        internalType: "string",
+        "name": "name",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
       },
       {
-        name: "version",
-        type: "string",
-        indexed: false,
-        internalType: "string",
-      },
+        "name": "version",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      }
     ],
-    anonymous: false,
+    "anonymous": false
   },
   {
-    type: "event",
-    name: "RoleAdminChanged",
-    inputs: [
+    "type": "event",
+    "name": "RoleAdminChanged",
+    "inputs": [
       {
-        name: "role",
-        type: "bytes32",
-        indexed: true,
-        internalType: "bytes32",
+        "name": "role",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
       },
       {
-        name: "previousAdminRole",
-        type: "bytes32",
-        indexed: true,
-        internalType: "bytes32",
+        "name": "previousAdminRole",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
       },
       {
-        name: "newAdminRole",
-        type: "bytes32",
-        indexed: true,
-        internalType: "bytes32",
-      },
+        "name": "newAdminRole",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      }
     ],
-    anonymous: false,
+    "anonymous": false
   },
   {
-    type: "event",
-    name: "RoleGranted",
-    inputs: [
+    "type": "event",
+    "name": "RoleGranted",
+    "inputs": [
       {
-        name: "role",
-        type: "bytes32",
-        indexed: true,
-        internalType: "bytes32",
+        "name": "role",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
       },
       {
-        name: "account",
-        type: "address",
-        indexed: true,
-        internalType: "address",
+        "name": "account",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
       },
       {
-        name: "sender",
-        type: "address",
-        indexed: true,
-        internalType: "address",
-      },
+        "name": "sender",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
     ],
-    anonymous: false,
+    "anonymous": false
   },
   {
-    type: "event",
-    name: "RoleRevoked",
-    inputs: [
+    "type": "event",
+    "name": "RoleRevoked",
+    "inputs": [
       {
-        name: "role",
-        type: "bytes32",
-        indexed: true,
-        internalType: "bytes32",
+        "name": "role",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
       },
       {
-        name: "account",
-        type: "address",
-        indexed: true,
-        internalType: "address",
+        "name": "account",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
       },
       {
-        name: "sender",
-        type: "address",
-        indexed: true,
-        internalType: "address",
-      },
+        "name": "sender",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
     ],
-    anonymous: false,
+    "anonymous": false
   },
   {
-    type: "event",
-    name: "Upgraded",
-    inputs: [
+    "type": "event",
+    "name": "Upgraded",
+    "inputs": [
       {
-        name: "implementation",
-        type: "address",
-        indexed: true,
-        internalType: "address",
-      },
+        "name": "implementation",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
     ],
-    anonymous: false,
+    "anonymous": false
   },
   {
-    type: "error",
-    name: "InsufficientPayment",
-    inputs: [],
+    "type": "error",
+    "name": "InsufficientPayment",
+    "inputs": []
   },
   {
-    type: "error",
-    name: "InvalidFeeRecipient",
-    inputs: [],
+    "type": "error",
+    "name": "InvalidFeeRecipient",
+    "inputs": []
   },
   {
-    type: "error",
-    name: "LandAlreadyExists",
-    inputs: [],
+    "type": "error",
+    "name": "InvalidSlotCount",
+    "inputs": []
   },
   {
-    type: "error",
-    name: "UnauthorizedLandExpansion",
-    inputs: [],
+    "type": "error",
+    "name": "LandAlreadyExists",
+    "inputs": []
   },
+  {
+    "type": "error",
+    "name": "UnauthorizedLandExpansion",
+    "inputs": []
+  }
 ] as const;

@@ -5,7 +5,7 @@ import { useLands } from "../hooks";
 import { LandCard } from "./LandCard";
 
 export function LandsTab({ chainId }: { chainId: SlotsChain }) {
-  const { data: lands, isLoading } = useLands(chainId);
+  const { data: lands, isLoading, refetch, isFetching } = useLands(chainId);
 
   if (isLoading) {
     return (
@@ -40,7 +40,28 @@ export function LandsTab({ chainId }: { chainId: SlotsChain }) {
         <span className="w-20 text-center">Slots</span>
         <span className="w-24 text-center">Occupied</span>
         <span className="w-16 text-center">Tax</span>
-        <span className="flex-1 text-right">Slot Map</span>
+        <span className="flex-1 text-right">
+          <button
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className="inline-flex items-center gap-1 text-gray-400 hover:text-black transition-colors disabled:opacity-50"
+            title="Refresh"
+          >
+            <svg
+              className={`w-3 h-3 ${isFetching ? "animate-spin" : ""}`}
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2.5}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+              />
+            </svg>
+          </button>
+        </span>
       </div>
       {lands.map((land) => (
         <LandCard

@@ -69,13 +69,6 @@ contract SlotsV2Test is Test {
       protocolFeeRecipient: admin,
       landCreationFee: 0,
       slotExpansionFee: 0,
-      newLandInitialCurrency: address(token),
-      newLandInitialAmount: 3,
-      newLandInitialPrice: 1 ether,
-      newLandInitialTaxPercentage: 100, // 1%
-      newLandInitialMaxTaxPercentage: 1000, // 10%
-      newLandInitialMinTaxUpdatePeriod: 7 days,
-      newLandInitialModule: address(0),
       moduleCallGasLimit: 500_000,
       liquidationBountyBps: 500, // 5%
       minDepositSeconds: MIN_DEPOSIT_SECONDS
@@ -91,8 +84,19 @@ contract SlotsV2Test is Test {
     token.mint(charlie, 100_000e18);
   }
 
+  function _defaultSlotParams() internal view returns (SlotParams memory) {
+    return SlotParams({
+      currency: IERC20(address(token)),
+      basePrice: 1 ether,
+      taxPercentage: 100, // 1%
+      maxTaxPercentage: 1000, // 10%
+      minTaxUpdatePeriod: 7 days,
+      module: address(0)
+    });
+  }
+
   function _openLand(address account) internal returns (Slots) {
-    address land = hub.openLand(account);
+    address land = hub.openLand(account, _defaultSlotParams(), 3);
     return Slots(land);
   }
 
@@ -111,20 +115,17 @@ contract SlotsV2Test is Test {
     assertEq(land.nextSlotId(), 4); // 3 slots created
   }
 
-  function test_openLandCustom() public {
-    SlotParams[] memory params = new SlotParams[](2);
-    for (uint256 i = 0; i < 2; i++) {
-      params[i] = SlotParams({
-        currency: IERC20(address(token)),
-        basePrice: 5 ether,
-        taxPercentage: 200,
-        maxTaxPercentage: 2000,
-        minTaxUpdatePeriod: 3 days,
-        module: address(0)
-      });
-    }
+  function test_openLandCustomParams() public {
+    SlotParams memory param = SlotParams({
+      currency: IERC20(address(token)),
+      basePrice: 5 ether,
+      taxPercentage: 200,
+      maxTaxPercentage: 2000,
+      minTaxUpdatePeriod: 3 days,
+      module: address(0)
+    });
 
-    address land = hub.openLandCustom(alice, params);
+    address land = hub.openLand(alice, param, 2);
     Slots slots_ = Slots(land);
     assertEq(slots_.owner(), alice);
     assertEq(slots_.nextSlotId(), 3); // 2 custom slots
@@ -136,7 +137,7 @@ contract SlotsV2Test is Test {
   function test_cannotOpenLandTwice() public {
     _openLand(alice);
     vm.expectRevert(SlotsHub.LandAlreadyExists.selector);
-    hub.openLand(alice);
+    hub.openLand(alice, _defaultSlotParams(), 3);
   }
 
   // ═══════════════════════════════════════════════════
