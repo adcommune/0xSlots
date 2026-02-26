@@ -6,11 +6,11 @@ schema:
 dataSources:
   - kind: ethereum
     name: SlotsHub
-    network: base-sepolia
+    network: arbitrum-one
     source:
-      address: "0xc9D6BDAf9e807Be880509B05c5C5216Ff1c63603"
+      address: "0x5a5EFE9D235F1B180A015c9d922b052eE12ca4aB"
       abi: SlotsHub
-      startBlock: 38133214
+      startBlock: 24540965
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -27,7 +27,7 @@ dataSources:
         - name: ERC20
           file: ./abis/ERC20.json
       eventHandlers:
-        - event: HubSettingsUpdated((uint256,address,uint256,uint256,address,uint256,uint256,uint256,uint256,uint256,address,uint256,uint256,uint256))
+        - event: HubSettingsUpdated((uint256,address,uint256,uint256,uint256,uint256,uint256))
           handler: handleHubSettingsUpdated
         - event: LandOpened(indexed address,indexed address)
           handler: handleLandOpened
@@ -39,7 +39,7 @@ dataSources:
 templates:
   - kind: ethereum
     name: Slots
-    network: base-sepolia
+    network: arbitrum-one
     source:
       abi: Slots
     mapping:

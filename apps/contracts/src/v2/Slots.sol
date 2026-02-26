@@ -101,12 +101,9 @@ contract Slots is ISlotsEvents, ReentrancyGuardUpgradeable, OwnableUpgradeable {
       esc.deposit = 0;
       if (refund > 0) currency.safeTransfer(prev, refund);
     } else {
-      // First sale: price goes to owner minus protocol fee
-      uint256 feeBps = hub.hubSettings().protocolFeeBps;
-      uint256 fee = (price * feeBps) / BASIS_POINTS;
+      // First sale: full price to owner
       if (price > 0) {
-        if (fee > 0) currency.safeTransfer(hub.hubSettings().protocolFeeRecipient, fee);
-        currency.safeTransfer(owner(), price - fee);
+        currency.safeTransfer(owner(), price);
       }
     }
 

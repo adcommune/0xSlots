@@ -41,14 +41,6 @@ export default function RootLayout({
                 <a href="/explorer" className="hover:underline">
                   Explorer
                 </a>
-                <a
-                  href="https://github.com/adcommune/0xSlots"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:underline"
-                >
-                  GitHub ↗
-                </a>
                 <ChainSelector />
                 <ConnectButton />
               </div>
@@ -61,14 +53,24 @@ export default function RootLayout({
             <footer className="px-6 py-6 border-t-4 border-black">
               <div className="max-w-5xl mx-auto flex justify-between items-center font-mono text-xs uppercase tracking-widest">
                 <span>0xSlots</span>
-                <a
-                  href="https://github.com/adcommune"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:underline"
-                >
-                  adcommune
-                </a>
+                <div className="flex items-center gap-6">
+                  <a
+                    href="https://github.com/adcommune/0xSlots"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:underline"
+                  >
+                    GitHub ↗
+                  </a>
+                  <a
+                    href="https://github.com/adcommune"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:underline"
+                  >
+                    adcommune
+                  </a>
+                </div>
               </div>
             </footer>
           </div>

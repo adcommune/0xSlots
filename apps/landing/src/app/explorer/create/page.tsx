@@ -3,7 +3,7 @@
 import { slotsHubAbi, slotsHubAddress } from "@0xslots/contracts";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { type Address, isAddress } from "viem";
+import { type Address, isAddress, parseUnits, zeroAddress } from "viem";
 import { normalize } from "viem/ens";
 import {
   useAccount,
@@ -16,13 +16,146 @@ import {
 import { mainnet } from "wagmi/chains";
 import { useHubSettings, useLandsByOwner } from "@/app/explorer/hooks";
 import { useChain } from "@/context/chain";
-import { formatBps, formatWei } from "@/utils";
+import { formatWei } from "@/utils";
+
+interface SlotConfig {
+  currency: string;
+  basePrice: string;
+  taxPercentage: string;
+  maxTaxPercentage: string;
+  minTaxUpdatePeriod: string;
+  module: string;
+  decimals: number;
+}
+
+function defaultSlotConfig(): SlotConfig {
+  return {
+    currency: zeroAddress,
+    basePrice: "1",
+    taxPercentage: "1",
+    maxTaxPercentage: "10",
+    minTaxUpdatePeriod: "7",
+    module: zeroAddress,
+    decimals: 18,
+  };
+}
+
+function SlotConfigForm({
+  config,
+  onChange,
+}: {
+  config: SlotConfig;
+  onChange: (s: SlotConfig) => void;
+}) {
+  return (
+    <div className="space-y-3">
+      <div>
+        <label className="font-mono text-[10px] text-gray-500 uppercase block mb-1">
+          Currency Address
+        </label>
+        <input
+          type="text"
+          value={config.currency}
+          onChange={(e) => onChange({ ...config, currency: e.target.value })}
+          placeholder="0x..."
+          className="w-full border-2 border-black px-3 py-1.5 font-mono text-xs"
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="font-mono text-[10px] text-gray-500 uppercase block mb-1">
+            Base Price
+          </label>
+          <input
+            type="text"
+            value={config.basePrice}
+            onChange={(e) =>
+              onChange({ ...config, basePrice: e.target.value })
+            }
+            placeholder="1.0"
+            className="w-full border-2 border-black px-3 py-1.5 font-mono text-xs"
+          />
+        </div>
+        <div>
+          <label className="font-mono text-[10px] text-gray-500 uppercase block mb-1">
+            Decimals
+          </label>
+          <input
+            type="number"
+            value={config.decimals}
+            onChange={(e) =>
+              onChange({ ...config, decimals: Number(e.target.value) })
+            }
+            className="w-full border-2 border-black px-3 py-1.5 font-mono text-xs"
+          />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="font-mono text-[10px] text-gray-500 uppercase block mb-1">
+            Tax Rate (%)
+          </label>
+          <input
+            type="text"
+            value={config.taxPercentage}
+            onChange={(e) =>
+              onChange({ ...config, taxPercentage: e.target.value })
+            }
+            placeholder="1"
+            className="w-full border-2 border-black px-3 py-1.5 font-mono text-xs"
+          />
+        </div>
+        <div>
+          <label className="font-mono text-[10px] text-gray-500 uppercase block mb-1">
+            Max Tax Rate (%)
+          </label>
+          <input
+            type="text"
+            value={config.maxTaxPercentage}
+            onChange={(e) =>
+              onChange({ ...config, maxTaxPercentage: e.target.value })
+            }
+            placeholder="10"
+            className="w-full border-2 border-black px-3 py-1.5 font-mono text-xs"
+          />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="font-mono text-[10px] text-gray-500 uppercase block mb-1">
+            Min Tax Update (days)
+          </label>
+          <input
+            type="text"
+            value={config.minTaxUpdatePeriod}
+            onChange={(e) =>
+              onChange({ ...config, minTaxUpdatePeriod: e.target.value })
+            }
+            placeholder="7"
+            className="w-full border-2 border-black px-3 py-1.5 font-mono text-xs"
+          />
+        </div>
+        <div>
+          <label className="font-mono text-[10px] text-gray-500 uppercase block mb-1">
+            Module Address
+          </label>
+          <input
+            type="text"
+            value={config.module}
+            onChange={(e) => onChange({ ...config, module: e.target.value })}
+            placeholder="0x000..."
+            className="w-full border-2 border-black px-3 py-1.5 font-mono text-xs"
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function CreatePage() {
   const router = useRouter();
   const { chainId } = useChain();
   const hubAddress = slotsHubAddress[chainId];
-  console.log({ hubAddress });
 
   const { data: hubData, isLoading } = useHubSettings(chainId);
   const hub = hubData?.hub;
@@ -34,8 +167,19 @@ export default function CreatePage() {
     hash,
   });
 
-  const [useCustom, setUseCustom] = useState(false);
+  // Single mode — user always configures slot params
+  const [useCustomOwner, setUseCustomOwner] = useState(false);
   const [customInput, setCustomInput] = useState("");
+  const [slotConfig, setSlotConfig] = useState<SlotConfig | null>(null);
+  const [slotCount, setSlotCount] = useState(1);
+
+  // Initialize config when hub loads
+  useEffect(() => {
+    if (hub && !slotConfig) {
+      setSlotConfig(defaultSlotConfig());
+      setSlotCount(6);
+    }
+  }, [hub, slotConfig]);
 
   const isEns = /\.eth$/i.test(customInput.trim());
   const { data: ensResolvedAddress, isLoading: ensLoading } = useEnsAddress({
@@ -44,7 +188,7 @@ export default function CreatePage() {
   });
 
   const resolvedCustom = isEns ? (ensResolvedAddress ?? "") : customInput;
-  const targetAddress = useCustom ? resolvedCustom : (address ?? "");
+  const targetAddress = useCustomOwner ? resolvedCustom : (address ?? "");
   const isValidTarget = isAddress(targetAddress);
 
   const { data: existingLands } = useLandsByOwner(
@@ -53,26 +197,40 @@ export default function CreatePage() {
   );
   const ownerHasLand = (existingLands?.length ?? 0) > 0;
 
+  const wrongChain = walletChainId !== (chainId as number);
+
+  function encodeSlotParam() {
+    if (!slotConfig) return null;
+    return {
+      currency: slotConfig.currency as Address,
+      basePrice: parseUnits(slotConfig.basePrice || "0", slotConfig.decimals),
+      taxPercentage: BigInt(Math.round(Number(slotConfig.taxPercentage || "0") * 100)),
+      maxTaxPercentage: BigInt(
+        Math.round(Number(slotConfig.maxTaxPercentage || "0") * 100),
+      ),
+      minTaxUpdatePeriod: BigInt(
+        Math.round(Number(slotConfig.minTaxUpdatePeriod || "0") * 86400),
+      ),
+      module: (slotConfig.module || zeroAddress) as Address,
+    };
+  }
+
   const canSimulate =
     isConnected &&
     isValidTarget &&
     !ownerHasLand &&
     !!hub &&
-    walletChainId === (chainId as number);
-  const { error: simulateError, isLoading: isSimulating } = useSimulateContract(
-    {
+    !wrongChain;
+
+  const { error: simulateError, isLoading: isSimulating } =
+    useSimulateContract({
       address: hubAddress as Address,
       abi: slotsHubAbi,
       functionName: "openLand",
-      args: canSimulate ? [targetAddress as Address] : undefined,
+      args: [targetAddress as Address, encodeSlotParam()!, BigInt(slotCount)],
       value: hub ? BigInt(hub.landCreationFee) : undefined,
-      query: { enabled: canSimulate },
-    },
-  );
-
-  if (simulateError) {
-    console.error("[openLand simulation]", simulateError);
-  }
+      query: { enabled: canSimulate && slotCount > 0 && !!slotConfig },
+    });
 
   const simErrorMessage = simulateError
     ? ((simulateError.cause as any)?.reason ??
@@ -80,7 +238,6 @@ export default function CreatePage() {
       simulateError.message)
     : null;
 
-  const wrongChain = walletChainId !== (chainId as number);
   const busy = isPending || isConfirming;
 
   useEffect(() => {
@@ -93,15 +250,18 @@ export default function CreatePage() {
   }, [isSuccess, router]);
 
   function handleCreate() {
-    if (!isValidTarget || !hub) return;
+    if (!isValidTarget || !hub || !slotConfig) return;
     writeContract({
       address: hubAddress as Address,
       abi: slotsHubAbi,
       functionName: "openLand",
-      args: [targetAddress as Address],
+      args: [targetAddress as Address, encodeSlotParam()!, BigInt(slotCount)],
       value: BigInt(hub.landCreationFee),
     });
   }
+
+  const canCreate =
+    isConnected && isValidTarget && !ownerHasLand && !!hub && !wrongChain;
 
   return (
     <div className="min-h-screen bg-white">
@@ -111,81 +271,60 @@ export default function CreatePage() {
             Create Land
           </h1>
           <p className="text-gray-500 font-mono text-sm">
-            Open a new land on-chain with hub defaults
+            Open a new land on-chain
           </p>
         </div>
       </div>
 
       <div className="max-w-5xl mx-auto px-6 py-8">
         {isLoading ? (
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 items-start">
-            <div className="space-y-6">
-              <div className="border-2 border-black">
-                <div className="bg-gray-50 border-b-2 border-black p-4">
-                  <div className="h-5 w-48 bg-gray-200 animate-pulse" />
-                </div>
-                <div className="p-6 space-y-3">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <div key={i} className="flex justify-between">
-                      <div className="h-3 w-32 bg-gray-100 animate-pulse" />
-                      <div className="h-3 w-24 bg-gray-100 animate-pulse" />
-                    </div>
-                  ))}
-                </div>
+          <div className="space-y-6">
+            <div className="border-2 border-black">
+              <div className="bg-gray-50 border-b-2 border-black p-4">
+                <div className="h-5 w-48 bg-gray-200 animate-pulse" />
               </div>
-            </div>
-            <div className="border-2 border-black p-6">
-              <div className="h-5 w-24 bg-gray-200 animate-pulse mb-4" />
-              <div className="h-10 w-full bg-gray-100 animate-pulse" />
+              <div className="p-6 space-y-3">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="flex justify-between">
+                    <div className="h-3 w-32 bg-gray-100 animate-pulse" />
+                    <div className="h-3 w-24 bg-gray-100 animate-pulse" />
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         ) : hub ? (
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 items-start">
-            {/* Left column — config cards */}
+            {/* Left column */}
             <div className="space-y-6">
-              {/* Defaults info panel */}
+              {/* Mode toggle */}
               <div className="border-2 border-black">
                 <div className="bg-gray-50 border-b-2 border-black p-4">
                   <h2 className="text-sm font-bold uppercase tracking-tight">
-                    Land Defaults
+                    Slot Configuration
                   </h2>
                 </div>
-                <div className="divide-y divide-gray-200">
-                  {[
-                    ["Creation Fee", `${formatWei(hub.landCreationFee)} ETH`],
-                    ["Initial Slots", hub.defaultSlotCount],
-                    [
-                      "Default Price",
-                      `${formatWei(
-                        hub.defaultPrice,
-                        hub.defaultCurrency?.decimals ?? 18,
-                      )} ${hub.defaultCurrency?.symbol || ""}`,
-                    ],
-                    [
-                      "Default Currency",
-                      hub.defaultCurrency
-                        ? `${
-                            hub.defaultCurrency.symbol
-                          } (${hub.defaultCurrency.id.slice(
-                            0,
-                            6,
-                          )}…${hub.defaultCurrency.id.slice(-4)})`
-                        : "—",
-                    ],
-                    ["Tax Rate", formatBps(hub.defaultTaxPercentage)],
-                  ].map(([label, value]) => (
-                    <div
-                      key={label}
-                      className="flex items-center justify-between px-6 py-3"
-                    >
-                      <span className="font-mono text-xs text-gray-500 uppercase">
-                        {label}
-                      </span>
-                      <span className="font-mono text-xs font-bold">
-                        {value}
-                      </span>
+                <div className="p-4">
+                  {slotConfig ? (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="font-mono text-[10px] text-gray-500 uppercase block mb-1">
+                          Number of Slots
+                        </label>
+                        <input
+                          type="number"
+                          min={1}
+                          value={slotCount}
+                          onChange={(e) => setSlotCount(Math.max(1, Number(e.target.value) || 1))}
+                          className="w-20 border-2 border-black px-3 py-1.5 font-mono text-xs"
+                        />
+                        <p className="font-mono text-[10px] text-gray-400 mt-1">
+                          This config will be applied to all {slotCount} slot{slotCount !== 1 ? "s" : ""}
+                        </p>
+                      </div>
+                      <SlotConfigForm config={slotConfig} onChange={setSlotConfig} />
                     </div>
-                  ))}
+                  ) : null}
                 </div>
               </div>
 
@@ -199,9 +338,9 @@ export default function CreatePage() {
                 <div className="p-6 space-y-4">
                   <div className="flex items-center gap-3">
                     <button
-                      onClick={() => setUseCustom(false)}
+                      onClick={() => setUseCustomOwner(false)}
                       className={`font-mono text-xs uppercase px-3 py-1.5 border-2 border-black transition-colors ${
-                        !useCustom
+                        !useCustomOwner
                           ? "bg-black text-white"
                           : "bg-white text-black hover:bg-gray-100"
                       }`}
@@ -209,26 +348,18 @@ export default function CreatePage() {
                       My Wallet
                     </button>
                     <button
-                      onClick={() => setUseCustom(true)}
+                      onClick={() => setUseCustomOwner(true)}
                       className={`font-mono text-xs uppercase px-3 py-1.5 border-2 border-black transition-colors ${
-                        useCustom
+                        useCustomOwner
                           ? "bg-black text-white"
                           : "bg-white text-black hover:bg-gray-100"
                       }`}
                     >
                       Address or ENS
                     </button>
-                    <button
-                      type="button"
-                      disabled
-                      className="font-mono text-xs uppercase px-3 py-1.5 border-2 border-gray-300 text-gray-300 cursor-not-allowed"
-                      title="Coming soon"
-                    >
-                      Group
-                    </button>
                   </div>
 
-                  {useCustom ? (
+                  {useCustomOwner ? (
                     <div>
                       <label className="font-mono text-xs text-gray-500 block mb-1">
                         ADDRESS OR ENS NAME
@@ -297,16 +428,15 @@ export default function CreatePage() {
                   </h2>
                 </div>
                 <div className="p-5 space-y-4">
-                  {/* Summary */}
                   <div className="space-y-2">
                     <div className="flex justify-between font-mono text-xs">
                       <span className="text-gray-500">Slots</span>
-                      <span className="font-bold">{hub.defaultSlotCount}</span>
+                      <span className="font-bold">{slotCount}</span>
                     </div>
                     <div className="flex justify-between font-mono text-xs">
                       <span className="text-gray-500">Tax Rate</span>
                       <span className="font-bold">
-                        {formatBps(hub.defaultTaxPercentage)}
+                        {slotConfig ? `${slotConfig.taxPercentage}%` : "—"}
                       </span>
                     </div>
                     <div className="flex justify-between font-mono text-xs">
@@ -368,7 +498,7 @@ export default function CreatePage() {
                         <button
                           disabled={
                             busy ||
-                            !isValidTarget ||
+                            !canCreate ||
                             !!simulateError ||
                             isSimulating
                           }
@@ -381,7 +511,7 @@ export default function CreatePage() {
                               ? "CONFIRMING..."
                               : isSimulating
                                 ? "SIMULATING..."
-                                : "CREATE LAND"}
+                                : `CREATE LAND (${slotCount} SLOTS)`}
                         </button>
                       </>
                     )}

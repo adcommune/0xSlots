@@ -9,19 +9,21 @@ import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol"
 import {Slots} from "./Slots.sol";
 import {HubSettings, SlotParams, IHubEvents} from "./ISlots.sol";
 
-/// @title SlotsHub (v2) — No Superfluid, escrow-based
+/// @title SlotsHub (v2) - No Superfluid, escrow-based
 /// @notice Factory for creating Lands (Slots contracts). Manages protocol settings.
 contract SlotsHub is IHubEvents, UUPSUpgradeable, AccessControlUpgradeable {
   error InvalidFeeRecipient();
   error UnauthorizedLandExpansion();
   error InsufficientPayment();
   error LandAlreadyExists();
+  error InvalidSlotCount();
 
   HubSettings internal _hubSettings;
   UpgradeableBeacon public beacon;
 
   mapping(address => address) public lands; // account => land address
   mapping(address => bool) internal _allowedModules;
+
   function initialize(
     address _slotsImpl,
     HubSettings memory settings
@@ -44,13 +46,22 @@ contract SlotsHub is IHubEvents, UUPSUpgradeable, AccessControlUpgradeable {
   // LAND MANAGEMENT
   // ══════════════════════════════════════════════════════════════
 
-  /// @notice Create a new land with custom slot params
-  function openLandCustom(address account, SlotParams[] memory params) external payable returns (address land) {
+  /// @notice Create a new land with uniform slot params
+  /// @param account The owner of the new land
+  /// @param param Slot configuration applied to all slots
+  /// @param count Number of slots to create (must be > 0)
+  function openLand(address account, SlotParams memory param, uint256 count) external payable returns (address land) {
     if (lands[account] != address(0)) revert LandAlreadyExists();
+    if (count == 0) revert InvalidSlotCount();
 
     HubSettings memory s = _hubSettings;
     if (s.landCreationFee > 0) {
       if (msg.value < s.landCreationFee) revert InsufficientPayment();
+    }
+
+    SlotParams[] memory params = new SlotParams[](count);
+    for (uint256 i = 0; i < count; i++) {
+      params[i] = param;
     }
 
     land = address(new BeaconProxy(
@@ -62,40 +73,7 @@ contract SlotsHub is IHubEvents, UUPSUpgradeable, AccessControlUpgradeable {
     emit LandOpened(land, account);
   }
 
-  /// @notice Create a new land for an account with default slots
-  function openLand(address account) external payable returns (address land) {
-    if (lands[account] != address(0)) revert LandAlreadyExists();
-
-    HubSettings memory s = _hubSettings;
-
-    if (s.landCreationFee > 0) {
-      if (msg.value < s.landCreationFee) revert InsufficientPayment();
-    }
-
-    SlotParams[] memory params = new SlotParams[](s.newLandInitialAmount);
-    SlotParams memory defaultParam = SlotParams({
-      currency: IERC20(s.newLandInitialCurrency),
-      basePrice: s.newLandInitialPrice,
-      taxPercentage: s.newLandInitialTaxPercentage,
-      maxTaxPercentage: s.newLandInitialMaxTaxPercentage,
-      minTaxUpdatePeriod: s.newLandInitialMinTaxUpdatePeriod,
-      module: s.newLandInitialModule
-    });
-
-    for (uint256 i = 0; i < s.newLandInitialAmount; i++) {
-      params[i] = defaultParam;
-    }
-
-    land = address(new BeaconProxy(
-      address(beacon),
-      abi.encodeCall(Slots.initialize, (payable(address(this)), account, params))
-    ));
-    lands[account] = land;
-
-    emit LandOpened(land, account);
-  }
-
-  /// @notice Expand an existing land with more slots
+  /// @notice Expand an existing land with more slots (owner only)
   function expandLand(address account, SlotParams[] memory params) external payable {
     address land = lands[account];
     if (Slots(land).owner() != msg.sender) revert UnauthorizedLandExpansion();
@@ -132,7 +110,7 @@ contract SlotsHub is IHubEvents, UUPSUpgradeable, AccessControlUpgradeable {
   // ══════════════════════════════════════════════════════════════
 
   function isModuleAllowed(address module) public view returns (bool) {
-    if (module == address(0)) return true; // No module is always allowed
+    if (module == address(0)) return true;
     return _allowedModules[module];
   }
 

@@ -7,6 +7,7 @@ import { EventsTab } from "./components/EventsTab";
 import { HubSettingsTab } from "./components/HubSettingsTab";
 import { LandsTab } from "./components/LandsTab";
 import { StatsGrid } from "./components/StatsGrid";
+import { SyncBanner } from "./components/SyncBanner";
 
 export default function ExplorerPage() {
   const { chainId } = useChain();
@@ -14,6 +15,7 @@ export default function ExplorerPage() {
 
   return (
     <div className="min-h-screen bg-white">
+      <SyncBanner chainId={chainId} />
       {/* Header */}
       <div className="border-b-4 border-black bg-linear-to-br from-gray-50 to-white">
         <div className="max-w-6xl mx-auto px-6 py-4">

@@ -1,5 +1,4 @@
 import { BigInt, Bytes } from "@graphprotocol/graph-ts";
-import { ERC20 } from "../generated/SlotsHub/ERC20";
 import {
   HubSettingsUpdated,
   LandOpened,
@@ -11,7 +10,6 @@ import {
   Hub,
   Land,
   Module,
-  Currency,
   LandOpenedEvent,
   LandExpandedEvent,
 } from "../generated/schema";
@@ -28,13 +26,6 @@ function getOrCreateHub(address: Bytes): Hub {
     hub.protocolFeeRecipient = Bytes.empty();
     hub.landCreationFee = BigInt.zero();
     hub.slotExpansionFee = BigInt.zero();
-    hub.defaultCurrency = null;
-    hub.defaultSlotCount = BigInt.zero();
-    hub.defaultPrice = BigInt.zero();
-    hub.defaultTaxPercentage = BigInt.zero();
-    hub.defaultMaxTaxPercentage = BigInt.zero();
-    hub.defaultMinTaxUpdatePeriod = BigInt.zero();
-    hub.defaultModule = Bytes.empty();
     hub.moduleCallGasLimit = BigInt.zero();
     hub.liquidationBountyBps = BigInt.zero();
     hub.minDepositSeconds = BigInt.zero();
@@ -50,31 +41,6 @@ export function handleHubSettingsUpdated(event: HubSettingsUpdated): void {
   hub.protocolFeeRecipient = settings.protocolFeeRecipient;
   hub.landCreationFee = settings.landCreationFee;
   hub.slotExpansionFee = settings.slotExpansionFee;
-
-  // Link defaultCurrency to Currency entity
-  let currencyAddr = settings.newLandInitialCurrency;
-  let currencyId = currencyAddr.toHexString();
-  let currency = Currency.load(currencyId);
-  if (!currency) {
-    currency = new Currency(currencyId);
-    currency.hub = hub.id;
-    let token = ERC20.bind(currencyAddr);
-    let nameResult = token.try_name();
-    if (!nameResult.reverted) currency.name = nameResult.value;
-    let symbolResult = token.try_symbol();
-    if (!symbolResult.reverted) currency.symbol = symbolResult.value;
-    let decimalsResult = token.try_decimals();
-    if (!decimalsResult.reverted) currency.decimals = decimalsResult.value;
-
-    currency.save();
-  }
-  hub.defaultCurrency = currencyId;
-  hub.defaultSlotCount = settings.newLandInitialAmount;
-  hub.defaultPrice = settings.newLandInitialPrice;
-  hub.defaultTaxPercentage = settings.newLandInitialTaxPercentage;
-  hub.defaultMaxTaxPercentage = settings.newLandInitialMaxTaxPercentage;
-  hub.defaultMinTaxUpdatePeriod = settings.newLandInitialMinTaxUpdatePeriod;
-  hub.defaultModule = settings.newLandInitialModule;
   hub.moduleCallGasLimit = settings.moduleCallGasLimit;
   hub.liquidationBountyBps = settings.liquidationBountyBps;
   hub.minDepositSeconds = settings.minDepositSeconds;
@@ -104,7 +70,6 @@ export function handleLandOpened(event: LandOpened): void {
   landEvent.tx = event.transaction.hash;
   landEvent.save();
 
-  // Start indexing this Slots contract
   SlotsTemplate.create(event.params.land);
 }
 
@@ -136,5 +101,3 @@ export function handleModuleAllowedStatusUpdated(
   module.version = event.params.version;
   module.save();
 }
-
-// Currency allowlist removed — any ERC-20 is accepted
