@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import { ChainSelector } from "@/app/explorer/chain-selector";
 import { ConnectButton } from "@/components/connect-button";
 import { Providers } from "@/components/providers";
 
@@ -48,6 +49,7 @@ export default function RootLayout({
                 >
                   GitHub ↗
                 </a>
+                <ChainSelector />
                 <ConnectButton />
               </div>
             </nav>

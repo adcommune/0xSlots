@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useAccount } from "wagmi";
 import {
   Select,
   SelectContent,
@@ -8,27 +8,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {useSwitchChain} from "wagmi"
-import {baseSepolia, arbitrum} from 'viem/chains'
+import { useChain } from "@/context/chain";
 
 const CHAINS = [
-  { value: "base-sepolia", label: "Base Sepolia", icon: "🔵", chainId: baseSepolia.id },
-  { value: "arbitrum", label: "Arbitrum", icon: "🔷", chainId: arbitrum.id },
+  { value: "base-sepolia", label: "Base Sepolia", icon: "🔵" },
+  { value: "arbitrum", label: "Arbitrum", icon: "🔷" },
 ] as const;
 
-export function ChainSelector({ current }: { current: string }) {
-  const router = useRouter();
-  const { mutate: switchChain } = useSwitchChain()
+export function ChainSelector() {
+  const { chainKey, setChain } = useChain();
 
   return (
-    <Select
-      value={current}
-      onValueChange={(value) => {
-        router.push(`/explorer?chain=${value}`);
-        // @ts-ignore
-        switchChain({chainId: CHAINS.find(c => c.value === value)?.chainId})
-      }}
-    >
+    <Select value={chainKey} onValueChange={setChain}>
       <SelectTrigger className="w-[200px] border-2 border-black font-mono text-sm font-bold uppercase bg-white cursor-pointer rounded-none">
         <SelectValue />
       </SelectTrigger>

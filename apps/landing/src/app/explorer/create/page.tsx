@@ -1,8 +1,8 @@
 "use client";
 
 import { slotsHubAbi, slotsHubAddress } from "@0xslots/contracts";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { type Address, isAddress } from "viem";
 import { normalize } from "viem/ens";
 import {
@@ -15,15 +15,14 @@ import {
 } from "wagmi";
 import { mainnet } from "wagmi/chains";
 import { useHubSettings, useLandsByOwner } from "@/app/explorer/hooks";
-import { parseChain } from "@/lib/config";
+import { useChain } from "@/context/chain";
 import { formatBps, formatWei } from "@/utils";
 
-function CreateContent() {
-  const searchParams = useSearchParams();
+export default function CreatePage() {
   const router = useRouter();
-  const chainParam = searchParams.get("chain") ?? undefined;
-  const chainId = parseChain(chainParam);
+  const { chainId } = useChain();
   const hubAddress = slotsHubAddress[chainId];
+  console.log({ hubAddress });
 
   const { data: hubData, isLoading } = useHubSettings(chainId);
   const hub = hubData?.hub;
@@ -87,11 +86,11 @@ function CreateContent() {
   useEffect(() => {
     if (isSuccess) {
       const timeout = setTimeout(() => {
-        router.push(`/explorer?chain=${chainParam || "arbitrum"}`);
+        router.push("/explorer");
       }, 1500);
       return () => clearTimeout(timeout);
     }
-  }, [isSuccess, router, chainParam]);
+  }, [isSuccess, router]);
 
   function handleCreate() {
     if (!isValidTarget || !hub) return;
@@ -398,26 +397,5 @@ function CreateContent() {
         )}
       </div>
     </div>
-  );
-}
-
-function CreateSkeleton() {
-  return (
-    <div className="min-h-screen bg-white">
-      <div className="border-b-4 border-black bg-linear-to-br from-gray-50 to-white">
-        <div className="max-w-3xl mx-auto px-6 py-12">
-          <div className="h-10 w-48 bg-gray-200 animate-pulse" />
-          <div className="h-4 w-64 bg-gray-100 animate-pulse mt-2" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export default function CreatePage() {
-  return (
-    <Suspense fallback={<CreateSkeleton />}>
-      <CreateContent />
-    </Suspense>
   );
 }
