@@ -10,11 +10,11 @@ export const config = getDefaultConfig({
   transports: {
     [mainnet.id]: http(`https://eth-mainnet.g.alchemy.com/v2/${alchemyKey}`),
     [baseSepolia.id]: http(
-      `https://eth-sepolia.g.alchemy.com/v2/${alchemyKey}`,
+      `https://base-sepolia.g.alchemy.com/v2/${alchemyKey}`,
     ),
     [arbitrum.id]: http(`https://arb-mainnet.g.alchemy.com/v2/${alchemyKey}`),
   },
-  ssr: true,
+  ssr: false,
 });
 
 declare module "wagmi" {
