@@ -290,11 +290,13 @@ contract Slots is ISlotsEvents, ReentrancyGuardUpgradeable, OwnableUpgradeable {
       slot.currency = IERC20(newCurrency);
     }
 
-    if (newMaxTaxPercentage > 0) {
+    if (newMaxTaxPercentage > 0 && newMaxTaxPercentage != slot.maxTaxPercentage) {
+      if (!isVacant) revert SlotMustBeUnoccupied(slotId);
       slot.maxTaxPercentage = newMaxTaxPercentage;
     }
 
     if (newModule != slot.module) {
+      if (!isVacant) revert SlotMustBeUnoccupied(slotId);
       slot.module = newModule;
     }
 

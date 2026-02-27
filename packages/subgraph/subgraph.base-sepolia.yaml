@@ -8,9 +8,9 @@ dataSources:
     name: SlotsHub
     network: base-sepolia
     source:
-      address: "0xc9D6BDAf9e807Be880509B05c5C5216Ff1c63603"
+      address: "0x6E6EB67EB3DD64555F23d02F7a5c48F490CCf3BB"
       abi: SlotsHub
-      startBlock: 38133214
+      startBlock: 38208373
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9

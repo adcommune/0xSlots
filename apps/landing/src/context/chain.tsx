@@ -26,7 +26,7 @@ const WALLET_CHAIN_MAP = {
 } as const;
 
 export function ChainProvider({ children }: { children: ReactNode }) {
-  const [chainKey, setChainKey] = useState("arbitrum");
+  const [chainKey, setChainKey] = useState("base-sepolia");
   const chainId = parseChain(chainKey);
   const { mutate: switchWalletChain } = useSwitchChain();
 
