@@ -100,8 +100,9 @@ contract SlotV3Test is Test {
     }
 
     function test_deterministicAddress() public {
+        SlotInitParams memory init = _defaultInit();
         address predicted = factory.predictSlotAddress(
-            recipient, IERC20(address(token)), _defaultConfig()
+            recipient, IERC20(address(token)), init.taxPercentage, init.module, _defaultConfig()
         );
         Slot slot = _createDefaultSlot();
         assertEq(address(slot), predicted);

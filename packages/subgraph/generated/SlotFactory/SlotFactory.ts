@@ -264,14 +264,18 @@ export class SlotFactory extends ethereum.SmartContract {
   predictSlotAddress(
     recipient: Address,
     currency: Address,
+    taxPercentage: BigInt,
+    module: Address,
     config: SlotFactory__predictSlotAddressInputConfigStruct,
   ): Address {
     let result = super.call(
       "predictSlotAddress",
-      "predictSlotAddress(address,address,(bool,bool,address)):(address)",
+      "predictSlotAddress(address,address,uint256,address,(bool,bool,address)):(address)",
       [
         ethereum.Value.fromAddress(recipient),
         ethereum.Value.fromAddress(currency),
+        ethereum.Value.fromUnsignedBigInt(taxPercentage),
+        ethereum.Value.fromAddress(module),
         ethereum.Value.fromTuple(config),
       ],
     );
@@ -282,14 +286,18 @@ export class SlotFactory extends ethereum.SmartContract {
   try_predictSlotAddress(
     recipient: Address,
     currency: Address,
+    taxPercentage: BigInt,
+    module: Address,
     config: SlotFactory__predictSlotAddressInputConfigStruct,
   ): ethereum.CallResult<Address> {
     let result = super.tryCall(
       "predictSlotAddress",
-      "predictSlotAddress(address,address,(bool,bool,address)):(address)",
+      "predictSlotAddress(address,address,uint256,address,(bool,bool,address)):(address)",
       [
         ethereum.Value.fromAddress(recipient),
         ethereum.Value.fromAddress(currency),
+        ethereum.Value.fromUnsignedBigInt(taxPercentage),
+        ethereum.Value.fromAddress(module),
         ethereum.Value.fromTuple(config),
       ],
     );

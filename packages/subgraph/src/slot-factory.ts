@@ -3,7 +3,7 @@ import { SlotDeployed } from "../generated/SlotFactory/SlotFactory";
 import { Slot as SlotTemplate } from "../generated/templates";
 import { Factory, Slot } from "../generated/schema";
 
-const FACTORY_ID = "0xd8d1b8daec8dd0ad62a5c30ccd1babf98916edc4";
+const FACTORY_ID = "0xe8fd4df6f1d1914062a2a55ad6dee2a506bbbaa0";
 const ZERO_ADDRESS = Bytes.fromHexString("0x0000000000000000000000000000000000000000");
 
 function getOrCreateFactory(): Factory {
