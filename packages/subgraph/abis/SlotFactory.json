@@ -143,6 +143,16 @@
         "internalType": "contract IERC20"
       },
       {
+        "name": "taxPercentage",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "module",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
         "name": "config",
         "type": "tuple",
         "internalType": "struct SlotConfig",

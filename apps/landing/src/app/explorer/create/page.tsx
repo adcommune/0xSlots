@@ -17,7 +17,7 @@ import { ConnectButton } from "@/components/connect-button";
 import { truncateAddress } from "@/utils";
 
 const CHAIN_ID = baseSepolia.id;
-const FACTORY_ADDRESS = "0xd8d1b8DaeC8Dd0Ad62a5C30Ccd1BaBF98916edc4" as Address;
+const FACTORY_ADDRESS = "0xe8FD4DF6f1d1914062a2A55Ad6DEE2a506BbbAa0" as Address;
 
 const factoryAbi = [
   {
@@ -45,6 +45,8 @@ const factoryAbi = [
     inputs: [
       { name: "recipient", type: "address" },
       { name: "currency", type: "address" },
+      { name: "taxPercentage", type: "uint256" },
+      { name: "module", type: "address" },
       { name: "config", type: "tuple", components: [
         { name: "mutableTax", type: "bool" },
         { name: "mutableModule", type: "bool" },
@@ -158,7 +160,13 @@ export default function CreatePage() {
     address: FACTORY_ADDRESS,
     abi: factoryAbi,
     functionName: "predictSlotAddress",
-    args: [effectiveRecipient as Address, effectiveCurrency as Address, configTuple],
+    args: [
+      effectiveRecipient as Address,
+      effectiveCurrency as Address,
+      BigInt(Math.round(Number(taxPercentage) * 100)),
+      (isAddress(effectiveModule) ? effectiveModule : zeroAddress) as Address,
+      configTuple,
+    ],
     query: { enabled: false },
   });
 

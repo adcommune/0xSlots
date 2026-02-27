@@ -81,8 +81,8 @@ contract SlotFactory {
 
         if (initParams.taxPercentage == 0) revert InvalidTaxPercentage();
 
-        // Compute deterministic salt from identity params only
-        bytes32 salt = _computeSalt(recipient, currency, config);
+        // Compute deterministic salt from identity params
+        bytes32 salt = _computeSalt(recipient, currency, initParams.taxPercentage, initParams.module, config);
 
         // Deploy clone
         slot = implementation.cloneDeterministic(salt);
@@ -97,9 +97,11 @@ contract SlotFactory {
     function predictSlotAddress(
         address recipient,
         IERC20 currency,
+        uint256 taxPercentage,
+        address module,
         SlotConfig memory config
     ) external view returns (address) {
-        bytes32 salt = _computeSalt(recipient, currency, config);
+        bytes32 salt = _computeSalt(recipient, currency, taxPercentage, module, config);
         return implementation.predictDeterministicAddress(salt);
     }
 
@@ -131,8 +133,10 @@ contract SlotFactory {
     function _computeSalt(
         address recipient,
         IERC20 currency,
+        uint256 taxPercentage,
+        address module,
         SlotConfig memory config
     ) internal pure returns (bytes32) {
-        return keccak256(abi.encode(recipient, currency, config.mutableTax, config.mutableModule, config.manager));
+        return keccak256(abi.encode(recipient, currency, taxPercentage, module, config.mutableTax, config.mutableModule));
     }
 }
