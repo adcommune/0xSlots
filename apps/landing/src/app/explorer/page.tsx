@@ -35,14 +35,14 @@ function StatsBar() {
   );
 }
 
-function SlotsGrid() {
+function SlotsTable() {
   const { data: slots, isLoading, refetch, isFetching } = useV3Slots();
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="border-2 border-black animate-pulse h-36" />
+      <div className="border-2 border-black p-8">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="h-6 bg-gray-100 animate-pulse mb-2" />
         ))}
       </div>
     );
@@ -67,59 +67,63 @@ function SlotsGrid() {
           {isFetching ? "REFRESHING..." : "↻ REFRESH"}
         </button>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-        {slots.map((slot) => {
-          const isOccupied = !slot.isVacant;
-          return (
-            <Link key={slot.id} href={`/slots/${slot.id}`}>
-              <div className="border-2 border-black hover:border-gray-600 transition-all cursor-pointer">
-                <div
-                  className={`px-3 py-2 border-b-2 border-black flex items-center justify-between ${
-                    isOccupied ? "bg-black text-white" : "bg-gray-50"
-                  }`}
-                >
-                  <span className="font-mono text-[10px] truncate max-w-[160px]">
-                    {truncateAddress(slot.id)}
-                  </span>
-                  <span
-                    className={`font-mono text-[10px] px-1.5 py-0.5 border ${
-                      isOccupied
-                        ? "border-white/40 text-white/80"
-                        : "border-black/30 text-black/60"
-                    }`}
-                  >
-                    {isOccupied ? "OCCUPIED" : "VACANT"}
-                  </span>
-                </div>
-                <div className="px-3 py-2 space-y-1 font-mono text-[11px]">
-                  {isOccupied && slot.occupant && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Occupant</span>
-                      <span className="font-bold">{truncateAddress(slot.occupant)}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Price</span>
-                    <span className="font-bold">{formatPrice(slot.price, 6)} USDC</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Tax</span>
-                    <span>{Number(slot.taxPercentage) / 100}%/mo</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Recipient</span>
-                    <span>{truncateAddress(slot.recipient)}</span>
-                  </div>
-                  {(slot.hasPendingTaxUpdate || slot.hasPendingModuleUpdate) && (
-                    <div className="border border-yellow-500 bg-yellow-50 text-yellow-800 text-center py-0.5 text-[10px] font-bold mt-1">
-                      PENDING UPDATE
-                    </div>
-                  )}
-                </div>
-              </div>
-            </Link>
-          );
-        })}
+      <div className="border-2 border-black">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b-2 border-black bg-gray-50">
+                <th className="px-4 py-2 text-left font-mono text-[10px] uppercase text-gray-500">Slot</th>
+                <th className="px-4 py-2 text-left font-mono text-[10px] uppercase text-gray-500">Status</th>
+                <th className="px-4 py-2 text-left font-mono text-[10px] uppercase text-gray-500">Occupant</th>
+                <th className="px-4 py-2 text-right font-mono text-[10px] uppercase text-gray-500">Price</th>
+                <th className="px-4 py-2 text-right font-mono text-[10px] uppercase text-gray-500">Tax</th>
+                <th className="px-4 py-2 text-left font-mono text-[10px] uppercase text-gray-500">Recipient</th>
+                <th className="px-4 py-2 text-left font-mono text-[10px] uppercase text-gray-500">Flags</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {slots.map((slot) => {
+                const isOccupied = !slot.isVacant;
+                const hasPending = slot.hasPendingTaxUpdate || slot.hasPendingModuleUpdate;
+                return (
+                  <tr key={slot.id} className="font-mono text-xs hover:bg-gray-50 cursor-pointer" onClick={() => window.location.href = `/slots/${slot.id}`}>
+                    <td className="px-4 py-2">
+                      <Link href={`/slots/${slot.id}`} className="text-blue-600 hover:underline">
+                        {truncateAddress(slot.id)}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-2">
+                      <span className={`inline-block px-1.5 py-0.5 border text-[10px] font-bold ${
+                        isOccupied ? "border-black bg-black text-white" : "border-gray-400 text-gray-500"
+                      }`}>
+                        {isOccupied ? "OCCUPIED" : "VACANT"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2 text-gray-600">
+                      {isOccupied && slot.occupant ? truncateAddress(slot.occupant) : "—"}
+                    </td>
+                    <td className="px-4 py-2 text-right font-bold">
+                      {isOccupied ? formatPrice(slot.price, 6) : "0"}
+                    </td>
+                    <td className="px-4 py-2 text-right">
+                      {Number(slot.taxPercentage) / 100}%
+                    </td>
+                    <td className="px-4 py-2 text-gray-600">
+                      {truncateAddress(slot.recipient)}
+                    </td>
+                    <td className="px-4 py-2">
+                      <div className="flex gap-1">
+                        {slot.mutableTax && <span className="text-[9px] px-1 py-0.5 border border-gray-300 text-gray-500">TAX</span>}
+                        {slot.mutableModule && <span className="text-[9px] px-1 py-0.5 border border-gray-300 text-gray-500">MOD</span>}
+                        {hasPending && <span className="text-[9px] px-1 py-0.5 border border-yellow-500 text-yellow-700 bg-yellow-50">PENDING</span>}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
@@ -242,7 +246,7 @@ export default function ExplorerPage() {
             {
               id: "slots",
               label: "Slots",
-              content: () => <SlotsGrid />,
+              content: () => <SlotsTable />,
             },
             {
               id: "events",
