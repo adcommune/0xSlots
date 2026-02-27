@@ -1,16 +1,18 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { type Address, isAddress, parseUnits, zeroAddress } from "viem";
+import { normalize } from "viem/ens";
 import {
   useAccount,
+  useEnsAddress,
   useReadContract,
   useSwitchChain,
   useWaitForTransactionReceipt,
   useWriteContract,
 } from "wagmi";
-import { baseSepolia } from "wagmi/chains";
+import { mainnet, baseSepolia } from "wagmi/chains";
 import { ConnectButton } from "@/components/connect-button";
 import { truncateAddress } from "@/utils";
 
@@ -56,6 +58,60 @@ const factoryAbi = [
 
 const USDC_ADDRESS = "0x036CbD53842c5426634e7929541eC2318f3dCF7e";
 
+function useResolveAddress(input: string): { resolved: string; isEns: boolean; isResolving: boolean; ensName: string | null } {
+  const isEns = input.endsWith(".eth") || input.endsWith(".xyz") || input.endsWith(".id");
+  let ensName: string | undefined;
+  try {
+    ensName = isEns ? normalize(input) : undefined;
+  } catch {
+    ensName = undefined;
+  }
+  const { data: ensAddress, isLoading } = useEnsAddress({
+    name: ensName,
+    chainId: mainnet.id,
+    query: { enabled: !!ensName },
+  });
+  return {
+    resolved: isEns && ensAddress ? ensAddress : input,
+    isEns,
+    isResolving: isEns && isLoading,
+    ensName: isEns && ensAddress ? input : null,
+  };
+}
+
+function AddressInput({
+  value, onChange, placeholder, hint,
+}: {
+  value: string; onChange: (v: string) => void; placeholder?: string; hint?: string;
+}) {
+  const { resolved, isEns, isResolving, ensName } = useResolveAddress(value);
+  const isValid = !value || isAddress(resolved);
+  return (
+    <div className="space-y-1">
+      <input
+        type="text"
+        placeholder={placeholder ?? "0x... or ENS name"}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={`w-full border-2 px-3 py-2 font-mono text-xs ${
+          value && !isValid && !isResolving ? "border-red-500" : "border-black"
+        }`}
+      />
+      {isResolving && (
+        <p className="font-mono text-[10px] text-blue-500">Resolving {value}...</p>
+      )}
+      {ensName && isAddress(resolved) && (
+        <p className="font-mono text-[10px] text-green-600">
+          ✓ {ensName} → {resolved.slice(0, 6)}...{resolved.slice(-4)}
+        </p>
+      )}
+      {hint && !isResolving && !ensName && (
+        <p className="font-mono text-[10px] text-gray-400">{hint}</p>
+      )}
+    </div>
+  );
+}
+
 export default function CreatePage() {
   const router = useRouter();
   const { address, isConnected, chainId: walletChainId } = useAccount();
@@ -75,8 +131,16 @@ export default function CreatePage() {
   const [predictedAddress, setPredictedAddress] = useState<string | null>(null);
 
   const needsManager = mutableTax || mutableModule;
-  const effectiveManager = needsManager ? manager : zeroAddress;
-  const effectiveRecipient = recipient || (address ?? "");
+
+  const recipientResolved = useResolveAddress(recipient);
+  const currencyResolved = useResolveAddress(currency);
+  const managerResolved = useResolveAddress(manager);
+  const moduleResolved = useResolveAddress(module);
+
+  const effectiveRecipient = recipientResolved.resolved || (address ?? "");
+  const effectiveManager = needsManager ? managerResolved.resolved : zeroAddress;
+  const effectiveCurrency = currencyResolved.resolved || currency;
+  const effectiveModule = moduleResolved.resolved || "";
 
   const wrongChain = walletChainId !== CHAIN_ID;
   const busy = isPending || isConfirming;
@@ -88,13 +152,13 @@ export default function CreatePage() {
     manager: (isAddress(effectiveManager) ? effectiveManager : zeroAddress) as Address,
   };
 
-  const canPredict = isAddress(effectiveRecipient) && isAddress(currency);
+  const canPredict = isAddress(effectiveRecipient) && isAddress(effectiveCurrency);
 
   const { data: predicted, refetch: refetchPredict } = useReadContract({
     address: FACTORY_ADDRESS,
     abi: factoryAbi,
     functionName: "predictSlotAddress",
-    args: [effectiveRecipient as Address, currency as Address, configTuple],
+    args: [effectiveRecipient as Address, effectiveCurrency as Address, configTuple],
     query: { enabled: false },
   });
 
@@ -112,18 +176,18 @@ export default function CreatePage() {
   }
 
   function handleCreate() {
-    if (!isAddress(effectiveRecipient) || !isAddress(currency)) return;
+    if (!isAddress(effectiveRecipient) || !isAddress(effectiveCurrency)) return;
     writeContract({
       address: FACTORY_ADDRESS,
       abi: factoryAbi,
       functionName: "createSlot",
       args: [
         effectiveRecipient as Address,
-        currency as Address,
+        effectiveCurrency as Address,
         configTuple,
         {
           taxPercentage: BigInt(Math.round(Number(taxPercentage) * 100)),
-          module: (isAddress(module) ? module : zeroAddress) as Address,
+          module: (isAddress(effectiveModule) ? effectiveModule : zeroAddress) as Address,
           liquidationBountyBps: BigInt(liquidationBountyBps || "0"),
           minDepositSeconds: BigInt(minDepositSeconds || "0"),
         },
@@ -150,12 +214,12 @@ export default function CreatePage() {
                 <h2 className="text-sm font-bold uppercase tracking-tight">Recipient</h2>
               </div>
               <div className="p-4 space-y-3">
-                <input type="text" placeholder={address ?? "0x..."} value={recipient}
-                  onChange={(e) => setRecipient(e.target.value)}
-                  className="w-full border-2 border-black px-3 py-2 font-mono text-xs" />
-                <p className="font-mono text-[10px] text-gray-400">
-                  Tax revenue goes to this address. Leave empty to use your wallet.
-                </p>
+                <AddressInput
+                  value={recipient}
+                  onChange={setRecipient}
+                  placeholder={address ?? "0x... or vitalik.eth"}
+                  hint="Tax revenue goes to this address. Leave empty to use your wallet."
+                />
               </div>
             </div>
 
@@ -176,9 +240,11 @@ export default function CreatePage() {
                   </button>
                 </div>
                 {currency !== USDC_ADDRESS && (
-                  <input type="text" placeholder="0x... ERC20 address" value={currency}
-                    onChange={(e) => setCurrency(e.target.value)}
-                    className="w-full border-2 border-black px-3 py-2 font-mono text-xs" />
+                  <AddressInput
+                    value={currency}
+                    onChange={setCurrency}
+                    placeholder="0x... ERC20 address or ENS"
+                  />
                 )}
               </div>
             </div>
@@ -208,8 +274,7 @@ export default function CreatePage() {
                 </div>
                 <div>
                   <label className="font-mono text-[10px] text-gray-500 uppercase block mb-1">Module (optional)</label>
-                  <input type="text" placeholder="0x... or leave empty" value={module} onChange={(e) => setModule(e.target.value)}
-                    className="w-full border-2 border-black px-3 py-1.5 font-mono text-xs" />
+                  <AddressInput value={module} onChange={setModule} placeholder="0x... or ENS (optional)" />
                 </div>
               </div>
             </div>
@@ -235,8 +300,7 @@ export default function CreatePage() {
                 {needsManager && (
                   <div>
                     <label className="font-mono text-[10px] text-gray-500 uppercase block mb-1">Manager Address (required)</label>
-                    <input type="text" placeholder="0x..." value={manager} onChange={(e) => setManager(e.target.value)}
-                      className={`w-full border-2 px-3 py-2 font-mono text-xs ${manager && !isAddress(manager) ? "border-red-500" : "border-black"}`} />
+                    <AddressInput value={manager} onChange={setManager} placeholder="0x... or ENS name" />
                   </div>
                 )}
                 {!needsManager && (
@@ -303,7 +367,7 @@ export default function CreatePage() {
                       <p className="font-mono text-[10px] text-gray-500">Redirecting...</p>
                     </div>
                   ) : (
-                    <button disabled={busy || !isAddress(effectiveRecipient) || !isAddress(currency)}
+                    <button disabled={busy || !isAddress(effectiveRecipient) || !isAddress(effectiveCurrency)}
                       onClick={handleCreate}
                       className="w-full border-4 border-black bg-black text-white px-4 py-3 font-mono text-xs uppercase tracking-widest font-bold hover:bg-white hover:text-black transition-colors disabled:opacity-50">
                       {isPending ? "CONFIRM IN WALLET..." : isConfirming ? "CONFIRMING..." : "CREATE SLOT"}
