@@ -2,7 +2,7 @@ specVersion: 1.0.0
 indexerHints:
   prune: auto
 schema:
-  file: schema-v3.graphql
+  file: ./schema-v3.graphql
 dataSources:
   - kind: ethereum
     name: SlotFactory
@@ -20,12 +20,11 @@ dataSources:
         - Slot
       abis:
         - name: SlotFactory
-          file: SlotFactory/SlotFactory.json
+          file: ./abis/SlotFactory.json
       eventHandlers:
-        - event: SlotDeployed(indexed address,indexed address,indexed
-            address,(bool,bool,address),(uint256,address,uint256,uint256))
+        - event: SlotDeployed(indexed address,indexed address,indexed address,(bool,bool,address),(uint256,address,uint256,uint256))
           handler: handleSlotDeployed
-      file: SlotFactory/SlotFactory.wasm
+      file: ./src/slot-factory.ts
 templates:
   - kind: ethereum
     name: Slot
@@ -41,7 +40,7 @@ templates:
         - SlotEvent
       abis:
         - name: Slot
-          file: Slot/Slot.json
+          file: ./abis/Slot.json
       eventHandlers:
         - event: Bought(indexed address,indexed address,uint256,uint256,uint256)
           handler: handleBought
@@ -69,4 +68,4 @@ templates:
           handler: handlePendingUpdateApplied
         - event: LiquidationBountyUpdated(uint256)
           handler: handleLiquidationBountyUpdated
-      file: templates/Slot/Slot.wasm
+      file: ./src/slot.ts

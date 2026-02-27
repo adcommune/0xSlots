@@ -10,7 +10,7 @@ export type SupportedChainId = typeof baseSepolia.id | typeof arbitrum.id;
  * SlotsHub contract addresses by chain ID
  */
 export const slotsHubAddress = {
-  [baseSepolia.id]: "0xc9d6bdaf9e807be880509b05c5c5216ff1c63603",
+  [baseSepolia.id]: "0x6e6eb67eb3dd64555f23d02f7a5c48f490ccf3bb",
   [arbitrum.id]: "0x5a5efe9d235f1b180a015c9d922b052ee12ca4ab",
 } as const satisfies Record<SupportedChainId, Address>;
 

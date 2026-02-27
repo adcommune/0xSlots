@@ -1,0 +1,65 @@
+# ──────────────────────────────────────────
+# 0xSlots v3 Subgraph Schema
+# Factory → Slot (one contract per slot)
+# ──────────────────────────────────────────
+
+type Factory @entity(immutable: false) {
+  id: ID! # factory address
+  address: Bytes!
+  slotCount: Int!
+  admin: Bytes!
+  slots: [Slot!]! @derivedFrom(field: "factory")
+}
+
+type Slot @entity(immutable: false) {
+  id: ID! # slot contract address
+  factory: Factory!
+  recipient: Bytes!
+  currency: Bytes!
+  manager: Bytes!
+  mutableTax: Boolean!
+  mutableModule: Boolean!
+  taxPercentage: BigInt!
+  module: Bytes!
+  occupant: Bytes
+  price: BigInt!
+  deposit: BigInt!
+  collectedTax: BigInt!
+  liquidationBountyBps: BigInt!
+  isVacant: Boolean!
+  hasPendingTaxUpdate: Boolean!
+  hasPendingModuleUpdate: Boolean!
+  pendingTaxPercentage: BigInt
+  pendingModule: Bytes
+  createdAt: BigInt!
+  createdTx: Bytes!
+  events: [SlotEvent!]! @derivedFrom(field: "slot")
+}
+
+enum SlotEventType {
+  Buy
+  Release
+  Liquidate
+  PriceUpdate
+  Deposit
+  Withdraw
+  TaxCollect
+  Settle
+  TaxProposed
+  ModuleProposed
+  UpdateCancelled
+  UpdateApplied
+  LiquidationBountyUpdated
+}
+
+type SlotEvent @entity(immutable: true) {
+  id: ID! # txHash-logIndex
+  slot: Slot!
+  type: SlotEventType!
+  actor: Bytes!
+  timestamp: BigInt!
+  txHash: Bytes!
+  amount: BigInt
+  newPrice: BigInt
+  newTax: BigInt
+}
