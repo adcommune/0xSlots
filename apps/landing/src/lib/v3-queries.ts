@@ -1,5 +1,5 @@
 const V3_SUBGRAPH_URL =
-  "https://api.studio.thegraph.com/query/958/0-x-slots-base-sepolia/v3.0.0";
+  "https://api.studio.thegraph.com/query/958/0-x-slots-base-sepolia/v3.0.2";
 
 async function gqlFetch<T>(query: string, variables?: Record<string, any>): Promise<T> {
   const res = await fetch(V3_SUBGRAPH_URL, {
