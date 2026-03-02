@@ -1,5 +1,5 @@
 const V3_SUBGRAPH_URL =
-  "https://api.studio.thegraph.com/query/958/0-x-slots-base-sepolia/v3.0.2";
+  "https://api.studio.thegraph.com/query/958/0-x-slots-base-sepolia/v3.1.1";
 
 async function gqlFetch<T>(query: string, variables?: Record<string, any>): Promise<T> {
   const res = await fetch(V3_SUBGRAPH_URL, {
@@ -99,6 +99,20 @@ export async function fetchFactory(): Promise<V3Factory | null> {
     }
   `);
   return data.factories[0] ?? null;
+}
+
+export async function fetchSlotsByRecipient(recipient: string, first = 100): Promise<V3Slot[]> {
+  const data = await gqlFetch<{ slots: V3Slot[] }>(`
+    query GetSlotsByRecipient($recipient: String!, $first: Int!) {
+      slots(first: $first, orderBy: createdAt, orderDirection: desc, where: { recipient: $recipient }) {
+        id recipient currency manager mutableTax mutableModule
+        taxPercentage module occupant price deposit collectedTax
+        liquidationBountyBps isVacant hasPendingTaxUpdate hasPendingModuleUpdate
+        pendingTaxPercentage pendingModule createdAt createdTx
+      }
+    }
+  `, { recipient: recipient.toLowerCase(), first });
+  return data.slots;
 }
 
 export async function fetchAllEvents(first = 50): Promise<V3SlotEvent[]> {

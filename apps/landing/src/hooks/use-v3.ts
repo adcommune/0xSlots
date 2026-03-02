@@ -5,6 +5,7 @@ import {
   fetchSlots,
   fetchSlot,
   fetchSlotEvents,
+  fetchSlotsByRecipient,
   fetchFactory,
   fetchAllEvents,
 } from "@/lib/v3-queries";
@@ -32,6 +33,15 @@ export function useV3SlotEvents(slotId: string) {
     queryFn: () => fetchSlotEvents(slotId.toLowerCase()),
     staleTime: 10_000,
     enabled: !!slotId,
+  });
+}
+
+export function useV3SlotsByRecipient(recipient: string) {
+  return useQuery({
+    queryKey: ["v3-slots-recipient", recipient],
+    queryFn: () => fetchSlotsByRecipient(recipient),
+    staleTime: 15_000,
+    enabled: !!recipient,
   });
 }
 

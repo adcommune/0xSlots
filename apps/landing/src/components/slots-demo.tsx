@@ -12,12 +12,12 @@ const LINES = [
 ];
 
 const SLOTS = [
-  { id: "0x1a2b", color: "bg-black text-white" },
-  { id: "0x3c4d", color: "bg-white text-black" },
-  { id: "0x5e6f", color: "bg-black text-white" },
-  { id: "0x7a8b", color: "bg-white text-black" },
-  { id: "0x9c0d", color: "bg-black text-white" },
-  { id: "0xef12", color: "bg-white text-black" },
+  { id: "0x1a2b", color: "bg-black text-white", border: "border-black" },
+  { id: "0x3c4d", color: "bg-white text-black", border: "border-black" },
+  { id: "0x5e6f", color: "bg-black text-white", border: "border-black" },
+  { id: "0x7a8b", color: "bg-white text-black", border: "border-black" },
+  { id: "0x9c0d", color: "bg-black text-white", border: "border-black" },
+  { id: "0xef12", color: "bg-white text-black", border: "border-black" },
 ];
 
 export function SlotsDemo() {
@@ -50,17 +50,26 @@ export function SlotsDemo() {
           />
         ))}
       </svg>
-      {/* Slots grid */}
-      <div className="grid grid-cols-3 grid-rows-2 gap-4 border p-2 border-black">
+      {/* Individual slots — flat lozenge perspective */}
+      <div className="grid grid-cols-3 grid-rows-2 gap-6 py-4 px-2">
         {SLOTS.map((slot, i) => (
-          <div
-            key={slot.id}
-            className={`aspect-square border border-black flex flex-col items-center justify-center ${slot.color}`}
-          >
-            <span className="font-mono text-[10px] uppercase tracking-wider opacity-50">
-              Slot {String(i + 1).padStart(2, "0")}
-            </span>
-            <span className="font-mono text-xs font-bold mt-1">{slot.id}</span>
+          <div key={slot.id} className="flex items-center justify-center">
+            <div
+              className={`w-20 h-20 border-2 ${slot.border} ${slot.color} flex items-center justify-center`}
+              style={{ transform: "rotate(45deg) scaleY(0.6)" }}
+            >
+              <div
+                className="flex flex-col items-center justify-center"
+                style={{ transform: "scaleY(1.667) rotate(-45deg)" }}
+              >
+                <span className="font-mono text-[9px] uppercase tracking-wider opacity-50">
+                  Slot {String(i + 1).padStart(2, "0")}
+                </span>
+                <span className="font-mono text-[10px] font-bold mt-0.5">
+                  {slot.id}
+                </span>
+              </div>
+            </div>
           </div>
         ))}
       </div>

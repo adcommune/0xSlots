@@ -1,174 +1,104 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useCallback } from "react";
-import { type Address, isAddress, parseUnits, zeroAddress } from "viem";
-import { normalize } from "viem/ens";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { type Address, isAddress, zeroAddress } from "viem";
 import {
   useAccount,
-  useEnsAddress,
-  useReadContract,
   useSwitchChain,
   useWaitForTransactionReceipt,
   useWriteContract,
 } from "wagmi";
-import { mainnet, baseSepolia } from "wagmi/chains";
-import { ConnectButton } from "@/components/connect-button";
+import { baseSepolia } from "wagmi/chains";
+
+import { slotsFactoryAbi, slotFactoryAddress } from "@0xslots/contracts";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  FormDescription,
+} from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 import { truncateAddress } from "@/utils";
 
-const CHAIN_ID = baseSepolia.id;
-const FACTORY_ADDRESS = "0xe8FD4DF6f1d1914062a2A55Ad6DEE2a506BbbAa0" as Address;
+import { AddressInput, useResolveAddress } from "./address-input";
+import { MobileBottomBar } from "./components/mobile-bottom-bar";
+import { SummaryCard } from "./components/summary-card";
+import {
+  type CreateSlotFormValues,
+  createSlotSchema,
+  defaultValues,
+  percentToBps,
+  timeDenominations,
+  toSeconds,
+} from "./schema";
 
-const factoryAbi = [
-  {
-    type: "function", name: "createSlot",
-    inputs: [
-      { name: "recipient", type: "address" },
-      { name: "currency", type: "address" },
-      { name: "config", type: "tuple", components: [
-        { name: "mutableTax", type: "bool" },
-        { name: "mutableModule", type: "bool" },
-        { name: "manager", type: "address" },
-      ]},
-      { name: "initParams", type: "tuple", components: [
-        { name: "taxPercentage", type: "uint256" },
-        { name: "module", type: "address" },
-        { name: "liquidationBountyBps", type: "uint256" },
-        { name: "minDepositSeconds", type: "uint256" },
-      ]},
-    ],
-    outputs: [{ name: "slot", type: "address" }],
-    stateMutability: "nonpayable",
-  },
-  {
-    type: "function", name: "predictSlotAddress",
-    inputs: [
-      { name: "recipient", type: "address" },
-      { name: "currency", type: "address" },
-      { name: "taxPercentage", type: "uint256" },
-      { name: "module", type: "address" },
-      { name: "config", type: "tuple", components: [
-        { name: "mutableTax", type: "bool" },
-        { name: "mutableModule", type: "bool" },
-        { name: "manager", type: "address" },
-      ]},
-    ],
-    outputs: [{ name: "", type: "address" }],
-    stateMutability: "view",
-  },
-] as const;
+const CHAIN_ID = baseSepolia.id;
+const FACTORY_ADDRESS = slotFactoryAddress[CHAIN_ID];
 
 const USDC_ADDRESS = "0x036CbD53842c5426634e7929541eC2318f3dCF7e";
-
-function useResolveAddress(input: string): { resolved: string; isEns: boolean; isResolving: boolean; ensName: string | null } {
-  const isEns = input.endsWith(".eth") || input.endsWith(".xyz") || input.endsWith(".id");
-  let ensName: string | undefined;
-  try {
-    ensName = isEns ? normalize(input) : undefined;
-  } catch {
-    ensName = undefined;
-  }
-  const { data: ensAddress, isLoading } = useEnsAddress({
-    name: ensName,
-    chainId: mainnet.id,
-    query: { enabled: !!ensName },
-  });
-  return {
-    resolved: isEns && ensAddress ? ensAddress : input,
-    isEns,
-    isResolving: isEns && isLoading,
-    ensName: isEns && ensAddress ? input : null,
-  };
-}
-
-function AddressInput({
-  value, onChange, placeholder, hint,
-}: {
-  value: string; onChange: (v: string) => void; placeholder?: string; hint?: string;
-}) {
-  const { resolved, isEns, isResolving, ensName } = useResolveAddress(value);
-  const isValid = !value || isAddress(resolved);
-  return (
-    <div className="space-y-1">
-      <input
-        type="text"
-        placeholder={placeholder ?? "0x... or ENS name"}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className={`w-full border-2 px-3 py-2 font-mono text-xs ${
-          value && !isValid && !isResolving ? "border-red-500" : "border-black"
-        }`}
-      />
-      {isResolving && (
-        <p className="font-mono text-[10px] text-blue-500">Resolving {value}...</p>
-      )}
-      {ensName && isAddress(resolved) && (
-        <p className="font-mono text-[10px] text-green-600">
-          ✓ {ensName} → {resolved.slice(0, 6)}...{resolved.slice(-4)}
-        </p>
-      )}
-      {hint && !isResolving && !ensName && (
-        <p className="font-mono text-[10px] text-gray-400">{hint}</p>
-      )}
-    </div>
-  );
-}
 
 export default function CreatePage() {
   const router = useRouter();
   const { address, isConnected, chainId: walletChainId } = useAccount();
   const { switchChain } = useSwitchChain();
   const { writeContract, data: hash, isPending } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+  const [slotCount, setSlotCount] = useState(1);
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
+    hash,
+  });
 
-  const [recipient, setRecipient] = useState("");
-  const [currency, setCurrency] = useState(USDC_ADDRESS);
-  const [taxPercentage, setTaxPercentage] = useState("1");
-  const [module, setModule] = useState("");
-  const [manager, setManager] = useState("");
-  const [mutableTax, setMutableTax] = useState(false);
-  const [mutableModule, setMutableModule] = useState(false);
-  const [liquidationBountyBps, setLiquidationBountyBps] = useState("500");
-  const [minDepositSeconds, setMinDepositSeconds] = useState("86400");
-  const [predictedAddress, setPredictedAddress] = useState<string | null>(null);
+  // ── Form ──
+  const form = useForm<CreateSlotFormValues>({
+    resolver: zodResolver(createSlotSchema),
+    defaultValues,
+    mode: "onChange",
+  });
 
-  const needsManager = mutableTax || mutableModule;
+  const watchedRecipientMode = form.watch("recipientMode");
+  const watchedRecipient = form.watch("recipient");
+  const watchedCustomCurrency = form.watch("customCurrency");
+  const watchedModule = form.watch("module");
+  const watchedManager = form.watch("manager");
+  const watchedCurrencyMode = form.watch("currencyMode");
+  const watchedTaxPercentage = form.watch("taxPercentage");
+  const watchedBounty = form.watch("liquidationBountyPercent");
+  const watchedMinDepositValue = form.watch("minDepositValue");
+  const watchedMinDepositUnit = form.watch("minDepositUnit");
+  const watchedMutableTax = form.watch("mutableTax");
+  const watchedMutableModule = form.watch("mutableModule");
 
-  const recipientResolved = useResolveAddress(recipient);
-  const currencyResolved = useResolveAddress(currency);
-  const managerResolved = useResolveAddress(manager);
-  const moduleResolved = useResolveAddress(module);
+  const needsManager = watchedMutableTax || watchedMutableModule;
 
-  const effectiveRecipient = recipientResolved.resolved || (address ?? "");
-  const effectiveManager = needsManager ? managerResolved.resolved : zeroAddress;
-  const effectiveCurrency = currencyResolved.resolved || currency;
-  const effectiveModule = moduleResolved.resolved || "";
+  // ── ENS resolution ──
+  const recipientResolved = useResolveAddress(watchedRecipient);
+  const currencyResolved = useResolveAddress(watchedCustomCurrency);
+  const moduleResolved = useResolveAddress(watchedModule);
+  const managerResolved = useResolveAddress(watchedManager);
 
+  const effectiveRecipient =
+    watchedRecipientMode === "self"
+      ? (address ?? "")
+      : recipientResolved.resolved || "";
   const wrongChain = walletChainId !== CHAIN_ID;
   const busy = isPending || isConfirming;
-
-  // Predict address
-  const configTuple = {
-    mutableTax,
-    mutableModule,
-    manager: (isAddress(effectiveManager) ? effectiveManager : zeroAddress) as Address,
-  };
-
-  const canPredict = isAddress(effectiveRecipient) && isAddress(effectiveCurrency);
-
-  const { data: predicted, refetch: refetchPredict } = useReadContract({
-    address: FACTORY_ADDRESS,
-    abi: factoryAbi,
-    functionName: "predictSlotAddress",
-    args: [
-      effectiveRecipient as Address,
-      effectiveCurrency as Address,
-      BigInt(Math.round(Number(taxPercentage) * 100)),
-      (isAddress(effectiveModule) ? effectiveModule : zeroAddress) as Address,
-      configTuple,
-    ],
-    query: { enabled: false },
-  });
+  const anyResolving =
+    recipientResolved.isResolving ||
+    currencyResolved.isResolving ||
+    moduleResolved.isResolving ||
+    managerResolved.isResolving;
 
   useEffect(() => {
     if (isSuccess) {
@@ -177,215 +107,506 @@ export default function CreatePage() {
     }
   }, [isSuccess, router]);
 
-  function handlePredict() {
-    if (canPredict) refetchPredict().then((r) => {
-      if (r.data) setPredictedAddress(r.data as string);
-    });
-  }
+  function onSubmit(data: CreateSlotFormValues) {
+    const recipient =
+      data.recipientMode === "self"
+        ? (address ?? "")
+        : recipientResolved.resolved || data.recipient;
+    const currency =
+      data.currencyMode === "usdc"
+        ? USDC_ADDRESS
+        : currencyResolved.resolved || data.customCurrency;
+    const module = moduleResolved.resolved || "";
+    const manager = needsManager ? managerResolved.resolved : zeroAddress;
 
-  function handleCreate() {
-    if (!isAddress(effectiveRecipient) || !isAddress(effectiveCurrency)) return;
-    writeContract({
-      address: FACTORY_ADDRESS,
-      abi: factoryAbi,
-      functionName: "createSlot",
-      args: [
-        effectiveRecipient as Address,
-        effectiveCurrency as Address,
-        configTuple,
-        {
-          taxPercentage: BigInt(Math.round(Number(taxPercentage) * 100)),
-          module: (isAddress(effectiveModule) ? effectiveModule : zeroAddress) as Address,
-          liquidationBountyBps: BigInt(liquidationBountyBps || "0"),
-          minDepositSeconds: BigInt(minDepositSeconds || "0"),
-        },
-      ],
-    });
+    if (!isAddress(recipient as string) || !isAddress(currency as string))
+      return;
+
+    const config = {
+      mutableTax: data.mutableTax,
+      mutableModule: data.mutableModule,
+      manager: (isAddress(manager as string)
+        ? manager
+        : zeroAddress) as Address,
+    };
+    const initParams = {
+      taxPercentage: BigInt(Math.round(Number(data.taxPercentage) * 100)),
+      module: (isAddress(module as string)
+        ? module
+        : zeroAddress) as Address,
+      liquidationBountyBps: percentToBps(data.liquidationBountyPercent),
+      minDepositSeconds: toSeconds(
+        data.minDepositValue,
+        data.minDepositUnit,
+      ),
+    };
+
+    if (slotCount === 1) {
+      writeContract({
+        address: FACTORY_ADDRESS,
+        abi: slotsFactoryAbi,
+        functionName: "createSlot",
+        args: [recipient as Address, currency as Address, config, initParams],
+      });
+    } else {
+      writeContract({
+        address: FACTORY_ADDRESS,
+        abi: slotsFactoryAbi,
+        functionName: "createSlots",
+        args: [recipient as Address, currency as Address, config, initParams, BigInt(slotCount)],
+      });
+    }
   }
 
   return (
     <div className="min-h-screen bg-white">
+      {/* Header */}
       <div className="border-b-4 border-black bg-linear-to-br from-gray-50 to-white">
-        <div className="max-w-3xl mx-auto px-6 py-12">
-          <h1 className="text-4xl font-black tracking-tighter uppercase mb-2">Create Slot</h1>
-          <p className="text-gray-500 font-mono text-sm">Deploy a new Harberger tax slot on Base Sepolia</p>
+        <div className="max-w-5xl mx-auto px-6 py-12">
+          <h1 className="text-4xl font-black tracking-tighter uppercase mb-2">
+            Create Slot
+          </h1>
+          <p className="text-gray-500 font-mono text-sm">
+            Deploy a new Harberger tax slot on Base Sepolia
+          </p>
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-6 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 items-start">
-          {/* Left: Form */}
-          <div className="space-y-6">
-            {/* Recipient */}
-            <div className="border-2 border-black">
+      {/* Form + Sidebar */}
+      <div className="max-w-5xl mx-auto px-6 py-8 pb-24 lg:pb-8">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex gap-6 items-start">
+            {/* Left: Form */}
+            <div className="flex-1 min-w-0 border-2 border-black">
+              {/* Card header */}
               <div className="bg-gray-50 border-b-2 border-black p-4">
-                <h2 className="text-sm font-bold uppercase tracking-tight">Recipient</h2>
+                <h2 className="text-sm font-bold uppercase tracking-tight">
+                  Configure Your Slot
+                </h2>
               </div>
-              <div className="p-4 space-y-3">
-                <AddressInput
-                  value={recipient}
-                  onChange={setRecipient}
-                  placeholder={address ?? "0x... or vitalik.eth"}
-                  hint="Tax revenue goes to this address. Leave empty to use your wallet."
-                />
-              </div>
-            </div>
 
-            {/* Currency */}
-            <div className="border-2 border-black">
-              <div className="bg-gray-50 border-b-2 border-black p-4">
-                <h2 className="text-sm font-bold uppercase tracking-tight">Currency</h2>
-              </div>
-              <div className="p-4 space-y-3">
-                <div className="flex gap-2">
-                  <button onClick={() => setCurrency(USDC_ADDRESS)}
-                    className={`font-mono text-xs px-3 py-1.5 border-2 border-black ${currency === USDC_ADDRESS ? "bg-black text-white" : ""}`}>
-                    USDC
-                  </button>
-                  <button onClick={() => setCurrency("")}
-                    className={`font-mono text-xs px-3 py-1.5 border-2 border-black ${currency !== USDC_ADDRESS ? "bg-black text-white" : ""}`}>
-                    Custom
-                  </button>
-                </div>
-                {currency !== USDC_ADDRESS && (
-                  <AddressInput
-                    value={currency}
-                    onChange={setCurrency}
-                    placeholder="0x... ERC20 address or ENS"
+              <div className="p-6 space-y-6">
+                {/* ── Recipient ── */}
+                <div>
+                  <FormField
+                    control={form.control}
+                    name="recipientMode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="font-mono text-[10px] text-gray-500 uppercase tracking-wider">
+                          Recipient
+                        </FormLabel>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              field.onChange("self");
+                              form.setValue("recipient", "");
+                            }}
+                            className={`font-mono text-xs px-3 py-1.5 border-2 border-black transition-colors ${
+                              field.value === "self"
+                                ? "bg-black text-white"
+                                : ""
+                            }`}
+                          >
+                            My Address
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => field.onChange("custom")}
+                            className={`font-mono text-xs px-3 py-1.5 border-2 border-black transition-colors ${
+                              field.value === "custom"
+                                ? "bg-black text-white"
+                                : ""
+                            }`}
+                          >
+                            Custom
+                          </button>
+                          <button
+                            type="button"
+                            disabled
+                            className="font-mono text-xs px-3 py-1.5 border-2 border-black opacity-30 cursor-not-allowed"
+                          >
+                            Group
+                          </button>
+                        </div>
+                      </FormItem>
+                    )}
                   />
-                )}
-              </div>
-            </div>
 
-            {/* Slot Parameters */}
-            <div className="border-2 border-black">
-              <div className="bg-gray-50 border-b-2 border-black p-4">
-                <h2 className="text-sm font-bold uppercase tracking-tight">Slot Parameters</h2>
-              </div>
-              <div className="p-4 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="font-mono text-[10px] text-gray-500 uppercase block mb-1">Tax Rate (%/mo)</label>
-                    <input type="text" value={taxPercentage} onChange={(e) => setTaxPercentage(e.target.value)}
-                      className="w-full border-2 border-black px-3 py-1.5 font-mono text-xs" />
-                  </div>
-                  <div>
-                    <label className="font-mono text-[10px] text-gray-500 uppercase block mb-1">Liq. Bounty (bps)</label>
-                    <input type="text" value={liquidationBountyBps} onChange={(e) => setLiquidationBountyBps(e.target.value)}
-                      className="w-full border-2 border-black px-3 py-1.5 font-mono text-xs" />
-                  </div>
-                </div>
-                <div>
-                  <label className="font-mono text-[10px] text-gray-500 uppercase block mb-1">Min Deposit (seconds)</label>
-                  <input type="text" value={minDepositSeconds} onChange={(e) => setMinDepositSeconds(e.target.value)}
-                    className="w-full border-2 border-black px-3 py-1.5 font-mono text-xs" />
-                </div>
-                <div>
-                  <label className="font-mono text-[10px] text-gray-500 uppercase block mb-1">Module (optional)</label>
-                  <AddressInput value={module} onChange={setModule} placeholder="0x... or ENS (optional)" />
-                </div>
-              </div>
-            </div>
+                  {watchedRecipientMode === "self" && address && (
+                    <p className="mt-2 font-mono text-[10px] text-gray-400">
+                      Tax revenue goes to {truncateAddress(address)}
+                    </p>
+                  )}
+                  {watchedRecipientMode === "self" && !address && (
+                    <p className="mt-2 font-mono text-[10px] text-gray-400">
+                      Connect your wallet to use your address.
+                    </p>
+                  )}
 
-            {/* Mutability */}
-            <div className="border-2 border-black">
-              <div className="bg-gray-50 border-b-2 border-black p-4">
-                <h2 className="text-sm font-bold uppercase tracking-tight">Mutability & Manager</h2>
-              </div>
-              <div className="p-4 space-y-4">
-                <div className="flex gap-4">
-                  <label className="flex items-center gap-2 font-mono text-xs cursor-pointer">
-                    <input type="checkbox" checked={mutableTax} onChange={(e) => setMutableTax(e.target.checked)}
-                      className="accent-black w-4 h-4" />
-                    Mutable Tax
-                  </label>
-                  <label className="flex items-center gap-2 font-mono text-xs cursor-pointer">
-                    <input type="checkbox" checked={mutableModule} onChange={(e) => setMutableModule(e.target.checked)}
-                      className="accent-black w-4 h-4" />
-                    Mutable Module
-                  </label>
-                </div>
-                {needsManager && (
-                  <div>
-                    <label className="font-mono text-[10px] text-gray-500 uppercase block mb-1">Manager Address (required)</label>
-                    <AddressInput value={manager} onChange={setManager} placeholder="0x... or ENS name" />
-                  </div>
-                )}
-                {!needsManager && (
-                  <p className="font-mono text-[10px] text-gray-400">No manager needed when both flags are off.</p>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Right: Checkout */}
-          <div className="lg:sticky lg:top-6">
-            <div className="border-2 border-black">
-              <div className="bg-gray-50 border-b-2 border-black p-4">
-                <h2 className="text-sm font-bold uppercase tracking-tight">Checkout</h2>
-              </div>
-              <div className="p-5 space-y-4">
-                <div className="space-y-2 font-mono text-xs">
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Recipient</span>
-                    <span className="font-bold truncate max-w-[160px]">
-                      {isAddress(effectiveRecipient) ? truncateAddress(effectiveRecipient) : "—"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Tax Rate</span>
-                    <span className="font-bold">{taxPercentage}%/mo</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Liq. Bounty</span>
-                    <span className="font-bold">{Number(liquidationBountyBps) / 100}%</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Mutable</span>
-                    <span className="font-bold">
-                      {mutableTax && mutableModule ? "Tax + Module" : mutableTax ? "Tax" : mutableModule ? "Module" : "None"}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Predict */}
-                {predictedAddress && (
-                  <div className="border-2 border-green-500 bg-green-50 px-3 py-2">
-                    <p className="font-mono text-[10px] text-green-700 font-bold">PREDICTED ADDRESS</p>
-                    <p className="font-mono text-xs text-green-800 break-all mt-1">{predictedAddress}</p>
-                  </div>
-                )}
-
-                <button onClick={handlePredict} disabled={!canPredict}
-                  className="w-full border-2 border-black px-4 py-2 font-mono text-xs uppercase tracking-widest hover:bg-gray-100 disabled:opacity-50">
-                  PREDICT ADDRESS
-                </button>
-
-                <div className="border-t-2 border-black pt-3">
-                  {!isConnected ? (
-                    <p className="font-mono text-xs text-gray-400 text-center py-2">CONNECT WALLET</p>
-                  ) : wrongChain ? (
-                    <button onClick={() => switchChain({ chainId: CHAIN_ID })}
-                      className="w-full font-mono text-xs bg-red-900 border-2 border-red-500 text-red-300 px-4 py-3 hover:bg-red-800 uppercase tracking-widest">
-                      Switch to Base Sepolia
-                    </button>
-                  ) : isSuccess ? (
-                    <div className="text-center space-y-1 py-2">
-                      <p className="font-mono text-sm text-green-600 font-bold">✓ SLOT CREATED</p>
-                      <p className="font-mono text-[10px] text-gray-500">Redirecting...</p>
+                  {watchedRecipientMode === "custom" && (
+                    <div className="mt-3">
+                      <FormField
+                        control={form.control}
+                        name="recipient"
+                        render={({ field, fieldState }) => (
+                          <FormItem>
+                            <AddressInput
+                              value={field.value}
+                              onChange={field.onChange}
+                              onBlur={field.onBlur}
+                              placeholder="0x… or vitalik.eth"
+                              hint="Supports ENS names (.eth, .xyz, .id)"
+                              error={fieldState.error?.message}
+                            />
+                          </FormItem>
+                        )}
+                      />
                     </div>
-                  ) : (
-                    <button disabled={busy || !isAddress(effectiveRecipient) || !isAddress(effectiveCurrency)}
-                      onClick={handleCreate}
-                      className="w-full border-4 border-black bg-black text-white px-4 py-3 font-mono text-xs uppercase tracking-widest font-bold hover:bg-white hover:text-black transition-colors disabled:opacity-50">
-                      {isPending ? "CONFIRM IN WALLET..." : isConfirming ? "CONFIRMING..." : "CREATE SLOT"}
-                    </button>
                   )}
                 </div>
+
+                <Separator className="bg-black! h-0.5" />
+
+                {/* ── Currency ── */}
+                <FormField
+                  control={form.control}
+                  name="currencyMode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-mono text-[10px] text-gray-500 uppercase tracking-wider">
+                        Currency
+                      </FormLabel>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => field.onChange("usdc")}
+                          className={`font-mono text-xs px-3 py-1.5 border-2 border-black transition-colors ${
+                            field.value === "usdc" ? "bg-black text-white" : ""
+                          }`}
+                        >
+                          USDC
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => field.onChange("custom")}
+                          className={`font-mono text-xs px-3 py-1.5 border-2 border-black transition-colors ${
+                            field.value === "custom"
+                              ? "bg-black text-white"
+                              : ""
+                          }`}
+                        >
+                          Custom
+                        </button>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+
+                {watchedCurrencyMode === "custom" && (
+                  <FormField
+                    control={form.control}
+                    name="customCurrency"
+                    render={({ field, fieldState }) => (
+                      <FormItem>
+                        <AddressInput
+                          value={field.value}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          placeholder="0x… ERC-20 address or ENS"
+                          error={fieldState.error?.message}
+                        />
+                      </FormItem>
+                    )}
+                  />
+                )}
+
+                <Separator className="bg-black! h-0.5" />
+
+                {/* ── Slot Parameters ── */}
+                <div>
+                  <p className="font-mono text-[10px] text-gray-500 uppercase tracking-wider mb-4">
+                    Slot Parameters
+                  </p>
+
+                  {/* Tax Rate — Slider */}
+                  <FormField
+                    control={form.control}
+                    name="taxPercentage"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex items-center justify-between">
+                          <FormLabel className="font-mono text-[10px] text-gray-500 uppercase tracking-wider">
+                            Tax Rate
+                          </FormLabel>
+                          <span className="font-mono text-xs font-bold">
+                            {parseFloat(field.value).toFixed(1) || "0"}%/mo
+                          </span>
+                        </div>
+                        <input
+                          type="range"
+                          min="0"
+                          max="100"
+                          step="0.5"
+                          value={Number(field.value) || 0}
+                          onChange={(e) => field.onChange(e.target.value)}
+                          className="w-full h-2 appearance-none bg-gray-200 cursor-pointer accent-black [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-black [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:bg-black [&::-moz-range-thumb]:border-0"
+                        />
+                        <div className="flex justify-between font-mono text-[9px] text-gray-400">
+                          <span>0%</span>
+                          <span>25%</span>
+                          <span>50%</span>
+                          <span>75%</span>
+                          <span>100%</span>
+                        </div>
+                        {(() => {
+                          const v = Number(field.value) || 0;
+                          const isLow = v <= 20;
+                          const isHigh = v >= 30;
+                          return (
+                            <div className="flex justify-between mt-1.5 font-mono text-[9px] leading-tight gap-4">
+                              <span
+                                className={
+                                  isLow
+                                    ? "font-bold text-gray-700"
+                                    : "text-gray-400"
+                                }
+                              >
+                                Predictability · low churn · squat risk
+                              </span>
+                              <span
+                                className={`text-right ${isHigh ? "font-bold text-gray-700" : "text-gray-400"}`}
+                              >
+                                Allocative efficiency · anti-squat · volatility
+                              </span>
+                            </div>
+                          );
+                        })()}
+                        <FormMessage className="font-mono text-[10px]" />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Min Deposit Time */}
+                  <div className="mt-4">
+                    <FormField
+                      control={form.control}
+                      name="minDepositValue"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="font-mono text-[10px] text-gray-500 uppercase tracking-wider">
+                            Min Deposit Time
+                          </FormLabel>
+                          <div className="flex gap-0">
+                            <input
+                              {...field}
+                              type="text"
+                              inputMode="decimal"
+                              className="flex-1 border-2 border-r-0 border-black px-3 py-2 font-mono text-xs"
+                            />
+                            <FormField
+                              control={form.control}
+                              name="minDepositUnit"
+                              render={({ field: selectField }) => (
+                                <Select
+                                  value={selectField.value}
+                                  onValueChange={selectField.onChange}
+                                >
+                                  <SelectTrigger className="w-25 border-2 border-black font-mono text-xs h-auto py-2">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent className="border-2 border-black">
+                                    {timeDenominations.map((unit) => (
+                                      <SelectItem
+                                        key={unit}
+                                        value={unit}
+                                        className="font-mono text-xs"
+                                      >
+                                        {unit.charAt(0).toUpperCase() +
+                                          unit.slice(1)}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              )}
+                            />
+                          </div>
+                          <FormMessage className="font-mono text-[10px]" />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {/* Module */}
+                  <div className="mt-4">
+                    <FormField
+                      control={form.control}
+                      name="module"
+                      render={({ field, fieldState }) => (
+                        <FormItem>
+                          <FormLabel className="font-mono text-[10px] text-gray-500 uppercase tracking-wider">
+                            Module (optional)
+                          </FormLabel>
+                          <AddressInput
+                            value={field.value}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            placeholder="0x… or ENS (optional)"
+                            error={fieldState.error?.message}
+                          />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                <Separator className="bg-black! h-0.5" />
+
+                {/* ── Mutability & Manager ── */}
+                <div>
+                  <p className="font-mono text-[10px] text-gray-500 uppercase tracking-wider mb-4">
+                    Mutability & Manager
+                  </p>
+
+                  <div className="flex gap-6">
+                    <FormField
+                      control={form.control}
+                      name="mutableTax"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center gap-2">
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            className="border-2 border-black data-[state=checked]:bg-black"
+                          />
+                          <FormLabel className="font-mono text-xs cursor-pointer mt-0!">
+                            Mutable Tax
+                          </FormLabel>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="mutableModule"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center gap-2">
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            className="border-2 border-black data-[state=checked]:bg-black"
+                          />
+                          <FormLabel className="font-mono text-xs cursor-pointer mt-0!">
+                            Mutable Module
+                          </FormLabel>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {needsManager && (
+                    <div className="mt-4">
+                      <FormField
+                        control={form.control}
+                        name="manager"
+                        render={({ field, fieldState }) => (
+                          <FormItem>
+                            <FormLabel className="font-mono text-[10px] text-gray-500 uppercase tracking-wider">
+                              Manager Address (required)
+                            </FormLabel>
+                            <AddressInput
+                              value={field.value}
+                              onChange={field.onChange}
+                              onBlur={field.onBlur}
+                              placeholder="0x… or ENS name"
+                              error={fieldState.error?.message}
+                            />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  )}
+
+                  {!needsManager && (
+                    <p className="font-mono text-[10px] text-gray-400 mt-2">
+                      No manager needed when both flags are off.
+                    </p>
+                  )}
+                </div>
+
+                <Separator className="bg-black! h-0.5" />
+
+                {/* ── Liquidation Bounty ── */}
+                <FormField
+                  control={form.control}
+                  name="liquidationBountyPercent"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-mono text-[10px] text-gray-500 uppercase tracking-wider">
+                        Liquidation Bounty
+                      </FormLabel>
+                      <div className="relative">
+                        <input
+                          {...field}
+                          type="text"
+                          inputMode="decimal"
+                          className="w-full border-2 border-black px-3 py-2 pr-8 font-mono text-xs"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-xs text-gray-400">
+                          %
+                        </span>
+                      </div>
+                      <FormDescription className="font-mono text-[10px] text-gray-400">
+                        Reward for liquidators
+                      </FormDescription>
+                      <FormMessage className="font-mono text-[10px]" />
+                    </FormItem>
+                  )}
+                />
+
               </div>
             </div>
-          </div>
-        </div>
+
+            <SummaryCard
+              slotCount={slotCount}
+              setSlotCount={setSlotCount}
+              effectiveRecipient={effectiveRecipient}
+              address={address}
+              watchedTaxPercentage={watchedTaxPercentage}
+              watchedBounty={watchedBounty}
+              watchedMinDepositValue={watchedMinDepositValue}
+              watchedMinDepositUnit={watchedMinDepositUnit}
+              watchedMutableTax={watchedMutableTax}
+              watchedMutableModule={watchedMutableModule}
+              isConnected={isConnected}
+              wrongChain={wrongChain}
+              isSuccess={isSuccess}
+              isPending={isPending}
+              isConfirming={isConfirming}
+              busy={busy}
+              anyResolving={anyResolving}
+              isFormValid={form.formState.isValid}
+              switchChain={switchChain}
+              chainId={CHAIN_ID}
+            />
+
+            <MobileBottomBar
+              slotCount={slotCount}
+              setSlotCount={setSlotCount}
+              isConnected={isConnected}
+              wrongChain={wrongChain}
+              isSuccess={isSuccess}
+              isPending={isPending}
+              isConfirming={isConfirming}
+              busy={busy}
+              anyResolving={anyResolving}
+              isFormValid={form.formState.isValid}
+              switchChain={switchChain}
+              chainId={CHAIN_ID}
+            />
+          </form>
+        </Form>
       </div>
     </div>
   );
