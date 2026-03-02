@@ -1,0 +1,85 @@
+"use client";
+
+import { forwardRef } from "react";
+import { isAddress } from "viem";
+import { normalize } from "viem/ens";
+import { useEnsAddress } from "wagmi";
+import { mainnet } from "wagmi/chains";
+import { cn } from "@/lib/utils";
+
+export function useResolveAddress(input: string) {
+  const isEns =
+    input.endsWith(".eth") || input.endsWith(".xyz") || input.endsWith(".id");
+  let ensName: string | undefined;
+  try {
+    ensName = isEns ? normalize(input) : undefined;
+  } catch {
+    ensName = undefined;
+  }
+  const { data: ensAddress, isLoading } = useEnsAddress({
+    name: ensName,
+    chainId: mainnet.id,
+    query: { enabled: !!ensName },
+  });
+  return {
+    resolved: isEns && ensAddress ? ensAddress : input,
+    isEns,
+    isResolving: isEns && isLoading,
+    ensName: isEns && ensAddress ? input : null,
+  };
+}
+
+interface AddressInputProps {
+  value: string;
+  onChange: (value: string) => void;
+  onBlur?: () => void;
+  placeholder?: string;
+  hint?: string;
+  error?: string;
+  name?: string;
+}
+
+export const AddressInput = forwardRef<HTMLInputElement, AddressInputProps>(
+  ({ value, onChange, onBlur, placeholder, hint, error, name }, ref) => {
+    const { resolved, isResolving, ensName } = useResolveAddress(value);
+    const isValid = !value || isAddress(resolved);
+
+    return (
+      <div className="space-y-1">
+        <input
+          ref={ref}
+          name={name}
+          type="text"
+          placeholder={placeholder ?? "0x… or vitalik.eth"}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onBlur={onBlur}
+          className={cn(
+            "w-full border-2 px-3 py-2 font-mono text-xs bg-white",
+            value && !isValid && !isResolving
+              ? "border-red-500"
+              : "border-black",
+            error && "border-red-500",
+          )}
+        />
+        {isResolving && (
+          <p className="font-mono text-[10px] text-blue-500">
+            Resolving {value}…
+          </p>
+        )}
+        {ensName && isAddress(resolved) && (
+          <p className="font-mono text-[10px] text-green-600">
+            {ensName} → {resolved.slice(0, 6)}…{resolved.slice(-4)}
+          </p>
+        )}
+        {error && (
+          <p className="font-mono text-[10px] text-red-500">{error}</p>
+        )}
+        {hint && !isResolving && !ensName && !error && (
+          <p className="font-mono text-[10px] text-gray-400">{hint}</p>
+        )}
+      </div>
+    );
+  },
+);
+AddressInput.displayName = "AddressInput";

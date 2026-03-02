@@ -1,5 +1,6 @@
 "use client";
 
+import { CHAINS, DEFAULT_CHAIN } from "@0xslots/contracts";
 import type { SlotsChain } from "@0xslots/sdk";
 import {
   createContext,
@@ -9,41 +10,32 @@ import {
   useState,
 } from "react";
 import { useSwitchChain } from "wagmi";
-import { arbitrum, baseSepolia } from "wagmi/chains";
-import { parseChain } from "@/lib/config";
 
 interface ChainContextValue {
   chainId: SlotsChain;
-  chainKey: string;
-  setChain: (key: string) => void;
+  setChain: (chainId: number) => void;
 }
 
 const ChainContext = createContext<ChainContextValue | null>(null);
 
-const WALLET_CHAIN_MAP = {
-  arbitrum: arbitrum.id,
-  "base-sepolia": baseSepolia.id,
-} as const;
-
 export function ChainProvider({ children }: { children: ReactNode }) {
-  const [chainKey, setChainKey] = useState("base-sepolia");
-  const chainId = parseChain(chainKey);
+  const [chainId, setChainId] = useState<SlotsChain>(
+    DEFAULT_CHAIN.id as SlotsChain,
+  );
   const { mutate: switchWalletChain } = useSwitchChain();
 
   const setChain = useCallback(
-    (key: string) => {
-      setChainKey(key);
-      if (key in WALLET_CHAIN_MAP) {
-        switchWalletChain({
-          chainId: WALLET_CHAIN_MAP[key as keyof typeof WALLET_CHAIN_MAP],
-        });
+    (id: number) => {
+      setChainId(id as SlotsChain);
+      if (CHAINS.some((c) => c.id === id)) {
+        switchWalletChain({ chainId: id });
       }
     },
     [switchWalletChain],
   );
 
   return (
-    <ChainContext.Provider value={{ chainId, chainKey, setChain }}>
+    <ChainContext.Provider value={{ chainId, setChain }}>
       {children}
     </ChainContext.Provider>
   );

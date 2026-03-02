@@ -27,30 +27,17 @@ export const slotsAbi = [
   },
   {
     "type": "function",
-    "name": "activateSlot",
-    "inputs": [
-      {
-        "name": "slotId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
     "name": "buy",
     "inputs": [
-      {
-        "name": "slotId",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
       {
         "name": "depositAmount",
         "type": "uint256",
         "internalType": "uint256"
+      },
+      {
+        "name": "selfAssessedPrice",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "outputs": [],
@@ -58,343 +45,88 @@ export const slotsAbi = [
   },
   {
     "type": "function",
-    "name": "cancelTaxRateUpdate",
-    "inputs": [
-      {
-        "name": "slotId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
+    "name": "cancelPendingUpdates",
+    "inputs": [],
     "outputs": [],
     "stateMutability": "nonpayable"
   },
   {
     "type": "function",
     "name": "collect",
-    "inputs": [
-      {
-        "name": "slotId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
+    "inputs": [],
     "outputs": [],
     "stateMutability": "nonpayable"
   },
   {
     "type": "function",
-    "name": "collectRange",
-    "inputs": [
-      {
-        "name": "fromId",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "toId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "confirmTaxRateUpdate",
-    "inputs": [
-      {
-        "name": "slotId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "deactivateSlot",
-    "inputs": [
-      {
-        "name": "slotId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "deposit",
-    "inputs": [
-      {
-        "name": "slotId",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "amount",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "escrows",
-    "inputs": [
+    "name": "collectedTax",
+    "inputs": [],
+    "outputs": [
       {
         "name": "",
         "type": "uint256",
         "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "deposit",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "lastSettled",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "collectedTax",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "pendingTaxUpdate",
-        "type": "tuple",
-        "internalType": "struct TaxUpdate",
-        "components": [
-          {
-            "name": "newRate",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "proposedAt",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "status",
-            "type": "uint8",
-            "internalType": "enum TaxUpdateStatus"
-          }
-        ]
       }
     ],
     "stateMutability": "view"
   },
   {
     "type": "function",
-    "name": "getEscrow",
-    "inputs": [
-      {
-        "name": "slotId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "tuple",
-        "internalType": "struct SlotEscrow",
-        "components": [
-          {
-            "name": "deposit",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "lastSettled",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "collectedTax",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "pendingTaxUpdate",
-            "type": "tuple",
-            "internalType": "struct TaxUpdate",
-            "components": [
-              {
-                "name": "newRate",
-                "type": "uint256",
-                "internalType": "uint256"
-              },
-              {
-                "name": "proposedAt",
-                "type": "uint256",
-                "internalType": "uint256"
-              },
-              {
-                "name": "status",
-                "type": "uint8",
-                "internalType": "enum TaxUpdateStatus"
-              }
-            ]
-          }
-        ]
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "getModule",
-    "inputs": [
-      {
-        "name": "slotId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "getOccupant",
-    "inputs": [
-      {
-        "name": "slotId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "getPendingTaxUpdate",
-    "inputs": [
-      {
-        "name": "slotId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "",
-        "type": "uint8",
-        "internalType": "enum TaxUpdateStatus"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "getSlot",
-    "inputs": [
-      {
-        "name": "slotId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "tuple",
-        "internalType": "struct Slot",
-        "components": [
-          {
-            "name": "currency",
-            "type": "address",
-            "internalType": "contract IERC20"
-          },
-          {
-            "name": "occupant",
-            "type": "address",
-            "internalType": "address"
-          },
-          {
-            "name": "basePrice",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "price",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "active",
-            "type": "bool",
-            "internalType": "bool"
-          },
-          {
-            "name": "taxPercentage",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "maxTaxPercentage",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "minTaxUpdatePeriod",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "module",
-            "type": "address",
-            "internalType": "address"
-          }
-        ]
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "hub",
+    "name": "currency",
     "inputs": [],
     "outputs": [
       {
         "name": "",
         "type": "address",
-        "internalType": "contract SlotsHub"
+        "internalType": "contract IERC20"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "deposit",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getPendingUpdate",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct PendingUpdate",
+        "components": [
+          {
+            "name": "newTaxPercentage",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "newModule",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "hasTaxUpdate",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "hasModuleUpdate",
+            "type": "bool",
+            "internalType": "bool"
+          }
+        ]
       }
     ],
     "stateMutability": "view"
@@ -404,42 +136,44 @@ export const slotsAbi = [
     "name": "initialize",
     "inputs": [
       {
-        "name": "_hub",
-        "type": "address",
-        "internalType": "address payable"
-      },
-      {
-        "name": "account",
+        "name": "_recipient",
         "type": "address",
         "internalType": "address"
       },
       {
-        "name": "params",
-        "type": "tuple[]",
-        "internalType": "struct SlotParams[]",
+        "name": "_currency",
+        "type": "address",
+        "internalType": "contract IERC20"
+      },
+      {
+        "name": "_config",
+        "type": "tuple",
+        "internalType": "struct SlotConfig",
         "components": [
           {
-            "name": "currency",
-            "type": "address",
-            "internalType": "contract IERC20"
+            "name": "mutableTax",
+            "type": "bool",
+            "internalType": "bool"
           },
           {
-            "name": "basePrice",
-            "type": "uint256",
-            "internalType": "uint256"
+            "name": "mutableModule",
+            "type": "bool",
+            "internalType": "bool"
           },
+          {
+            "name": "manager",
+            "type": "address",
+            "internalType": "address"
+          }
+        ]
+      },
+      {
+        "name": "_init",
+        "type": "tuple",
+        "internalType": "struct SlotInitParams",
+        "components": [
           {
             "name": "taxPercentage",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "maxTaxPercentage",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "minTaxUpdatePeriod",
             "type": "uint256",
             "internalType": "uint256"
           },
@@ -447,6 +181,16 @@ export const slotsAbi = [
             "name": "module",
             "type": "address",
             "internalType": "address"
+          },
+          {
+            "name": "liquidationBountyBps",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "minDepositSeconds",
+            "type": "uint256",
+            "internalType": "uint256"
           }
         ]
       }
@@ -457,13 +201,7 @@ export const slotsAbi = [
   {
     "type": "function",
     "name": "isInsolvent",
-    "inputs": [
-      {
-        "name": "slotId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
+    "inputs": [],
     "outputs": [
       {
         "name": "",
@@ -475,20 +213,20 @@ export const slotsAbi = [
   },
   {
     "type": "function",
-    "name": "liquidate",
-    "inputs": [
+    "name": "isVacant",
+    "inputs": [],
+    "outputs": [
       {
-        "name": "slotId",
-        "type": "uint256",
-        "internalType": "uint256"
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
       }
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    "stateMutability": "view"
   },
   {
     "type": "function",
-    "name": "nextSlotId",
+    "name": "lastSettled",
     "inputs": [],
     "outputs": [
       {
@@ -501,58 +239,27 @@ export const slotsAbi = [
   },
   {
     "type": "function",
-    "name": "open",
-    "inputs": [
-      {
-        "name": "params",
-        "type": "tuple[]",
-        "internalType": "struct SlotParams[]",
-        "components": [
-          {
-            "name": "currency",
-            "type": "address",
-            "internalType": "contract IERC20"
-          },
-          {
-            "name": "basePrice",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "taxPercentage",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "maxTaxPercentage",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "minTaxUpdatePeriod",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "module",
-            "type": "address",
-            "internalType": "address"
-          }
-        ]
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256[]",
-        "internalType": "uint256[]"
-      }
-    ],
+    "name": "liquidate",
+    "inputs": [],
+    "outputs": [],
     "stateMutability": "nonpayable"
   },
   {
     "type": "function",
-    "name": "owner",
+    "name": "liquidationBountyBps",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "manager",
     "inputs": [],
     "outputs": [
       {
@@ -565,13 +272,127 @@ export const slotsAbi = [
   },
   {
     "type": "function",
-    "name": "proposeTaxRateUpdate",
-    "inputs": [
+    "name": "minDepositSeconds",
+    "inputs": [],
+    "outputs": [
       {
-        "name": "slotId",
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "module",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "mutableModule",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "mutableTax",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "occupant",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "pendingUpdate",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "newTaxPercentage",
         "type": "uint256",
         "internalType": "uint256"
       },
+      {
+        "name": "newModule",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "hasTaxUpdate",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "hasModuleUpdate",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "price",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "proposeModuleUpdate",
+    "inputs": [
+      {
+        "name": "newModule",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "proposeTaxUpdate",
+    "inputs": [
       {
         "name": "newPct",
         "type": "uint256",
@@ -583,20 +404,20 @@ export const slotsAbi = [
   },
   {
     "type": "function",
-    "name": "release",
-    "inputs": [
+    "name": "recipient",
+    "inputs": [],
+    "outputs": [
       {
-        "name": "slotId",
-        "type": "uint256",
-        "internalType": "uint256"
+        "name": "",
+        "type": "address",
+        "internalType": "address"
       }
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    "stateMutability": "view"
   },
   {
     "type": "function",
-    "name": "renounceOwnership",
+    "name": "release",
     "inputs": [],
     "outputs": [],
     "stateMutability": "nonpayable"
@@ -604,13 +425,7 @@ export const slotsAbi = [
   {
     "type": "function",
     "name": "secondsUntilLiquidation",
-    "inputs": [
-      {
-        "name": "slotId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
+    "inputs": [],
     "outputs": [
       {
         "name": "",
@@ -625,11 +440,6 @@ export const slotsAbi = [
     "name": "selfAssess",
     "inputs": [
       {
-        "name": "slotId",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
         "name": "newPrice",
         "type": "uint256",
         "internalType": "uint256"
@@ -640,90 +450,12 @@ export const slotsAbi = [
   },
   {
     "type": "function",
-    "name": "slots",
+    "name": "setLiquidationBounty",
     "inputs": [
       {
-        "name": "",
+        "name": "newBps",
         "type": "uint256",
         "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "currency",
-        "type": "address",
-        "internalType": "contract IERC20"
-      },
-      {
-        "name": "occupant",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "basePrice",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "price",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "active",
-        "type": "bool",
-        "internalType": "bool"
-      },
-      {
-        "name": "taxPercentage",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "maxTaxPercentage",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "minTaxUpdatePeriod",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "module",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "taxOwed",
-    "inputs": [
-      {
-        "name": "slotId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "transferOwnership",
-    "inputs": [
-      {
-        "name": "newOwner",
-        "type": "address",
-        "internalType": "address"
       }
     ],
     "outputs": [],
@@ -731,32 +463,38 @@ export const slotsAbi = [
   },
   {
     "type": "function",
-    "name": "updateSlotSettings",
+    "name": "taxOwed",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "taxPercentage",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "topUp",
     "inputs": [
       {
-        "name": "slotId",
+        "name": "amount",
         "type": "uint256",
         "internalType": "uint256"
-      },
-      {
-        "name": "newBasePrice",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "newCurrency",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "newMaxTaxPercentage",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "newModule",
-        "type": "address",
-        "internalType": "address"
       }
     ],
     "outputs": [],
@@ -766,11 +504,6 @@ export const slotsAbi = [
     "type": "function",
     "name": "withdraw",
     "inputs": [
-      {
-        "name": "slotId",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
       {
         "name": "amount",
         "type": "uint256",
@@ -782,14 +515,45 @@ export const slotsAbi = [
   },
   {
     "type": "event",
-    "name": "Deposited",
+    "name": "Bought",
     "inputs": [
       {
-        "name": "slotId",
-        "type": "uint256",
+        "name": "buyer",
+        "type": "address",
         "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "previousOccupant",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "price",
+        "type": "uint256",
+        "indexed": false,
         "internalType": "uint256"
       },
+      {
+        "name": "deposit",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "selfAssessedPrice",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Deposited",
+    "inputs": [
       {
         "name": "depositor",
         "type": "address",
@@ -807,228 +571,8 @@ export const slotsAbi = [
   },
   {
     "type": "event",
-    "name": "Initialized",
+    "name": "Liquidated",
     "inputs": [
-      {
-        "name": "version",
-        "type": "uint8",
-        "indexed": false,
-        "internalType": "uint8"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "ModuleCallFailed",
-    "inputs": [
-      {
-        "name": "slotId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
-      {
-        "name": "callbackName",
-        "type": "string",
-        "indexed": false,
-        "internalType": "string"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "OwnershipTransferred",
-    "inputs": [
-      {
-        "name": "previousOwner",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "newOwner",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "PriceUpdated",
-    "inputs": [
-      {
-        "name": "landOwner",
-        "type": "address",
-        "indexed": false,
-        "internalType": "address"
-      },
-      {
-        "name": "slotId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
-      {
-        "name": "oldPrice",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "newPrice",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "Settled",
-    "inputs": [
-      {
-        "name": "slotId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
-      {
-        "name": "taxOwed",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "depositRemaining",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "SlotActivated",
-    "inputs": [
-      {
-        "name": "landOwner",
-        "type": "address",
-        "indexed": false,
-        "internalType": "address"
-      },
-      {
-        "name": "slotId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "SlotCreated",
-    "inputs": [
-      {
-        "name": "landOwner",
-        "type": "address",
-        "indexed": false,
-        "internalType": "address"
-      },
-      {
-        "name": "slotId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
-      {
-        "name": "account",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "params",
-        "type": "tuple",
-        "indexed": false,
-        "internalType": "struct SlotParams",
-        "components": [
-          {
-            "name": "currency",
-            "type": "address",
-            "internalType": "contract IERC20"
-          },
-          {
-            "name": "basePrice",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "taxPercentage",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "maxTaxPercentage",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "minTaxUpdatePeriod",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "module",
-            "type": "address",
-            "internalType": "address"
-          }
-        ]
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "SlotDeactivated",
-    "inputs": [
-      {
-        "name": "landOwner",
-        "type": "address",
-        "indexed": false,
-        "internalType": "address"
-      },
-      {
-        "name": "slotId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "SlotLiquidated",
-    "inputs": [
-      {
-        "name": "landOwner",
-        "type": "address",
-        "indexed": false,
-        "internalType": "address"
-      },
-      {
-        "name": "slotId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
       {
         "name": "liquidator",
         "type": "address",
@@ -1052,28 +596,10 @@ export const slotsAbi = [
   },
   {
     "type": "event",
-    "name": "SlotPurchased",
+    "name": "LiquidationBountyUpdated",
     "inputs": [
       {
-        "name": "landOwner",
-        "type": "address",
-        "indexed": false,
-        "internalType": "address"
-      },
-      {
-        "name": "slotId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
-      {
-        "name": "newOccupant",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "price",
+        "name": "newBps",
         "type": "uint256",
         "indexed": false,
         "internalType": "uint256"
@@ -1083,18 +609,69 @@ export const slotsAbi = [
   },
   {
     "type": "event",
-    "name": "SlotReleased",
+    "name": "ModuleCallFailed",
     "inputs": [
       {
-        "name": "landOwner",
+        "name": "callbackName",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "ModuleUpdateProposed",
+    "inputs": [
+      {
+        "name": "newModule",
         "type": "address",
         "indexed": false,
         "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "PendingUpdateApplied",
+    "inputs": [
+      {
+        "name": "newTaxPercentage",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
       },
       {
-        "name": "slotId",
+        "name": "newModule",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "PendingUpdateCancelled",
+    "inputs": [],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "PriceUpdated",
+    "inputs": [
+      {
+        "name": "oldPrice",
         "type": "uint256",
-        "indexed": true,
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "newPrice",
+        "type": "uint256",
+        "indexed": false,
         "internalType": "uint256"
       }
     ],
@@ -1102,43 +679,114 @@ export const slotsAbi = [
   },
   {
     "type": "event",
-    "name": "SlotSettingsUpdated",
+    "name": "Released",
     "inputs": [
       {
-        "name": "landOwner",
+        "name": "occupant",
         "type": "address",
-        "indexed": false,
+        "indexed": true,
         "internalType": "address"
       },
       {
-        "name": "slotId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
-      {
-        "name": "basePrice",
+        "name": "refund",
         "type": "uint256",
         "indexed": false,
         "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Settled",
+    "inputs": [
+      {
+        "name": "taxOwed",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "depositRemaining",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "SlotCreated",
+    "inputs": [
+      {
+        "name": "slot",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "recipient",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
       },
       {
         "name": "currency",
         "type": "address",
-        "indexed": false,
+        "indexed": true,
         "internalType": "address"
       },
       {
-        "name": "maxTaxPercentage",
-        "type": "uint256",
+        "name": "config",
+        "type": "tuple",
         "indexed": false,
-        "internalType": "uint256"
+        "internalType": "struct SlotConfig",
+        "components": [
+          {
+            "name": "mutableTax",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "mutableModule",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "manager",
+            "type": "address",
+            "internalType": "address"
+          }
+        ]
       },
       {
-        "name": "module",
-        "type": "address",
+        "name": "initParams",
+        "type": "tuple",
         "indexed": false,
-        "internalType": "address"
+        "internalType": "struct SlotInitParams",
+        "components": [
+          {
+            "name": "taxPercentage",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "module",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "liquidationBountyBps",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "minDepositSeconds",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
       }
     ],
     "anonymous": false
@@ -1148,13 +796,7 @@ export const slotsAbi = [
     "name": "TaxCollected",
     "inputs": [
       {
-        "name": "slotId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
-      {
-        "name": "owner",
+        "name": "recipient",
         "type": "address",
         "indexed": true,
         "internalType": "address"
@@ -1170,78 +812,10 @@ export const slotsAbi = [
   },
   {
     "type": "event",
-    "name": "TaxRateUpdateCancelled",
+    "name": "TaxUpdateProposed",
     "inputs": [
-      {
-        "name": "landOwner",
-        "type": "address",
-        "indexed": false,
-        "internalType": "address"
-      },
-      {
-        "name": "slotId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "TaxRateUpdateConfirmed",
-    "inputs": [
-      {
-        "name": "landOwner",
-        "type": "address",
-        "indexed": false,
-        "internalType": "address"
-      },
-      {
-        "name": "slotId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
-      {
-        "name": "oldPercentage",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
       {
         "name": "newPercentage",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "TaxRateUpdateProposed",
-    "inputs": [
-      {
-        "name": "landOwner",
-        "type": "address",
-        "indexed": false,
-        "internalType": "address"
-      },
-      {
-        "name": "slotId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
-      {
-        "name": "newPercentage",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "confirmableAt",
         "type": "uint256",
         "indexed": false,
         "internalType": "uint256"
@@ -1253,12 +827,6 @@ export const slotsAbi = [
     "type": "event",
     "name": "Withdrawn",
     "inputs": [
-      {
-        "name": "slotId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
       {
         "name": "occupant",
         "type": "address",
@@ -1276,12 +844,17 @@ export const slotsAbi = [
   },
   {
     "type": "error",
+    "name": "AlreadyInitialized",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "CannotBuyFromYourself",
     "inputs": []
   },
   {
     "type": "error",
-    "name": "CurrencyChangeWhileOccupied",
+    "name": "CannotBuyWhenNotOccupied",
     "inputs": []
   },
   {
@@ -1296,33 +869,43 @@ export const slotsAbi = [
   },
   {
     "type": "error",
-    "name": "InvalidRange",
-    "inputs": []
-  },
-  {
-    "type": "error",
     "name": "InvalidTaxPercentage",
     "inputs": []
   },
   {
     "type": "error",
-    "name": "ModuleNotAllowed",
+    "name": "ModuleCallFailed_Error",
     "inputs": [
       {
-        "name": "module",
-        "type": "address",
-        "internalType": "address"
+        "name": "callbackName",
+        "type": "string",
+        "internalType": "string"
       }
     ]
   },
   {
     "type": "error",
-    "name": "NoTaxUpdatePending",
+    "name": "ModuleNotMutable",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NoPendingUpdate",
     "inputs": []
   },
   {
     "type": "error",
     "name": "NotInsolvent",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotManager",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotOccupant",
     "inputs": []
   },
   {
@@ -1337,135 +920,7 @@ export const slotsAbi = [
   },
   {
     "type": "error",
-    "name": "OnlyHub",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "OnlyOccupant",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "SlotAlreadyActive",
-    "inputs": [
-      {
-        "name": "slotId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "SlotAlreadyExists",
-    "inputs": [
-      {
-        "name": "slotId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "SlotAlreadyInactive",
-    "inputs": [
-      {
-        "name": "slotId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "SlotMustBeUnoccupied",
-    "inputs": [
-      {
-        "name": "slotId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "SlotNotActive",
-    "inputs": [
-      {
-        "name": "slotId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "SlotNotExist",
-    "inputs": [
-      {
-        "name": "slotId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "TaxPercentageOutOfBounds",
-    "inputs": [
-      {
-        "name": "percentage",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "max",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "TaxUpdateAlreadyPending",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "TaxUpdatePeriodNotPassed",
-    "inputs": [
-      {
-        "name": "currentTime",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "requiredTime",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "UnauthorizedRelease",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "UnauthorizedSelfAssess",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "UnauthorizedSlotActivation",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "UnauthorizedTaxUpdate",
+    "name": "TaxNotMutable",
     "inputs": []
   }
 ] as const;

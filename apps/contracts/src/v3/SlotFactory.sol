@@ -6,8 +6,7 @@ import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {Slot} from "./Slot.sol";
 import {SlotConfig, SlotInitParams, ISlotEvents} from "./ISlot.sol";
 
-/// @title SlotFactory — Deterministic deployment of Harberger-taxed slots
-/// @notice Creates Slot contracts via ERC-1167 clones with CREATE2
+/// @title SlotFactory — Deploy Harberger-taxed slots via ERC-1167 clones
 contract SlotFactory {
     using Clones for address;
 
@@ -18,7 +17,7 @@ contract SlotFactory {
     error InvalidConfig_ManagerRequired();
     error InvalidConfig_ManagerMustBeZero();
     error InvalidTaxPercentage();
-    error SlotAlreadyExists();
+    error InvalidCount();
 
     // ═══════════════════════════════════════════════════════════
     // EVENTS
@@ -60,49 +59,32 @@ contract SlotFactory {
     // DEPLOYMENT
     // ═══════════════════════════════════════════════════════════
 
-    /// @notice Deploy a new Slot contract deterministically
-    /// @param recipient Revenue recipient (immutable)
-    /// @param currency Payment token (immutable)
-    /// @param config Mutability flags + manager
-    /// @param initParams Initial tax, module, bounty, minDeposit
-    /// @return slot The deployed Slot address
+    /// @notice Deploy a new Slot contract
     function createSlot(
         address recipient,
         IERC20 currency,
         SlotConfig memory config,
         SlotInitParams memory initParams
     ) external returns (address slot) {
-        // Validate config
-        if (config.mutableTax || config.mutableModule) {
-            if (config.manager == address(0)) revert InvalidConfig_ManagerRequired();
-        } else {
-            if (config.manager != address(0)) revert InvalidConfig_ManagerMustBeZero();
-        }
-
-        if (initParams.taxPercentage == 0) revert InvalidTaxPercentage();
-
-        // Compute deterministic salt from identity params
-        bytes32 salt = _computeSalt(recipient, currency, initParams.taxPercentage, initParams.module, config);
-
-        // Deploy clone
-        slot = implementation.cloneDeterministic(salt);
-
-        // Initialize
-        Slot(slot).initialize(recipient, currency, config, initParams);
-
-        emit SlotDeployed(slot, recipient, address(currency), config, initParams);
+        _validateConfig(config, initParams);
+        slot = _deploySlot(recipient, currency, config, initParams);
     }
 
-    /// @notice Predict the address of a slot before deployment
-    function predictSlotAddress(
+    /// @notice Deploy multiple Slot contracts with the same params
+    function createSlots(
         address recipient,
         IERC20 currency,
-        uint256 taxPercentage,
-        address module,
-        SlotConfig memory config
-    ) external view returns (address) {
-        bytes32 salt = _computeSalt(recipient, currency, taxPercentage, module, config);
-        return implementation.predictDeterministicAddress(salt);
+        SlotConfig memory config,
+        SlotInitParams memory initParams,
+        uint256 count
+    ) external returns (address[] memory slots) {
+        if (count == 0) revert InvalidCount();
+        _validateConfig(config, initParams);
+
+        slots = new address[](count);
+        for (uint256 i = 0; i < count; i++) {
+            slots[i] = _deploySlot(recipient, currency, config, initParams);
+        }
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -130,13 +112,23 @@ contract SlotFactory {
     // INTERNAL
     // ═══════════════════════════════════════════════════════════
 
-    function _computeSalt(
+    function _validateConfig(SlotConfig memory config, SlotInitParams memory initParams) internal pure {
+        if (config.mutableTax || config.mutableModule) {
+            if (config.manager == address(0)) revert InvalidConfig_ManagerRequired();
+        } else {
+            if (config.manager != address(0)) revert InvalidConfig_ManagerMustBeZero();
+        }
+        if (initParams.taxPercentage == 0) revert InvalidTaxPercentage();
+    }
+
+    function _deploySlot(
         address recipient,
         IERC20 currency,
-        uint256 taxPercentage,
-        address module,
-        SlotConfig memory config
-    ) internal pure returns (bytes32) {
-        return keccak256(abi.encode(recipient, currency, taxPercentage, module, config.mutableTax, config.mutableModule));
+        SlotConfig memory config,
+        SlotInitParams memory initParams
+    ) internal returns (address slot) {
+        slot = implementation.clone();
+        Slot(slot).initialize(recipient, currency, config, initParams);
+        emit SlotDeployed(slot, recipient, address(currency), config, initParams);
     }
 }

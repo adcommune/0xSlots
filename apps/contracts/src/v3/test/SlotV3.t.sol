@@ -99,19 +99,33 @@ contract SlotV3Test is Test {
         assertTrue(slot.isVacant());
     }
 
-    function test_deterministicAddress() public {
-        SlotInitParams memory init = _defaultInit();
-        address predicted = factory.predictSlotAddress(
-            recipient, IERC20(address(token)), init.taxPercentage, init.module, _defaultConfig()
-        );
-        Slot slot = _createDefaultSlot();
-        assertEq(address(slot), predicted);
+    function test_createDuplicateParams() public {
+        // Should succeed — no uniqueness constraint
+        Slot slot1 = _createDefaultSlot();
+        Slot slot2 = _createDefaultSlot();
+        assertTrue(address(slot1) != address(slot2));
     }
 
-    function test_cannotDeployDuplicate() public {
-        _createDefaultSlot();
-        vm.expectRevert();
-        _createDefaultSlot();
+    function test_createSlotsBatch() public {
+        address[] memory slots = factory.createSlots(
+            recipient, IERC20(address(token)), _defaultConfig(), _defaultInit(), 5
+        );
+        assertEq(slots.length, 5);
+        for (uint256 i = 0; i < 5; i++) {
+            Slot slot = Slot(slots[i]);
+            assertEq(slot.recipient(), recipient);
+            assertEq(slot.taxPercentage(), 100);
+            assertTrue(slot.isVacant());
+            // All different addresses
+            for (uint256 j = 0; j < i; j++) {
+                assertTrue(slots[i] != slots[j]);
+            }
+        }
+    }
+
+    function test_createSlotsZeroReverts() public {
+        vm.expectRevert(SlotFactory.InvalidCount.selector);
+        factory.createSlots(recipient, IERC20(address(token)), _defaultConfig(), _defaultInit(), 0);
     }
 
     function test_immutableConfig_managerMustBeZero() public {
