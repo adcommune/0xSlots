@@ -1,6 +1,10 @@
 "use client";
 
-import { createSlotsClient, type SlotFieldsFragment } from "@0xslots/sdk";
+import {
+  createSlotsClient,
+  type AccountFieldsFragment,
+  type SlotFieldsFragment,
+} from "@0xslots/sdk";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useChain } from "@/context/chain";
@@ -170,5 +174,23 @@ export function useRecentEvents() {
       return client.getRecentEvents({ first: 50 });
     },
     staleTime: 10_000,
+  });
+}
+
+export function useAccounts() {
+  const { chainId } = useChain();
+  const client = useSlotsClient();
+  return useQuery({
+    queryKey: ["accounts", chainId],
+    queryFn: async () => {
+      const { accounts } = await client.getAccounts({
+        first: 100,
+        orderBy: "slotCount" as any,
+        orderDirection: "desc" as any,
+        where: { slotCount_gt: 0 } as any,
+      });
+      return accounts as AccountFieldsFragment[];
+    },
+    staleTime: 15_000,
   });
 }
