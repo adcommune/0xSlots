@@ -42,6 +42,9 @@ export default function RootLayout({
                 <a href="/explorer" className="text-muted-foreground hover:text-foreground transition-colors">
                   Explorer
                 </a>
+                <a href="/profile" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Profile
+                </a>
                 <SubgraphStatus />
                 <ChainSelector />
                 <ConnectButton />
