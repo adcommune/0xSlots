@@ -1,6 +1,5 @@
 "use client";
 
-import { batchCollectorAbi, batchCollectorAddress } from "@0xslots/contracts";
 import Link from "next/link";
 import { use } from "react";
 import { type Address, formatUnits } from "viem";
@@ -9,12 +8,9 @@ import {
   useAccount,
   useEnsAvatar,
   useEnsName,
-  useWaitForTransactionReceipt,
-  useWriteContract,
 } from "wagmi";
-import { baseSepolia, mainnet } from "wagmi/chains";
+import { mainnet } from "wagmi/chains";
 import { ConnectButton } from "@/components/connect-button";
-import { Button } from "@/components/ui/button";
 import { useChain } from "@/context/chain";
 import { type SlotOnChain, useSlotsOnChain } from "@/hooks/use-slot-onchain";
 import { useV3SlotsByRecipient } from "@/hooks/use-v3";
@@ -47,20 +43,8 @@ export default function RecipientPage({
   });
 
   const { address: connectedAddress } = useAccount();
-  const {
-    writeContract: write,
-    data: hash,
-    isPending,
-    error: writeError,
-  } = useWriteContract();
-  const {
-    isLoading: isConfirming,
-    isSuccess,
-    error: receiptError,
-  } = useWaitForTransactionReceipt({ hash });
 
   const isLoading = subgraphLoading || onchainLoading;
-  const isOwner = connectedAddress?.toLowerCase() === address.toLowerCase();
   const occupied = slots.filter((s) => s.occupant != null);
   const vacant = slots.length - occupied.length;
   const decimals = slots[0]?.currencyDecimals ?? 6;
@@ -139,41 +123,6 @@ export default function RecipientPage({
             </div>
           ))}
         </div>
-
-        {/* Collect All */}
-        {isOwner && occupied.length > 0 && (
-          <div className="mb-6">
-            <Button
-              className="w-full"
-              disabled={isPending || isConfirming}
-              onClick={() => {
-                const addrs = occupied.map((s) => s.id as Address);
-                if (addrs.length === 0) return;
-                write({
-                  address: batchCollectorAddress[baseSepolia.id] as Address,
-                  abi: batchCollectorAbi,
-                  functionName: "collectAll",
-                  args: [addrs],
-                });
-              }}
-            >
-              {isPending || isConfirming
-                ? "Collecting..."
-                : `Collect All Tax (${occupied.length} slots)`}
-            </Button>
-            {isSuccess && (
-              <p className="text-sm text-green-600 text-center mt-2">
-                Tax collected from all slots
-              </p>
-            )}
-            {(writeError || receiptError) && (
-              <p className="text-sm text-destructive text-center mt-2">
-                {(writeError || receiptError)?.message?.split("\n")[0] ??
-                  "Transaction failed"}
-              </p>
-            )}
-          </div>
-        )}
 
         {/* Slots Table */}
         <div className="rounded-lg border">
