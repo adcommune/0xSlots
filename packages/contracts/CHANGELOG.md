@@ -1,5 +1,11 @@
 # @0xslots/contracts
 
+## 0.4.0
+
+### Minor Changes
+
+- 037b454: v3 update
+
 ## 0.3.0
 
 ### Minor Changes
