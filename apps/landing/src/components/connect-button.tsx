@@ -1,6 +1,7 @@
 "use client";
 
 import { ConnectButton as RainbowConnectButton } from "@rainbow-me/rainbowkit";
+import { Button } from "@/components/ui/button";
 
 export function ConnectButton() {
   return (
@@ -23,29 +24,17 @@ export function ConnectButton() {
             })}
           >
             {!connected ? (
-              <button
-                onClick={openConnectModal}
-                type="button"
-                className="border-2 border-black bg-black text-white px-4 py-2 font-mono text-xs uppercase tracking-wider hover:bg-white hover:text-black"
-              >
+              <Button onClick={openConnectModal} size="sm">
                 Connect
-              </button>
+              </Button>
             ) : chain.unsupported ? (
-              <button
-                onClick={openChainModal}
-                type="button"
-                className="border-2 border-red-600 bg-red-600 text-white px-4 py-2 font-mono text-xs uppercase tracking-wider hover:bg-white hover:text-red-600"
-              >
+              <Button onClick={openChainModal} variant="destructive" size="sm">
                 Wrong Network
-              </button>
+              </Button>
             ) : (
-              <button
-                onClick={openAccountModal}
-                type="button"
-                className="border-2 border-black px-4 py-2 font-mono text-xs uppercase tracking-wider hover:bg-black hover:text-white"
-              >
+              <Button onClick={openAccountModal} variant="outline" size="sm">
                 {account.displayName}
-              </button>
+              </Button>
             )}
           </div>
         );
