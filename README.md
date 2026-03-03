@@ -11,7 +11,7 @@ Every slot has a price. Holders self-assess and pay continuous tax. Anyone can b
 1. **Self-assessment** — Slot holders set their own price
 2. **Continuous tax** — Pay tax proportional to your price via [Superfluid](https://superfluid.finance) streams
 3. **Always for sale** — Anyone can buy at the posted price, instantly
-4. **No squatting** — Holding costs money, so only active users hold slots
+4. **No squatting** — Holding costs money, so only active users hold slots.
 
 ## NPM Packages
 
