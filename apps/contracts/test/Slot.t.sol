@@ -7,6 +7,7 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {Slot} from "../src/Slot.sol";
 import {SlotFactory} from "../src/SlotFactory.sol";
 import {SlotConfig, SlotInitParams, PendingUpdate} from "../src/ISlot.sol";
+import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 contract MockERC20 is ERC20 {
     constructor() ERC20("Mock", "MCK") {
@@ -28,7 +29,13 @@ contract SlotV3Test is Test {
     address liquidator = makeAddr("liquidator");
 
     function setUp() public {
-        factory = new SlotFactory(address(this));
+        Slot slotImpl = new Slot();
+        SlotFactory factoryImpl = new SlotFactory();
+        ERC1967Proxy proxy = new ERC1967Proxy(
+            address(factoryImpl),
+            abi.encodeCall(SlotFactory.initialize, (address(this), address(slotImpl)))
+        );
+        factory = SlotFactory(address(proxy));
         token = new MockERC20();
 
         // Fund users
