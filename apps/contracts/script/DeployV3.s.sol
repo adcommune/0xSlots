@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {BaseScript, console2} from "./Base.s.sol";
-import {SlotFactory} from "../src/v3/SlotFactory.sol";
+import {SlotFactory} from "../src/SlotFactory.sol";
 
 /**
  * @title DeployV3
