@@ -30,6 +30,7 @@ export function BuySection({
   isOccupied: boolean;
 }) {
   const decimals = slot.currencyDecimals ?? 6;
+  const symbol = slot.currencySymbol ?? "USDC";
   const {
     writeContract,
     writeContractAsync,
@@ -40,11 +41,10 @@ export function BuySection({
     hash,
   });
   const busy = isPending || isConfirming;
-  const [expanded, setExpanded] = useState(false);
   const [buyPrice, setBuyPrice] = useState("");
   const [buyDeposit, setBuyDeposit] = useState("");
 
-  const MONTH = 30n * 24n * 60n * 60n; // 30 days in seconds
+  const MONTH = 30n * 24n * 60n * 60n;
 
   function computeMinDeposit(price: bigint): string {
     if (slot.minDepositSeconds === 0n) return "0";
@@ -60,8 +60,17 @@ export function BuySection({
   const minDep = computeMinDeposit(priceForMin);
   const effectiveDeposit = buyDeposit || (minDep !== "0" ? minDep : "");
 
-  const label = isOccupied ? "Buy" : "Buy Slot";
   const costPrice = isOccupied ? currentPrice : "0";
+
+  function totalApprovalDisplay(): string {
+    try {
+      const dep = Number.parseFloat(effectiveDeposit || "0");
+      const cost = Number.parseFloat(costPrice);
+      return (dep + cost).toFixed(2);
+    } catch {
+      return "0";
+    }
+  }
 
   async function handleBuy() {
     const dep = toUnits(effectiveDeposit || "0", decimals);
@@ -88,117 +97,84 @@ export function BuySection({
   }
 
   return (
-    <div className="space-y-0">
-      {/* Main button + dropdown toggle */}
-      <div className="flex">
-        <Button
-          disabled={busy}
-          onClick={handleBuy}
-          className="flex-1 rounded-r-none"
-        >
-          {busy ? (
-            "Processing..."
-          ) : (
-            <span className="flex items-center justify-center gap-2">
-              {label}
-              {isOccupied && (
-                <span className="opacity-60">@ {currentPrice} USDC</span>
-              )}
-            </span>
-          )}
-        </Button>
-        <Button
-          variant="default"
-          size="sm"
-          className="rounded-l-none border-l border-primary-foreground/20 px-2.5"
-          onClick={() => {
-            if (!expanded) {
-              if (!buyPrice) setBuyPrice(defaultPrice);
-              if (!buyDeposit && minDep !== "0") setBuyDeposit(minDep);
-            }
-            setExpanded(!expanded);
-          }}
-        >
-          {expanded ? "▲" : "▼"}
-        </Button>
-      </div>
-
-      {/* Expandable detail panel */}
-      {expanded && (
-        <div className="rounded-b-lg border border-t-0 p-3 space-y-2 bg-muted/50">
-          {isOccupied && (
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span>Purchase cost</span>
-              <span className="font-bold text-foreground">{currentPrice} USDC</span>
-            </div>
-          )}
-
-          <div>
-            <label className="text-xs text-muted-foreground block mb-1">
-              Your Price (USDC)
-            </label>
-            <Input
-              type="text"
-              placeholder={defaultPrice || "1.00"}
-              value={buyPrice}
-              onChange={(e) => setBuyPrice(e.target.value)}
-              className="font-mono text-xs"
-            />
-            <p className="text-[9px] text-muted-foreground mt-0.5">
-              Others can force-buy at this price
-            </p>
-          </div>
-
-          <div>
-            <label className="text-xs text-muted-foreground block mb-1">
-              Deposit (USDC)
-            </label>
-            <Input
-              type="text"
-              placeholder={minDep !== "0" ? `Min: ${minDep}` : "0.00"}
-              value={buyDeposit}
-              onChange={(e) => setBuyDeposit(e.target.value)}
-              className="font-mono text-xs"
-            />
-            {minDep !== "0" && (
-              <p className="text-[9px] text-muted-foreground mt-0.5">
-                Minimum deposit: {minDep} USDC
-              </p>
-            )}
-          </div>
-
-          {/* Summary */}
-          <div className="border-t pt-2 mt-2 space-y-1">
-            <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">
-                {isOccupied ? "Purchase" : "Cost"}
-              </span>
-              <span>{costPrice} USDC</span>
-            </div>
-            <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">Deposit</span>
-              <span>{effectiveDeposit || "0"} USDC</span>
-            </div>
-            <div className="flex justify-between text-sm font-bold border-t pt-1">
-              <span>Total approval</span>
-              <span>
-                {(() => {
-                  try {
-                    const dep = parseFloat(effectiveDeposit || "0");
-                    const cost = parseFloat(costPrice);
-                    return (dep + cost).toFixed(2);
-                  } catch {
-                    return "0";
-                  }
-                })()} USDC
-              </span>
-            </div>
-          </div>
+    <div className="space-y-3">
+      {isOccupied && (
+        <div className="flex justify-between text-xs text-muted-foreground">
+          <span>Purchase cost</span>
+          <span className="font-bold text-foreground">
+            {currentPrice} {symbol}
+          </span>
         </div>
       )}
 
+      <div>
+        <label className="text-xs text-muted-foreground block mb-1">
+          Your Price ({symbol})
+        </label>
+        <Input
+          type="text"
+          placeholder={defaultPrice || "1.00"}
+          value={buyPrice}
+          onChange={(e) => setBuyPrice(e.target.value)}
+          className="font-mono text-xs"
+        />
+        <p className="text-[10px] text-muted-foreground mt-0.5">
+          Others can force-buy at this price
+        </p>
+      </div>
+
+      <div>
+        <label className="text-xs text-muted-foreground block mb-1">
+          Deposit ({symbol})
+        </label>
+        <Input
+          type="text"
+          placeholder={minDep !== "0" ? `Min: ${minDep}` : "0.00"}
+          value={buyDeposit}
+          onChange={(e) => setBuyDeposit(e.target.value)}
+          className="font-mono text-xs"
+        />
+        {minDep !== "0" && (
+          <p className="text-[10px] text-muted-foreground mt-0.5">
+            Minimum deposit: {minDep} {symbol}
+          </p>
+        )}
+      </div>
+
+      {/* Summary */}
+      <div className="rounded-md bg-muted/50 p-2.5 space-y-1">
+        {isOccupied && (
+          <div className="flex justify-between text-xs">
+            <span className="text-muted-foreground">Purchase</span>
+            <span>
+              {costPrice} {symbol}
+            </span>
+          </div>
+        )}
+        <div className="flex justify-between text-xs">
+          <span className="text-muted-foreground">Deposit</span>
+          <span>
+            {effectiveDeposit || "0"} {symbol}
+          </span>
+        </div>
+        <div className="flex justify-between text-sm font-bold border-t pt-1 mt-1">
+          <span>Total</span>
+          <span>
+            {totalApprovalDisplay()} {symbol}
+          </span>
+        </div>
+      </div>
+
+      <Button disabled={busy} onClick={handleBuy} className="w-full">
+        {busy
+          ? "Processing..."
+          : isOccupied
+            ? `Buy @ ${currentPrice} ${symbol}`
+            : "Buy Slot"}
+      </Button>
+
       {isSuccess && (
-        <p className="text-sm text-green-600 text-center mt-2">
+        <p className="text-sm text-green-600 text-center">
           Transaction confirmed
         </p>
       )}

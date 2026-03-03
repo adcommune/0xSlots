@@ -11,6 +11,7 @@ import {
   useWriteContract,
 } from "wagmi";
 import { baseSepolia } from "wagmi/chains";
+import { Badge } from "@/components/ui/badge";
 import { ConnectButton } from "@/components/connect-button";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -123,6 +124,28 @@ export default function SlotPage({
   const remaining =
     slot.deposit > slot.taxOwed ? slot.deposit - slot.taxOwed : 0n;
 
+  const role = isConnected
+    ? isOccupant && isRecipient
+      ? {
+          label: "Owner & Occupant",
+          badge: "border-purple-200 bg-purple-50 text-purple-700",
+          accent: "border-t-2 border-t-purple-500",
+        }
+      : isRecipient
+        ? {
+            label: "Owner",
+            badge: "border-blue-200 bg-blue-50 text-blue-700",
+            accent: "border-t-2 border-t-blue-500",
+          }
+        : isOccupant
+          ? {
+              label: "Occupant",
+              badge: "border-emerald-200 bg-emerald-50 text-emerald-700",
+              accent: "border-t-2 border-t-emerald-500",
+            }
+          : null
+    : null;
+
   return (
     <div className="min-h-screen">
       <PageHeader>
@@ -136,12 +159,22 @@ export default function SlotPage({
           <h1 className="text-xl font-bold tracking-tight leading-tight">
             Slot {truncateAddress(slot.id)}
           </h1>
-          <p className="text-xs text-muted-foreground">
-            {isOccupied
-              ? `Occupied by ${truncateAddress(slot.occupant!)}`
-              : "Vacant"}{" "}
-            · Base Sepolia
-          </p>
+          <div className="flex items-center gap-2">
+            <p className="text-xs text-muted-foreground">
+              {isOccupied
+                ? `Occupied by ${truncateAddress(slot.occupant!)}`
+                : "Vacant"}{" "}
+              · Base Sepolia
+            </p>
+            {role && (
+              <Badge
+                variant="outline"
+                className={role.badge}
+              >
+                {role.label}
+              </Badge>
+            )}
+          </div>
         </div>
         <ConnectButton />
       </PageHeader>
@@ -179,8 +212,7 @@ export default function SlotPage({
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Currency</span>
                   <span className="font-mono text-xs">
-                    {slot.currencyName ?? truncateAddress(slot.currency)} (
-                    {symbol})
+                    {slot.currencyName ?? truncateAddress(slot.currency)} ({symbol})
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -196,6 +228,16 @@ export default function SlotPage({
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Liq. Bounty</span>
                   <span>{formatBps(slot.liquidationBountyBps.toString())}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Min. Deposit</span>
+                  <span>{formatDuration(Number(slot.minDepositSeconds))}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Tax Collected</span>
+                  <span>
+                    {formatBalance(slot.collectedTax, decimals)} {symbol}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Mutable Tax</span>
@@ -259,13 +301,22 @@ export default function SlotPage({
 
           {/* Right: Actions */}
           <div className="lg:sticky lg:top-6">
-            <div className="rounded-lg border">
-              <div className="bg-muted/50 border-b px-3 py-3">
+            <div
+              className={`rounded-lg border ${role ? role.accent : ""}`}
+            >
+              <div className="bg-muted/50 border-b px-3 py-3 flex items-center justify-between">
                 <h2 className="text-sm font-semibold">
                   {isOccupied
                     ? `Price: ${formatBalance(slot.price, decimals)} ${symbol}`
                     : "Vacant Slot"}
                 </h2>
+                {role && (
+                  <span
+                    className={`text-[11px] font-medium rounded-full border px-2 py-0.5 ${role.badge}`}
+                  >
+                    {role.label}
+                  </span>
+                )}
               </div>
 
               {/* Live on-chain financials */}
@@ -341,7 +392,7 @@ export default function SlotPage({
                 ) : (
                   <>
                     {/* Buy / Force Buy */}
-                    {(slot.occupant == null || !isOccupant) && (
+                    {(slot.occupant == null || !isOccupant) && !isRecipient && (
                       <BuySection
                         slot={slot}
                         slotAddress={slotAddress}
@@ -486,7 +537,7 @@ export default function SlotPage({
                       <Button
                         variant="outline"
                         className="w-full"
-                        disabled={busy}
+                        disabled={busy || slot.taxOwed === 0n}
                         onClick={() =>
                           writeContract({
                             address: slotAddress as Address,
@@ -496,7 +547,11 @@ export default function SlotPage({
                           })
                         }
                       >
-                        {busy ? "..." : "Collect Tax"}
+                        {busy
+                          ? "..."
+                          : slot.taxOwed === 0n
+                            ? "Nothing to Collect"
+                            : `Collect Tax (${formatBalance(slot.taxOwed, decimals)} ${symbol})`}
                       </Button>
                     )}
 
