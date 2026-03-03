@@ -78,7 +78,7 @@ export function useFactory() {
 
 export function useSlotPurchases(slotId: string) {
   return useQuery({
-    queryKey: ["v3-slot-purchases", slotId],
+    queryKey: ["slot-purchases", slotId],
     queryFn: async () => {
       const { boughtEvents } = await client.getBoughtEvents({
         slotId: slotId.toLowerCase(),
@@ -93,7 +93,7 @@ export function useSlotPurchases(slotId: string) {
 
 export function useSlotsettlements(slotId: string) {
   return useQuery({
-    queryKey: ["v3-slot-settlements", slotId],
+    queryKey: ["slot-settlements", slotId],
     queryFn: async () => {
       const { settledEvents } = await client.getSettledEvents({
         slotId: slotId.toLowerCase(),
@@ -108,7 +108,7 @@ export function useSlotsettlements(slotId: string) {
 
 export function useSlotTaxCollections(slotId: string) {
   return useQuery({
-    queryKey: ["v3-slot-tax-collections", slotId],
+    queryKey: ["slot-tax-collections", slotId],
     queryFn: async () => {
       const { taxCollectedEvents } = await client.getTaxCollectedEvents({
         slotId: slotId.toLowerCase(),
@@ -123,7 +123,7 @@ export function useSlotTaxCollections(slotId: string) {
 
 export function useSlotActivity(slotId: string) {
   return useQuery({
-    queryKey: ["v3-slot-activity", slotId],
+    queryKey: ["slot-activity", slotId],
     queryFn: async () => {
       const data = await client.getSlotActivity({
         slotId: slotId.toLowerCase(),
@@ -136,9 +136,9 @@ export function useSlotActivity(slotId: string) {
   });
 }
 
-export function useV3RecentEvents() {
+export function useRecentEvents() {
   return useQuery({
-    queryKey: ["v3-recent-events"],
+    queryKey: ["recent-events"],
     queryFn: async () => {
       return client.getRecentEvents({ first: 50 });
     },

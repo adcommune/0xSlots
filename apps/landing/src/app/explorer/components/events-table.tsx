@@ -2,9 +2,9 @@
 
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
-import { useV3RecentEvents } from "@/hooks/use-v3";
 import { useChain } from "@/context/chain";
-import { truncateAddress, formatPrice } from "@/utils";
+import { useRecentEvents } from "@/hooks/use-v3";
+import { formatPrice, truncateAddress } from "@/utils";
 
 type UnifiedEvent = {
   id: string;
@@ -16,59 +16,90 @@ type UnifiedEvent = {
   tx: string;
 };
 
-function normalizeEvents(data: ReturnType<typeof useV3RecentEvents>["data"]): UnifiedEvent[] {
+function normalizeEvents(
+  data: ReturnType<typeof useRecentEvents>["data"],
+): UnifiedEvent[] {
   if (!data) return [];
   const events: UnifiedEvent[] = [];
 
   for (const e of data.boughtEvents) {
     events.push({
-      id: e.id, type: "Buy", slot: e.slot.id, actor: e.buyer,
-      detail: e.previousOccupant === "0x0000000000000000000000000000000000000000"
-        ? `claimed @ ${formatPrice(e.selfAssessedPrice, 6)}`
-        : `force-bought @ ${formatPrice(e.price, 6)} → ${formatPrice(e.selfAssessedPrice, 6)}`,
-      timestamp: Number(e.timestamp), tx: e.tx,
+      id: e.id,
+      type: "Buy",
+      slot: e.slot.id,
+      actor: e.buyer,
+      detail:
+        e.previousOccupant === "0x0000000000000000000000000000000000000000"
+          ? `claimed @ ${formatPrice(e.selfAssessedPrice, 6)}`
+          : `force-bought @ ${formatPrice(e.price, 6)} → ${formatPrice(e.selfAssessedPrice, 6)}`,
+      timestamp: Number(e.timestamp),
+      tx: e.tx,
     });
   }
   for (const e of data.releasedEvents) {
     events.push({
-      id: e.id, type: "Release", slot: e.slot.id, actor: e.occupant,
+      id: e.id,
+      type: "Release",
+      slot: e.slot.id,
+      actor: e.occupant,
       detail: `refund ${formatPrice(e.refund, 6)}`,
-      timestamp: Number(e.timestamp), tx: e.tx,
+      timestamp: Number(e.timestamp),
+      tx: e.tx,
     });
   }
   for (const e of data.liquidatedEvents) {
     events.push({
-      id: e.id, type: "Liquidate", slot: e.slot.id, actor: e.liquidator,
+      id: e.id,
+      type: "Liquidate",
+      slot: e.slot.id,
+      actor: e.liquidator,
       detail: `bounty ${formatPrice(e.bounty, 6)}`,
-      timestamp: Number(e.timestamp), tx: e.tx,
+      timestamp: Number(e.timestamp),
+      tx: e.tx,
     });
   }
   for (const e of data.priceUpdatedEvents) {
     events.push({
-      id: e.id, type: "Price", slot: e.slot.id, actor: "",
+      id: e.id,
+      type: "Price",
+      slot: e.slot.id,
+      actor: "",
       detail: `${formatPrice(e.oldPrice, 6)} → ${formatPrice(e.newPrice, 6)}`,
-      timestamp: Number(e.timestamp), tx: e.tx,
+      timestamp: Number(e.timestamp),
+      tx: e.tx,
     });
   }
   for (const e of data.depositedEvents) {
     events.push({
-      id: e.id, type: "Deposit", slot: e.slot.id, actor: e.depositor,
+      id: e.id,
+      type: "Deposit",
+      slot: e.slot.id,
+      actor: e.depositor,
       detail: `+${formatPrice(e.amount, 6)}`,
-      timestamp: Number(e.timestamp), tx: e.tx,
+      timestamp: Number(e.timestamp),
+      tx: e.tx,
     });
   }
   for (const e of data.withdrawnEvents) {
     events.push({
-      id: e.id, type: "Withdraw", slot: e.slot.id, actor: e.occupant,
+      id: e.id,
+      type: "Withdraw",
+      slot: e.slot.id,
+      actor: e.occupant,
       detail: `-${formatPrice(e.amount, 6)}`,
-      timestamp: Number(e.timestamp), tx: e.tx,
+      timestamp: Number(e.timestamp),
+      tx: e.tx,
     });
   }
   for (const e of data.taxCollectedEvents) {
     events.push({
-      id: e.id, type: "Collect", slot: e.slot.id, actor: e.recipient,
+      id: e.id,
+      type: "Collect",
+      slot: e.slot.id,
+      actor: e.recipient,
       detail: `${formatPrice(e.amount, 6)}`,
-      timestamp: Number(e.timestamp), tx: e.tx,
+      timestamp: Number(e.timestamp),
+      tx: e.tx,
     });
   }
 
@@ -86,7 +117,7 @@ const TYPE_COLORS: Record<string, string> = {
 };
 
 export function EventsTable() {
-  const { data, isLoading } = useV3RecentEvents();
+  const { data, isLoading } = useRecentEvents();
   const { explorerUrl } = useChain();
   const events = normalizeEvents(data);
 
@@ -123,28 +154,47 @@ export function EventsTable() {
           {events.map((ev) => (
             <tr key={ev.id} className="hover:bg-muted/30 transition-colors">
               <td className="px-4 py-2.5">
-                <span className={`inline-block px-1.5 py-0.5 rounded text-xs font-medium ${TYPE_COLORS[ev.type] ?? "bg-muted text-muted-foreground"}`}>
+                <span
+                  className={`inline-block px-1.5 py-0.5 rounded text-xs font-medium ${TYPE_COLORS[ev.type] ?? "bg-muted text-muted-foreground"}`}
+                >
                   {ev.type}
                 </span>
               </td>
               <td className="px-4 py-2.5">
-                <Link href={`/slots/${ev.slot}`} className="text-primary hover:underline font-mono text-xs">
+                <Link
+                  href={`/slots/${ev.slot}`}
+                  className="text-primary hover:underline font-mono text-xs"
+                >
                   {truncateAddress(ev.slot)}
                 </Link>
               </td>
               <td className="px-4 py-2.5 font-mono text-xs">
                 {ev.actor ? (
-                  <a href={`${explorerUrl}/address/${ev.actor}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                  <a
+                    href={`${explorerUrl}/address/${ev.actor}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
                     {truncateAddress(ev.actor)}
                   </a>
-                ) : "—"}
+                ) : (
+                  "—"
+                )}
               </td>
               <td className="px-4 py-2.5 text-muted-foreground">{ev.detail}</td>
               <td className="px-4 py-2.5 text-muted-foreground text-xs whitespace-nowrap">
-                {formatDistanceToNow(new Date(ev.timestamp * 1000), { addSuffix: true })}
+                {formatDistanceToNow(new Date(ev.timestamp * 1000), {
+                  addSuffix: true,
+                })}
               </td>
               <td className="px-4 py-2.5">
-                <a href={`${explorerUrl}/tx/${ev.tx}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-mono text-xs">
+                <a
+                  href={`${explorerUrl}/tx/${ev.tx}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline font-mono text-xs"
+                >
                   {truncateAddress(ev.tx)}
                 </a>
               </td>
