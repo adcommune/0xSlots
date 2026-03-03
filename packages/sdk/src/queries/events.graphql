@@ -1,63 +1,61 @@
-query GetSlotPurchases($first: Int = 100, $skip: Int = 0, $orderBy: SlotPurchase_orderBy, $orderDirection: OrderDirection, $where: SlotPurchase_filter) {
-  slotPurchases(first: $first, skip: $skip, orderBy: $orderBy, orderDirection: $orderDirection, where: $where) {
+query GetBoughtEvents($slotId: String!, $first: Int!) {
+  boughtEvents(first: $first, orderBy: timestamp, orderDirection: desc, where: { slot: $slotId }) {
     id
-    slot {
-      id
-      slotId
-      land {
-        id
-      }
-    }
-    newOccupant
+    buyer
     previousOccupant
+    price
+    deposit
+    selfAssessedPrice
     timestamp
     blockNumber
     tx
   }
 }
 
-query GetLandOpenedEvents($first: Int = 100, $orderBy: LandOpenedEvent_orderBy, $orderDirection: OrderDirection) {
-  landOpenedEvents(first: $first, orderBy: $orderBy, orderDirection: $orderDirection) {
+query GetSettledEvents($slotId: String!, $first: Int!) {
+  settledEvents(first: $first, orderBy: timestamp, orderDirection: desc, where: { slot: $slotId }) {
     id
-    land {
-      id
-    }
-    account
+    taxOwed
+    taxPaid
+    depositRemaining
     timestamp
-    blockNumber
     tx
   }
 }
 
-query GetSlotCreatedEvents($first: Int = 100, $orderBy: SlotCreatedEvent_orderBy, $orderDirection: OrderDirection, $where: SlotCreatedEvent_filter) {
-  slotCreatedEvents(first: $first, orderBy: $orderBy, orderDirection: $orderDirection, where: $where) {
+query GetTaxCollectedEvents($slotId: String!, $first: Int!) {
+  taxCollectedEvents(first: $first, orderBy: timestamp, orderDirection: desc, where: { slot: $slotId }) {
     id
-    slot {
-      id
-      slotId
-    }
-    land
-    slotId
-    currency
-    basePrice
-    taxPercentage
+    recipient
+    amount
     timestamp
-    blockNumber
     tx
   }
 }
 
-query GetPriceUpdates($first: Int = 100, $orderBy: PriceUpdate_orderBy, $orderDirection: OrderDirection, $where: PriceUpdate_filter) {
-  priceUpdates(first: $first, orderBy: $orderBy, orderDirection: $orderDirection, where: $where) {
+query GetSlotActivity($slotId: String!, $first: Int!) {
+  boughtEvents(first: $first, orderBy: timestamp, orderDirection: desc, where: { slot: $slotId }) {
     id
-    slot {
-      id
-      slotId
-    }
-    oldPrice
-    newPrice
+    buyer
+    previousOccupant
+    price
+    selfAssessedPrice
     timestamp
-    blockNumber
+    tx
+  }
+  releasedEvents(first: $first, orderBy: timestamp, orderDirection: desc, where: { slot: $slotId }) {
+    id
+    occupant
+    refund
+    timestamp
+    tx
+  }
+  liquidatedEvents(first: $first, orderBy: timestamp, orderDirection: desc, where: { slot: $slotId }) {
+    id
+    liquidator
+    occupant
+    bounty
+    timestamp
     tx
   }
 }

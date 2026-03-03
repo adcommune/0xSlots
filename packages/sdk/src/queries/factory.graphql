@@ -1,0 +1,15 @@
+query GetFactory {
+  factories(first: 1) {
+    id
+    slotCount
+  }
+}
+
+query GetModules($first: Int!) {
+  modules(first: $first) {
+    id
+    verified
+    name
+    version
+  }
+}
