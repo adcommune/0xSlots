@@ -12,6 +12,7 @@ import {
 } from "wagmi";
 import { baseSepolia } from "wagmi/chains";
 import { ConnectButton } from "@/components/connect-button";
+import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useChain } from "@/context/chain";
@@ -124,31 +125,26 @@ export default function SlotPage({
 
   return (
     <div className="min-h-screen">
-      {/* Header */}
-      <div className="border-b">
-        <div className="max-w-6xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <Link
-                href="/explorer"
-                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-              >
-                ← Explorer
-              </Link>
-              <h1 className="text-xl font-bold tracking-tight leading-tight">
-                Slot {truncateAddress(slot.id)}
-              </h1>
-              <p className="text-xs text-muted-foreground">
-                {isOccupied
-                  ? `Occupied by ${truncateAddress(slot.occupant!)}`
-                  : "Vacant"}{" "}
-                · Base Sepolia
-              </p>
-            </div>
-            <ConnectButton />
-          </div>
+      <PageHeader>
+        <div>
+          <Link
+            href="/explorer"
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            ← Explorer
+          </Link>
+          <h1 className="text-xl font-bold tracking-tight leading-tight">
+            Slot {truncateAddress(slot.id)}
+          </h1>
+          <p className="text-xs text-muted-foreground">
+            {isOccupied
+              ? `Occupied by ${truncateAddress(slot.occupant!)}`
+              : "Vacant"}{" "}
+            · Base Sepolia
+          </p>
         </div>
-      </div>
+        <ConnectButton />
+      </PageHeader>
 
       <div className="max-w-6xl mx-auto px-6 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 items-start">

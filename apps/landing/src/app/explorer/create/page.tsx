@@ -1,5 +1,6 @@
 "use client";
 
+import { slotFactoryAbi, slotFactoryAddress } from "@0xslots/contracts";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -12,17 +13,16 @@ import {
   useWriteContract,
 } from "wagmi";
 import { baseSepolia } from "wagmi/chains";
-
-import { slotFactoryAbi, slotFactoryAddress } from "@0xslots/contracts";
+import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
@@ -133,14 +133,9 @@ export default function CreatePage() {
     };
     const initParams = {
       taxPercentage: BigInt(Math.round(Number(data.taxPercentage) * 100)),
-      module: (isAddress(module as string)
-        ? module
-        : zeroAddress) as Address,
+      module: (isAddress(module as string) ? module : zeroAddress) as Address,
       liquidationBountyBps: percentToBps(data.liquidationBountyPercent),
-      minDepositSeconds: toSeconds(
-        data.minDepositValue,
-        data.minDepositUnit,
-      ),
+      minDepositSeconds: toSeconds(data.minDepositValue, data.minDepositUnit),
     };
 
     if (slotCount === 1) {
@@ -155,36 +150,42 @@ export default function CreatePage() {
         address: FACTORY_ADDRESS,
         abi: slotFactoryAbi,
         functionName: "createSlots",
-        args: [recipient as Address, currency as Address, config, initParams, BigInt(slotCount)],
+        args: [
+          recipient as Address,
+          currency as Address,
+          config,
+          initParams,
+          BigInt(slotCount),
+        ],
       });
     }
   }
 
   return (
     <div className="min-h-screen">
-      {/* Header */}
-      <div className="border-b bg-muted/50">
-        <div className="max-w-5xl mx-auto px-6 py-12">
-          <h1 className="text-4xl font-black tracking-tight mb-2">
+      <PageHeader>
+        <div>
+          <h1 className="text-xl font-bold tracking-tight leading-tight">
             Create Slot
           </h1>
-          <p className="text-muted-foreground text-sm">
+          <p className="text-muted-foreground text-xs">
             Deploy a new Harberger tax slot on Base Sepolia
           </p>
         </div>
-      </div>
+      </PageHeader>
 
       {/* Form + Sidebar */}
-      <div className="max-w-5xl mx-auto px-6 py-8 pb-24 lg:pb-8">
+      <div className="max-w-6xl mx-auto px-6 py-8 pb-24 lg:pb-8">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="flex gap-6 items-start">
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="flex gap-6 items-start"
+          >
             {/* Left: Form */}
             <div className="flex-1 min-w-0 rounded-lg border">
               {/* Card header */}
               <div className="bg-muted/50 border-b px-4 py-3">
-                <h2 className="text-sm font-semibold">
-                  Configure Your Slot
-                </h2>
+                <h2 className="text-sm font-semibold">Configure Your Slot</h2>
               </div>
 
               <div className="p-6 space-y-6">
@@ -200,7 +201,9 @@ export default function CreatePage() {
                           <Button
                             type="button"
                             size="sm"
-                            variant={field.value === "self" ? "default" : "outline"}
+                            variant={
+                              field.value === "self" ? "default" : "outline"
+                            }
                             onClick={() => {
                               field.onChange("self");
                               form.setValue("recipient", "");
@@ -211,7 +214,9 @@ export default function CreatePage() {
                           <Button
                             type="button"
                             size="sm"
-                            variant={field.value === "custom" ? "default" : "outline"}
+                            variant={
+                              field.value === "custom" ? "default" : "outline"
+                            }
                             onClick={() => field.onChange("custom")}
                           >
                             Custom
@@ -275,7 +280,9 @@ export default function CreatePage() {
                         <Button
                           type="button"
                           size="sm"
-                          variant={field.value === "usdc" ? "default" : "outline"}
+                          variant={
+                            field.value === "usdc" ? "default" : "outline"
+                          }
                           onClick={() => field.onChange("usdc")}
                         >
                           USDC
@@ -283,7 +290,9 @@ export default function CreatePage() {
                         <Button
                           type="button"
                           size="sm"
-                          variant={field.value === "custom" ? "default" : "outline"}
+                          variant={
+                            field.value === "custom" ? "default" : "outline"
+                          }
                           onClick={() => field.onChange("custom")}
                         >
                           Custom
@@ -315,9 +324,7 @@ export default function CreatePage() {
 
                 {/* ── Slot Parameters ── */}
                 <div>
-                  <p className="text-sm font-medium mb-4">
-                    Slot Parameters
-                  </p>
+                  <p className="text-sm font-medium mb-4">Slot Parameters</p>
 
                   {/* Tax Rate — Slider */}
                   <FormField
@@ -403,10 +410,7 @@ export default function CreatePage() {
                                   </SelectTrigger>
                                   <SelectContent>
                                     {timeDenominations.map((unit) => (
-                                      <SelectItem
-                                        key={unit}
-                                        value={unit}
-                                      >
+                                      <SelectItem key={unit} value={unit}>
                                         {unit.charAt(0).toUpperCase() +
                                           unit.slice(1)}
                                       </SelectItem>
@@ -533,14 +537,11 @@ export default function CreatePage() {
                           %
                         </span>
                       </div>
-                      <FormDescription>
-                        Reward for liquidators
-                      </FormDescription>
+                      <FormDescription>Reward for liquidators</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-
               </div>
             </div>
 
