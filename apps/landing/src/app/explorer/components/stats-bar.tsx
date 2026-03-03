@@ -1,10 +1,10 @@
 "use client";
 
-import { useV3Factory, useV3Slots } from "@/hooks/use-v3";
+import { useFactory, useSlots } from "@/hooks/use-v3";
 
 export function StatsBar() {
-  const { data: factory } = useV3Factory();
-  const { data: slots } = useV3Slots();
+  const { data: factory } = useFactory();
+  const { data: slots } = useSlots();
   const vacant = slots?.filter((s) => s.occupant == null).length ?? 0;
   const occupied = (slots?.length ?? 0) - vacant;
 
