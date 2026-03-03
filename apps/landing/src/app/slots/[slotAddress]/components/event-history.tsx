@@ -3,50 +3,121 @@
 import { formatDistanceToNow } from "date-fns";
 import { formatPrice, truncateAddress } from "@/utils";
 
-interface Purchase {
+type UnifiedEvent = {
   id: string;
-  buyer: string;
-  previousOccupant: string;
-  price: string;
-  deposit: string;
-  selfAssessedPrice: string;
-  timestamp: string;
+  type: string;
+  actor: string;
+  detail: string;
+  timestamp: number;
   tx: string;
+};
+
+const TYPE_COLORS: Record<string, string> = {
+  Buy: "bg-green-500/10 text-green-600",
+  Release: "bg-yellow-500/10 text-yellow-600",
+  Liquidate: "bg-red-500/10 text-red-600",
+  Price: "bg-blue-500/10 text-blue-600",
+  Deposit: "bg-emerald-500/10 text-emerald-600",
+  Withdraw: "bg-orange-500/10 text-orange-600",
+  Collect: "bg-purple-500/10 text-purple-600",
+};
+
+export function normalizeSlotActivity(data: any, decimals: number = 6): UnifiedEvent[] {
+  if (!data) return [];
+  const events: UnifiedEvent[] = [];
+
+  for (const e of data.boughtEvents ?? []) {
+    events.push({
+      id: e.id, type: "Buy", actor: e.buyer,
+      detail: e.previousOccupant === "0x0000000000000000000000000000000000000000"
+        ? `claimed @ ${formatPrice(e.selfAssessedPrice, decimals)}`
+        : `force-bought @ ${formatPrice(e.price, decimals)} → ${formatPrice(e.selfAssessedPrice, decimals)}`,
+      timestamp: Number(e.timestamp), tx: e.tx,
+    });
+  }
+  for (const e of data.releasedEvents ?? []) {
+    events.push({
+      id: e.id, type: "Release", actor: e.occupant,
+      detail: `refund ${formatPrice(e.refund, decimals)}`,
+      timestamp: Number(e.timestamp), tx: e.tx,
+    });
+  }
+  for (const e of data.liquidatedEvents ?? []) {
+    events.push({
+      id: e.id, type: "Liquidate", actor: e.liquidator,
+      detail: `bounty ${formatPrice(e.bounty, decimals)}`,
+      timestamp: Number(e.timestamp), tx: e.tx,
+    });
+  }
+  for (const e of data.priceUpdatedEvents ?? []) {
+    events.push({
+      id: e.id, type: "Price", actor: "",
+      detail: `${formatPrice(e.oldPrice, decimals)} → ${formatPrice(e.newPrice, decimals)}`,
+      timestamp: Number(e.timestamp), tx: e.tx,
+    });
+  }
+  for (const e of data.depositedEvents ?? []) {
+    events.push({
+      id: e.id, type: "Deposit", actor: e.depositor,
+      detail: `+${formatPrice(e.amount, decimals)}`,
+      timestamp: Number(e.timestamp), tx: e.tx,
+    });
+  }
+  for (const e of data.withdrawnEvents ?? []) {
+    events.push({
+      id: e.id, type: "Withdraw", actor: e.occupant,
+      detail: `-${formatPrice(e.amount, decimals)}`,
+      timestamp: Number(e.timestamp), tx: e.tx,
+    });
+  }
+  for (const e of data.taxCollectedEvents ?? []) {
+    events.push({
+      id: e.id, type: "Collect", actor: e.recipient,
+      detail: `${formatPrice(e.amount, decimals)}`,
+      timestamp: Number(e.timestamp), tx: e.tx,
+    });
+  }
+
+  return events.sort((a, b) => b.timestamp - a.timestamp);
 }
 
-export function SlotEventHistory({ events, explorerUrl, decimals = 6 }: { events: Purchase[] | undefined; explorerUrl: string; decimals?: number }) {
+export function SlotEventHistory({ events, explorerUrl }: { events: UnifiedEvent[]; explorerUrl: string }) {
   return (
     <div className="rounded-lg border">
       <div className="bg-muted/50 border-b px-4 py-3">
-        <h2 className="text-sm font-semibold">Purchase History</h2>
+        <h2 className="text-sm font-semibold">Activity</h2>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr className="border-b">
-              <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Buyer</th>
-              <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Price Paid</th>
-              <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Self-Assessed</th>
-              <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Deposit</th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Type</th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Actor</th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Detail</th>
               <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Time</th>
               <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Tx</th>
             </tr>
           </thead>
           <tbody className="divide-y">
-            {(!events || events.length === 0) ? (
-              <tr><td colSpan={6} className="text-center text-muted-foreground py-6 text-sm">No purchases yet</td></tr>
+            {events.length === 0 ? (
+              <tr><td colSpan={5} className="text-center text-muted-foreground py-6 text-sm">No activity yet</td></tr>
             ) : events.map((ev) => (
-              <tr key={ev.id} className="text-sm">
+              <tr key={ev.id} className="text-sm hover:bg-muted/30 transition-colors">
                 <td className="px-4 py-2.5">
-                  <a href={`${explorerUrl}/address/${ev.buyer}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-mono text-xs">
-                    {truncateAddress(ev.buyer)}
-                  </a>
+                  <span className={`inline-block px-1.5 py-0.5 rounded text-xs font-medium ${TYPE_COLORS[ev.type] ?? "bg-muted text-muted-foreground"}`}>
+                    {ev.type}
+                  </span>
                 </td>
-                <td className="px-4 py-2.5">{formatPrice(ev.price, decimals)}</td>
-                <td className="px-4 py-2.5">{formatPrice(ev.selfAssessedPrice, decimals)}</td>
-                <td className="px-4 py-2.5">{formatPrice(ev.deposit, decimals)}</td>
-                <td className="px-4 py-2.5 text-muted-foreground text-xs">
-                  {formatDistanceToNow(new Date(Number(ev.timestamp) * 1000), { addSuffix: true })}
+                <td className="px-4 py-2.5 font-mono text-xs">
+                  {ev.actor ? (
+                    <a href={`${explorerUrl}/address/${ev.actor}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                      {truncateAddress(ev.actor)}
+                    </a>
+                  ) : "—"}
+                </td>
+                <td className="px-4 py-2.5 text-muted-foreground">{ev.detail}</td>
+                <td className="px-4 py-2.5 text-muted-foreground text-xs whitespace-nowrap">
+                  {formatDistanceToNow(new Date(ev.timestamp * 1000), { addSuffix: true })}
                 </td>
                 <td className="px-4 py-2.5">
                   <a href={`${explorerUrl}/tx/${ev.tx}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-mono text-xs">

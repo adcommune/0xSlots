@@ -1,3 +1,70 @@
+# ── Global (explorer) ──
+
+query GetRecentEvents($first: Int!) {
+  boughtEvents(first: $first, orderBy: timestamp, orderDirection: desc) {
+    id
+    slot { id }
+    buyer
+    previousOccupant
+    price
+    selfAssessedPrice
+    deposit
+    timestamp
+    tx
+  }
+  releasedEvents(first: $first, orderBy: timestamp, orderDirection: desc) {
+    id
+    slot { id }
+    occupant
+    refund
+    timestamp
+    tx
+  }
+  liquidatedEvents(first: $first, orderBy: timestamp, orderDirection: desc) {
+    id
+    slot { id }
+    liquidator
+    occupant
+    bounty
+    timestamp
+    tx
+  }
+  priceUpdatedEvents(first: $first, orderBy: timestamp, orderDirection: desc) {
+    id
+    slot { id }
+    oldPrice
+    newPrice
+    timestamp
+    tx
+  }
+  depositedEvents(first: $first, orderBy: timestamp, orderDirection: desc) {
+    id
+    slot { id }
+    depositor
+    amount
+    timestamp
+    tx
+  }
+  withdrawnEvents(first: $first, orderBy: timestamp, orderDirection: desc) {
+    id
+    slot { id }
+    occupant
+    amount
+    timestamp
+    tx
+  }
+  taxCollectedEvents(first: $first, orderBy: timestamp, orderDirection: desc) {
+    id
+    slot { id }
+    recipient
+    amount
+    timestamp
+    tx
+  }
+}
+
+# ── Per-slot ──
+
 query GetBoughtEvents($slotId: String!, $first: Int!) {
   boughtEvents(first: $first, orderBy: timestamp, orderDirection: desc, where: { slot: $slotId }) {
     id
@@ -40,6 +107,7 @@ query GetSlotActivity($slotId: String!, $first: Int!) {
     previousOccupant
     price
     selfAssessedPrice
+    deposit
     timestamp
     tx
   }
@@ -55,6 +123,34 @@ query GetSlotActivity($slotId: String!, $first: Int!) {
     liquidator
     occupant
     bounty
+    timestamp
+    tx
+  }
+  priceUpdatedEvents(first: $first, orderBy: timestamp, orderDirection: desc, where: { slot: $slotId }) {
+    id
+    oldPrice
+    newPrice
+    timestamp
+    tx
+  }
+  depositedEvents(first: $first, orderBy: timestamp, orderDirection: desc, where: { slot: $slotId }) {
+    id
+    depositor
+    amount
+    timestamp
+    tx
+  }
+  withdrawnEvents(first: $first, orderBy: timestamp, orderDirection: desc, where: { slot: $slotId }) {
+    id
+    occupant
+    amount
+    timestamp
+    tx
+  }
+  taxCollectedEvents(first: $first, orderBy: timestamp, orderDirection: desc, where: { slot: $slotId }) {
+    id
+    recipient
+    amount
     timestamp
     tx
   }

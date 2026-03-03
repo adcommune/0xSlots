@@ -15,13 +15,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ConnectButton } from "@/components/connect-button";
 import { useSlotOnChain } from "@/hooks/use-slot-onchain";
-import { useV3SlotPurchases } from "@/hooks/use-v3";
+import { useV3SlotActivity } from "@/hooks/use-v3";
 import { useChain } from "@/context/chain";
 import { truncateAddress, formatBalance, formatDuration, formatBps } from "@/utils";
 
 import { BuySection } from "./components/buy-section";
 import { UserCurrencyBalance } from "./components/user-balance";
-import { SlotEventHistory } from "./components/event-history";
+import { SlotEventHistory, normalizeSlotActivity } from "./components/event-history";
 
 const CHAIN_ID = baseSepolia.id;
 
@@ -29,7 +29,7 @@ export default function SlotPage({ params }: { params: Promise<{ slotAddress: st
   const { slotAddress } = use(params);
   const { explorerUrl } = useChain();
   const { data: slot, isLoading } = useSlotOnChain(slotAddress);
-  const { data: events } = useV3SlotPurchases(slotAddress);
+  const { data: activityData } = useV3SlotActivity(slotAddress);
   const { address, isConnected, chainId } = useAccount();
   const { switchChain } = useSwitchChain();
   const { writeContract, writeContractAsync, data: hash, isPending } = useWriteContract();
@@ -161,7 +161,7 @@ export default function SlotPage({ params }: { params: Promise<{ slotAddress: st
               </div>
             )}
 
-            <SlotEventHistory events={events} explorerUrl={explorerUrl} decimals={decimals} />
+            <SlotEventHistory events={normalizeSlotActivity(activityData, decimals)} explorerUrl={explorerUrl} />
           </div>
 
           {/* Right: Actions */}
