@@ -1,11 +1,19 @@
 "use client";
 
+import { batchCollectorAbi, batchCollectorAddress } from "@0xslots/contracts";
 import { use } from "react";
 import type { Address } from "viem";
-import { useEnsName, useEnsAvatar } from "wagmi";
-import { mainnet } from "viem/chains";
+import { baseSepolia, mainnet } from "viem/chains";
 import { normalize } from "viem/ens";
+import {
+  useAccount,
+  useEnsAvatar,
+  useEnsName,
+  useWaitForTransactionReceipt,
+  useWriteContract,
+} from "wagmi";
 import { ConnectButton } from "@/components/connect-button";
+import { Button } from "@/components/ui/button";
 import { useV3SlotsByRecipient } from "@/hooks/use-v3";
 import { formatPrice } from "@/utils";
 
@@ -29,14 +37,24 @@ export default function RecipientPage({
     chainId: mainnet.id,
   });
 
+  const { address: connectedAddress } = useAccount();
+  const { writeContract: write, data: hash, isPending } = useWriteContract();
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
+    hash,
+  });
+
+  const isOwner = connectedAddress?.toLowerCase() === address.toLowerCase();
   const occupied = slots?.filter((s) => !s.isVacant).length ?? 0;
   const vacant = (slots?.length ?? 0) - occupied;
-  const totalCollected = slots?.reduce((sum, s) => sum + BigInt(s.collectedTax), 0n) ?? 0n;
-
+  const totalCollected =
+    slots?.reduce((sum, s) => sum + BigInt(s.collectedTax), 0n) ?? 0n;
+  const occupiedSlots =
+    slots?.filter((s) => !s.isVacant).map((s) => s.id as Address) ?? [];
+  console.log({ occupiedSlots });
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen">
       {/* Header */}
-      <div className="border-b-4 border-black bg-linear-to-br from-gray-50 to-white">
+      <div className="border-b bg-muted/50">
         <div className="max-w-6xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -44,24 +62,24 @@ export default function RecipientPage({
                 <img
                   src={ensAvatar}
                   alt={ensName ?? address}
-                  className="w-12 h-12 border-2 border-black"
+                  className="w-12 h-12 rounded-full border"
                 />
               )}
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <a
                     href="/explorer"
-                    className="font-mono text-[10px] text-gray-400 hover:text-black"
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    ← EXPLORER
+                    ← Explorer
                   </a>
                 </div>
                 {ensName ? (
-                  <h1 className="text-xl font-black tracking-tighter leading-tight">
+                  <h1 className="text-xl font-bold tracking-tight leading-tight">
                     {ensName}
                   </h1>
                 ) : (
-                  <h1 className="text-xl font-black tracking-tighter uppercase leading-tight">
+                  <h1 className="text-xl font-bold tracking-tight leading-tight">
                     Recipient
                   </h1>
                 )}
@@ -69,7 +87,7 @@ export default function RecipientPage({
                   href={`${EXPLORER}/address/${address}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="font-mono text-xs text-blue-600 hover:underline"
+                  className="font-mono text-xs text-primary hover:underline"
                 >
                   {address}
                 </a>
@@ -92,14 +110,44 @@ export default function RecipientPage({
               value: formatPrice(totalCollected.toString(), 6),
             },
           ].map((stat) => (
-            <div key={stat.label} className="border-2 border-black p-3">
-              <p className="font-mono text-[10px] uppercase text-gray-500">
-                {stat.label}
-              </p>
-              <p className="font-mono text-lg font-black">{stat.value}</p>
+            <div key={stat.label} className="rounded-lg border p-3">
+              <p className="text-xs text-muted-foreground">{stat.label}</p>
+              <p className="text-lg font-bold">{stat.value}</p>
             </div>
           ))}
         </div>
+
+        {/* Collect All */}
+        {isOwner && occupied > 0 && (
+          <div className="mb-6">
+            <Button
+              className="w-full"
+              disabled={isPending || isConfirming}
+              onClick={() => {
+                const occupiedSlots =
+                  slots
+                    ?.filter((s) => !s.isVacant)
+                    .map((s) => s.id as Address) ?? [];
+                if (occupiedSlots.length === 0) return;
+                write({
+                  address: batchCollectorAddress[baseSepolia.id] as Address,
+                  abi: batchCollectorAbi,
+                  functionName: "collectAll",
+                  args: [occupiedSlots],
+                });
+              }}
+            >
+              {isPending || isConfirming
+                ? "Collecting..."
+                : `Collect All Tax (${occupied} slots)`}
+            </Button>
+            {isSuccess && (
+              <p className="text-sm text-green-600 text-center mt-2">
+                Tax collected from all slots
+              </p>
+            )}
+          </div>
+        )}
 
         <RecipientSlotsTable slots={slots} isLoading={isLoading} />
       </div>

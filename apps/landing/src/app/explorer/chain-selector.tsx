@@ -18,15 +18,15 @@ export function ChainSelector() {
       value={chainId.toString()}
       onValueChange={(v) => setChain(Number(v))}
     >
-      <SelectTrigger className="w-[200px] border-2 border-black font-mono text-sm font-bold uppercase bg-white cursor-pointer rounded-none">
+      <SelectTrigger className="w-[200px] text-sm font-medium cursor-pointer">
         <SelectValue />
       </SelectTrigger>
-      <SelectContent className="font-mono text-sm rounded-none border-2 border-black">
+      <SelectContent className="text-sm">
         {CHAINS.map((chain) => (
           <SelectItem
             key={chain.id}
             value={chain.id.toString()}
-            className="font-mono text-sm font-bold uppercase cursor-pointer"
+            className="text-sm cursor-pointer"
           >
             {chain.name}
           </SelectItem>

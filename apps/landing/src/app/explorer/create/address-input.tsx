@@ -5,6 +5,7 @@ import { isAddress } from "viem";
 import { normalize } from "viem/ens";
 import { useEnsAddress } from "wagmi";
 import { mainnet } from "wagmi/chains";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 export function useResolveAddress(input: string) {
@@ -46,7 +47,7 @@ export const AddressInput = forwardRef<HTMLInputElement, AddressInputProps>(
 
     return (
       <div className="space-y-1">
-        <input
+        <Input
           ref={ref}
           name={name}
           type="text"
@@ -55,28 +56,26 @@ export const AddressInput = forwardRef<HTMLInputElement, AddressInputProps>(
           onChange={(e) => onChange(e.target.value)}
           onBlur={onBlur}
           className={cn(
-            "w-full border-2 px-3 py-2 font-mono text-xs bg-white",
-            value && !isValid && !isResolving
-              ? "border-red-500"
-              : "border-black",
-            error && "border-red-500",
+            "font-mono text-xs",
+            (value && !isValid && !isResolving) && "border-destructive",
+            error && "border-destructive",
           )}
         />
         {isResolving && (
-          <p className="font-mono text-[10px] text-blue-500">
+          <p className="text-[10px] text-blue-500">
             Resolving {value}…
           </p>
         )}
         {ensName && isAddress(resolved) && (
-          <p className="font-mono text-[10px] text-green-600">
+          <p className="text-[10px] text-green-600">
             {ensName} → {resolved.slice(0, 6)}…{resolved.slice(-4)}
           </p>
         )}
         {error && (
-          <p className="font-mono text-[10px] text-red-500">{error}</p>
+          <p className="text-[10px] text-destructive">{error}</p>
         )}
         {hint && !isResolving && !ensName && !error && (
-          <p className="font-mono text-[10px] text-gray-400">{hint}</p>
+          <p className="text-[10px] text-muted-foreground">{hint}</p>
         )}
       </div>
     );
