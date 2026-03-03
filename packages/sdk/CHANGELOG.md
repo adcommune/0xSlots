@@ -1,5 +1,11 @@
 # @0xslots/sdk
 
+## 0.5.0
+
+### Minor Changes
+
+- 037b454: v3 update
+
 ## 0.4.0
 
 ### Minor Changes
