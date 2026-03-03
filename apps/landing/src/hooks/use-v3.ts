@@ -135,3 +135,13 @@ export function useV3SlotActivity(slotId: string) {
     enabled: !!slotId,
   });
 }
+
+export function useV3RecentEvents() {
+  return useQuery({
+    queryKey: ["v3-recent-events"],
+    queryFn: async () => {
+      return client.getRecentEvents({ first: 50 });
+    },
+    staleTime: 10_000,
+  });
+}

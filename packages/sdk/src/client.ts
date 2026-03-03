@@ -91,6 +91,9 @@ export class SlotsClient {
   getSlotActivity(...args: Parameters<ReturnType<typeof getSdk>["GetSlotActivity"]>) {
     return this.sdk.GetSlotActivity(...args);
   }
+  getRecentEvents(...args: Parameters<ReturnType<typeof getSdk>["GetRecentEvents"]>) {
+    return this.sdk.GetRecentEvents(...args);
+  }
 
   // Meta
   getMeta(): Promise<SubgraphMeta> {
