@@ -1,87 +1,47 @@
-query GetSlots($first: Int = 100, $skip: Int = 0, $orderBy: Slot_orderBy, $orderDirection: OrderDirection, $where: Slot_filter) {
-  slots(first: $first, skip: $skip, orderBy: $orderBy, orderDirection: $orderDirection, where: $where) {
-    id
-    land {
-      id
-      owner
-    }
-    slotId
-    occupant
-    currency { id name symbol decimals }
-    basePrice
-    price
-    taxPercentage
-    maxTaxPercentage
-    minTaxUpdatePeriod
-    module
-    active
-    createdAt
-    updatedAt
+fragment SlotFields on Slot {
+  id
+  recipient
+  currency
+  currencyName
+  currencySymbol
+  currencyDecimals
+  manager
+  mutableTax
+  mutableModule
+  taxPercentage
+  module
+  occupant
+  price
+  deposit
+  collectedTax
+  totalCollected
+  liquidationBountyBps
+  minDepositSeconds
+  createdAt
+  createdTx
+  updatedAt
+}
+
+query GetSlots($first: Int!, $skip: Int) {
+  slots(first: $first, skip: $skip, orderBy: createdAt, orderDirection: desc) {
+    ...SlotFields
   }
 }
 
 query GetSlot($id: ID!) {
   slot(id: $id) {
-    id
-    land {
-      id
-      owner
-    }
-    slotId
-    occupant
-    currency { id name symbol decimals }
-    basePrice
-    price
-    taxPercentage
-    maxTaxPercentage
-    minTaxUpdatePeriod
-    module
-    active
-    createdAt
-    updatedAt
-    priceHistory(orderBy: timestamp, orderDirection: desc, first: 10) {
-      id
-      oldPrice
-      newPrice
-      timestamp
-      tx
-    }
-    taxUpdates(orderBy: timestamp, orderDirection: desc, first: 10) {
-      id
-      kind
-      oldPercentage
-      newPercentage
-      confirmableAt
-      timestamp
-      tx
-    }
+    ...SlotFields
   }
 }
 
-query GetSlotsByOccupant($occupant: Bytes!, $first: Int = 100) {
-  slots(where: { occupant: $occupant, active: true }, first: $first) {
-    id
-    land {
-      id
-    }
-    slotId
-    occupant
-    price
-    taxPercentage
-    active
+query GetSlotsByRecipient($recipient: Bytes!, $first: Int!) {
+  slots(first: $first, orderBy: createdAt, orderDirection: desc, where: { recipient: $recipient }) {
+    ...SlotFields
   }
 }
 
-query GetAvailableSlots($first: Int = 100, $skip: Int = 0) {
-  slots(where: { occupant: null, active: true }, first: $first, skip: $skip, orderBy: price, orderDirection: asc) {
-    id
-    land {
-      id
-      owner
-    }
-    slotId
-    currency { id name symbol decimals }
-    price
-    taxPercentage
+query GetSlotsByOccupant($occupant: Bytes!, $first: Int!) {
+  slots(first: $first, orderBy: createdAt, orderDirection: desc, where: { occupant: $occupant }) {
+    ...SlotFields
   }
 }

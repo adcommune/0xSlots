@@ -1,4 +1,9 @@
-export const slotsAbi = [
+export const slotAbi = [
+  {
+    "type": "constructor",
+    "inputs": [],
+    "stateMutability": "nonpayable"
+  },
   {
     "type": "function",
     "name": "BASIS_POINTS",
@@ -707,6 +712,12 @@ export const slotsAbi = [
         "internalType": "uint256"
       },
       {
+        "name": "taxPaid",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
         "name": "depositRemaining",
         "type": "uint256",
         "indexed": false,
@@ -854,12 +865,17 @@ export const slotsAbi = [
   },
   {
     "type": "error",
-    "name": "CannotBuyWhenNotOccupied",
+    "name": "InsufficientDeposit",
     "inputs": []
   },
   {
     "type": "error",
-    "name": "InsufficientDeposit",
+    "name": "InvalidCurrency",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidLiquidationBounty",
     "inputs": []
   },
   {
@@ -869,19 +885,13 @@ export const slotsAbi = [
   },
   {
     "type": "error",
-    "name": "InvalidTaxPercentage",
+    "name": "InvalidRecipient",
     "inputs": []
   },
   {
     "type": "error",
-    "name": "ModuleCallFailed_Error",
-    "inputs": [
-      {
-        "name": "callbackName",
-        "type": "string",
-        "internalType": "string"
-      }
-    ]
+    "name": "InvalidTaxPercentage",
+    "inputs": []
   },
   {
     "type": "error",
@@ -911,11 +921,6 @@ export const slotsAbi = [
   {
     "type": "error",
     "name": "NothingToCollect",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "NothingToWithdraw",
     "inputs": []
   },
   {
