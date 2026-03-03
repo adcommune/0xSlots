@@ -5,7 +5,7 @@ import { useV3Factory, useV3Slots } from "@/hooks/use-v3";
 export function StatsBar() {
   const { data: factory } = useV3Factory();
   const { data: slots } = useV3Slots();
-  const vacant = slots?.filter((s) => s.isVacant).length ?? 0;
+  const vacant = slots?.filter((s) => s.occupant == null).length ?? 0;
   const occupied = (slots?.length ?? 0) - vacant;
 
   return (

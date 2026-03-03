@@ -1,6 +1,6 @@
 "use client";
 
-import { slotsAbi } from "@0xslots/contracts";
+import { slotAbi } from "@0xslots/contracts";
 import { useState } from "react";
 import { type Address, erc20Abi, parseUnits } from "viem";
 import {
@@ -10,12 +10,12 @@ import {
 } from "wagmi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { V3Slot } from "@/lib/v3-queries";
+import type { V3Slot } from "@/hooks/use-v3";
 import { formatBalance, formatPrice } from "@/utils";
 
-function toUnits(v: string): bigint {
+function toUnits(v: string, decimals: number = 6): bigint {
   try {
-    return parseUnits(v || "0", 6);
+    return parseUnits(v || "0", decimals);
   } catch {
     return 0n;
   }
@@ -30,6 +30,7 @@ export function BuySection({
   slotAddress: string;
   isOccupied: boolean;
 }) {
+  const decimals = slot.currencyDecimals ?? 6;
   const {
     writeContract,
     writeContractAsync,
@@ -47,7 +48,7 @@ export function BuySection({
   // Read on-chain params for min deposit
   const slotContract = {
     address: slotAddress as Address,
-    abi: slotsAbi,
+    abi: slotAbi,
   } as const;
   const { data: slotParams } = useReadContracts({
     contracts: [
@@ -64,14 +65,14 @@ export function BuySection({
     if (!minDepositSeconds || !onChainTax || !MONTH || minDepositSeconds === 0n)
       return "0";
     const min = (price * onChainTax * minDepositSeconds) / (MONTH * 10000n);
-    return formatBalance(min, 6);
+    return formatBalance(min, decimals);
   }
 
-  const currentPrice = isOccupied ? formatPrice(slot.price, 6) : "0";
-  const defaultPrice = isOccupied ? formatPrice(slot.price, 6) : "";
+  const currentPrice = isOccupied ? formatPrice(slot.price, slot.currencyDecimals ?? 18) : "0";
+  const defaultPrice = isOccupied ? formatPrice(slot.price, slot.currencyDecimals ?? 18) : "";
 
   const effectivePrice = buyPrice || defaultPrice;
-  const priceForMin = effectivePrice ? toUnits(effectivePrice) : 0n;
+  const priceForMin = effectivePrice ? toUnits(effectivePrice, decimals) : 0n;
   const minDep = computeMinDeposit(priceForMin);
   const effectiveDeposit = buyDeposit || (minDep !== "0" ? minDep : "");
 
@@ -79,7 +80,7 @@ export function BuySection({
   const costPrice = isOccupied ? currentPrice : "0";
 
   async function handleBuy() {
-    const dep = toUnits(effectiveDeposit || "0");
+    const dep = toUnits(effectiveDeposit || "0", decimals);
     const price = isOccupied ? BigInt(slot.price) : 0n;
     const totalApproval = dep + price;
 
@@ -96,9 +97,9 @@ export function BuySection({
 
     writeContract({
       address: slotAddress as Address,
-      abi: slotsAbi,
+      abi: slotAbi,
       functionName: "buy",
-      args: [dep, toUnits(effectivePrice || "0")],
+      args: [dep, toUnits(effectivePrice || "0", decimals)],
     });
   }
 

@@ -52,8 +52,7 @@ export function SlotsTable() {
             </thead>
             <tbody className="divide-y">
               {slots.map((slot) => {
-                const isOccupied = !slot.isVacant;
-                const hasPending = slot.hasPendingTaxUpdate || slot.hasPendingModuleUpdate;
+                const isOccupied = slot.occupant != null;
                 return (
                   <tr key={slot.id} className="text-sm hover:bg-muted/50 cursor-pointer" onClick={() => { window.location.href = `/slots/${slot.id}`; }}>
                     <td className="px-4 py-2.5">
@@ -72,7 +71,7 @@ export function SlotsTable() {
                       {isOccupied && slot.occupant ? truncateAddress(slot.occupant) : "—"}
                     </td>
                     <td className="px-4 py-2.5 text-right font-bold font-mono text-xs">
-                      {isOccupied ? formatPrice(slot.price, 6) : "0"}
+                      {isOccupied ? formatPrice(slot.price, slot.currencyDecimals ?? 18) : "0"}
                     </td>
                     <td className="px-4 py-2.5 text-right font-mono text-xs">
                       {Number(slot.taxPercentage) / 100}%
@@ -81,7 +80,6 @@ export function SlotsTable() {
                       <div className="flex gap-1">
                         {slot.mutableTax && <Badge variant="outline" className="text-[9px]">TAX</Badge>}
                         {slot.mutableModule && <Badge variant="outline" className="text-[9px]">MOD</Badge>}
-                        {hasPending && <Badge variant="outline" className="text-[9px] border-yellow-500 text-yellow-700 bg-yellow-50">PENDING</Badge>}
                       </div>
                     </td>
                   </tr>

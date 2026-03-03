@@ -10,11 +10,11 @@ import {
   useWriteContract,
 } from "wagmi";
 import { baseSepolia } from "wagmi/chains";
-import { slotsAbi } from "@0xslots/contracts";
+import { slotAbi } from "@0xslots/contracts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ConnectButton } from "@/components/connect-button";
-import { useV3Slot, useV3SlotEvents } from "@/hooks/use-v3";
+import { useV3Slot, useV3SlotPurchases } from "@/hooks/use-v3";
 import { useChain } from "@/context/chain";
 import { truncateAddress, formatPrice } from "@/utils";
 
@@ -29,7 +29,7 @@ export default function SlotPage({ params }: { params: Promise<{ slotAddress: st
   const { slotAddress } = use(params);
   const { explorerUrl } = useChain();
   const { data: slot, isLoading } = useV3Slot(slotAddress);
-  const { data: events } = useV3SlotEvents(slotAddress);
+  const { data: events } = useV3SlotPurchases(slotAddress);
   const { address, isConnected, chainId } = useAccount();
   const { switchChain } = useSwitchChain();
   const { writeContract, writeContractAsync, data: hash, isPending } = useWriteContract();
@@ -43,7 +43,7 @@ export default function SlotPage({ params }: { params: Promise<{ slotAddress: st
   const busy = isPending || isConfirming;
 
   function toUnits(v: string): bigint {
-    try { return parseUnits(v || "0", 6); } catch { return 0n; }
+    try { return parseUnits(v || "0", slot?.currencyDecimals ?? 6); } catch { return 0n; }
   }
 
   async function approveAndCall(amount: bigint, fn: () => void) {
@@ -84,7 +84,7 @@ export default function SlotPage({ params }: { params: Promise<{ slotAddress: st
     );
   }
 
-  const isOccupied = !slot.isVacant;
+  const isOccupied = slot.occupant != null;
   const isOccupant = address?.toLowerCase() === slot.occupant?.toLowerCase();
   const isRecipient = address?.toLowerCase() === slot.recipient.toLowerCase();
 
@@ -129,35 +129,13 @@ export default function SlotPage({ params }: { params: Promise<{ slotAddress: st
                 <div className="flex justify-between"><span className="text-muted-foreground">Mutable Tax</span><span>{slot.mutableTax ? "Yes" : "No"}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Mutable Module</span><span>{slot.mutableModule ? "Yes" : "No"}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Module</span><span className="font-mono text-xs">{slot.module === "0x0000000000000000000000000000000000000000" ? "None" : truncateAddress(slot.module)}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Collected Tax</span><span>{formatPrice(slot.collectedTax, 6)} USDC</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Collected Tax</span><span>{formatPrice(slot.collectedTax, slot.currencyDecimals ?? 18)} {slot.currencySymbol ?? 'USDC'}</span></div>
               </div>
             </div>
 
-            {/* Pending Updates */}
-            {(slot.hasPendingTaxUpdate || slot.hasPendingModuleUpdate) && (
-              <div className="rounded-lg border border-yellow-500 bg-yellow-50">
-                <div className="p-4">
-                  <h3 className="font-semibold text-sm mb-2 text-yellow-800">Pending Updates</h3>
-                  <div className="space-y-1 text-sm">
-                    {slot.hasPendingTaxUpdate && (
-                      <div className="flex justify-between">
-                        <span className="text-yellow-700">New Tax</span>
-                        <span className="font-bold">{Number(slot.pendingTaxPercentage ?? 0) / 100}%/mo</span>
-                      </div>
-                    )}
-                    {slot.hasPendingModuleUpdate && (
-                      <div className="flex justify-between">
-                        <span className="text-yellow-700">New Module</span>
-                        <span className="font-bold font-mono text-xs">{truncateAddress(slot.pendingModule ?? "")}</span>
-                      </div>
-                    )}
-                    <p className="text-xs text-yellow-600 mt-2">Applied on next ownership transition</p>
-                  </div>
-                </div>
-              </div>
-            )}
+            {/* Pending Updates — TODO: read from on-chain getPendingUpdate() */}
 
-            <SlotEventHistory events={events} explorerUrl={explorerUrl} />
+            <SlotEventHistory events={events} explorerUrl={explorerUrl} decimals={slot.currencyDecimals ?? 6} />
           </div>
 
           {/* Right: Actions */}
@@ -165,7 +143,7 @@ export default function SlotPage({ params }: { params: Promise<{ slotAddress: st
             <div className="rounded-lg border">
               <div className="bg-muted/50 border-b px-3 py-3">
                 <h2 className="text-sm font-semibold">
-                  {isOccupied ? `Price: ${formatPrice(slot.price, 6)} USDC` : "Vacant Slot"}
+                  {isOccupied ? `Price: ${formatPrice(slot.price, slot.currencyDecimals ?? 18)} {slot.currencySymbol ?? 'USDC'}` : "Vacant Slot"}
                 </h2>
               </div>
 
@@ -189,7 +167,7 @@ export default function SlotPage({ params }: { params: Promise<{ slotAddress: st
                 ) : (
                   <>
                     {/* Buy / Force Buy */}
-                    {(slot.isVacant || !isOccupant) && (
+                    {(slot.occupant == null || !isOccupant) && (
                       <BuySection
                         slot={slot}
                         slotAddress={slotAddress}
@@ -200,19 +178,19 @@ export default function SlotPage({ params }: { params: Promise<{ slotAddress: st
                     {isOccupant && (
                       <div className="space-y-3">
                         <div>
-                          <label className="text-xs text-muted-foreground block mb-1">New Price (USDC)</label>
+                          <label className="text-xs text-muted-foreground block mb-1">New Price ({slot.currencySymbol ?? 'USDC'})</label>
                           <div className="flex gap-2">
                             <Input type="text" placeholder="1.00" value={newPrice} onChange={(e) => setNewPrice(e.target.value)}
                               className="font-mono text-xs flex-1" />
                             <Button size="sm" variant="outline" disabled={busy}
-                              onClick={() => writeContract({ address: slotAddress as Address, abi: slotsAbi, functionName: "selfAssess", args: [toUnits(newPrice)] })}>
+                              onClick={() => writeContract({ address: slotAddress as Address, abi: slotAbi, functionName: "selfAssess", args: [toUnits(newPrice)] })}>
                               {busy ? "..." : "Set"}
                             </Button>
                           </div>
                         </div>
 
                         <div>
-                          <label className="text-xs text-muted-foreground block mb-1">Add Deposit (USDC)</label>
+                          <label className="text-xs text-muted-foreground block mb-1">Add Deposit ({slot.currencySymbol ?? 'USDC'})</label>
                           <div className="flex gap-2">
                             <Input type="text" placeholder="1.00" value={depositAmount} onChange={(e) => setDepositAmount(e.target.value)}
                               className="font-mono text-xs flex-1" />
@@ -220,7 +198,7 @@ export default function SlotPage({ params }: { params: Promise<{ slotAddress: st
                               onClick={() => {
                                 const amt = toUnits(depositAmount);
                                 approveAndCall(amt, () =>
-                                  writeContract({ address: slotAddress as Address, abi: slotsAbi, functionName: "topUp", args: [amt] })
+                                  writeContract({ address: slotAddress as Address, abi: slotAbi, functionName: "topUp", args: [amt] })
                                 );
                               }}>
                               {busy ? "..." : "Add"}
@@ -229,19 +207,19 @@ export default function SlotPage({ params }: { params: Promise<{ slotAddress: st
                         </div>
 
                         <div>
-                          <label className="text-xs text-muted-foreground block mb-1">Withdraw (USDC)</label>
+                          <label className="text-xs text-muted-foreground block mb-1">Withdraw ({slot.currencySymbol ?? 'USDC'})</label>
                           <div className="flex gap-2">
                             <Input type="text" placeholder="1.00" value={withdrawAmount} onChange={(e) => setWithdrawAmount(e.target.value)}
                               className="font-mono text-xs flex-1" />
                             <Button size="sm" variant="outline" disabled={busy}
-                              onClick={() => writeContract({ address: slotAddress as Address, abi: slotsAbi, functionName: "withdraw", args: [toUnits(withdrawAmount)] })}>
+                              onClick={() => writeContract({ address: slotAddress as Address, abi: slotAbi, functionName: "withdraw", args: [toUnits(withdrawAmount)] })}>
                               {busy ? "..." : "Out"}
                             </Button>
                           </div>
                         </div>
 
                         <Button variant="destructive" className="w-full" disabled={busy}
-                          onClick={() => writeContract({ address: slotAddress as Address, abi: slotsAbi, functionName: "release", args: [] })}>
+                          onClick={() => writeContract({ address: slotAddress as Address, abi: slotAbi, functionName: "release", args: [] })}>
                           {busy ? "..." : "Release Slot"}
                         </Button>
                       </div>
@@ -249,14 +227,14 @@ export default function SlotPage({ params }: { params: Promise<{ slotAddress: st
 
                     {isOccupied && !isOccupant && (
                       <Button variant="destructive" className="w-full" disabled={busy}
-                        onClick={() => writeContract({ address: slotAddress as Address, abi: slotsAbi, functionName: "liquidate", args: [] })}>
+                        onClick={() => writeContract({ address: slotAddress as Address, abi: slotAbi, functionName: "liquidate", args: [] })}>
                         {busy ? "..." : "Liquidate"}
                       </Button>
                     )}
 
                     {isRecipient && (
                       <Button variant="outline" className="w-full" disabled={busy}
-                        onClick={() => writeContract({ address: slotAddress as Address, abi: slotsAbi, functionName: "collect", args: [] })}>
+                        onClick={() => writeContract({ address: slotAddress as Address, abi: slotAbi, functionName: "collect", args: [] })}>
                         {busy ? "..." : "Collect Tax"}
                       </Button>
                     )}
