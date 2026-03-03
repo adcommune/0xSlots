@@ -5,6 +5,7 @@ export {
   SlotsChain,
   SUBGRAPH_URLS,
   type SlotsClientConfig,
+  type SubgraphMeta,
 } from "./client";
 
 // Re-export generated types and SDK

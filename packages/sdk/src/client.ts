@@ -1,5 +1,25 @@
-import { GraphQLClient } from "graphql-request";
+import { GraphQLClient, gql } from "graphql-request";
 import { getSdk } from "./generated/graphql";
+
+const META_QUERY = gql`
+  query GetMeta {
+    _meta {
+      block {
+        number
+        hash
+        timestamp
+      }
+      hasIndexingErrors
+    }
+  }
+`;
+
+export interface SubgraphMeta {
+  _meta: {
+    block: { number: number; hash: string; timestamp: number };
+    hasIndexingErrors: boolean;
+  };
+}
 
 export enum SlotsChain {
   BASE_SEPOLIA = 84532,
@@ -70,6 +90,11 @@ export class SlotsClient {
   }
   getSlotActivity(...args: Parameters<ReturnType<typeof getSdk>["GetSlotActivity"]>) {
     return this.sdk.GetSlotActivity(...args);
+  }
+
+  // Meta
+  getMeta(): Promise<SubgraphMeta> {
+    return this.client.request<SubgraphMeta>(META_QUERY);
   }
 }
 

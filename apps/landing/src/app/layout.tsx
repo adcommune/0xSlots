@@ -4,6 +4,7 @@ import "./globals.css";
 import { ChainSelector } from "@/app/explorer/chain-selector";
 import { ConnectButton } from "@/components/connect-button";
 import { Providers } from "@/components/providers";
+import { SubgraphStatus } from "@/components/subgraph-status";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const jetbrains = JetBrains_Mono({
@@ -41,6 +42,7 @@ export default function RootLayout({
                 <a href="/explorer" className="text-muted-foreground hover:text-foreground transition-colors">
                   Explorer
                 </a>
+                <SubgraphStatus />
                 <ChainSelector />
                 <ConnectButton />
               </div>
