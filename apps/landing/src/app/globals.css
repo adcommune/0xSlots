@@ -9,20 +9,6 @@
   --font-mono: var(--font-mono), ui-monospace, monospace;
 }
 
-* {
-  border-radius: 0 !important;
-}
-
-::selection {
-  background: black;
-  color: white;
-}
-
-hr {
-  border: none;
-  border-top: 3px solid black;
-}
-
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);

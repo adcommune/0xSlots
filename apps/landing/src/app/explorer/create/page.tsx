@@ -14,6 +14,7 @@ import {
 import { baseSepolia } from "wagmi/chains";
 
 import { slotsFactoryAbi, slotFactoryAddress } from "@0xslots/contracts";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
@@ -23,6 +24,7 @@ import {
   FormMessage,
   FormDescription,
 } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -159,14 +161,14 @@ export default function CreatePage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen">
       {/* Header */}
-      <div className="border-b-4 border-black bg-linear-to-br from-gray-50 to-white">
+      <div className="border-b bg-muted/50">
         <div className="max-w-5xl mx-auto px-6 py-12">
-          <h1 className="text-4xl font-black tracking-tighter uppercase mb-2">
+          <h1 className="text-4xl font-black tracking-tight mb-2">
             Create Slot
           </h1>
-          <p className="text-gray-500 font-mono text-sm">
+          <p className="text-muted-foreground text-sm">
             Deploy a new Harberger tax slot on Base Sepolia
           </p>
         </div>
@@ -177,10 +179,10 @@ export default function CreatePage() {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex gap-6 items-start">
             {/* Left: Form */}
-            <div className="flex-1 min-w-0 border-2 border-black">
+            <div className="flex-1 min-w-0 rounded-lg border">
               {/* Card header */}
-              <div className="bg-gray-50 border-b-2 border-black p-4">
-                <h2 className="text-sm font-bold uppercase tracking-tight">
+              <div className="bg-muted/50 border-b px-4 py-3">
+                <h2 className="text-sm font-semibold">
                   Configure Your Slot
                 </h2>
               </div>
@@ -193,54 +195,47 @@ export default function CreatePage() {
                     name="recipientMode"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="font-mono text-[10px] text-gray-500 uppercase tracking-wider">
-                          Recipient
-                        </FormLabel>
+                        <FormLabel>Recipient</FormLabel>
                         <div className="flex gap-2">
-                          <button
+                          <Button
                             type="button"
+                            size="sm"
+                            variant={field.value === "self" ? "default" : "outline"}
                             onClick={() => {
                               field.onChange("self");
                               form.setValue("recipient", "");
                             }}
-                            className={`font-mono text-xs px-3 py-1.5 border-2 border-black transition-colors ${
-                              field.value === "self"
-                                ? "bg-black text-white"
-                                : ""
-                            }`}
                           >
                             My Address
-                          </button>
-                          <button
+                          </Button>
+                          <Button
                             type="button"
+                            size="sm"
+                            variant={field.value === "custom" ? "default" : "outline"}
                             onClick={() => field.onChange("custom")}
-                            className={`font-mono text-xs px-3 py-1.5 border-2 border-black transition-colors ${
-                              field.value === "custom"
-                                ? "bg-black text-white"
-                                : ""
-                            }`}
                           >
                             Custom
-                          </button>
-                          <button
+                          </Button>
+                          <Button
                             type="button"
+                            size="sm"
+                            variant="outline"
                             disabled
-                            className="font-mono text-xs px-3 py-1.5 border-2 border-black opacity-30 cursor-not-allowed"
                           >
                             Group
-                          </button>
+                          </Button>
                         </div>
                       </FormItem>
                     )}
                   />
 
                   {watchedRecipientMode === "self" && address && (
-                    <p className="mt-2 font-mono text-[10px] text-gray-400">
+                    <p className="mt-2 text-xs text-muted-foreground">
                       Tax revenue goes to {truncateAddress(address)}
                     </p>
                   )}
                   {watchedRecipientMode === "self" && !address && (
-                    <p className="mt-2 font-mono text-[10px] text-gray-400">
+                    <p className="mt-2 text-xs text-muted-foreground">
                       Connect your wallet to use your address.
                     </p>
                   )}
@@ -267,7 +262,7 @@ export default function CreatePage() {
                   )}
                 </div>
 
-                <Separator className="bg-black! h-0.5" />
+                <Separator />
 
                 {/* ── Currency ── */}
                 <FormField
@@ -275,30 +270,24 @@ export default function CreatePage() {
                   name="currencyMode"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="font-mono text-[10px] text-gray-500 uppercase tracking-wider">
-                        Currency
-                      </FormLabel>
+                      <FormLabel>Currency</FormLabel>
                       <div className="flex gap-2">
-                        <button
+                        <Button
                           type="button"
+                          size="sm"
+                          variant={field.value === "usdc" ? "default" : "outline"}
                           onClick={() => field.onChange("usdc")}
-                          className={`font-mono text-xs px-3 py-1.5 border-2 border-black transition-colors ${
-                            field.value === "usdc" ? "bg-black text-white" : ""
-                          }`}
                         >
                           USDC
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           type="button"
+                          size="sm"
+                          variant={field.value === "custom" ? "default" : "outline"}
                           onClick={() => field.onChange("custom")}
-                          className={`font-mono text-xs px-3 py-1.5 border-2 border-black transition-colors ${
-                            field.value === "custom"
-                              ? "bg-black text-white"
-                              : ""
-                          }`}
                         >
                           Custom
-                        </button>
+                        </Button>
                       </div>
                     </FormItem>
                   )}
@@ -322,11 +311,11 @@ export default function CreatePage() {
                   />
                 )}
 
-                <Separator className="bg-black! h-0.5" />
+                <Separator />
 
                 {/* ── Slot Parameters ── */}
                 <div>
-                  <p className="font-mono text-[10px] text-gray-500 uppercase tracking-wider mb-4">
+                  <p className="text-sm font-medium mb-4">
                     Slot Parameters
                   </p>
 
@@ -337,10 +326,8 @@ export default function CreatePage() {
                     render={({ field }) => (
                       <FormItem>
                         <div className="flex items-center justify-between">
-                          <FormLabel className="font-mono text-[10px] text-gray-500 uppercase tracking-wider">
-                            Tax Rate
-                          </FormLabel>
-                          <span className="font-mono text-xs font-bold">
+                          <FormLabel>Tax Rate</FormLabel>
+                          <span className="text-sm font-semibold">
                             {parseFloat(field.value).toFixed(1) || "0"}%/mo
                           </span>
                         </div>
@@ -351,9 +338,9 @@ export default function CreatePage() {
                           step="0.5"
                           value={Number(field.value) || 0}
                           onChange={(e) => field.onChange(e.target.value)}
-                          className="w-full h-2 appearance-none bg-gray-200 cursor-pointer accent-black [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-black [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:bg-black [&::-moz-range-thumb]:border-0"
+                          className="w-full h-2 appearance-none bg-secondary rounded-full cursor-pointer accent-primary [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:rounded-full [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:bg-primary [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0"
                         />
-                        <div className="flex justify-between font-mono text-[9px] text-gray-400">
+                        <div className="flex justify-between text-[9px] text-muted-foreground">
                           <span>0%</span>
                           <span>25%</span>
                           <span>50%</span>
@@ -365,25 +352,25 @@ export default function CreatePage() {
                           const isLow = v <= 20;
                           const isHigh = v >= 30;
                           return (
-                            <div className="flex justify-between mt-1.5 font-mono text-[9px] leading-tight gap-4">
+                            <div className="flex justify-between mt-1.5 text-[9px] leading-tight gap-4">
                               <span
                                 className={
                                   isLow
-                                    ? "font-bold text-gray-700"
-                                    : "text-gray-400"
+                                    ? "font-bold text-foreground"
+                                    : "text-muted-foreground"
                                 }
                               >
                                 Predictability · low churn · squat risk
                               </span>
                               <span
-                                className={`text-right ${isHigh ? "font-bold text-gray-700" : "text-gray-400"}`}
+                                className={`text-right ${isHigh ? "font-bold text-foreground" : "text-muted-foreground"}`}
                               >
                                 Allocative efficiency · anti-squat · volatility
                               </span>
                             </div>
                           );
                         })()}
-                        <FormMessage className="font-mono text-[10px]" />
+                        <FormMessage />
                       </FormItem>
                     )}
                   />
@@ -395,15 +382,13 @@ export default function CreatePage() {
                       name="minDepositValue"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="font-mono text-[10px] text-gray-500 uppercase tracking-wider">
-                            Min Deposit Time
-                          </FormLabel>
+                          <FormLabel>Min Deposit Time</FormLabel>
                           <div className="flex gap-0">
-                            <input
+                            <Input
                               {...field}
                               type="text"
                               inputMode="decimal"
-                              className="flex-1 border-2 border-r-0 border-black px-3 py-2 font-mono text-xs"
+                              className="rounded-r-none"
                             />
                             <FormField
                               control={form.control}
@@ -413,15 +398,14 @@ export default function CreatePage() {
                                   value={selectField.value}
                                   onValueChange={selectField.onChange}
                                 >
-                                  <SelectTrigger className="w-25 border-2 border-black font-mono text-xs h-auto py-2">
+                                  <SelectTrigger className="w-25 rounded-l-none border-l-0">
                                     <SelectValue />
                                   </SelectTrigger>
-                                  <SelectContent className="border-2 border-black">
+                                  <SelectContent>
                                     {timeDenominations.map((unit) => (
                                       <SelectItem
                                         key={unit}
                                         value={unit}
-                                        className="font-mono text-xs"
                                       >
                                         {unit.charAt(0).toUpperCase() +
                                           unit.slice(1)}
@@ -432,7 +416,7 @@ export default function CreatePage() {
                               )}
                             />
                           </div>
-                          <FormMessage className="font-mono text-[10px]" />
+                          <FormMessage />
                         </FormItem>
                       )}
                     />
@@ -445,9 +429,7 @@ export default function CreatePage() {
                       name="module"
                       render={({ field, fieldState }) => (
                         <FormItem>
-                          <FormLabel className="font-mono text-[10px] text-gray-500 uppercase tracking-wider">
-                            Module (optional)
-                          </FormLabel>
+                          <FormLabel>Module (optional)</FormLabel>
                           <AddressInput
                             value={field.value}
                             onChange={field.onChange}
@@ -461,11 +443,11 @@ export default function CreatePage() {
                   </div>
                 </div>
 
-                <Separator className="bg-black! h-0.5" />
+                <Separator />
 
                 {/* ── Mutability & Manager ── */}
                 <div>
-                  <p className="font-mono text-[10px] text-gray-500 uppercase tracking-wider mb-4">
+                  <p className="text-sm font-medium mb-4">
                     Mutability & Manager
                   </p>
 
@@ -478,9 +460,8 @@ export default function CreatePage() {
                           <Checkbox
                             checked={field.value}
                             onCheckedChange={field.onChange}
-                            className="border-2 border-black data-[state=checked]:bg-black"
                           />
-                          <FormLabel className="font-mono text-xs cursor-pointer mt-0!">
+                          <FormLabel className="cursor-pointer mt-0!">
                             Mutable Tax
                           </FormLabel>
                         </FormItem>
@@ -495,9 +476,8 @@ export default function CreatePage() {
                           <Checkbox
                             checked={field.value}
                             onCheckedChange={field.onChange}
-                            className="border-2 border-black data-[state=checked]:bg-black"
                           />
-                          <FormLabel className="font-mono text-xs cursor-pointer mt-0!">
+                          <FormLabel className="cursor-pointer mt-0!">
                             Mutable Module
                           </FormLabel>
                         </FormItem>
@@ -512,9 +492,7 @@ export default function CreatePage() {
                         name="manager"
                         render={({ field, fieldState }) => (
                           <FormItem>
-                            <FormLabel className="font-mono text-[10px] text-gray-500 uppercase tracking-wider">
-                              Manager Address (required)
-                            </FormLabel>
+                            <FormLabel>Manager Address (required)</FormLabel>
                             <AddressInput
                               value={field.value}
                               onChange={field.onChange}
@@ -529,13 +507,13 @@ export default function CreatePage() {
                   )}
 
                   {!needsManager && (
-                    <p className="font-mono text-[10px] text-gray-400 mt-2">
+                    <p className="text-xs text-muted-foreground mt-2">
                       No manager needed when both flags are off.
                     </p>
                   )}
                 </div>
 
-                <Separator className="bg-black! h-0.5" />
+                <Separator />
 
                 {/* ── Liquidation Bounty ── */}
                 <FormField
@@ -543,24 +521,22 @@ export default function CreatePage() {
                   name="liquidationBountyPercent"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="font-mono text-[10px] text-gray-500 uppercase tracking-wider">
-                        Liquidation Bounty
-                      </FormLabel>
+                      <FormLabel>Liquidation Bounty</FormLabel>
                       <div className="relative">
-                        <input
+                        <Input
                           {...field}
                           type="text"
                           inputMode="decimal"
-                          className="w-full border-2 border-black px-3 py-2 pr-8 font-mono text-xs"
+                          className="pr-8"
                         />
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-xs text-gray-400">
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
                           %
                         </span>
                       </div>
-                      <FormDescription className="font-mono text-[10px] text-gray-400">
+                      <FormDescription>
                         Reward for liquidators
                       </FormDescription>
-                      <FormMessage className="font-mono text-[10px]" />
+                      <FormMessage />
                     </FormItem>
                   )}
                 />

@@ -17,8 +17,8 @@ export function SlotOnChainData({ slotAddress, isOccupied }: { slotAddress: stri
     query: { enabled: isOccupied },
   });
 
-  if (!isOccupied) return <p className="font-mono text-xs text-gray-400">VACANT — No escrow data</p>;
-  if (isLoading || !data) return <p className="font-mono text-xs text-gray-400 animate-pulse">Loading on-chain data...</p>;
+  if (!isOccupied) return <p className="text-sm text-muted-foreground">Vacant — No escrow data</p>;
+  if (isLoading || !data) return <p className="text-sm text-muted-foreground animate-pulse">Loading on-chain data...</p>;
 
   const deposit = data[0].result as bigint | undefined;
   const owed = data[1].result as bigint | undefined;
@@ -30,29 +30,29 @@ export function SlotOnChainData({ slotAddress, isOccupied }: { slotAddress: stri
   const remaining = deposit > (owed ?? 0n) ? deposit - (owed ?? 0n) : 0n;
 
   return (
-    <div className="space-y-1.5 font-mono text-xs">
+    <div className="space-y-1.5 text-sm">
       <div className="flex justify-between">
-        <span className="text-gray-500">Deposit</span>
+        <span className="text-muted-foreground">Deposit</span>
         <span>{formatBalance(deposit, 6)} USDC</span>
       </div>
       <div className="flex justify-between">
-        <span className="text-gray-500">Tax Owed</span>
+        <span className="text-muted-foreground">Tax Owed</span>
         <span>{formatBalance(owed ?? 0n, 6)} USDC</span>
       </div>
       <div className="flex justify-between">
-        <span className="text-gray-500">Net Balance</span>
-        <span className={`font-bold ${insolvent ? "text-red-600" : ""}`}>
+        <span className="text-muted-foreground">Net Balance</span>
+        <span className={`font-bold ${insolvent ? "text-destructive" : ""}`}>
           {formatBalance(remaining, 6)} USDC
         </span>
       </div>
       <div className="flex justify-between">
-        <span className="text-gray-500">Liquidation In</span>
-        <span className={insolvent ? "text-red-600 font-bold" : ""}>
+        <span className="text-muted-foreground">Liquidation In</span>
+        <span className={insolvent ? "text-destructive font-bold" : ""}>
           {insolvent ? "NOW" : formatDuration(Number(secsUntilLiq ?? 0n))}
         </span>
       </div>
       {insolvent && (
-        <div className="border border-red-600 bg-red-50 text-red-800 text-center py-1 text-[10px] font-bold">
+        <div className="rounded border border-destructive bg-destructive/10 text-destructive text-center py-1 text-xs font-bold">
           INSOLVENT
         </div>
       )}

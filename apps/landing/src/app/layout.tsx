@@ -25,20 +25,20 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.variable} ${jetbrains.variable} font-sans bg-white text-black`}
+        className={`${inter.variable} ${jetbrains.variable} font-sans bg-background text-foreground`}
       >
         <Providers>
           <div className="min-h-screen flex flex-col">
             {/* Nav */}
-            <nav className="flex items-center justify-between px-6 py-4 border-b-4 border-black">
+            <nav className="flex items-center justify-between px-6 py-4 border-b">
               <a
                 href="/"
-                className="text-2xl font-black tracking-tighter uppercase"
+                className="text-2xl font-black tracking-tighter"
               >
                 0xSlots
               </a>
-              <div className="flex items-center gap-6 text-xs font-mono uppercase tracking-widest">
-                <a href="/explorer" className="hover:underline">
+              <div className="flex items-center gap-4 text-sm">
+                <a href="/explorer" className="text-muted-foreground hover:text-foreground transition-colors">
                   Explorer
                 </a>
                 <ChainSelector />
@@ -50,23 +50,23 @@ export default function RootLayout({
             <main className="flex-1">{children}</main>
 
             {/* Footer */}
-            <footer className="px-6 py-6 border-t-4 border-black">
-              <div className="max-w-5xl mx-auto flex justify-between items-center font-mono text-xs uppercase tracking-widest">
+            <footer className="px-6 py-6 border-t">
+              <div className="max-w-5xl mx-auto flex justify-between items-center text-sm text-muted-foreground">
                 <span>0xSlots</span>
                 <div className="flex items-center gap-6">
                   <a
                     href="https://github.com/adcommune/0xSlots"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hover:underline"
+                    className="hover:text-foreground transition-colors"
                   >
-                    GitHub ↗
+                    GitHub
                   </a>
                   <a
                     href="https://github.com/adcommune"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hover:underline"
+                    className="hover:text-foreground transition-colors"
                   >
                     adcommune
                   </a>

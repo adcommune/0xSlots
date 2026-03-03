@@ -1,7 +1,9 @@
 "use client";
 
 import { formatDistanceToNow } from "date-fns";
-import { truncateAddress, formatPrice } from "@/utils";
+import EventBadge from "@/app/explorer/components/EventBadge";
+import type { EventType } from "@/types";
+import { formatPrice, truncateAddress } from "@/utils";
 
 const EXPLORER = "https://sepolia.basescan.org";
 
@@ -16,40 +18,40 @@ interface SlotEvent {
 
 export function SlotEventHistory({ events }: { events: SlotEvent[] | undefined }) {
   return (
-    <div className="border-2 border-black">
-      <div className="bg-gray-50 border-b-2 border-black p-4">
-        <h2 className="text-sm font-bold uppercase tracking-tight">Event History</h2>
+    <div className="rounded-lg border">
+      <div className="bg-muted/50 border-b px-4 py-3">
+        <h2 className="text-sm font-semibold">Event History</h2>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-gray-200">
-              <th className="px-4 py-2 text-left font-mono text-[10px] uppercase text-gray-500">Type</th>
-              <th className="px-4 py-2 text-left font-mono text-[10px] uppercase text-gray-500">Actor</th>
-              <th className="px-4 py-2 text-left font-mono text-[10px] uppercase text-gray-500">Amount</th>
-              <th className="px-4 py-2 text-left font-mono text-[10px] uppercase text-gray-500">Time</th>
-              <th className="px-4 py-2 text-left font-mono text-[10px] uppercase text-gray-500">Tx</th>
+            <tr className="border-b">
+              <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Type</th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Actor</th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Amount</th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Time</th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Tx</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody className="divide-y">
             {(!events || events.length === 0) ? (
-              <tr><td colSpan={5} className="text-center text-gray-400 py-6 font-mono text-xs">No events yet</td></tr>
+              <tr><td colSpan={5} className="text-center text-muted-foreground py-6 text-sm">No events yet</td></tr>
             ) : events.map((ev) => (
-              <tr key={ev.id} className="font-mono text-[11px]">
-                <td className="px-4 py-2">
-                  <span className="inline-block px-1.5 py-0.5 border border-black text-[10px] font-bold uppercase">{ev.type}</span>
+              <tr key={ev.id} className="text-sm">
+                <td className="px-4 py-2.5">
+                  <EventBadge type={ev.type as EventType} />
                 </td>
-                <td className="px-4 py-2">
-                  <a href={`${EXPLORER}/address/${ev.actor}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                <td className="px-4 py-2.5">
+                  <a href={`${EXPLORER}/address/${ev.actor}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-mono text-xs">
                     {truncateAddress(ev.actor)}
                   </a>
                 </td>
-                <td className="px-4 py-2">{ev.amount ? formatPrice(ev.amount, 6) : "—"}</td>
-                <td className="px-4 py-2 text-gray-500">
+                <td className="px-4 py-2.5">{ev.amount ? formatPrice(ev.amount, 6) : "—"}</td>
+                <td className="px-4 py-2.5 text-muted-foreground text-xs">
                   {formatDistanceToNow(new Date(Number(ev.timestamp) * 1000), { addSuffix: true })}
                 </td>
-                <td className="px-4 py-2">
-                  <a href={`${EXPLORER}/tx/${ev.txHash}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                <td className="px-4 py-2.5">
+                  <a href={`${EXPLORER}/tx/${ev.txHash}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-mono text-xs">
                     {truncateAddress(ev.txHash)}
                   </a>
                 </td>

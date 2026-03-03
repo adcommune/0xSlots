@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { ConnectButton } from "@/components/connect-button";
 import { ExplorerTabs } from "@/components/explorer-tabs";
 
@@ -10,31 +11,30 @@ import { StatsBar } from "./components/stats-bar";
 
 export default function ExplorerPage() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen">
       {/* Header */}
-      <div className="border-b-4 border-black bg-linear-to-br from-gray-50 to-white">
+      <div className="border-b bg-muted/50">
         <div className="max-w-6xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
               <div>
-                <h1 className="text-xl font-black tracking-tighter uppercase leading-tight">
+                <h1 className="text-xl font-bold tracking-tight leading-tight">
                   Explorer
                 </h1>
-                <p className="text-gray-400 font-mono text-[10px]">
+                <p className="text-muted-foreground text-xs">
                   Base Sepolia · v3
                 </p>
               </div>
-              <div className="w-px h-6 bg-gray-300" />
+              <div className="w-px h-6 bg-border" />
               <StatsBar />
             </div>
             <div className="flex items-center gap-3">
               <ConnectButton />
-              <Link
-                href="/explorer/create"
-                className="border-2 border-black bg-black text-white px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest font-bold hover:bg-white hover:text-black transition-colors"
-              >
-                + Create Slot
-              </Link>
+              <Button size="sm" asChild>
+                <Link href="/explorer/create">
+                  + Create Slot
+                </Link>
+              </Button>
             </div>
           </div>
         </div>
@@ -56,7 +56,7 @@ export default function ExplorerPage() {
           ]}
         />
 
-        <div className="mt-8 text-center text-xs text-gray-400 font-mono">
+        <div className="mt-8 text-center text-xs text-muted-foreground">
           Powered by 0xSlots v3 · The Graph
         </div>
       </div>

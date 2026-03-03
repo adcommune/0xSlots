@@ -25,8 +25,8 @@ export function UserCurrencyBalance({ currency }: { currency: Address }) {
   });
 
   return (
-    <div className="px-4 py-2 border-b border-gray-200 flex justify-between font-mono text-xs">
-      <span className="text-gray-500">Your {symbol ?? "Token"} Balance</span>
+    <div className="px-4 py-2 border-b flex justify-between text-sm">
+      <span className="text-muted-foreground">Your {symbol ?? "Token"} Balance</span>
       <span className="font-bold">
         {balance !== undefined && decimals !== undefined
           ? formatBalance(balance, decimals)

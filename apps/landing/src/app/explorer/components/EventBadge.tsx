@@ -3,6 +3,21 @@ import type { EventType } from "@/types";
 
 function EventBadge({ type }: { type: EventType }) {
   const labels: Record<EventType, string> = {
+    // V3
+    Buy: "Buy",
+    Release: "Release",
+    Liquidate: "Liquidate",
+    PriceUpdate: "Price Update",
+    Deposit: "Deposit",
+    Withdraw: "Withdraw",
+    TaxCollect: "Tax Collect",
+    Settle: "Settle",
+    TaxProposed: "Tax Proposed",
+    ModuleProposed: "Module Proposed",
+    UpdateCancelled: "Cancelled",
+    UpdateApplied: "Applied",
+    LiquidationBountyUpdated: "Bounty Updated",
+    // V2
     landOpened: "Land Opened",
     slotCreated: "Slot Created",
     slotPurchased: "Slot Purchased",
@@ -11,7 +26,7 @@ function EventBadge({ type }: { type: EventType }) {
   };
 
   return (
-    <Badge variant={type} className="font-mono text-[10px] uppercase">
+    <Badge variant={type} className="text-[10px] font-semibold uppercase">
       {labels[type]}
     </Badge>
   );

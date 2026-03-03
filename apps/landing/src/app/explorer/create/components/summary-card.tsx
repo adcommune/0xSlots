@@ -1,5 +1,7 @@
 import { isAddress } from "viem";
+import { Button } from "@/components/ui/button";
 import { ConnectButton } from "@/components/connect-button";
+import { Separator } from "@/components/ui/separator";
 import { truncateAddress } from "@/utils";
 
 interface SummaryCardProps {
@@ -49,9 +51,9 @@ export function SummaryCard({
 }: SummaryCardProps) {
   return (
     <div className="hidden lg:block w-72 shrink-0">
-      <div className="sticky top-8 border-2 border-black">
-        <div className="bg-gray-50 border-b-2 border-black p-3">
-          <p className="font-mono text-[10px] text-gray-500 uppercase tracking-widest font-bold">
+      <div className="sticky top-8 rounded-lg border">
+        <div className="bg-muted/50 border-b px-3 py-3">
+          <p className="text-xs text-muted-foreground font-semibold">
             Summary
           </p>
         </div>
@@ -59,34 +61,36 @@ export function SummaryCard({
         <div className="p-4 space-y-4">
           {/* Slot count selector */}
           <div className="flex items-center justify-between">
-            <span className="font-mono text-xs font-bold uppercase">Slots</span>
+            <span className="text-sm font-semibold">Slots</span>
             <div className="flex items-center gap-0">
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                size="icon-xs"
                 onClick={() => setSlotCount(Math.max(1, slotCount - 1))}
-                className="w-7 h-7 border-2 border-black font-mono text-sm font-bold hover:bg-gray-100 transition-colors"
               >
                 −
-              </button>
-              <span className="w-10 h-7 border-y-2 border-black flex items-center justify-center font-mono text-sm font-bold">
+              </Button>
+              <span className="w-10 h-6 border-y flex items-center justify-center text-sm font-semibold">
                 {slotCount}
               </span>
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                size="icon-xs"
                 onClick={() => setSlotCount(Math.min(50, slotCount + 1))}
-                className="w-7 h-7 border-2 border-black font-mono text-sm font-bold hover:bg-gray-100 transition-colors"
               >
                 +
-              </button>
+              </Button>
             </div>
           </div>
 
-          <div className="h-px bg-black" />
+          <Separator />
 
-          <div className="space-y-2 font-mono text-[11px]">
+          <div className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-gray-500">Recipient</span>
-              <span className="font-bold truncate max-w-32">
+              <span className="text-muted-foreground">Recipient</span>
+              <span className="font-semibold truncate max-w-32 font-mono text-xs">
                 {isAddress(effectiveRecipient as `0x${string}`)
                   ? truncateAddress(effectiveRecipient)
                   : address
@@ -95,24 +99,24 @@ export function SummaryCard({
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-500">Tax Rate</span>
-              <span className="font-bold">
+              <span className="text-muted-foreground">Tax Rate</span>
+              <span className="font-semibold">
                 {watchedTaxPercentage || "0"}%/mo
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-500">Liq. Bounty</span>
-              <span className="font-bold">{watchedBounty || "0"}%</span>
+              <span className="text-muted-foreground">Liq. Bounty</span>
+              <span className="font-semibold">{watchedBounty || "0"}%</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-500">Min Deposit</span>
-              <span className="font-bold">
+              <span className="text-muted-foreground">Min Deposit</span>
+              <span className="font-semibold">
                 {watchedMinDepositValue || "0"} {watchedMinDepositUnit}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-500">Mutable</span>
-              <span className="font-bold">
+              <span className="text-muted-foreground">Mutable</span>
+              <span className="font-semibold">
                 {watchedMutableTax && watchedMutableModule
                   ? "Tax + Module"
                   : watchedMutableTax
@@ -123,14 +127,14 @@ export function SummaryCard({
               </span>
             </div>
             {slotCount > 1 && (
-              <div className="flex justify-between border-t border-gray-200 pt-2 mt-2">
-                <span className="text-gray-500">Total</span>
-                <span className="font-bold text-black">{slotCount}× identical</span>
+              <div className="flex justify-between border-t pt-2 mt-2">
+                <span className="text-muted-foreground">Total</span>
+                <span className="font-semibold">{slotCount}× identical</span>
               </div>
             )}
           </div>
 
-          <div className="h-px bg-black" />
+          <Separator />
 
           {/* Actions */}
           {!isConnected ? (
@@ -138,36 +142,37 @@ export function SummaryCard({
               <ConnectButton />
             </div>
           ) : wrongChain ? (
-            <button
+            <Button
               type="button"
+              variant="destructive"
+              className="w-full"
               onClick={() => switchChain({ chainId })}
-              className="w-full font-mono text-[10px] bg-red-900 border-2 border-red-500 text-red-300 px-3 py-2.5 hover:bg-red-800 uppercase tracking-widest"
             >
               Switch to Base Sepolia
-            </button>
+            </Button>
           ) : isSuccess ? (
             <div className="text-center space-y-1 py-2">
-              <p className="font-mono text-sm text-green-600 font-bold">
+              <p className="text-sm text-green-600 font-bold">
                 {slotCount > 1 ? `${slotCount} SLOTS CREATED` : "SLOT CREATED"}
               </p>
-              <p className="font-mono text-[10px] text-gray-500">
+              <p className="text-xs text-muted-foreground">
                 Redirecting…
               </p>
             </div>
           ) : (
-            <button
+            <Button
               type="submit"
+              className="w-full"
               disabled={busy || anyResolving || !isFormValid}
-              className="w-full border-3 border-black bg-black text-white px-3 py-2.5 font-mono text-[10px] uppercase tracking-widest font-bold hover:bg-white hover:text-black transition-colors disabled:opacity-50"
             >
               {isPending
-                ? "CONFIRM IN WALLET…"
+                ? "Confirm in wallet…"
                 : isConfirming
-                  ? "CONFIRMING…"
+                  ? "Confirming…"
                   : slotCount > 1
-                    ? `CREATE ${slotCount} SLOTS`
-                    : "CREATE SLOT"}
-            </button>
+                    ? `Create ${slotCount} Slots`
+                    : "Create Slot"}
+            </Button>
           )}
         </div>
       </div>
