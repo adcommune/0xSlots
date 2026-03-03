@@ -7,6 +7,7 @@ import {
 import { ERC20 } from "../generated/SlotFactory/ERC20";
 import { Slot as SlotTemplate } from "../generated/templates";
 import { Factory, Slot, Module } from "../generated/schema";
+import { getOrCreateAccount } from "./helpers";
 
 function getOrCreateFactory(address: string): Factory {
   let factory = Factory.load(address);
@@ -26,7 +27,13 @@ export function handleSlotDeployed(event: SlotDeployed): void {
   let slotAddress = event.params.slot.toHexString();
   let slot = new Slot(slotAddress);
 
+  let recipientAccount = getOrCreateAccount(event.params.recipient);
+  recipientAccount.slotCount += 1;
+  recipientAccount.save();
+
   slot.recipient = event.params.recipient;
+  slot.recipientAccount = recipientAccount.id;
+  slot.occupantAccount = null;
   slot.currency = event.params.currency;
 
   // Fetch ERC20 metadata

@@ -28,7 +28,7 @@ export enum SlotsChain {
 
 export const SUBGRAPH_URLS: Record<SlotsChain, string> = {
   [SlotsChain.BASE_SEPOLIA]:
-    "https://api.studio.thegraph.com/query/958/0-x-slots-base-sepolia/v3.4.0",
+    "https://api.studio.thegraph.com/query/958/0-x-slots-base-sepolia/v3.5.0",
   [SlotsChain.ARBITRUM]:
     "https://api.studio.thegraph.com/query/958/0-x-slots-arb/version/latest",
 };
@@ -93,6 +93,31 @@ export class SlotsClient {
   }
   getRecentEvents(...args: Parameters<ReturnType<typeof getSdk>["GetRecentEvents"]>) {
     return this.sdk.GetRecentEvents(...args);
+  }
+
+  // Account queries
+  getAccount(...args: Parameters<ReturnType<typeof getSdk>["GetAccount"]>) {
+    return this.sdk.GetAccount(...args);
+  }
+  getAccounts(...args: Parameters<ReturnType<typeof getSdk>["GetAccounts"]>) {
+    return this.sdk.GetAccounts(...args);
+  }
+
+  // Individual event queries (full params)
+  getReleasedEvents(...args: Parameters<ReturnType<typeof getSdk>["GetReleasedEvents"]>) {
+    return this.sdk.GetReleasedEvents(...args);
+  }
+  getLiquidatedEvents(...args: Parameters<ReturnType<typeof getSdk>["GetLiquidatedEvents"]>) {
+    return this.sdk.GetLiquidatedEvents(...args);
+  }
+  getDepositedEvents(...args: Parameters<ReturnType<typeof getSdk>["GetDepositedEvents"]>) {
+    return this.sdk.GetDepositedEvents(...args);
+  }
+  getWithdrawnEvents(...args: Parameters<ReturnType<typeof getSdk>["GetWithdrawnEvents"]>) {
+    return this.sdk.GetWithdrawnEvents(...args);
+  }
+  getPriceUpdatedEvents(...args: Parameters<ReturnType<typeof getSdk>["GetPriceUpdatedEvents"]>) {
+    return this.sdk.GetPriceUpdatedEvents(...args);
   }
 
   // Meta
