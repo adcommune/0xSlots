@@ -1,20 +1,23 @@
 "use client";
 
-import {
-  createSlotsClient,
-  type SlotFieldsFragment,
-  SlotsChain,
-} from "@0xslots/sdk";
+import { createSlotsClient, type SlotFieldsFragment } from "@0xslots/sdk";
 import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
+import { useChain } from "@/context/chain";
 
 // Re-export the slot type for convenience
 export type { SlotFieldsFragment as V3Slot } from "@0xslots/sdk";
 
-const client = createSlotsClient({ chainId: SlotsChain.BASE_SEPOLIA });
+export function useSlotsClient() {
+  const { chainId } = useChain();
+  return useMemo(() => createSlotsClient({ chainId }), [chainId]);
+}
 
 export function useSlots() {
+  const { chainId } = useChain();
+  const client = useSlotsClient();
   return useQuery({
-    queryKey: ["slots"],
+    queryKey: ["slots", chainId],
     queryFn: async () => {
       const { slots } = await client.getSlots({ first: 100 });
       return slots as SlotFieldsFragment[];
@@ -24,8 +27,10 @@ export function useSlots() {
 }
 
 export function useSlot(id: string) {
+  const { chainId } = useChain();
+  const client = useSlotsClient();
   return useQuery({
-    queryKey: ["slot", id],
+    queryKey: ["slot", chainId, id],
     queryFn: async () => {
       const { slot } = await client.getSlot({ id: id.toLowerCase() });
       return slot as SlotFieldsFragment | null;
@@ -36,8 +41,10 @@ export function useSlot(id: string) {
 }
 
 export function useSlotsByRecipient(recipient: string) {
+  const { chainId } = useChain();
+  const client = useSlotsClient();
   return useQuery({
-    queryKey: ["slots-recipient", recipient],
+    queryKey: ["slots-recipient", chainId, recipient],
     queryFn: async () => {
       const { slots } = await client.getSlotsByRecipient({
         recipient: recipient.toLowerCase(),
@@ -51,8 +58,10 @@ export function useSlotsByRecipient(recipient: string) {
 }
 
 export function useSlotsByOccupant(occupant: string) {
+  const { chainId } = useChain();
+  const client = useSlotsClient();
   return useQuery({
-    queryKey: ["slots-occupant", occupant],
+    queryKey: ["slots-occupant", chainId, occupant],
     queryFn: async () => {
       const { slots } = await client.getSlotsByOccupant({
         occupant: occupant.toLowerCase(),
@@ -66,8 +75,10 @@ export function useSlotsByOccupant(occupant: string) {
 }
 
 export function useFactory() {
+  const { chainId } = useChain();
+  const client = useSlotsClient();
   return useQuery({
-    queryKey: ["factory"],
+    queryKey: ["factory", chainId],
     queryFn: async () => {
       const { factories } = await client.getFactory();
       return factories[0] ?? null;
@@ -77,8 +88,10 @@ export function useFactory() {
 }
 
 export function useSlotPurchases(slotId: string) {
+  const { chainId } = useChain();
+  const client = useSlotsClient();
   return useQuery({
-    queryKey: ["slot-purchases", slotId],
+    queryKey: ["slot-purchases", chainId, slotId],
     queryFn: async () => {
       const { boughtEvents } = await client.getBoughtEvents({
         slotId: slotId.toLowerCase(),
@@ -92,8 +105,10 @@ export function useSlotPurchases(slotId: string) {
 }
 
 export function useSlotsettlements(slotId: string) {
+  const { chainId } = useChain();
+  const client = useSlotsClient();
   return useQuery({
-    queryKey: ["slot-settlements", slotId],
+    queryKey: ["slot-settlements", chainId, slotId],
     queryFn: async () => {
       const { settledEvents } = await client.getSettledEvents({
         slotId: slotId.toLowerCase(),
@@ -107,8 +122,10 @@ export function useSlotsettlements(slotId: string) {
 }
 
 export function useSlotTaxCollections(slotId: string) {
+  const { chainId } = useChain();
+  const client = useSlotsClient();
   return useQuery({
-    queryKey: ["slot-tax-collections", slotId],
+    queryKey: ["slot-tax-collections", chainId, slotId],
     queryFn: async () => {
       const { taxCollectedEvents } = await client.getTaxCollectedEvents({
         slotId: slotId.toLowerCase(),
@@ -122,8 +139,10 @@ export function useSlotTaxCollections(slotId: string) {
 }
 
 export function useSlotActivity(slotId: string) {
+  const { chainId } = useChain();
+  const client = useSlotsClient();
   return useQuery({
-    queryKey: ["slot-activity", slotId],
+    queryKey: ["slot-activity", chainId, slotId],
     queryFn: async () => {
       const data = await client.getSlotActivity({
         slotId: slotId.toLowerCase(),
@@ -137,8 +156,10 @@ export function useSlotActivity(slotId: string) {
 }
 
 export function useRecentEvents() {
+  const { chainId } = useChain();
+  const client = useSlotsClient();
   return useQuery({
-    queryKey: ["recent-events"],
+    queryKey: ["recent-events", chainId],
     queryFn: async () => {
       return client.getRecentEvents({ first: 50 });
     },

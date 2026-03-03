@@ -2,13 +2,14 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useBlockNumber } from "wagmi";
-import { createSlotsClient, SlotsChain } from "@0xslots/sdk";
-
-const client = createSlotsClient({ chainId: SlotsChain.BASE_SEPOLIA });
+import { useChain } from "@/context/chain";
+import { useSlotsClient } from "@/hooks/use-v3";
 
 function useSubgraphMeta() {
+  const { chainId } = useChain();
+  const client = useSlotsClient();
   return useQuery({
-    queryKey: ["subgraph-meta"],
+    queryKey: ["subgraph-meta", chainId],
     queryFn: async () => {
       const res = await client.getMeta();
       return res._meta;
@@ -19,7 +20,7 @@ function useSubgraphMeta() {
 
 export function SubgraphStatus() {
   const { data: meta, isError } = useSubgraphMeta();
-  const { data: chainBlock } = useBlockNumber({ watch: true });
+  const { data: chainBlock } = useBlockNumber();
 
   if (isError || meta?.hasIndexingErrors) {
     return (
@@ -35,7 +36,10 @@ export function SubgraphStatus() {
 
   if (!meta || !chainBlock) {
     return (
-      <div className="flex items-center gap-1.5" title="Loading subgraph status...">
+      <div
+        className="flex items-center gap-1.5"
+        title="Loading subgraph status..."
+      >
         <span className="relative flex h-2 w-2">
           <span className="relative inline-flex rounded-full h-2 w-2 bg-muted-foreground/30" />
         </span>
@@ -70,12 +74,18 @@ export function SubgraphStatus() {
     >
       <span className="relative flex h-2 w-2">
         {behind <= 5 && (
-          <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${color} opacity-75`} />
+          <span
+            className={`animate-ping absolute inline-flex h-full w-full rounded-full ${color} opacity-75`}
+          />
         )}
-        <span className={`relative inline-flex rounded-full h-2 w-2 ${color}`} />
+        <span
+          className={`relative inline-flex rounded-full h-2 w-2 ${color}`}
+        />
       </span>
       {behind > 5 && (
-        <span className={`text-[10px] font-mono ${behind > 100 ? "text-red-500" : behind > 20 ? "text-orange-500" : "text-yellow-500"}`}>
+        <span
+          className={`text-[10px] font-mono ${behind > 100 ? "text-red-500" : behind > 20 ? "text-orange-500" : "text-yellow-500"}`}
+        >
           {label}
         </span>
       )}
