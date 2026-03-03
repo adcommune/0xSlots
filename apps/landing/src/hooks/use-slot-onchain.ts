@@ -1,8 +1,10 @@
 "use client";
 
-import { type Address, erc20Abi } from "viem";
-import { useReadContract, useReadContracts } from "wagmi";
 import { slotAbi } from "@0xslots/contracts";
+import { type Address, erc20Abi } from "viem";
+import { useReadContract, useReadContracts, useBlockNumber } from "wagmi";
+import { useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 
 export type SlotOnChain = {
   // Identity
@@ -38,38 +40,57 @@ export type SlotOnChain = {
 
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
+type SlotInfoResult = {
+  recipient: string;
+  currency: string;
+  manager: string;
+  mutableTax: boolean;
+  mutableModule: boolean;
+  occupant: string;
+  price: bigint;
+  taxPercentage: bigint;
+  module: string;
+  liquidationBountyBps: bigint;
+  minDepositSeconds: bigint;
+  deposit: bigint;
+  collectedTax: bigint;
+  taxOwed: bigint;
+  secondsUntilLiquidation: bigint;
+  insolvent: boolean;
+  hasPendingTax: boolean;
+  pendingTaxPercentage: bigint;
+  hasPendingModule: boolean;
+  pendingModule: string;
+};
+
 function parseSlotInfo(
   slotAddress: string,
-  info: readonly [
-    string, string, string, boolean, boolean,
-    string, bigint, bigint, string, bigint, bigint,
-    bigint, bigint, bigint, bigint, boolean,
-    boolean, bigint, boolean, string,
-  ],
+  info: SlotInfoResult,
   currencyMeta?: { name?: string; symbol?: string; decimals?: number },
 ): SlotOnChain {
   return {
     id: slotAddress.toLowerCase(),
-    recipient: info[0].toLowerCase(),
-    currency: info[1].toLowerCase(),
-    manager: info[2].toLowerCase(),
-    mutableTax: info[3],
-    mutableModule: info[4],
-    occupant: info[5] === ZERO_ADDRESS ? null : info[5].toLowerCase(),
-    price: info[6],
-    taxPercentage: info[7],
-    module: info[8].toLowerCase(),
-    liquidationBountyBps: info[9],
-    minDepositSeconds: info[10],
-    deposit: info[11],
-    collectedTax: info[12],
-    taxOwed: info[13],
-    secondsUntilLiquidation: info[14],
-    insolvent: info[15],
-    hasPendingTax: info[16],
-    pendingTaxPercentage: info[17],
-    hasPendingModule: info[18],
-    pendingModule: info[19].toLowerCase(),
+    recipient: info.recipient.toLowerCase(),
+    currency: info.currency.toLowerCase(),
+    manager: info.manager.toLowerCase(),
+    mutableTax: info.mutableTax,
+    mutableModule: info.mutableModule,
+    occupant:
+      info.occupant === ZERO_ADDRESS ? null : info.occupant.toLowerCase(),
+    price: info.price,
+    taxPercentage: info.taxPercentage,
+    module: info.module.toLowerCase(),
+    liquidationBountyBps: info.liquidationBountyBps,
+    minDepositSeconds: info.minDepositSeconds,
+    deposit: info.deposit,
+    collectedTax: info.collectedTax,
+    taxOwed: info.taxOwed,
+    secondsUntilLiquidation: info.secondsUntilLiquidation,
+    insolvent: info.insolvent,
+    hasPendingTax: info.hasPendingTax,
+    pendingTaxPercentage: info.pendingTaxPercentage,
+    hasPendingModule: info.hasPendingModule,
+    pendingModule: info.pendingModule.toLowerCase(),
     currencyName: currencyMeta?.name,
     currencySymbol: currencyMeta?.symbol,
     currencyDecimals: currencyMeta?.decimals,
@@ -77,20 +98,41 @@ function parseSlotInfo(
 }
 
 /**
+ * Invalidate all contract reads on every new block — ensures fresh data after txs
+ */
+function useInvalidateOnBlock() {
+  const queryClient = useQueryClient();
+  const { data: blockNumber } = useBlockNumber({ watch: true });
+  useEffect(() => {
+    if (blockNumber) {
+      queryClient.invalidateQueries({ queryKey: ["readContract"] });
+      queryClient.invalidateQueries({ queryKey: ["readContracts"] });
+    }
+  }, [blockNumber, queryClient]);
+}
+
+/**
  * Fetch a single slot's complete state from on-chain via getSlotInfo() + currency metadata
  */
 export function useSlotOnChain(slotAddress: string) {
+  useInvalidateOnBlock();
   const addr = slotAddress as Address;
 
-  const { data: info, isLoading: infoLoading, refetch } = useReadContract({
+  const {
+    data: info,
+    isLoading: infoLoading,
+    refetch,
+  } = useReadContract({
     address: addr,
     abi: slotAbi,
     functionName: "getSlotInfo",
-    query: { refetchInterval: 10_000 },
+    query: { gcTime: 0, staleTime: 0, refetchOnMount: "always" },
   });
 
-  // Currency metadata — only fetch when we have info
-  const currencyAddr = info ? (info as any)[1] as Address : undefined;
+  // Currency metadata — only fetch when we have info (static, can cache)
+  const currencyAddr = info
+    ? ((info as SlotInfoResult).currency as Address)
+    : undefined;
   const { data: currencyMeta, isLoading: metaLoading } = useReadContracts({
     contracts: currencyAddr
       ? [
@@ -99,7 +141,7 @@ export function useSlotOnChain(slotAddress: string) {
           { address: currencyAddr, abi: erc20Abi, functionName: "decimals" },
         ]
       : [],
-    query: { enabled: !!currencyAddr },
+    query: { enabled: !!currencyAddr, staleTime: Infinity },
   });
 
   const isLoading = infoLoading || metaLoading;
@@ -107,7 +149,7 @@ export function useSlotOnChain(slotAddress: string) {
   const slot = info
     ? parseSlotInfo(
         slotAddress,
-        info as any,
+        info as SlotInfoResult,
         currencyMeta
           ? {
               name: currencyMeta[0]?.result as string | undefined,
@@ -126,17 +168,24 @@ export function useSlotOnChain(slotAddress: string) {
  * Used for recipient page — slot addresses from subgraph, data from RPC
  */
 export function useSlotsOnChain(slotAddresses: string[]) {
+  useInvalidateOnBlock();
   const contracts = slotAddresses.map((addr) => ({
     address: addr as Address,
     abi: slotAbi,
     functionName: "getSlotInfo" as const,
   }));
 
-  const { data: infos, isLoading: infosLoading, refetch } = useReadContracts({
+  const {
+    data: infos,
+    isLoading: infosLoading,
+    refetch,
+  } = useReadContracts({
     contracts,
     query: {
       enabled: slotAddresses.length > 0,
-      refetchInterval: 15_000,
+      gcTime: 0,
+      staleTime: 0,
+      refetchOnMount: "always",
     },
   });
 
@@ -144,7 +193,10 @@ export function useSlotsOnChain(slotAddresses: string[]) {
   const currencies = new Set<string>();
   if (infos) {
     for (const r of infos) {
-      if (r.result) currencies.add(((r.result as any)[1] as string).toLowerCase());
+      if (r.result)
+        currencies.add(
+          (r.result as SlotInfoResult).currency.toLowerCase(),
+        );
     }
   }
   const currencyList = Array.from(currencies);
@@ -153,13 +205,20 @@ export function useSlotsOnChain(slotAddresses: string[]) {
     contracts: currencyList.flatMap((c) => [
       { address: c as Address, abi: erc20Abi, functionName: "name" as const },
       { address: c as Address, abi: erc20Abi, functionName: "symbol" as const },
-      { address: c as Address, abi: erc20Abi, functionName: "decimals" as const },
+      {
+        address: c as Address,
+        abi: erc20Abi,
+        functionName: "decimals" as const,
+      },
     ]),
     query: { enabled: currencyList.length > 0 },
   });
 
   // Build currency metadata map
-  const currencyMeta: Record<string, { name?: string; symbol?: string; decimals?: number }> = {};
+  const currencyMeta: Record<
+    string,
+    { name?: string; symbol?: string; decimals?: number }
+  > = {};
   if (metaResults) {
     currencyList.forEach((c, i) => {
       currencyMeta[c] = {
@@ -177,8 +236,11 @@ export function useSlotsOnChain(slotAddresses: string[]) {
     for (let i = 0; i < infos.length; i++) {
       const r = infos[i];
       if (r.result) {
-        const currency = ((r.result as any)[1] as string).toLowerCase();
-        slots.push(parseSlotInfo(slotAddresses[i], r.result as any, currencyMeta[currency]));
+        const result = r.result as SlotInfoResult;
+        const currency = result.currency.toLowerCase();
+        slots.push(
+          parseSlotInfo(slotAddresses[i], result, currencyMeta[currency]),
+        );
       }
     }
   }

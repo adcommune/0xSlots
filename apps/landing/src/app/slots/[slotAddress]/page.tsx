@@ -134,7 +134,6 @@ export default function SlotPage({ params }: { params: Promise<{ slotAddress: st
                 <div className="flex justify-between"><span className="text-muted-foreground">Mutable Tax</span><span>{slot.mutableTax ? "Yes" : "No"}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Mutable Module</span><span>{slot.mutableModule ? "Yes" : "No"}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Module</span><span className="font-mono text-xs">{slot.module === "0x0000000000000000000000000000000000000000" ? "None" : truncateAddress(slot.module)}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Collected Tax</span><span>{formatBalance(slot.collectedTax, decimals)} {symbol}</span></div>
               </div>
             </div>
 
