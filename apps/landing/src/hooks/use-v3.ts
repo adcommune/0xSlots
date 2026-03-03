@@ -1,20 +1,20 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import {
   createSlotsClient,
-  SlotsChain,
   type SlotFieldsFragment,
+  SlotsChain,
 } from "@0xslots/sdk";
+import { useQuery } from "@tanstack/react-query";
 
 // Re-export the slot type for convenience
 export type { SlotFieldsFragment as V3Slot } from "@0xslots/sdk";
 
 const client = createSlotsClient({ chainId: SlotsChain.BASE_SEPOLIA });
 
-export function useV3Slots() {
+export function useSlots() {
   return useQuery({
-    queryKey: ["v3-slots"],
+    queryKey: ["slots"],
     queryFn: async () => {
       const { slots } = await client.getSlots({ first: 100 });
       return slots as SlotFieldsFragment[];
@@ -23,9 +23,9 @@ export function useV3Slots() {
   });
 }
 
-export function useV3Slot(id: string) {
+export function useSlot(id: string) {
   return useQuery({
-    queryKey: ["v3-slot", id],
+    queryKey: ["slot", id],
     queryFn: async () => {
       const { slot } = await client.getSlot({ id: id.toLowerCase() });
       return slot as SlotFieldsFragment | null;
@@ -35,9 +35,9 @@ export function useV3Slot(id: string) {
   });
 }
 
-export function useV3SlotsByRecipient(recipient: string) {
+export function useSlotsByRecipient(recipient: string) {
   return useQuery({
-    queryKey: ["v3-slots-recipient", recipient],
+    queryKey: ["slots-recipient", recipient],
     queryFn: async () => {
       const { slots } = await client.getSlotsByRecipient({
         recipient: recipient.toLowerCase(),
@@ -50,9 +50,9 @@ export function useV3SlotsByRecipient(recipient: string) {
   });
 }
 
-export function useV3SlotsByOccupant(occupant: string) {
+export function useSlotsByOccupant(occupant: string) {
   return useQuery({
-    queryKey: ["v3-slots-occupant", occupant],
+    queryKey: ["slots-occupant", occupant],
     queryFn: async () => {
       const { slots } = await client.getSlotsByOccupant({
         occupant: occupant.toLowerCase(),
@@ -65,9 +65,9 @@ export function useV3SlotsByOccupant(occupant: string) {
   });
 }
 
-export function useV3Factory() {
+export function useFactory() {
   return useQuery({
-    queryKey: ["v3-factory"],
+    queryKey: ["factory"],
     queryFn: async () => {
       const { factories } = await client.getFactory();
       return factories[0] ?? null;
@@ -76,7 +76,7 @@ export function useV3Factory() {
   });
 }
 
-export function useV3SlotPurchases(slotId: string) {
+export function useSlotPurchases(slotId: string) {
   return useQuery({
     queryKey: ["v3-slot-purchases", slotId],
     queryFn: async () => {
@@ -91,7 +91,7 @@ export function useV3SlotPurchases(slotId: string) {
   });
 }
 
-export function useV3SlotSettlements(slotId: string) {
+export function useSlotsettlements(slotId: string) {
   return useQuery({
     queryKey: ["v3-slot-settlements", slotId],
     queryFn: async () => {
@@ -106,7 +106,7 @@ export function useV3SlotSettlements(slotId: string) {
   });
 }
 
-export function useV3SlotTaxCollections(slotId: string) {
+export function useSlotTaxCollections(slotId: string) {
   return useQuery({
     queryKey: ["v3-slot-tax-collections", slotId],
     queryFn: async () => {
@@ -121,7 +121,7 @@ export function useV3SlotTaxCollections(slotId: string) {
   });
 }
 
-export function useV3SlotActivity(slotId: string) {
+export function useSlotActivity(slotId: string) {
   return useQuery({
     queryKey: ["v3-slot-activity", slotId],
     queryFn: async () => {

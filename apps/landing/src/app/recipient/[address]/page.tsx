@@ -1,19 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { use } from "react";
 import { type Address, formatUnits } from "viem";
 import { normalize } from "viem/ens";
-import {
-  useAccount,
-  useEnsAvatar,
-  useEnsName,
-} from "wagmi";
+import { useEnsAvatar, useEnsName } from "wagmi";
 import { mainnet } from "wagmi/chains";
 import { ConnectButton } from "@/components/connect-button";
 import { useChain } from "@/context/chain";
-import { type SlotOnChain, useSlotsOnChain } from "@/hooks/use-slot-onchain";
-import { useV3SlotsByRecipient } from "@/hooks/use-v3";
+import { useSlotsOnChain } from "@/hooks/use-slot-onchain";
+import { useSlotsByRecipient } from "@/hooks/use-v3";
 import { formatBalance, truncateAddress } from "@/utils";
 
 export default function RecipientPage({
@@ -23,10 +20,11 @@ export default function RecipientPage({
 }) {
   const { address } = use(params);
   const { explorerUrl } = useChain();
+  const { push } = useRouter();
 
   // Step 1: Get slot addresses from subgraph (discovery only)
   const { data: subgraphSlots, isLoading: subgraphLoading } =
-    useV3SlotsByRecipient(address);
+    useSlotsByRecipient(address);
   const slotAddresses = subgraphSlots?.map((s) => s.id) ?? [];
 
   // Step 2: Get live on-chain data for all slots via multicall
@@ -42,8 +40,6 @@ export default function RecipientPage({
     chainId: mainnet.id,
   });
 
-  const { address: connectedAddress } = useAccount();
-
   const isLoading = subgraphLoading || onchainLoading;
   const occupied = slots.filter((s) => s.occupant != null);
   const vacant = slots.length - occupied.length;
@@ -51,8 +47,6 @@ export default function RecipientPage({
   const symbol = slots[0]?.currencySymbol ?? "USDC";
   const totalTaxOwed = slots.reduce((sum, s) => sum + s.taxOwed, 0n);
   const totalDeposit = slots.reduce((sum, s) => sum + s.deposit, 0n);
-
-  console.log({ slots });
 
   return (
     <div className="min-h-screen">
@@ -158,7 +152,9 @@ export default function RecipientPage({
                     <tr
                       key={s.id}
                       className="border-b hover:bg-muted/30 cursor-pointer transition-colors"
-                      onClick={() => (window.location.href = `/slots/${s.id}`)}
+                      onClick={() => {
+                        push(`/slots/${s.id}`);
+                      }}
                     >
                       <td className="px-4 py-2 font-mono text-xs">
                         {truncateAddress(s.id)}

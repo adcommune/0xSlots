@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { ConnectButton } from "@/components/connect-button";
 import { ExplorerTabs } from "@/components/explorer-tabs";
+import { Button } from "@/components/ui/button";
 
 import { EventsTable } from "./components/events-table";
 import { SlotsTable } from "./components/slots-table";
@@ -31,9 +31,7 @@ export default function ExplorerPage() {
             <div className="flex items-center gap-3">
               <ConnectButton />
               <Button size="sm" asChild>
-                <Link href="/explorer/create">
-                  + Create Slot
-                </Link>
+                <Link href="/explorer/create">+ Create Slot</Link>
               </Button>
             </div>
           </div>
@@ -57,7 +55,7 @@ export default function ExplorerPage() {
         />
 
         <div className="mt-8 text-center text-xs text-muted-foreground">
-          Powered by 0xSlots v3 · The Graph
+          Powered by 0xSlots · The Graph
         </div>
       </div>
     </div>

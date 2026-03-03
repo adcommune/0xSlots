@@ -2,11 +2,11 @@
 
 import { EnsAddress } from "@/components/ens-address";
 import { Badge } from "@/components/ui/badge";
-import { useV3Slots } from "@/hooks/use-v3";
-import { truncateAddress, formatPrice } from "@/utils";
+import { useSlots } from "@/hooks/use-v3";
+import { formatPrice, truncateAddress } from "@/utils";
 
 export function SlotsTable() {
-  const { data: slots, isLoading, refetch, isFetching } = useV3Slots();
+  const { data: slots, isLoading, refetch, isFetching } = useSlots();
 
   if (isLoading) {
     return (
@@ -42,19 +42,37 @@ export function SlotsTable() {
           <table className="w-full">
             <thead>
               <tr className="border-b bg-muted/50">
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Recipient</th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Status</th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Occupant</th>
-                <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">Price</th>
-                <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">Tax</th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Flags</th>
+                <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
+                  Recipient
+                </th>
+                <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
+                  Status
+                </th>
+                <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
+                  Occupant
+                </th>
+                <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">
+                  Price
+                </th>
+                <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">
+                  Tax
+                </th>
+                <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
+                  Flags
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y">
               {slots.map((slot) => {
                 const isOccupied = slot.occupant != null;
                 return (
-                  <tr key={slot.id} className="text-sm hover:bg-muted/50 cursor-pointer" onClick={() => { window.location.href = `/slots/${slot.id}`; }}>
+                  <tr
+                    key={slot.id}
+                    className="text-sm hover:bg-muted/50 cursor-pointer"
+                    onClick={() => {
+                      window.location.href = `/slots/${slot.id}`;
+                    }}
+                  >
                     <td className="px-4 py-2.5">
                       <EnsAddress
                         address={slot.recipient}
@@ -63,23 +81,38 @@ export function SlotsTable() {
                       />
                     </td>
                     <td className="px-4 py-2.5">
-                      <Badge variant={isOccupied ? "default" : "secondary"} className="text-[10px]">
+                      <Badge
+                        variant={isOccupied ? "default" : "secondary"}
+                        className="text-[10px]"
+                      >
                         {isOccupied ? "OCCUPIED" : "VACANT"}
                       </Badge>
                     </td>
                     <td className="px-4 py-2.5 text-muted-foreground font-mono text-xs">
-                      {isOccupied && slot.occupant ? truncateAddress(slot.occupant) : "—"}
+                      {isOccupied && slot.occupant
+                        ? truncateAddress(slot.occupant)
+                        : "—"}
                     </td>
                     <td className="px-4 py-2.5 text-right font-bold font-mono text-xs">
-                      {isOccupied ? formatPrice(slot.price, slot.currencyDecimals ?? 18) : "0"}
+                      {isOccupied
+                        ? formatPrice(slot.price, slot.currencyDecimals ?? 18)
+                        : "0"}
                     </td>
                     <td className="px-4 py-2.5 text-right font-mono text-xs">
                       {Number(slot.taxPercentage) / 100}%
                     </td>
                     <td className="px-4 py-2.5">
                       <div className="flex gap-1">
-                        {slot.mutableTax && <Badge variant="outline" className="text-[9px]">TAX</Badge>}
-                        {slot.mutableModule && <Badge variant="outline" className="text-[9px]">MOD</Badge>}
+                        {slot.mutableTax && (
+                          <Badge variant="outline" className="text-[9px]">
+                            TAX
+                          </Badge>
+                        )}
+                        {slot.mutableModule && (
+                          <Badge variant="outline" className="text-[9px]">
+                            MOD
+                          </Badge>
+                        )}
                       </div>
                     </td>
                   </tr>
