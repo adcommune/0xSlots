@@ -1,23 +1,5 @@
 import { Button } from "@/components/ui/button";
 
-const PROPERTIES = [
-  {
-    label: "Harberger Tax",
-    description:
-      "Deposit-based partial common ownership. Control is earned, defended, and reallocated through open competition.",
-  },
-  {
-    label: "Any ERC-20",
-    description:
-      "Deploy slots denominated in any token. No protocol lock-in, no wrapped assets, no permission needed.",
-  },
-  {
-    label: "Agent-Ready",
-    description:
-      "Built for machine-speed markets. AI agents can transact, optimize, and compete autonomously onchain.",
-  },
-];
-
 export default function Home() {
   return (
     <>
@@ -50,40 +32,6 @@ export default function Home() {
           <Button variant="outline" asChild>
             <a href="/explorer">Explore</a>
           </Button>
-        </div>
-      </section>
-
-      {/* Properties */}
-      <section className="px-6 py-16 border-t">
-        <div className="max-w-5xl mx-auto">
-          <p className="text-xs text-muted-foreground mb-8">Core Properties</p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {PROPERTIES.map((prop) => (
-              <div key={prop.label} className="p-6 rounded-lg border">
-                <h3 className="text-sm font-semibold mb-3">{prop.label}</h3>
-                <p className="text-sm leading-relaxed text-muted-foreground">
-                  {prop.description}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Manifesto strip */}
-      <section className="px-6 py-16 bg-primary text-primary-foreground">
-        <div className="max-w-3xl mx-auto text-center">
-          <p className="text-lg sm:text-xl font-bold leading-relaxed">
-            As AI agents begin transacting, optimizing, and competing
-            autonomously, static property models break down.
-          </p>
-          <p className="mt-6 text-lg sm:text-xl font-bold leading-relaxed">
-            0xSlots introduces infrastructure built for machine-speed markets —
-            fair, contestable, and capital-efficient.
-          </p>
-          <p className="mt-8 text-xs opacity-50">
-            The next property primitive is here.
-          </p>
         </div>
       </section>
     </>
