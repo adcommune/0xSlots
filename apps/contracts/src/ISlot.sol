@@ -67,7 +67,7 @@ interface ISlotEvents {
 
     event TaxCollected(address indexed recipient, uint256 amount);
 
-    event Settled(uint256 taxOwed, uint256 depositRemaining);
+    event Settled(uint256 taxOwed, uint256 taxPaid, uint256 depositRemaining);
 
     event TaxUpdateProposed(uint256 newPercentage);
 

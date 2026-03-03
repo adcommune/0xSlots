@@ -22,19 +22,19 @@ contract Slot is ISlotEvents, ReentrancyGuard {
     error NotManager();
     error NotOccupant();
     error CannotBuyFromYourself();
-    error CannotBuyWhenNotOccupied(); // shouldn't happen, but guard
     error InvalidPrice();
     error InvalidTaxPercentage();
     error InsufficientDeposit();
     error NotInsolvent();
     error NothingToCollect();
-    error NothingToWithdraw();
+
     error TaxNotMutable();
     error ModuleNotMutable();
     error NoPendingUpdate();
     error AlreadyInitialized();
-
-    error ModuleCallFailed_Error(string callbackName);
+    error InvalidLiquidationBounty();
+    error InvalidRecipient();
+    error InvalidCurrency();
 
     // ═══════════════════════════════════════════════════════════
     // IMMUTABLE STATE
@@ -69,7 +69,12 @@ contract Slot is ISlotEvents, ReentrancyGuard {
     // INITIALIZATION
     // ═══════════════════════════════════════════════════════════
 
-    /// @notice Called by SlotFactory after CREATE2 deployment
+    /// @dev Disables initialization on the implementation contract
+    constructor() {
+        _initialized = true;
+    }
+
+    /// @notice Called by SlotFactory after clone deployment
     function initialize(
         address _recipient,
         IERC20 _currency,
@@ -78,6 +83,11 @@ contract Slot is ISlotEvents, ReentrancyGuard {
     ) external {
         if (_initialized) revert AlreadyInitialized();
         _initialized = true;
+
+        if (_recipient == address(0)) revert InvalidRecipient();
+        if (address(_currency) == address(0)) revert InvalidCurrency();
+        if (_init.taxPercentage == 0) revert InvalidTaxPercentage();
+        if (_init.liquidationBountyBps > BASIS_POINTS) revert InvalidLiquidationBounty();
 
         recipient = _recipient;
         currency = _currency;
@@ -155,7 +165,6 @@ contract Slot is ISlotEvents, ReentrancyGuard {
         price = selfAssessedPrice;
         deposit = depositAmount;
         lastSettled = block.timestamp;
-        collectedTax = 0;
 
         _notifyModule("onTransfer", abi.encodeCall(ISlotsModule.onTransfer, (0, prev, msg.sender)));
 
@@ -168,6 +177,13 @@ contract Slot is ISlotEvents, ReentrancyGuard {
 
         address prev = occupant;
         uint256 refund = deposit;
+
+        // Flush collected tax to recipient
+        uint256 pendingTax = collectedTax;
+        if (pendingTax > 0) {
+            collectedTax = 0;
+            currency.safeTransfer(recipient, pendingTax);
+        }
 
         // Clear slot
         occupant = address(0);
@@ -188,7 +204,7 @@ contract Slot is ISlotEvents, ReentrancyGuard {
     }
 
     /// @notice Occupant self-assesses a new price
-    function selfAssess(uint256 newPrice) external onlyOccupant {
+    function selfAssess(uint256 newPrice) external nonReentrant onlyOccupant {
         if (newPrice == 0) revert InvalidPrice();
 
         _settle();
@@ -219,7 +235,7 @@ contract Slot is ISlotEvents, ReentrancyGuard {
     /// @notice Occupant withdraws excess deposit
     function withdraw(uint256 amount) external nonReentrant onlyOccupant {
         _settle();
-        if (amount > deposit) revert NothingToWithdraw();
+        if (amount > deposit) revert InsufficientDeposit();
 
         uint256 remaining = deposit - amount;
         uint256 minDep = _minDepositFor(price);
@@ -243,6 +259,13 @@ contract Slot is ISlotEvents, ReentrancyGuard {
         if (liquidationBountyBps > 0 && collectedTax > 0) {
             bounty = (collectedTax * liquidationBountyBps) / BASIS_POINTS;
             collectedTax -= bounty;
+        }
+
+        // Flush remaining collected tax to recipient
+        uint256 remainingTax = collectedTax;
+        if (remainingTax > 0) {
+            collectedTax = 0;
+            currency.safeTransfer(recipient, remainingTax);
         }
 
         // Clear slot
@@ -307,6 +330,7 @@ contract Slot is ISlotEvents, ReentrancyGuard {
 
     /// @notice Update liquidation bounty (immediate, doesn't affect current occupant terms)
     function setLiquidationBounty(uint256 newBps) external onlyManager {
+        if (newBps > BASIS_POINTS) revert InvalidLiquidationBounty();
         liquidationBountyBps = newBps;
         emit LiquidationBountyUpdated(newBps);
     }
@@ -357,16 +381,19 @@ contract Slot is ISlotEvents, ReentrancyGuard {
 
         uint256 owed = (price * taxPercentage * elapsed) / (MONTH * BASIS_POINTS);
 
+        uint256 paid;
         if (owed >= deposit) {
+            paid = deposit;
             collectedTax += deposit;
             deposit = 0;
         } else {
+            paid = owed;
             deposit -= owed;
             collectedTax += owed;
         }
         lastSettled = block.timestamp;
 
-        emit Settled(owed, deposit);
+        emit Settled(owed, paid, deposit);
     }
 
     function _applyPendingUpdates() internal {

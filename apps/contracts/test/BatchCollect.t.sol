@@ -7,6 +7,7 @@ import {SlotFactory} from "../src/SlotFactory.sol";
 import {SlotConfig, SlotInitParams} from "../src/ISlot.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 contract MockUSDC is ERC20 {
     constructor() ERC20("Mock USDC", "mUSDC") {}
@@ -40,7 +41,13 @@ contract BatchCollectTest is Test {
     SlotInitParams initParams;
 
     function setUp() public {
-        factory = new SlotFactory(address(this));
+        Slot slotImpl = new Slot();
+        SlotFactory factoryImpl = new SlotFactory();
+        ERC1967Proxy proxy = new ERC1967Proxy(
+            address(factoryImpl),
+            abi.encodeCall(SlotFactory.initialize, (address(this), address(slotImpl)))
+        );
+        factory = SlotFactory(address(proxy));
         usdc = new MockUSDC();
         batchCollector = new BatchCollector();
 
@@ -194,8 +201,8 @@ contract BatchCollectTest is Test {
         emit log_named_uint("collectedTax after collect", Slot(slot1).collectedTax());
     }
 
-    /// @notice Verify: what happens to collectedTax when someone force-buys?
-    function test_forceBuy_losesUncollectedTax() public {
+    /// @notice Verify: collectedTax is preserved after a force buy (C-1 fix)
+    function test_forceBuy_preservesUncollectedTax() public {
         address slot1 = _createSlot();
         address forceBuyer = makeAddr("forceBuyer");
 
@@ -206,8 +213,6 @@ contract BatchCollectTest is Test {
         // Wait 1 hour — tax accrues
         vm.warp(block.timestamp + 1 hours);
 
-        // Check collectedTax before force buy
-        // _settle in buy() should move tax to collectedTax, BUT then buy() resets it to 0!
         uint256 owedBefore = Slot(slot1).taxOwed();
         emit log_named_uint("taxOwed before force buy", owedBefore);
 
@@ -221,8 +226,7 @@ contract BatchCollectTest is Test {
         uint256 collectedAfter = Slot(slot1).collectedTax();
         emit log_named_uint("collectedTax after force buy", collectedAfter);
 
-        // THIS IS THE BUG: collectedTax is reset to 0, uncollected tax is LOST
-        // If recipient didn't collect before the force buy, that tax is gone
-        assertEq(collectedAfter, 0, "buy() resets collectedTax -- tax lost if uncollected!");
+        // C-1 FIX: collectedTax is preserved — tax accrued before force buy is still collectable
+        assertEq(collectedAfter, owedBefore, "collectedTax should equal accrued tax from previous occupant");
     }
 }
