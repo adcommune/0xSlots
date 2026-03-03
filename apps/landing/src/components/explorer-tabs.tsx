@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import { cn } from "@/lib/utils";
 
 interface Tab {
   id: string;
@@ -13,16 +14,17 @@ export function ExplorerTabs({ tabs }: { tabs: Tab[] }) {
 
   return (
     <div>
-      <div className="flex border-b-2 border-black mb-6">
+      <div className="flex border-b mb-6">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActive(tab.id)}
-            className={`font-mono text-xs uppercase tracking-widest px-6 py-3 border-b-4 -mb-[2px] transition-colors ${
+            className={cn(
+              "text-sm px-6 py-3 border-b-2 -mb-px transition-colors",
               active === tab.id
-                ? "border-black font-bold"
-                : "border-transparent text-gray-400 hover:text-black"
-            }`}
+                ? "border-primary font-semibold text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            )}
           >
             {tab.label}
           </button>
