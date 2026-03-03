@@ -5,8 +5,6 @@ import EventBadge from "@/app/explorer/components/EventBadge";
 import type { EventType } from "@/types";
 import { formatPrice, truncateAddress } from "@/utils";
 
-const EXPLORER = "https://sepolia.basescan.org";
-
 interface SlotEvent {
   id: string;
   type: string;
@@ -16,7 +14,7 @@ interface SlotEvent {
   txHash: string;
 }
 
-export function SlotEventHistory({ events }: { events: SlotEvent[] | undefined }) {
+export function SlotEventHistory({ events, explorerUrl }: { events: SlotEvent[] | undefined; explorerUrl: string }) {
   return (
     <div className="rounded-lg border">
       <div className="bg-muted/50 border-b px-4 py-3">
@@ -42,7 +40,7 @@ export function SlotEventHistory({ events }: { events: SlotEvent[] | undefined }
                   <EventBadge type={ev.type as EventType} />
                 </td>
                 <td className="px-4 py-2.5">
-                  <a href={`${EXPLORER}/address/${ev.actor}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-mono text-xs">
+                  <a href={`${explorerUrl}/address/${ev.actor}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-mono text-xs">
                     {truncateAddress(ev.actor)}
                   </a>
                 </td>
@@ -51,7 +49,7 @@ export function SlotEventHistory({ events }: { events: SlotEvent[] | undefined }
                   {formatDistanceToNow(new Date(Number(ev.timestamp) * 1000), { addSuffix: true })}
                 </td>
                 <td className="px-4 py-2.5">
-                  <a href={`${EXPLORER}/tx/${ev.txHash}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-mono text-xs">
+                  <a href={`${explorerUrl}/tx/${ev.txHash}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-mono text-xs">
                     {truncateAddress(ev.txHash)}
                   </a>
                 </td>

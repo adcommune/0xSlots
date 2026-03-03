@@ -3,13 +3,13 @@
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
 import type { EventType } from "@/types";
+import { useChain } from "@/context/chain";
 import { useV3AllEvents } from "@/hooks/use-v3";
 import { truncateAddress } from "@/utils";
 import EventBadge from "./EventBadge";
 
-const EXPLORER = "https://sepolia.basescan.org";
-
 export function EventsTable() {
+  const { explorerUrl } = useChain();
   const { data: events, isLoading } = useV3AllEvents();
 
   if (isLoading) {
@@ -55,7 +55,7 @@ export function EventsTable() {
                   </td>
                   <td className="px-4 py-2.5">
                     <a
-                      href={`${EXPLORER}/address/${ev.actor}`}
+                      href={`${explorerUrl}/address/${ev.actor}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-primary hover:underline font-mono text-xs"
@@ -68,7 +68,7 @@ export function EventsTable() {
                   </td>
                   <td className="px-4 py-2.5">
                     <a
-                      href={`${EXPLORER}/tx/${ev.txHash}`}
+                      href={`${explorerUrl}/tx/${ev.txHash}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-primary hover:underline font-mono text-xs"
