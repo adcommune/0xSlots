@@ -8,6 +8,7 @@ import { normalize } from "viem/ens";
 import { useEnsAvatar, useEnsName } from "wagmi";
 import { mainnet } from "wagmi/chains";
 import { ConnectButton } from "@/components/connect-button";
+import { PageHeader } from "@/components/page-header";
 import { useChain } from "@/context/chain";
 import { useSlotsOnChain } from "@/hooks/use-slot-onchain";
 import { useSlotsByRecipient } from "@/hooks/use-v3";
@@ -50,50 +51,39 @@ export default function RecipientPage({
 
   return (
     <div className="min-h-screen">
-      {/* Header */}
-      <div className="border-b bg-muted/50">
-        <div className="max-w-6xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              {ensAvatar && (
-                <img
-                  src={ensAvatar}
-                  alt={ensName ?? address}
-                  className="w-12 h-12 rounded-full border"
-                />
-              )}
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <Link
-                    href="/explorer"
-                    className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    ← Explorer
-                  </Link>
-                </div>
-                {ensName ? (
-                  <h1 className="text-xl font-bold tracking-tight leading-tight">
-                    {ensName}
-                  </h1>
-                ) : (
-                  <h1 className="text-xl font-bold tracking-tight leading-tight">
-                    Recipient
-                  </h1>
-                )}
-                <a
-                  href={`${explorerUrl}/address/${address}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-mono text-xs text-primary hover:underline"
-                >
-                  {truncateAddress(address)}
-                </a>
-              </div>
+      <PageHeader>
+        <div className="flex items-center gap-4">
+          {ensAvatar && (
+            <img
+              src={ensAvatar}
+              alt={ensName ?? address}
+              className="w-12 h-12 rounded-full border"
+            />
+          )}
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <Link
+                href="/explorer"
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                ← Explorer
+              </Link>
             </div>
-            <ConnectButton />
+            <h1 className="text-xl font-bold tracking-tight leading-tight">
+              {ensName ?? "Recipient"}
+            </h1>
+            <a
+              href={`${explorerUrl}/address/${address}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-mono text-xs text-primary hover:underline"
+            >
+              {truncateAddress(address)}
+            </a>
           </div>
         </div>
-      </div>
+        <ConnectButton />
+      </PageHeader>
 
       <div className="max-w-6xl mx-auto px-6 py-6">
         {/* Stats */}
