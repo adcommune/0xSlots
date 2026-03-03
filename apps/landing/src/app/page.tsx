@@ -23,9 +23,7 @@ export default function Home() {
     <>
       {/* Hero */}
       <section className="px-6 pt-16 pb-12 lg:pt-24 lg:pb-20 min-h-[85vh] flex flex-col justify-center items-start max-w-3xl mx-auto">
-        <p className="text-xs text-muted-foreground mb-6">
-          0xSlots Protocol
-        </p>
+        <p className="text-xs text-muted-foreground mb-6">0xSlots Protocol</p>
 
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black leading-[0.95] tracking-tight">
           0xSlots
@@ -50,9 +48,7 @@ export default function Home() {
             </a>
           </Button>
           <Button variant="outline" asChild>
-            <a href="/explorer/create">
-              Create a slot
-            </a>
+            <a href="/explorer">Explore</a>
           </Button>
         </div>
       </section>
@@ -60,18 +56,11 @@ export default function Home() {
       {/* Properties */}
       <section className="px-6 py-16 border-t">
         <div className="max-w-5xl mx-auto">
-          <p className="text-xs text-muted-foreground mb-8">
-            Core Properties
-          </p>
+          <p className="text-xs text-muted-foreground mb-8">Core Properties</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {PROPERTIES.map((prop) => (
-              <div
-                key={prop.label}
-                className="p-6 rounded-lg border"
-              >
-                <h3 className="text-sm font-semibold mb-3">
-                  {prop.label}
-                </h3>
+              <div key={prop.label} className="p-6 rounded-lg border">
+                <h3 className="text-sm font-semibold mb-3">{prop.label}</h3>
                 <p className="text-sm leading-relaxed text-muted-foreground">
                   {prop.description}
                 </p>

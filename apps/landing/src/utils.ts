@@ -1,20 +1,45 @@
+import { formatUnits, parseUnits } from "viem";
+
 export const truncateAddress = (address: string) => {
   if (address.length <= 10) return address;
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 };
 
-export function formatPrice(wei: string, decimals: number = 18): string {
-  const value = Number(wei) / 10 ** decimals;
-  if (value === 0) return "0";
-  if (value < 0.0001) return "<0.0001";
-  return value.toFixed(decimals <= 6 ? decimals : 6);
-}
-
-export function formatBalance(value: bigint, decimals: number): string {
-  const num = Number(value) / 10 ** decimals;
+/**
+ * Format a raw token amount (string) using viem's formatUnits.
+ * Trims trailing zeros for clean display.
+ */
+export function formatPrice(raw: string, decimals: number = 18): string {
+  if (!raw || raw === "0") return "0";
+  const formatted = formatUnits(BigInt(raw), decimals);
+  const num = parseFloat(formatted);
   if (num === 0) return "0";
   if (num < 0.0001) return "<0.0001";
-  return num.toFixed(decimals <= 6 ? decimals : 6);
+  // Show up to 6 decimal places, trim trailing zeros
+  return parseFloat(num.toFixed(Math.min(decimals, 6))).toString();
+}
+
+/**
+ * Format a bigint balance using viem's formatUnits.
+ */
+export function formatBalance(value: bigint, decimals: number): string {
+  if (value === 0n) return "0";
+  const formatted = formatUnits(value, decimals);
+  const num = parseFloat(formatted);
+  if (num === 0) return "0";
+  if (num < 0.0001) return "<0.0001";
+  return parseFloat(num.toFixed(Math.min(decimals, 6))).toString();
+}
+
+/**
+ * Parse a human-readable amount to raw units using viem's parseUnits.
+ */
+export function toRawUnits(value: string, decimals: number): bigint {
+  try {
+    return parseUnits(value || "0", decimals);
+  } catch {
+    return 0n;
+  }
 }
 
 export function formatDuration(totalSeconds: number): string {
@@ -26,12 +51,6 @@ export function formatDuration(totalSeconds: number): string {
   if (hours > 0) return `${hours}h ${mins}m`;
   if (mins > 0) return `${mins}m`;
   return `${totalSeconds}s`;
-}
-
-export function formatWei(wei: string, decimals: number = 18): string {
-  const value = Number(wei) / 10 ** decimals;
-  if (value === 0) return "0";
-  return value.toFixed(decimals <= 6 ? decimals : 6);
 }
 
 export function formatBps(bps: string | number): string {

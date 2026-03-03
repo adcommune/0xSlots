@@ -2,11 +2,11 @@
 
 import { type Address } from "viem";
 import { useReadContracts } from "wagmi";
-import { slotsAbi } from "@0xslots/contracts";
+import { slotAbi } from "@0xslots/contracts";
 import { formatBalance, formatDuration } from "@/utils";
 
 export function SlotOnChainData({ slotAddress, isOccupied }: { slotAddress: string; isOccupied: boolean }) {
-  const contract = { address: slotAddress as Address, abi: slotsAbi } as const;
+  const contract = { address: slotAddress as Address, abi: slotAbi } as const;
   const { data, isLoading } = useReadContracts({
     contracts: [
       { ...contract, functionName: "deposit" },

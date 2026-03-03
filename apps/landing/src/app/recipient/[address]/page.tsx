@@ -44,12 +44,12 @@ export default function RecipientPage({
   });
 
   const isOwner = connectedAddress?.toLowerCase() === address.toLowerCase();
-  const occupied = slots?.filter((s) => !s.isVacant).length ?? 0;
+  const occupied = slots?.filter((s) => s.occupant != null).length ?? 0;
   const vacant = (slots?.length ?? 0) - occupied;
   const totalCollected =
     slots?.reduce((sum, s) => sum + BigInt(s.collectedTax), 0n) ?? 0n;
   const occupiedSlots =
-    slots?.filter((s) => !s.isVacant).map((s) => s.id as Address) ?? [];
+    slots?.filter((s) => s.occupant != null).map((s) => s.id as Address) ?? [];
   console.log({ occupiedSlots });
   return (
     <div className="min-h-screen">
@@ -126,7 +126,7 @@ export default function RecipientPage({
               onClick={() => {
                 const occupiedSlots =
                   slots
-                    ?.filter((s) => !s.isVacant)
+                    ?.filter((s) => s.occupant != null)
                     .map((s) => s.id as Address) ?? [];
                 if (occupiedSlots.length === 0) return;
                 write({

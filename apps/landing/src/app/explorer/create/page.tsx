@@ -13,7 +13,7 @@ import {
 } from "wagmi";
 import { baseSepolia } from "wagmi/chains";
 
-import { slotsFactoryAbi, slotFactoryAddress } from "@0xslots/contracts";
+import { slotFactoryAbi, slotFactoryAddress } from "@0xslots/contracts";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -146,14 +146,14 @@ export default function CreatePage() {
     if (slotCount === 1) {
       writeContract({
         address: FACTORY_ADDRESS,
-        abi: slotsFactoryAbi,
+        abi: slotFactoryAbi,
         functionName: "createSlot",
         args: [recipient as Address, currency as Address, config, initParams],
       });
     } else {
       writeContract({
         address: FACTORY_ADDRESS,
-        abi: slotsFactoryAbi,
+        abi: slotFactoryAbi,
         functionName: "createSlots",
         args: [recipient as Address, currency as Address, config, initParams, BigInt(slotCount)],
       });
