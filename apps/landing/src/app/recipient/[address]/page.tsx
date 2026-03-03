@@ -3,7 +3,7 @@
 import { batchCollectorAbi, batchCollectorAddress } from "@0xslots/contracts";
 import { use } from "react";
 import type { Address } from "viem";
-import { baseSepolia, mainnet } from "viem/chains";
+import { baseSepolia, mainnet } from "wagmi/chains";
 import { normalize } from "viem/ens";
 import {
   useAccount,
@@ -16,9 +16,9 @@ import { ConnectButton } from "@/components/connect-button";
 import { Button } from "@/components/ui/button";
 import { useChain } from "@/context/chain";
 import { useV3SlotsByRecipient } from "@/hooks/use-v3";
-import { formatPrice, truncateAddress } from "@/utils";
-
-import { RecipientSlotsTable } from "./components/slots-table";
+import { useSlotsOnChain, type SlotOnChain } from "@/hooks/use-slot-onchain";
+import { formatBalance, truncateAddress } from "@/utils";
+import Link from "next/link";
 
 export default function RecipientPage({
   params,
@@ -27,7 +27,14 @@ export default function RecipientPage({
 }) {
   const { address } = use(params);
   const { explorerUrl } = useChain();
-  const { data: slots, isLoading } = useV3SlotsByRecipient(address);
+
+  // Step 1: Get slot addresses from subgraph (discovery only)
+  const { data: subgraphSlots, isLoading: subgraphLoading } = useV3SlotsByRecipient(address);
+  const slotAddresses = subgraphSlots?.map((s) => s.id) ?? [];
+
+  // Step 2: Get live on-chain data for all slots via multicall
+  const { data: slots, isLoading: onchainLoading } = useSlotsOnChain(slotAddresses);
+
   const { data: ensName } = useEnsName({
     address: address as Address,
     chainId: mainnet.id,
@@ -39,18 +46,17 @@ export default function RecipientPage({
 
   const { address: connectedAddress } = useAccount();
   const { writeContract: write, data: hash, isPending } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
-    hash,
-  });
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
+  const isLoading = subgraphLoading || onchainLoading;
   const isOwner = connectedAddress?.toLowerCase() === address.toLowerCase();
-  const occupied = slots?.filter((s) => s.occupant != null).length ?? 0;
-  const vacant = (slots?.length ?? 0) - occupied;
-  const totalCollected =
-    slots?.reduce((sum, s) => sum + BigInt(s.collectedTax), 0n) ?? 0n;
-  const occupiedSlots =
-    slots?.filter((s) => s.occupant != null).map((s) => s.id as Address) ?? [];
-  console.log({ occupiedSlots });
+  const occupied = slots.filter((s) => s.occupant != null);
+  const vacant = slots.length - occupied.length;
+  const decimals = slots[0]?.currencyDecimals ?? 6;
+  const symbol = slots[0]?.currencySymbol ?? "USDC";
+  const totalCollected = slots.reduce((sum, s) => sum + s.collectedTax, 0n);
+  const totalTaxOwed = slots.reduce((sum, s) => sum + s.taxOwed, 0n);
+
   return (
     <div className="min-h-screen">
       {/* Header */}
@@ -67,12 +73,12 @@ export default function RecipientPage({
               )}
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <a
+                  <Link
                     href="/explorer"
                     className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                   >
                     ← Explorer
-                  </a>
+                  </Link>
                 </div>
                 {ensName ? (
                   <h1 className="text-xl font-bold tracking-tight leading-tight">
@@ -100,15 +106,13 @@ export default function RecipientPage({
 
       <div className="max-w-6xl mx-auto px-6 py-6">
         {/* Stats */}
-        <div className="grid grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
           {[
-            { label: "Total Slots", value: slots?.length ?? 0 },
-            { label: "Occupied", value: occupied },
-            { label: "Vacant", value: vacant },
-            {
-              label: "Total Tax Collected",
-              value: formatPrice(totalCollected.toString(), 6),
-            },
+            { label: "Total Slots", value: slots.length.toString() },
+            { label: "Occupied", value: occupied.length.toString() },
+            { label: "Vacant", value: vacant.toString() },
+            { label: "Pending Tax", value: `${formatBalance(totalTaxOwed, decimals)} ${symbol}` },
+            { label: "Collected", value: `${formatBalance(totalCollected, decimals)} ${symbol}` },
           ].map((stat) => (
             <div key={stat.label} className="rounded-lg border p-3">
               <p className="text-xs text-muted-foreground">{stat.label}</p>
@@ -118,28 +122,25 @@ export default function RecipientPage({
         </div>
 
         {/* Collect All */}
-        {isOwner && occupied > 0 && (
+        {isOwner && occupied.length > 0 && (
           <div className="mb-6">
             <Button
               className="w-full"
               disabled={isPending || isConfirming}
               onClick={() => {
-                const occupiedSlots =
-                  slots
-                    ?.filter((s) => s.occupant != null)
-                    .map((s) => s.id as Address) ?? [];
-                if (occupiedSlots.length === 0) return;
+                const addrs = occupied.map((s) => s.id as Address);
+                if (addrs.length === 0) return;
                 write({
                   address: batchCollectorAddress[baseSepolia.id] as Address,
                   abi: batchCollectorAbi,
                   functionName: "collectAll",
-                  args: [occupiedSlots],
+                  args: [addrs],
                 });
               }}
             >
               {isPending || isConfirming
                 ? "Collecting..."
-                : `Collect All Tax (${occupied} slots)`}
+                : `Collect All Tax (${occupied.length} slots)`}
             </Button>
             {isSuccess && (
               <p className="text-sm text-green-600 text-center mt-2">
@@ -149,7 +150,70 @@ export default function RecipientPage({
           </div>
         )}
 
-        <RecipientSlotsTable slots={slots} isLoading={isLoading} />
+        {/* Slots Table */}
+        <div className="rounded-lg border">
+          <div className="bg-muted/50 border-b px-4 py-3">
+            <h2 className="text-sm font-semibold">Slots</h2>
+          </div>
+          {isLoading ? (
+            <div className="p-8 text-center animate-pulse">
+              <p className="text-sm text-muted-foreground">Loading slots...</p>
+            </div>
+          ) : slots.length === 0 ? (
+            <div className="p-8 text-center">
+              <p className="text-sm text-muted-foreground">No slots found for this recipient</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b text-left text-xs text-muted-foreground">
+                    <th className="px-4 py-2">Slot</th>
+                    <th className="px-4 py-2">Status</th>
+                    <th className="px-4 py-2">Occupant</th>
+                    <th className="px-4 py-2 text-right">Price</th>
+                    <th className="px-4 py-2 text-right">Tax</th>
+                    <th className="px-4 py-2 text-right">Deposit</th>
+                    <th className="px-4 py-2 text-right">Tax Owed</th>
+                    <th className="px-4 py-2 text-right">Collected</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {slots.map((s) => (
+                    <tr
+                      key={s.id}
+                      className="border-b hover:bg-muted/30 cursor-pointer transition-colors"
+                      onClick={() => window.location.href = `/slots/${s.id}`}
+                    >
+                      <td className="px-4 py-2 font-mono text-xs">
+                        {truncateAddress(s.id)}
+                      </td>
+                      <td className="px-4 py-2">
+                        <span className={`inline-block px-1.5 py-0.5 rounded text-xs font-medium ${
+                          s.insolvent
+                            ? "bg-destructive/10 text-destructive"
+                            : s.occupant
+                            ? "bg-green-500/10 text-green-600"
+                            : "bg-muted text-muted-foreground"
+                        }`}>
+                          {s.insolvent ? "INSOLVENT" : s.occupant ? "OCCUPIED" : "VACANT"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2 font-mono text-xs">
+                        {s.occupant ? truncateAddress(s.occupant) : "—"}
+                      </td>
+                      <td className="px-4 py-2 text-right">{formatBalance(s.price, decimals)}</td>
+                      <td className="px-4 py-2 text-right">{Number(s.taxPercentage) / 100}%</td>
+                      <td className="px-4 py-2 text-right">{formatBalance(s.deposit, decimals)}</td>
+                      <td className="px-4 py-2 text-right">{formatBalance(s.taxOwed, decimals)}</td>
+                      <td className="px-4 py-2 text-right">{formatBalance(s.collectedTax, decimals)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

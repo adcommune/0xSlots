@@ -4,14 +4,13 @@ import { slotAbi } from "@0xslots/contracts";
 import { useState } from "react";
 import { type Address, erc20Abi, parseUnits } from "viem";
 import {
-  useReadContracts,
   useWaitForTransactionReceipt,
   useWriteContract,
 } from "wagmi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { V3Slot } from "@/hooks/use-v3";
-import { formatBalance, formatPrice } from "@/utils";
+import type { SlotOnChain } from "@/hooks/use-slot-onchain";
+import { formatBalance } from "@/utils";
 
 function toUnits(v: string, decimals: number = 6): bigint {
   try {
@@ -26,7 +25,7 @@ export function BuySection({
   slotAddress,
   isOccupied,
 }: {
-  slot: V3Slot;
+  slot: SlotOnChain;
   slotAddress: string;
   isOccupied: boolean;
 }) {
@@ -45,31 +44,16 @@ export function BuySection({
   const [buyPrice, setBuyPrice] = useState("");
   const [buyDeposit, setBuyDeposit] = useState("");
 
-  // Read on-chain params for min deposit
-  const slotContract = {
-    address: slotAddress as Address,
-    abi: slotAbi,
-  } as const;
-  const { data: slotParams } = useReadContracts({
-    contracts: [
-      { ...slotContract, functionName: "minDepositSeconds" },
-      { ...slotContract, functionName: "taxPercentage" },
-      { ...slotContract, functionName: "MONTH" },
-    ],
-  });
-  const minDepositSeconds = slotParams?.[0]?.result as bigint | undefined;
-  const onChainTax = slotParams?.[1]?.result as bigint | undefined;
-  const MONTH = slotParams?.[2]?.result as bigint | undefined;
+  const MONTH = 30n * 24n * 60n * 60n; // 30 days in seconds
 
   function computeMinDeposit(price: bigint): string {
-    if (!minDepositSeconds || !onChainTax || !MONTH || minDepositSeconds === 0n)
-      return "0";
-    const min = (price * onChainTax * minDepositSeconds) / (MONTH * 10000n);
+    if (slot.minDepositSeconds === 0n) return "0";
+    const min = (price * slot.taxPercentage * slot.minDepositSeconds) / (MONTH * 10000n);
     return formatBalance(min, decimals);
   }
 
-  const currentPrice = isOccupied ? formatPrice(slot.price, slot.currencyDecimals ?? 18) : "0";
-  const defaultPrice = isOccupied ? formatPrice(slot.price, slot.currencyDecimals ?? 18) : "";
+  const currentPrice = isOccupied ? formatBalance(slot.price, decimals) : "0";
+  const defaultPrice = isOccupied ? formatBalance(slot.price, decimals) : "";
 
   const effectivePrice = buyPrice || defaultPrice;
   const priceForMin = effectivePrice ? toUnits(effectivePrice, decimals) : 0n;
@@ -81,7 +65,7 @@ export function BuySection({
 
   async function handleBuy() {
     const dep = toUnits(effectiveDeposit || "0", decimals);
-    const price = isOccupied ? BigInt(slot.price) : 0n;
+    const price = isOccupied ? slot.price : 0n;
     const totalApproval = dep + price;
 
     try {
