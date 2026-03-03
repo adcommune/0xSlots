@@ -7,12 +7,15 @@ import {
   type ReactNode,
   useCallback,
   useContext,
+  useMemo,
   useState,
 } from "react";
 import { useSwitchChain } from "wagmi";
+import { getExplorerUrl } from "@/lib/config";
 
 interface ChainContextValue {
   chainId: SlotsChain;
+  explorerUrl: string;
   setChain: (chainId: number) => void;
 }
 
@@ -34,8 +37,10 @@ export function ChainProvider({ children }: { children: ReactNode }) {
     [switchWalletChain],
   );
 
+  const explorerUrl = useMemo(() => getExplorerUrl(chainId), [chainId]);
+
   return (
-    <ChainContext.Provider value={{ chainId, setChain }}>
+    <ChainContext.Provider value={{ chainId, explorerUrl, setChain }}>
       {children}
     </ChainContext.Provider>
   );

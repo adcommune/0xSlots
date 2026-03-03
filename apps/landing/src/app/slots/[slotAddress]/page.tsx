@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ConnectButton } from "@/components/connect-button";
 import { useV3Slot, useV3SlotEvents } from "@/hooks/use-v3";
+import { useChain } from "@/context/chain";
 import { truncateAddress, formatPrice } from "@/utils";
 
 import { BuySection } from "./components/buy-section";
@@ -23,10 +24,10 @@ import { UserCurrencyBalance } from "./components/user-balance";
 import { SlotEventHistory } from "./components/event-history";
 
 const CHAIN_ID = baseSepolia.id;
-const EXPLORER = "https://sepolia.basescan.org";
 
 export default function SlotPage({ params }: { params: Promise<{ slotAddress: string }> }) {
   const { slotAddress } = use(params);
+  const { explorerUrl } = useChain();
   const { data: slot, isLoading } = useV3Slot(slotAddress);
   const { data: events } = useV3SlotEvents(slotAddress);
   const { address, isConnected, chainId } = useAccount();
@@ -118,7 +119,7 @@ export default function SlotPage({ params }: { params: Promise<{ slotAddress: st
               </div>
               <div className="p-4 space-y-1.5 text-sm">
                 <div className="flex justify-between"><span className="text-muted-foreground">Address</span>
-                  <a href={`${EXPLORER}/address/${slot.id}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-mono text-xs">{truncateAddress(slot.id)}</a>
+                  <a href={`${explorerUrl}/address/${slot.id}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-mono text-xs">{truncateAddress(slot.id)}</a>
                 </div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Recipient</span><span className="font-mono text-xs">{truncateAddress(slot.recipient)}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Currency</span><span className="font-mono text-xs">{truncateAddress(slot.currency)}</span></div>
@@ -156,7 +157,7 @@ export default function SlotPage({ params }: { params: Promise<{ slotAddress: st
               </div>
             )}
 
-            <SlotEventHistory events={events} />
+            <SlotEventHistory events={events} explorerUrl={explorerUrl} />
           </div>
 
           {/* Right: Actions */}

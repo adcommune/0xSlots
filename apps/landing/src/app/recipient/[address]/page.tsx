@@ -14,12 +14,11 @@ import {
 } from "wagmi";
 import { ConnectButton } from "@/components/connect-button";
 import { Button } from "@/components/ui/button";
+import { useChain } from "@/context/chain";
 import { useV3SlotsByRecipient } from "@/hooks/use-v3";
-import { formatPrice } from "@/utils";
+import { formatPrice, truncateAddress } from "@/utils";
 
 import { RecipientSlotsTable } from "./components/slots-table";
-
-const EXPLORER = "https://sepolia.basescan.org";
 
 export default function RecipientPage({
   params,
@@ -27,6 +26,7 @@ export default function RecipientPage({
   params: Promise<{ address: string }>;
 }) {
   const { address } = use(params);
+  const { explorerUrl } = useChain();
   const { data: slots, isLoading } = useV3SlotsByRecipient(address);
   const { data: ensName } = useEnsName({
     address: address as Address,
@@ -84,12 +84,12 @@ export default function RecipientPage({
                   </h1>
                 )}
                 <a
-                  href={`${EXPLORER}/address/${address}`}
+                  href={`${explorerUrl}/address/${address}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="font-mono text-xs text-primary hover:underline"
                 >
-                  {address}
+                  {truncateAddress(address)}
                 </a>
               </div>
             </div>
