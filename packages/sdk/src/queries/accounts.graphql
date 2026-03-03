@@ -1,0 +1,37 @@
+fragment AccountFields on Account {
+  id
+  slotCount
+  occupiedCount
+  slotsAsRecipient {
+    id
+  }
+  slotsAsOccupant {
+    id
+  }
+}
+
+query GetAccount($id: ID!, $block: Block_height) {
+  account(id: $id, block: $block) {
+    ...AccountFields
+  }
+}
+
+query GetAccounts(
+  $first: Int!
+  $skip: Int
+  $orderBy: Account_orderBy
+  $orderDirection: OrderDirection
+  $where: Account_filter
+  $block: Block_height
+) {
+  accounts(
+    first: $first
+    skip: $skip
+    orderBy: $orderBy
+    orderDirection: $orderDirection
+    where: $where
+    block: $block
+  ) {
+    ...AccountFields
+  }
+}

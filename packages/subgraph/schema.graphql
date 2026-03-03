@@ -9,9 +9,18 @@ type Factory @entity(immutable: false) {
   modules: [Module!]! @derivedFrom(field: "factory")
 }
 
+type Account @entity(immutable: false) {
+  id: ID! # address (lowercase)
+  slotsAsRecipient: [Slot!]! @derivedFrom(field: "recipientAccount")
+  slotsAsOccupant: [Slot!]! @derivedFrom(field: "occupantAccount")
+  slotCount: Int!
+  occupiedCount: Int!
+}
+
 type Slot @entity(immutable: false) {
   id: ID! # slot contract address (lowercase)
   recipient: Bytes!
+  recipientAccount: Account!
   currency: Bytes!
   currencyName: String
   currencySymbol: String
@@ -24,6 +33,7 @@ type Slot @entity(immutable: false) {
   liquidationBountyBps: BigInt!
   minDepositSeconds: BigInt!
   occupant: Bytes # null = vacant
+  occupantAccount: Account # null = vacant
   price: BigInt!
   deposit: BigInt!
   collectedTax: BigInt!

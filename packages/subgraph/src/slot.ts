@@ -24,6 +24,7 @@ import {
   SettledEvent,
   TaxCollectedEvent,
 } from "../generated/schema";
+import { getOrCreateAccount } from "./helpers";
 
 function evtId(txHash: Bytes, logIndex: BigInt): string {
   return txHash.toHexString() + "-" + logIndex.toString();
@@ -35,7 +36,22 @@ function getSlot(address: Address): Slot {
 
 export function handleBought(event: Bought): void {
   let slot = getSlot(event.address);
+
+  // Decrement previous occupant count
+  let zeroAddr = Address.zero();
+  if (slot.occupant !== null && Address.fromBytes(slot.occupant as Bytes) != zeroAddr) {
+    let prevAccount = getOrCreateAccount(Address.fromBytes(slot.occupant as Bytes));
+    prevAccount.occupiedCount -= 1;
+    prevAccount.save();
+  }
+
+  // Set new occupant
+  let buyerAccount = getOrCreateAccount(event.params.buyer);
+  buyerAccount.occupiedCount += 1;
+  buyerAccount.save();
+
   slot.occupant = event.params.buyer;
+  slot.occupantAccount = buyerAccount.id;
   slot.price = event.params.selfAssessedPrice;
   slot.deposit = event.params.deposit;
   slot.updatedAt = event.block.timestamp;
@@ -56,7 +72,15 @@ export function handleBought(event: Bought): void {
 
 export function handleReleased(event: Released): void {
   let slot = getSlot(event.address);
+
+  if (slot.occupant !== null) {
+    let prevAccount = getOrCreateAccount(Address.fromBytes(slot.occupant as Bytes));
+    prevAccount.occupiedCount -= 1;
+    prevAccount.save();
+  }
+
   slot.occupant = null;
+  slot.occupantAccount = null;
   slot.price = BigInt.zero();
   slot.deposit = BigInt.zero();
   slot.collectedTax = BigInt.zero();
@@ -75,7 +99,15 @@ export function handleReleased(event: Released): void {
 
 export function handleLiquidated(event: Liquidated): void {
   let slot = getSlot(event.address);
+
+  if (slot.occupant !== null) {
+    let prevAccount = getOrCreateAccount(Address.fromBytes(slot.occupant as Bytes));
+    prevAccount.occupiedCount -= 1;
+    prevAccount.save();
+  }
+
   slot.occupant = null;
+  slot.occupantAccount = null;
   slot.price = BigInt.zero();
   slot.deposit = BigInt.zero();
   slot.collectedTax = BigInt.zero();

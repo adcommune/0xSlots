@@ -1,6 +1,7 @@
 fragment SlotFields on Slot {
   id
   recipient
+  recipientAccount { id slotCount occupiedCount }
   currency
   currencyName
   currencySymbol
@@ -11,6 +12,7 @@ fragment SlotFields on Slot {
   taxPercentage
   module
   occupant
+  occupantAccount { id slotCount occupiedCount }
   price
   deposit
   collectedTax
@@ -22,26 +24,68 @@ fragment SlotFields on Slot {
   updatedAt
 }
 
-query GetSlots($first: Int!, $skip: Int) {
-  slots(first: $first, skip: $skip, orderBy: createdAt, orderDirection: desc) {
+query GetSlots(
+  $first: Int!
+  $skip: Int
+  $orderBy: Slot_orderBy
+  $orderDirection: OrderDirection
+  $where: Slot_filter
+  $block: Block_height
+) {
+  slots(
+    first: $first
+    skip: $skip
+    orderBy: $orderBy
+    orderDirection: $orderDirection
+    where: $where
+    block: $block
+  ) {
     ...SlotFields
   }
 }
 
-query GetSlot($id: ID!) {
-  slot(id: $id) {
+query GetSlot($id: ID!, $block: Block_height) {
+  slot(id: $id, block: $block) {
     ...SlotFields
   }
 }
 
-query GetSlotsByRecipient($recipient: Bytes!, $first: Int!) {
-  slots(first: $first, orderBy: createdAt, orderDirection: desc, where: { recipient: $recipient }) {
+query GetSlotsByRecipient(
+  $recipient: Bytes!
+  $first: Int!
+  $skip: Int
+  $orderBy: Slot_orderBy
+  $orderDirection: OrderDirection
+  $block: Block_height
+) {
+  slots(
+    first: $first
+    skip: $skip
+    orderBy: $orderBy
+    orderDirection: $orderDirection
+    where: { recipient: $recipient }
+    block: $block
+  ) {
     ...SlotFields
   }
 }
 
-query GetSlotsByOccupant($occupant: Bytes!, $first: Int!) {
-  slots(first: $first, orderBy: createdAt, orderDirection: desc, where: { occupant: $occupant }) {
+query GetSlotsByOccupant(
+  $occupant: Bytes!
+  $first: Int!
+  $skip: Int
+  $orderBy: Slot_orderBy
+  $orderDirection: OrderDirection
+  $block: Block_height
+) {
+  slots(
+    first: $first
+    skip: $skip
+    orderBy: $orderBy
+    orderDirection: $orderDirection
+    where: { occupant: $occupant }
+    block: $block
+  ) {
     ...SlotFields
   }
 }

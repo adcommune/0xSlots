@@ -6,6 +6,7 @@ import { ExplorerTabs } from "@/components/explorer-tabs";
 import { Button } from "@/components/ui/button";
 
 import { EventsTable } from "./components/events-table";
+import { RecipientsTable } from "./components/recipients-table";
 import { SlotsTable } from "./components/slots-table";
 import { StatsBar } from "./components/stats-bar";
 
@@ -41,6 +42,11 @@ export default function ExplorerPage() {
       <div className="max-w-6xl mx-auto px-6 py-4">
         <ExplorerTabs
           tabs={[
+            {
+              id: "recipients",
+              label: "Recipients",
+              content: () => <RecipientsTable />,
+            },
             {
               id: "slots",
               label: "Slots",

@@ -69,6 +69,88 @@ export class Factory extends Entity {
   }
 }
 
+export class Account extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id != null, "Cannot save Account entity without an ID");
+    if (id) {
+      assert(
+        id.kind == ValueKind.STRING,
+        `Entities of type Account must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`,
+      );
+      store.set("Account", id.toString(), this);
+    }
+  }
+
+  static loadInBlock(id: string): Account | null {
+    return changetype<Account | null>(store.get_in_block("Account", id));
+  }
+
+  static load(id: string): Account | null {
+    return changetype<Account | null>(store.get("Account", id));
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get slotsAsRecipient(): SlotLoader {
+    return new SlotLoader(
+      "Account",
+      this.get("id")!.toString(),
+      "slotsAsRecipient",
+    );
+  }
+
+  get slotsAsOccupant(): SlotLoader {
+    return new SlotLoader(
+      "Account",
+      this.get("id")!.toString(),
+      "slotsAsOccupant",
+    );
+  }
+
+  get slotCount(): i32 {
+    let value = this.get("slotCount");
+    if (!value || value.kind == ValueKind.NULL) {
+      return 0;
+    } else {
+      return value.toI32();
+    }
+  }
+
+  set slotCount(value: i32) {
+    this.set("slotCount", Value.fromI32(value));
+  }
+
+  get occupiedCount(): i32 {
+    let value = this.get("occupiedCount");
+    if (!value || value.kind == ValueKind.NULL) {
+      return 0;
+    } else {
+      return value.toI32();
+    }
+  }
+
+  set occupiedCount(value: i32) {
+    this.set("occupiedCount", Value.fromI32(value));
+  }
+}
+
 export class Slot extends Entity {
   constructor(id: string) {
     super();
@@ -119,6 +201,19 @@ export class Slot extends Entity {
 
   set recipient(value: Bytes) {
     this.set("recipient", Value.fromBytes(value));
+  }
+
+  get recipientAccount(): string {
+    let value = this.get("recipientAccount");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set recipientAccount(value: string) {
+    this.set("recipientAccount", Value.fromString(value));
   }
 
   get currency(): Bytes {
@@ -286,6 +381,23 @@ export class Slot extends Entity {
       this.unset("occupant");
     } else {
       this.set("occupant", Value.fromBytes(<Bytes>value));
+    }
+  }
+
+  get occupantAccount(): string | null {
+    let value = this.get("occupantAccount");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set occupantAccount(value: string | null) {
+    if (!value) {
+      this.unset("occupantAccount");
+    } else {
+      this.set("occupantAccount", Value.fromString(<string>value));
     }
   }
 
@@ -1581,6 +1693,24 @@ export class ModuleLoader extends Entity {
   load(): Module[] {
     let value = store.loadRelated(this._entity, this._id, this._field);
     return changetype<Module[]>(value);
+  }
+}
+
+export class SlotLoader extends Entity {
+  _entity: string;
+  _field: string;
+  _id: string;
+
+  constructor(entity: string, id: string, field: string) {
+    super();
+    this._entity = entity;
+    this._id = id;
+    this._field = field;
+  }
+
+  load(): Slot[] {
+    let value = store.loadRelated(this._entity, this._id, this._field);
+    return changetype<Slot[]>(value);
   }
 }
 

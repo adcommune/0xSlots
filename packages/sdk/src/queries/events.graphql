@@ -63,11 +63,26 @@ query GetRecentEvents($first: Int!) {
   }
 }
 
-# ── Per-slot ──
+# ── Per-slot events ──
 
-query GetBoughtEvents($slotId: String!, $first: Int!) {
-  boughtEvents(first: $first, orderBy: timestamp, orderDirection: desc, where: { slot: $slotId }) {
+query GetBoughtEvents(
+  $first: Int!
+  $skip: Int
+  $orderBy: BoughtEvent_orderBy
+  $orderDirection: OrderDirection
+  $where: BoughtEvent_filter
+  $block: Block_height
+) {
+  boughtEvents(
+    first: $first
+    skip: $skip
+    orderBy: $orderBy
+    orderDirection: $orderDirection
+    where: $where
+    block: $block
+  ) {
     id
+    slot { id }
     buyer
     previousOccupant
     price
@@ -79,26 +94,191 @@ query GetBoughtEvents($slotId: String!, $first: Int!) {
   }
 }
 
-query GetSettledEvents($slotId: String!, $first: Int!) {
-  settledEvents(first: $first, orderBy: timestamp, orderDirection: desc, where: { slot: $slotId }) {
+query GetReleasedEvents(
+  $first: Int!
+  $skip: Int
+  $orderBy: ReleasedEvent_orderBy
+  $orderDirection: OrderDirection
+  $where: ReleasedEvent_filter
+  $block: Block_height
+) {
+  releasedEvents(
+    first: $first
+    skip: $skip
+    orderBy: $orderBy
+    orderDirection: $orderDirection
+    where: $where
+    block: $block
+  ) {
     id
-    taxOwed
-    taxPaid
-    depositRemaining
+    slot { id }
+    occupant
+    refund
     timestamp
+    blockNumber
     tx
   }
 }
 
-query GetTaxCollectedEvents($slotId: String!, $first: Int!) {
-  taxCollectedEvents(first: $first, orderBy: timestamp, orderDirection: desc, where: { slot: $slotId }) {
+query GetLiquidatedEvents(
+  $first: Int!
+  $skip: Int
+  $orderBy: LiquidatedEvent_orderBy
+  $orderDirection: OrderDirection
+  $where: LiquidatedEvent_filter
+  $block: Block_height
+) {
+  liquidatedEvents(
+    first: $first
+    skip: $skip
+    orderBy: $orderBy
+    orderDirection: $orderDirection
+    where: $where
+    block: $block
+  ) {
     id
-    recipient
-    amount
+    slot { id }
+    liquidator
+    occupant
+    bounty
     timestamp
+    blockNumber
     tx
   }
 }
+
+query GetSettledEvents(
+  $first: Int!
+  $skip: Int
+  $orderBy: SettledEvent_orderBy
+  $orderDirection: OrderDirection
+  $where: SettledEvent_filter
+  $block: Block_height
+) {
+  settledEvents(
+    first: $first
+    skip: $skip
+    orderBy: $orderBy
+    orderDirection: $orderDirection
+    where: $where
+    block: $block
+  ) {
+    id
+    slot { id }
+    taxOwed
+    taxPaid
+    depositRemaining
+    timestamp
+    blockNumber
+    tx
+  }
+}
+
+query GetTaxCollectedEvents(
+  $first: Int!
+  $skip: Int
+  $orderBy: TaxCollectedEvent_orderBy
+  $orderDirection: OrderDirection
+  $where: TaxCollectedEvent_filter
+  $block: Block_height
+) {
+  taxCollectedEvents(
+    first: $first
+    skip: $skip
+    orderBy: $orderBy
+    orderDirection: $orderDirection
+    where: $where
+    block: $block
+  ) {
+    id
+    slot { id }
+    recipient
+    amount
+    timestamp
+    blockNumber
+    tx
+  }
+}
+
+query GetDepositedEvents(
+  $first: Int!
+  $skip: Int
+  $orderBy: DepositedEvent_orderBy
+  $orderDirection: OrderDirection
+  $where: DepositedEvent_filter
+  $block: Block_height
+) {
+  depositedEvents(
+    first: $first
+    skip: $skip
+    orderBy: $orderBy
+    orderDirection: $orderDirection
+    where: $where
+    block: $block
+  ) {
+    id
+    slot { id }
+    depositor
+    amount
+    timestamp
+    blockNumber
+    tx
+  }
+}
+
+query GetWithdrawnEvents(
+  $first: Int!
+  $skip: Int
+  $orderBy: WithdrawnEvent_orderBy
+  $orderDirection: OrderDirection
+  $where: WithdrawnEvent_filter
+  $block: Block_height
+) {
+  withdrawnEvents(
+    first: $first
+    skip: $skip
+    orderBy: $orderBy
+    orderDirection: $orderDirection
+    where: $where
+    block: $block
+  ) {
+    id
+    slot { id }
+    occupant
+    amount
+    timestamp
+    blockNumber
+    tx
+  }
+}
+
+query GetPriceUpdatedEvents(
+  $first: Int!
+  $skip: Int
+  $orderBy: PriceUpdatedEvent_orderBy
+  $orderDirection: OrderDirection
+  $where: PriceUpdatedEvent_filter
+  $block: Block_height
+) {
+  priceUpdatedEvents(
+    first: $first
+    skip: $skip
+    orderBy: $orderBy
+    orderDirection: $orderDirection
+    where: $where
+    block: $block
+  ) {
+    id
+    slot { id }
+    oldPrice
+    newPrice
+    timestamp
+    blockNumber
+    tx
+  }
+}
+
+# ── Per-slot activity (all event types) ──
 
 query GetSlotActivity($slotId: String!, $first: Int!) {
   boughtEvents(first: $first, orderBy: timestamp, orderDirection: desc, where: { slot: $slotId }) {

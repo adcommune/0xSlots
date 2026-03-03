@@ -94,8 +94,10 @@ export function useSlotPurchases(slotId: string) {
     queryKey: ["slot-purchases", chainId, slotId],
     queryFn: async () => {
       const { boughtEvents } = await client.getBoughtEvents({
-        slotId: slotId.toLowerCase(),
         first: 50,
+        where: { slot: slotId.toLowerCase() },
+        orderBy: "timestamp" as any,
+        orderDirection: "desc" as any,
       });
       return boughtEvents;
     },
@@ -111,8 +113,10 @@ export function useSlotsettlements(slotId: string) {
     queryKey: ["slot-settlements", chainId, slotId],
     queryFn: async () => {
       const { settledEvents } = await client.getSettledEvents({
-        slotId: slotId.toLowerCase(),
         first: 50,
+        where: { slot: slotId.toLowerCase() },
+        orderBy: "timestamp" as any,
+        orderDirection: "desc" as any,
       });
       return settledEvents;
     },
@@ -128,8 +132,10 @@ export function useSlotTaxCollections(slotId: string) {
     queryKey: ["slot-tax-collections", chainId, slotId],
     queryFn: async () => {
       const { taxCollectedEvents } = await client.getTaxCollectedEvents({
-        slotId: slotId.toLowerCase(),
         first: 50,
+        where: { slot: slotId.toLowerCase() },
+        orderBy: "timestamp" as any,
+        orderDirection: "desc" as any,
       });
       return taxCollectedEvents;
     },
