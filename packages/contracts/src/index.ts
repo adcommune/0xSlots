@@ -5,10 +5,11 @@ import { arbitrum, baseSepolia } from "viem/chains";
 import { slotFactoryAddress } from "./addresses";
 
 // Re-export ABIs
-export { slotsAbi, slotsFactoryAbi, slotsHubAbi } from "./abis";
+export { batchCollectorAbi, slotsAbi, slotsFactoryAbi, slotsHubAbi } from "./abis";
 
 // Re-export addresses and utilities
 export {
+  batchCollectorAddress,
   getSlotsHubAddress,
   getSupportedChainIds,
   isSlotsHubDeployed,

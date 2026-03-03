@@ -7,6 +7,10 @@ import { baseSepolia } from "viem/chains";
 export const slotFactoryAddress = {
   [baseSepolia.id]: "0x14cf0e785d2635c60f8a2bd473ce4f08a0e85a57",
 } as const;
+
+export const batchCollectorAddress = {
+  [baseSepolia.id]: "0x316cd70c96bd413eE088E74BddE02B2F6515cD58",
+} as const;
 /**
 
  * Supported chain IDs for 0xSlots protocol
