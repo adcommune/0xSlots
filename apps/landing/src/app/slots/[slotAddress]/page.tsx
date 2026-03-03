@@ -14,12 +14,12 @@ import { slotAbi } from "@0xslots/contracts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ConnectButton } from "@/components/connect-button";
-import { useV3Slot, useV3SlotPurchases } from "@/hooks/use-v3";
+import { useSlotOnChain } from "@/hooks/use-slot-onchain";
+import { useV3SlotPurchases } from "@/hooks/use-v3";
 import { useChain } from "@/context/chain";
-import { truncateAddress, formatPrice } from "@/utils";
+import { truncateAddress, formatBalance, formatDuration, formatBps } from "@/utils";
 
 import { BuySection } from "./components/buy-section";
-import { SlotOnChainData } from "./components/on-chain-data";
 import { UserCurrencyBalance } from "./components/user-balance";
 import { SlotEventHistory } from "./components/event-history";
 
@@ -28,7 +28,7 @@ const CHAIN_ID = baseSepolia.id;
 export default function SlotPage({ params }: { params: Promise<{ slotAddress: string }> }) {
   const { slotAddress } = use(params);
   const { explorerUrl } = useChain();
-  const { data: slot, isLoading } = useV3Slot(slotAddress);
+  const { data: slot, isLoading } = useSlotOnChain(slotAddress);
   const { data: events } = useV3SlotPurchases(slotAddress);
   const { address, isConnected, chainId } = useAccount();
   const { switchChain } = useSwitchChain();
@@ -41,9 +41,11 @@ export default function SlotPage({ params }: { params: Promise<{ slotAddress: st
 
   const wrongChain = chainId !== CHAIN_ID;
   const busy = isPending || isConfirming;
+  const decimals = slot?.currencyDecimals ?? 6;
+  const symbol = slot?.currencySymbol ?? "USDC";
 
   function toUnits(v: string): bigint {
-    try { return parseUnits(v || "0", slot?.currencyDecimals ?? 6); } catch { return 0n; }
+    try { return parseUnits(v || "0", decimals); } catch { return 0n; }
   }
 
   async function approveAndCall(amount: bigint, fn: () => void) {
@@ -87,6 +89,7 @@ export default function SlotPage({ params }: { params: Promise<{ slotAddress: st
   const isOccupied = slot.occupant != null;
   const isOccupant = address?.toLowerCase() === slot.occupant?.toLowerCase();
   const isRecipient = address?.toLowerCase() === slot.recipient.toLowerCase();
+  const remaining = slot.deposit > slot.taxOwed ? slot.deposit - slot.taxOwed : 0n;
 
   return (
     <div className="min-h-screen">
@@ -112,7 +115,7 @@ export default function SlotPage({ params }: { params: Promise<{ slotAddress: st
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 items-start">
           {/* Left: Info + Events */}
           <div className="space-y-6">
-            {/* Slot Info */}
+            {/* Slot Details */}
             <div className="rounded-lg border">
               <div className="bg-muted/50 border-b px-4 py-3">
                 <h2 className="text-sm font-semibold">Slot Details</h2>
@@ -121,21 +124,45 @@ export default function SlotPage({ params }: { params: Promise<{ slotAddress: st
                 <div className="flex justify-between"><span className="text-muted-foreground">Address</span>
                   <a href={`${explorerUrl}/address/${slot.id}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-mono text-xs">{truncateAddress(slot.id)}</a>
                 </div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Recipient</span><span className="font-mono text-xs">{truncateAddress(slot.recipient)}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Currency</span><span className="font-mono text-xs">{truncateAddress(slot.currency)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Recipient</span>
+                  <Link href={`/recipient/${slot.recipient}`} className="text-primary hover:underline font-mono text-xs">{truncateAddress(slot.recipient)}</Link>
+                </div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Currency</span><span className="font-mono text-xs">{slot.currencyName ?? truncateAddress(slot.currency)} ({symbol})</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Manager</span><span className="font-mono text-xs">{truncateAddress(slot.manager)}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Tax Rate</span><span>{Number(slot.taxPercentage) / 100}%/mo</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Liq. Bounty</span><span>{Number(slot.liquidationBountyBps) / 100}%</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Tax Rate</span><span>{formatBps(slot.taxPercentage.toString())}/mo</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Liq. Bounty</span><span>{formatBps(slot.liquidationBountyBps.toString())}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Mutable Tax</span><span>{slot.mutableTax ? "Yes" : "No"}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Mutable Module</span><span>{slot.mutableModule ? "Yes" : "No"}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Module</span><span className="font-mono text-xs">{slot.module === "0x0000000000000000000000000000000000000000" ? "None" : truncateAddress(slot.module)}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Collected Tax</span><span>{formatPrice(slot.collectedTax, slot.currencyDecimals ?? 18)} {slot.currencySymbol ?? 'USDC'}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Collected Tax</span><span>{formatBalance(slot.collectedTax, decimals)} {symbol}</span></div>
               </div>
             </div>
 
-            {/* Pending Updates — TODO: read from on-chain getPendingUpdate() */}
+            {/* Pending Updates */}
+            {(slot.hasPendingTax || slot.hasPendingModule) && (
+              <div className="rounded-lg border border-yellow-500/50 bg-yellow-500/5">
+                <div className="bg-yellow-500/10 border-b border-yellow-500/20 px-4 py-3">
+                  <h2 className="text-sm font-semibold text-yellow-600">Pending Updates</h2>
+                </div>
+                <div className="p-4 space-y-1.5 text-sm">
+                  {slot.hasPendingTax && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">New Tax Rate</span>
+                      <span>{formatBps(slot.pendingTaxPercentage.toString())}/mo</span>
+                    </div>
+                  )}
+                  {slot.hasPendingModule && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">New Module</span>
+                      <span className="font-mono text-xs">{truncateAddress(slot.pendingModule)}</span>
+                    </div>
+                  )}
+                  <p className="text-xs text-muted-foreground mt-2">Applied on next ownership transition</p>
+                </div>
+              </div>
+            )}
 
-            <SlotEventHistory events={events} explorerUrl={explorerUrl} decimals={slot.currencyDecimals ?? 6} />
+            <SlotEventHistory events={events} explorerUrl={explorerUrl} decimals={decimals} />
           </div>
 
           {/* Right: Actions */}
@@ -143,13 +170,46 @@ export default function SlotPage({ params }: { params: Promise<{ slotAddress: st
             <div className="rounded-lg border">
               <div className="bg-muted/50 border-b px-3 py-3">
                 <h2 className="text-sm font-semibold">
-                  {isOccupied ? `Price: ${formatPrice(slot.price, slot.currencyDecimals ?? 18)} {slot.currencySymbol ?? 'USDC'}` : "Vacant Slot"}
+                  {isOccupied ? `Price: ${formatBalance(slot.price, decimals)} ${symbol}` : "Vacant Slot"}
                 </h2>
               </div>
 
-              <div className="p-4 border-b">
-                <SlotOnChainData slotAddress={slot.id} isOccupied={isOccupied} />
-              </div>
+              {/* Live on-chain financials */}
+              {isOccupied && (
+                <div className="p-4 border-b space-y-1.5 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Deposit</span>
+                    <span>{formatBalance(slot.deposit, decimals)} {symbol}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Tax Owed</span>
+                    <span>{formatBalance(slot.taxOwed, decimals)} {symbol}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Net Balance</span>
+                    <span className={`font-bold ${slot.insolvent ? "text-destructive" : ""}`}>
+                      {formatBalance(remaining, decimals)} {symbol}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Liquidation In</span>
+                    <span className={slot.insolvent ? "text-destructive font-bold" : ""}>
+                      {slot.insolvent ? "NOW" : formatDuration(Number(slot.secondsUntilLiquidation))}
+                    </span>
+                  </div>
+                  {slot.insolvent && (
+                    <div className="rounded border border-destructive bg-destructive/10 text-destructive text-center py-1 text-xs font-bold">
+                      INSOLVENT
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {!isOccupied && (
+                <div className="p-4 border-b">
+                  <p className="text-sm text-muted-foreground">Vacant — No escrow data</p>
+                </div>
+              )}
 
               {isConnected && <UserCurrencyBalance currency={slot.currency as Address} />}
 
@@ -178,7 +238,7 @@ export default function SlotPage({ params }: { params: Promise<{ slotAddress: st
                     {isOccupant && (
                       <div className="space-y-3">
                         <div>
-                          <label className="text-xs text-muted-foreground block mb-1">New Price ({slot.currencySymbol ?? 'USDC'})</label>
+                          <label className="text-xs text-muted-foreground block mb-1">New Price ({symbol})</label>
                           <div className="flex gap-2">
                             <Input type="text" placeholder="1.00" value={newPrice} onChange={(e) => setNewPrice(e.target.value)}
                               className="font-mono text-xs flex-1" />
@@ -190,7 +250,7 @@ export default function SlotPage({ params }: { params: Promise<{ slotAddress: st
                         </div>
 
                         <div>
-                          <label className="text-xs text-muted-foreground block mb-1">Add Deposit ({slot.currencySymbol ?? 'USDC'})</label>
+                          <label className="text-xs text-muted-foreground block mb-1">Add Deposit ({symbol})</label>
                           <div className="flex gap-2">
                             <Input type="text" placeholder="1.00" value={depositAmount} onChange={(e) => setDepositAmount(e.target.value)}
                               className="font-mono text-xs flex-1" />
@@ -207,7 +267,7 @@ export default function SlotPage({ params }: { params: Promise<{ slotAddress: st
                         </div>
 
                         <div>
-                          <label className="text-xs text-muted-foreground block mb-1">Withdraw ({slot.currencySymbol ?? 'USDC'})</label>
+                          <label className="text-xs text-muted-foreground block mb-1">Withdraw ({symbol})</label>
                           <div className="flex gap-2">
                             <Input type="text" placeholder="1.00" value={withdrawAmount} onChange={(e) => setWithdrawAmount(e.target.value)}
                               className="font-mono text-xs flex-1" />

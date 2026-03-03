@@ -138,6 +138,121 @@ export const slotAbi = [
   },
   {
     "type": "function",
+    "name": "getSlotInfo",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "info",
+        "type": "tuple",
+        "internalType": "struct SlotInfo",
+        "components": [
+          {
+            "name": "recipient",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "currency",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "manager",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "mutableTax",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "mutableModule",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "occupant",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "price",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "taxPercentage",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "module",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "liquidationBountyBps",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "minDepositSeconds",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "deposit",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "collectedTax",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "taxOwed",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "secondsUntilLiquidation",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "insolvent",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "hasPendingTax",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "pendingTaxPercentage",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "hasPendingModule",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "pendingModule",
+            "type": "address",
+            "internalType": "address"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "initialize",
     "inputs": [
       {

@@ -8,7 +8,7 @@ export enum SlotsChain {
 
 export const SUBGRAPH_URLS: Record<SlotsChain, string> = {
   [SlotsChain.BASE_SEPOLIA]:
-    "https://api.studio.thegraph.com/query/958/0-x-slots-base-sepolia/v3.3.0",
+    "https://api.studio.thegraph.com/query/958/0-x-slots-base-sepolia/v3.4.0",
   [SlotsChain.ARBITRUM]:
     "https://api.studio.thegraph.com/query/958/0-x-slots-arb/version/latest",
 };

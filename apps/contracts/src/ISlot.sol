@@ -22,6 +22,34 @@ struct SlotInitParams {
     uint256 minDepositSeconds;   // minimum deposit to cover N seconds of tax
 }
 
+/// @notice Complete slot state returned by getSlotInfo()
+struct SlotInfo {
+    // Identity (immutable)
+    address recipient;
+    address currency;
+    address manager;
+    bool mutableTax;
+    bool mutableModule;
+    // State
+    address occupant;
+    uint256 price;
+    uint256 taxPercentage;
+    address module;
+    uint256 liquidationBountyBps;
+    uint256 minDepositSeconds;
+    // Financials (live-computed)
+    uint256 deposit;
+    uint256 collectedTax;
+    uint256 taxOwed;
+    uint256 secondsUntilLiquidation;
+    bool insolvent;
+    // Pending updates
+    bool hasPendingTax;
+    uint256 pendingTaxPercentage;
+    bool hasPendingModule;
+    address pendingModule;
+}
+
 /// @notice Pending update for tax or module (applied on next ownership transition)
 struct PendingUpdate {
     uint256 newTaxPercentage;

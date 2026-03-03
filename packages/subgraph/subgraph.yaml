@@ -8,9 +8,9 @@ dataSources:
     name: SlotFactory
     network: base-sepolia
     source:
-      address: "0xFdC0CD97B90893A4388356E99039Bfc613042f13"
+      address: "0x167022C83ce995b2D72232e000538264329e91d0"
       abi: SlotFactory
-      startBlock: 38389446
+      startBlock: 38392004
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
