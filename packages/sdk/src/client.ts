@@ -28,7 +28,7 @@ export enum SlotsChain {
 
 export const SUBGRAPH_URLS: Record<SlotsChain, string> = {
   [SlotsChain.BASE_SEPOLIA]:
-    "https://api.studio.thegraph.com/query/958/0-x-slots-base-sepolia/v3.6.0",
+    "https://api.studio.thegraph.com/query/958/0-x-slots-base-sepolia/version/latest",
   [SlotsChain.ARBITRUM]:
     "https://api.studio.thegraph.com/query/958/0-x-slots-arb/version/latest",
 };
@@ -52,9 +52,15 @@ export class SlotsClient {
     this.sdk = getSdk(this.client);
   }
 
-  getChainId(): SlotsChain { return this.chainId; }
-  getClient(): GraphQLClient { return this.client; }
-  getSdk() { return this.sdk; }
+  getChainId(): SlotsChain {
+    return this.chainId;
+  }
+  getClient(): GraphQLClient {
+    return this.client;
+  }
+  getSdk() {
+    return this.sdk;
+  }
 
   // Slot queries
   getSlots(...args: Parameters<ReturnType<typeof getSdk>["GetSlots"]>) {
@@ -63,10 +69,14 @@ export class SlotsClient {
   getSlot(...args: Parameters<ReturnType<typeof getSdk>["GetSlot"]>) {
     return this.sdk.GetSlot(...args);
   }
-  getSlotsByRecipient(...args: Parameters<ReturnType<typeof getSdk>["GetSlotsByRecipient"]>) {
+  getSlotsByRecipient(
+    ...args: Parameters<ReturnType<typeof getSdk>["GetSlotsByRecipient"]>
+  ) {
     return this.sdk.GetSlotsByRecipient(...args);
   }
-  getSlotsByOccupant(...args: Parameters<ReturnType<typeof getSdk>["GetSlotsByOccupant"]>) {
+  getSlotsByOccupant(
+    ...args: Parameters<ReturnType<typeof getSdk>["GetSlotsByOccupant"]>
+  ) {
     return this.sdk.GetSlotsByOccupant(...args);
   }
 
@@ -79,19 +89,29 @@ export class SlotsClient {
   }
 
   // Event queries
-  getBoughtEvents(...args: Parameters<ReturnType<typeof getSdk>["GetBoughtEvents"]>) {
+  getBoughtEvents(
+    ...args: Parameters<ReturnType<typeof getSdk>["GetBoughtEvents"]>
+  ) {
     return this.sdk.GetBoughtEvents(...args);
   }
-  getSettledEvents(...args: Parameters<ReturnType<typeof getSdk>["GetSettledEvents"]>) {
+  getSettledEvents(
+    ...args: Parameters<ReturnType<typeof getSdk>["GetSettledEvents"]>
+  ) {
     return this.sdk.GetSettledEvents(...args);
   }
-  getTaxCollectedEvents(...args: Parameters<ReturnType<typeof getSdk>["GetTaxCollectedEvents"]>) {
+  getTaxCollectedEvents(
+    ...args: Parameters<ReturnType<typeof getSdk>["GetTaxCollectedEvents"]>
+  ) {
     return this.sdk.GetTaxCollectedEvents(...args);
   }
-  getSlotActivity(...args: Parameters<ReturnType<typeof getSdk>["GetSlotActivity"]>) {
+  getSlotActivity(
+    ...args: Parameters<ReturnType<typeof getSdk>["GetSlotActivity"]>
+  ) {
     return this.sdk.GetSlotActivity(...args);
   }
-  getRecentEvents(...args: Parameters<ReturnType<typeof getSdk>["GetRecentEvents"]>) {
+  getRecentEvents(
+    ...args: Parameters<ReturnType<typeof getSdk>["GetRecentEvents"]>
+  ) {
     return this.sdk.GetRecentEvents(...args);
   }
 
@@ -104,19 +124,29 @@ export class SlotsClient {
   }
 
   // Individual event queries (full params)
-  getReleasedEvents(...args: Parameters<ReturnType<typeof getSdk>["GetReleasedEvents"]>) {
+  getReleasedEvents(
+    ...args: Parameters<ReturnType<typeof getSdk>["GetReleasedEvents"]>
+  ) {
     return this.sdk.GetReleasedEvents(...args);
   }
-  getLiquidatedEvents(...args: Parameters<ReturnType<typeof getSdk>["GetLiquidatedEvents"]>) {
+  getLiquidatedEvents(
+    ...args: Parameters<ReturnType<typeof getSdk>["GetLiquidatedEvents"]>
+  ) {
     return this.sdk.GetLiquidatedEvents(...args);
   }
-  getDepositedEvents(...args: Parameters<ReturnType<typeof getSdk>["GetDepositedEvents"]>) {
+  getDepositedEvents(
+    ...args: Parameters<ReturnType<typeof getSdk>["GetDepositedEvents"]>
+  ) {
     return this.sdk.GetDepositedEvents(...args);
   }
-  getWithdrawnEvents(...args: Parameters<ReturnType<typeof getSdk>["GetWithdrawnEvents"]>) {
+  getWithdrawnEvents(
+    ...args: Parameters<ReturnType<typeof getSdk>["GetWithdrawnEvents"]>
+  ) {
     return this.sdk.GetWithdrawnEvents(...args);
   }
-  getPriceUpdatedEvents(...args: Parameters<ReturnType<typeof getSdk>["GetPriceUpdatedEvents"]>) {
+  getPriceUpdatedEvents(
+    ...args: Parameters<ReturnType<typeof getSdk>["GetPriceUpdatedEvents"]>
+  ) {
     return this.sdk.GetPriceUpdatedEvents(...args);
   }
 

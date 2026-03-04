@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 
 import { EventsTable } from "./components/events-table";
+import { ModulesTable } from "./components/modules-table";
 import { RecipientsTable } from "./components/recipients-table";
 import { SlotsTable } from "./components/slots-table";
 import { StatsBar } from "./components/stats-bar";
@@ -47,6 +48,11 @@ export default function ExplorerPage() {
               id: "slots",
               label: "Slots",
               content: () => <SlotsTable />,
+            },
+            {
+              id: "modules",
+              label: "Modules",
+              content: () => <ModulesTable />,
             },
             {
               id: "events",

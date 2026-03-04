@@ -1,6 +1,6 @@
 import { isAddress } from "viem";
-import { Button } from "@/components/ui/button";
 import { ConnectButton } from "@/components/connect-button";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { truncateAddress } from "@/utils";
 
@@ -53,16 +53,14 @@ export function SummaryCard({
     <div className="hidden lg:block w-72 shrink-0">
       <div className="sticky top-8 rounded-lg border">
         <div className="bg-muted/50 border-b px-3 py-3">
-          <p className="text-xs text-muted-foreground font-semibold">
-            Summary
-          </p>
+          <p className="text-xs text-muted-foreground font-semibold">Summary</p>
         </div>
 
         <div className="p-4 space-y-4">
           {/* Slot count selector */}
           <div className="flex items-center justify-between">
             <span className="text-sm font-semibold">Slots</span>
-            <div className="flex items-center gap-0">
+            <div className="flex items-center gap-2">
               <Button
                 type="button"
                 variant="outline"
@@ -71,7 +69,7 @@ export function SummaryCard({
               >
                 −
               </Button>
-              <span className="w-10 h-6 border-y flex items-center justify-center text-sm font-semibold">
+              <span className="w-10 h-6 border rounded-md flex items-center justify-center text-sm font-semibold">
                 {slotCount}
               </span>
               <Button
@@ -155,9 +153,7 @@ export function SummaryCard({
               <p className="text-sm text-green-600 font-bold">
                 {slotCount > 1 ? `${slotCount} SLOTS CREATED` : "SLOT CREATED"}
               </p>
-              <p className="text-xs text-muted-foreground">
-                Redirecting…
-              </p>
+              <p className="text-xs text-muted-foreground">Redirecting…</p>
             </div>
           ) : (
             <Button
