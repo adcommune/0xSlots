@@ -91,6 +91,19 @@ export function useFactory() {
   });
 }
 
+export function useModules() {
+  const { chainId } = useChain();
+  const client = useSlotsClient();
+  return useQuery({
+    queryKey: ["modules", chainId],
+    queryFn: async () => {
+      const { modules } = await client.getModules({ first: 100 });
+      return modules;
+    },
+    staleTime: 30_000,
+  });
+}
+
 export function useSlotPurchases(slotId: string) {
   const { chainId } = useChain();
   const client = useSlotsClient();

@@ -66,6 +66,7 @@ export default function CreatePage() {
   const { switchChain } = useSwitchChain();
   const { writeContract, data: hash, isPending } = useWriteContract();
   const [slotCount, setSlotCount] = useState(1);
+  const [moduleMode, setModuleMode] = useState<"none" | "verified" | "custom">("none");
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash,
   });
@@ -439,31 +440,60 @@ export default function CreatePage() {
                     <FormField
                       control={form.control}
                       name="module"
-                      render={({ field, fieldState }) => (
-                        <FormItem>
-                          <FormLabel>Module (optional)</FormLabel>
-                          <div className="flex gap-2 mb-2">
-                            {VERIFIED_MODULES.map((m) => (
-                              <Button
-                                key={m.address}
-                                type="button"
-                                variant={field.value === m.address ? "default" : "outline"}
-                                size="sm"
-                                onClick={() => field.onChange(field.value === m.address ? "" : m.address)}
-                              >
-                                {m.name}
-                              </Button>
-                            ))}
-                          </div>
-                          <AddressInput
-                            value={field.value}
-                            onChange={field.onChange}
-                            onBlur={field.onBlur}
-                            placeholder="0x… or ENS (optional)"
-                            error={fieldState.error?.message}
-                          />
-                        </FormItem>
-                      )}
+                      render={({ field, fieldState }) => {
+                        const selectValue =
+                          moduleMode === "custom"
+                            ? "custom"
+                            : field.value === ""
+                              ? "none"
+                              : field.value;
+
+                        return (
+                          <FormItem>
+                            <FormLabel>Module (optional)</FormLabel>
+                            <Select
+                              value={selectValue}
+                              onValueChange={(v) => {
+                                if (v === "none") {
+                                  setModuleMode("none");
+                                  field.onChange("");
+                                } else if (v === "custom") {
+                                  setModuleMode("custom");
+                                  field.onChange("");
+                                } else {
+                                  setModuleMode("verified");
+                                  field.onChange(v);
+                                }
+                              }}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select a module" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="none">None</SelectItem>
+                                {VERIFIED_MODULES.map((m) => (
+                                  <SelectItem key={m.address} value={m.address}>
+                                    {m.name} — {m.description}
+                                  </SelectItem>
+                                ))}
+                                <SelectItem value="custom">Custom address</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            {moduleMode === "custom" && (
+                              <div className="mt-2">
+                                <AddressInput
+                                  value={field.value}
+                                  onChange={field.onChange}
+                                  onBlur={field.onBlur}
+                                  placeholder="0x… or ENS"
+                                  error={fieldState.error?.message}
+                                />
+                              </div>
+                            )}
+                            <FormMessage />
+                          </FormItem>
+                        );
+                      }}
                     />
                   </div>
                 </div>
