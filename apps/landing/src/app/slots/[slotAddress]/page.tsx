@@ -1,9 +1,25 @@
 "use client";
 
 import { slotAbi } from "@0xslots/contracts";
+import {
+  Banknote,
+  CircleDollarSign,
+  Clock,
+  FileBox,
+  HandCoins,
+  LandPlot,
+  Lock,
+  Receipt,
+  Settings,
+  Shield,
+  Sparkles,
+  Timer,
+  User,
+  Wallet,
+} from "lucide-react";
 import Link from "next/link";
 import { use, useState } from "react";
-import { type Address, erc20Abi, parseUnits } from "viem";
+import { type Address, parseUnits } from "viem";
 import {
   useAccount,
   useSwitchChain,
@@ -17,6 +33,7 @@ import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useChain } from "@/context/chain";
+import { useCurrencyBalance } from "@/hooks/use-currency-balance";
 import { useSlotOnChain } from "@/hooks/use-slot-onchain";
 import { useSlotActivity } from "@/hooks/use-v3";
 import {
@@ -27,6 +44,7 @@ import {
 } from "@/utils";
 
 import { BuySection } from "./components/buy-section";
+import { DepositSlider } from "./components/deposit-slider";
 import {
   normalizeSlotActivity,
   SlotEventHistory,
@@ -48,7 +66,6 @@ export default function SlotPage({
   const { switchChain } = useSwitchChain();
   const {
     writeContract,
-    writeContractAsync,
     data: hash,
     isPending,
   } = useWriteContract();
@@ -56,9 +73,8 @@ export default function SlotPage({
     hash,
   });
 
-  const [depositAmount, setDepositAmount] = useState("");
   const [newPrice, setNewPrice] = useState("");
-  const [withdrawAmount, setWithdrawAmount] = useState("");
+  const walletBalance = useCurrencyBalance(slot?.currency as Address);
 
   const wrongChain = chainId !== CHAIN_ID;
   const busy = isPending || isConfirming;
@@ -71,21 +87,6 @@ export default function SlotPage({
     } catch {
       return 0n;
     }
-  }
-
-  async function approveAndCall(amount: bigint, fn: () => void) {
-    if (!slot) return;
-    try {
-      await writeContractAsync({
-        address: slot.currency as Address,
-        abi: erc20Abi,
-        functionName: "approve",
-        args: [slotAddress as Address, amount],
-      });
-    } catch {
-      return;
-    }
-    fn();
   }
 
   if (isLoading) {
@@ -188,9 +189,10 @@ export default function SlotPage({
               <div className="bg-muted/50 border-b px-4 py-3">
                 <h2 className="text-sm font-semibold">Slot Details</h2>
               </div>
-              <div className="p-4 space-y-1.5 text-sm">
+              <div className="p-4 space-y-3 text-sm">
+                {/* Identity */}
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Address</span>
+                  <span className="text-muted-foreground flex items-center gap-1.5"><LandPlot className="size-3" /> Address</span>
                   <a
                     href={`${explorerUrl}/address/${slot.id}`}
                     target="_blank"
@@ -201,7 +203,7 @@ export default function SlotPage({
                   </a>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Recipient</span>
+                  <span className="text-muted-foreground flex items-center gap-1.5"><User className="size-3" /> Recipient</span>
                   <Link
                     href={`/recipient/${slot.recipient}`}
                     className="text-primary hover:underline font-mono text-xs"
@@ -210,45 +212,53 @@ export default function SlotPage({
                   </Link>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Currency</span>
+                  <span className="text-muted-foreground flex items-center gap-1.5"><CircleDollarSign className="size-3" /> Currency</span>
                   <span className="font-mono text-xs">
                     {slot.currencyName ?? truncateAddress(slot.currency)} ({symbol})
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Manager</span>
+                  <span className="text-muted-foreground flex items-center gap-1.5"><Shield className="size-3" /> Manager</span>
                   <span className="font-mono text-xs">
                     {truncateAddress(slot.manager)}
                   </span>
                 </div>
+
+                <div className="border-t" />
+
+                {/* Economics */}
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Tax Rate</span>
+                  <span className="text-muted-foreground flex items-center gap-1.5"><HandCoins className="size-3" /> Tax Rate</span>
                   <span>{formatBps(slot.taxPercentage.toString())}/mo</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Liq. Bounty</span>
+                  <span className="text-muted-foreground flex items-center gap-1.5"><Sparkles className="size-3 text-amber-500" /> Liq. Bounty</span>
                   <span>{formatBps(slot.liquidationBountyBps.toString())}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Min. Deposit</span>
+                  <span className="text-muted-foreground flex items-center gap-1.5"><Timer className="size-3" /> Min. Deposit</span>
                   <span>{formatDuration(Number(slot.minDepositSeconds))}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Tax Collected</span>
+                  <span className="text-muted-foreground flex items-center gap-1.5"><Receipt className="size-3" /> Tax Collected</span>
                   <span>
                     {formatBalance(slot.collectedTax, decimals)} {symbol}
                   </span>
                 </div>
+
+                <div className="border-t" />
+
+                {/* Configuration */}
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Mutable Tax</span>
+                  <span className="text-muted-foreground flex items-center gap-1.5"><Lock className="size-3" /> Mutable Tax</span>
                   <span>{slot.mutableTax ? "Yes" : "No"}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Mutable Module</span>
+                  <span className="text-muted-foreground flex items-center gap-1.5"><Settings className="size-3" /> Mutable Module</span>
                   <span>{slot.mutableModule ? "Yes" : "No"}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Module</span>
+                  <span className="text-muted-foreground flex items-center gap-1.5"><FileBox className="size-3" /> Module</span>
                   <span className="font-mono text-xs">
                     {slot.module ===
                     "0x0000000000000000000000000000000000000000"
@@ -321,21 +331,21 @@ export default function SlotPage({
 
               {/* Live on-chain financials */}
               {isOccupied && (
-                <div className="p-4 border-b space-y-1.5 text-sm">
+                <div className="p-4 border-b space-y-2.5 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Deposit</span>
+                    <span className="text-muted-foreground flex items-center gap-1.5"><Banknote className="size-3" /> Deposit</span>
                     <span>
                       {formatBalance(slot.deposit, decimals)} {symbol}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Tax Owed</span>
+                    <span className="text-muted-foreground flex items-center gap-1.5"><HandCoins className="size-3" /> Tax Owed</span>
                     <span>
                       {formatBalance(slot.taxOwed, decimals)} {symbol}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Net Balance</span>
+                    <span className="text-muted-foreground flex items-center gap-1.5"><Wallet className="size-3" /> Net Balance</span>
                     <span
                       className={`font-bold ${slot.insolvent ? "text-destructive" : ""}`}
                     >
@@ -343,8 +353,8 @@ export default function SlotPage({
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">
-                      Liquidation In
+                    <span className="text-muted-foreground flex items-center gap-1.5">
+                      <Clock className="size-3" /> Liquidation In
                     </span>
                     <span
                       className={
@@ -432,69 +442,12 @@ export default function SlotPage({
                           </div>
                         </div>
 
-                        <div>
-                          <label className="text-xs text-muted-foreground block mb-1">
-                            Add Deposit ({symbol})
-                          </label>
-                          <div className="flex gap-2">
-                            <Input
-                              type="text"
-                              placeholder="1.00"
-                              value={depositAmount}
-                              onChange={(e) => setDepositAmount(e.target.value)}
-                              className="font-mono text-xs flex-1"
-                            />
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              disabled={busy}
-                              onClick={() => {
-                                const amt = toUnits(depositAmount);
-                                approveAndCall(amt, () =>
-                                  writeContract({
-                                    address: slotAddress as Address,
-                                    abi: slotAbi,
-                                    functionName: "topUp",
-                                    args: [amt],
-                                  }),
-                                );
-                              }}
-                            >
-                              {busy ? "..." : "Add"}
-                            </Button>
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="text-xs text-muted-foreground block mb-1">
-                            Withdraw ({symbol})
-                          </label>
-                          <div className="flex gap-2">
-                            <Input
-                              type="text"
-                              placeholder="1.00"
-                              value={withdrawAmount}
-                              onChange={(e) =>
-                                setWithdrawAmount(e.target.value)
-                              }
-                              className="font-mono text-xs flex-1"
-                            />
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              disabled={busy}
-                              onClick={() =>
-                                writeContract({
-                                  address: slotAddress as Address,
-                                  abi: slotAbi,
-                                  functionName: "withdraw",
-                                  args: [toUnits(withdrawAmount)],
-                                })
-                              }
-                            >
-                              {busy ? "..." : "Out"}
-                            </Button>
-                          </div>
+                        <div className="border-t pt-3">
+                          <DepositSlider
+                            slot={slot}
+                            slotAddress={slotAddress}
+                            walletBalance={walletBalance}
+                          />
                         </div>
 
                         <Button
