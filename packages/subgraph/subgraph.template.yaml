@@ -6,11 +6,11 @@ schema:
 dataSources:
   - kind: ethereum
     name: SlotFactory
-    network: base-sepolia
+    network: {{network}}
     source:
-      address: "0xFdC0CD97B90893A4388356E99039Bfc613042f13"
+      address: "{{factoryAddress}}"
       abi: SlotFactory
-      startBlock: 38389446
+      startBlock: {{startBlock}}
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -37,7 +37,7 @@ dataSources:
 templates:
   - kind: ethereum
     name: Slot
-    network: base-sepolia
+    network: {{network}}
     source:
       abi: Slot
     mapping:

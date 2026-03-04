@@ -186,6 +186,10 @@ importers:
       '@graphprotocol/graph-ts':
         specifier: ^0.38.0
         version: 0.38.0
+    devDependencies:
+      mustache:
+        specifier: ^4.2.0
+        version: 4.2.0
 
 packages:
 
@@ -5447,6 +5451,10 @@ packages:
 
   multiformats@9.9.0:
     resolution: {integrity: sha512-HoMUjhH9T8DDBNT+6xzkrd9ga/XiBI4xLr58LJACwK6G3HTOPeMz4nB4KJs33L2BelrIJa7P0VuNaVF3hMYfjg==}
+
+  mustache@4.2.0:
+    resolution: {integrity: sha512-71ippSywq5Yb7/tVYyGbkBggbU8H3u5Rz56fH60jGFgr8uHwxs+aSKeqmluIVzM0m0kB7xQjKS6qPfd0b2ZoqQ==}
+    hasBin: true
 
   mute-stream@0.0.8:
     resolution: {integrity: sha512-nnbWWOkoWyUsTjKrhgD0dcz22mdkSnpYqbEjIm2nhwhuxlSkpywJmBo8h0ZqJdkp73mb90SssHkN4rsRaBAfAA==}
@@ -13860,6 +13868,8 @@ snapshots:
   multiformats@13.4.2: {}
 
   multiformats@9.9.0: {}
+
+  mustache@4.2.0: {}
 
   mute-stream@0.0.8: {}
 

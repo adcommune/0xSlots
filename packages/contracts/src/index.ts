@@ -6,6 +6,7 @@ import { slotFactoryAddress } from "./addresses";
 
 // Re-export ABIs
 export { batchCollectorAbi, slotAbi, slotFactoryAbi } from "./abis";
+export { metadataModuleAbi } from "./abis/metadata-module";
 
 // Re-export addresses and utilities
 export {
