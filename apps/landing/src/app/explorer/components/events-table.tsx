@@ -102,6 +102,39 @@ function normalizeEvents(
       tx: e.tx,
     });
   }
+  for (const e of data.taxUpdateProposedEvents) {
+    events.push({
+      id: e.id,
+      type: "Tax Proposed",
+      slot: e.slot.id,
+      actor: "",
+      detail: `→ ${(Number(e.newPercentage) / 100).toFixed(1)}%/mo`,
+      timestamp: Number(e.timestamp),
+      tx: e.tx,
+    });
+  }
+  for (const e of data.moduleUpdateProposedEvents) {
+    events.push({
+      id: e.id,
+      type: "Module Proposed",
+      slot: e.slot.id,
+      actor: "",
+      detail: truncateAddress(e.newModule),
+      timestamp: Number(e.timestamp),
+      tx: e.tx,
+    });
+  }
+  for (const e of data.pendingUpdateCancelledEvents) {
+    events.push({
+      id: e.id,
+      type: "Update Cancelled",
+      slot: e.slot.id,
+      actor: "",
+      detail: "",
+      timestamp: Number(e.timestamp),
+      tx: e.tx,
+    });
+  }
 
   return events.sort((a, b) => b.timestamp - a.timestamp);
 }
@@ -114,6 +147,9 @@ const TYPE_COLORS: Record<string, string> = {
   Deposit: "bg-emerald-500/10 text-emerald-600",
   Withdraw: "bg-orange-500/10 text-orange-600",
   Collect: "bg-purple-500/10 text-purple-600",
+  "Tax Proposed": "bg-indigo-500/10 text-indigo-600",
+  "Module Proposed": "bg-cyan-500/10 text-cyan-600",
+  "Update Cancelled": "bg-gray-500/10 text-gray-600",
 };
 
 export function EventsTable() {

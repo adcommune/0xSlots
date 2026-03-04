@@ -49,6 +49,9 @@ type Slot @entity(immutable: false) {
   withdrawals: [WithdrawnEvent!]! @derivedFrom(field: "slot")
   settlements: [SettledEvent!]! @derivedFrom(field: "slot")
   taxCollections: [TaxCollectedEvent!]! @derivedFrom(field: "slot")
+  taxUpdateProposals: [TaxUpdateProposedEvent!]! @derivedFrom(field: "slot")
+  moduleUpdateProposals: [ModuleUpdateProposedEvent!]! @derivedFrom(field: "slot")
+  pendingUpdateCancellations: [PendingUpdateCancelledEvent!]! @derivedFrom(field: "slot")
 }
 
 # ──────────────────────────────────────────
@@ -135,6 +138,32 @@ type TaxCollectedEvent @entity(immutable: true) {
   slot: Slot!
   recipient: Bytes!
   amount: BigInt!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  tx: Bytes!
+}
+
+type TaxUpdateProposedEvent @entity(immutable: true) {
+  id: ID!
+  slot: Slot!
+  newPercentage: BigInt!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  tx: Bytes!
+}
+
+type ModuleUpdateProposedEvent @entity(immutable: true) {
+  id: ID!
+  slot: Slot!
+  newModule: Bytes!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  tx: Bytes!
+}
+
+type PendingUpdateCancelledEvent @entity(immutable: true) {
+  id: ID!
+  slot: Slot!
   timestamp: BigInt!
   blockNumber: BigInt!
   tx: Bytes!

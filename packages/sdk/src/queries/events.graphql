@@ -61,6 +61,26 @@ query GetRecentEvents($first: Int!) {
     timestamp
     tx
   }
+  taxUpdateProposedEvents(first: $first, orderBy: timestamp, orderDirection: desc) {
+    id
+    slot { id }
+    newPercentage
+    timestamp
+    tx
+  }
+  moduleUpdateProposedEvents(first: $first, orderBy: timestamp, orderDirection: desc) {
+    id
+    slot { id }
+    newModule
+    timestamp
+    tx
+  }
+  pendingUpdateCancelledEvents(first: $first, orderBy: timestamp, orderDirection: desc) {
+    id
+    slot { id }
+    timestamp
+    tx
+  }
 }
 
 # ── Per-slot events ──
@@ -331,6 +351,23 @@ query GetSlotActivity($slotId: String!, $first: Int!) {
     id
     recipient
     amount
+    timestamp
+    tx
+  }
+  taxUpdateProposedEvents(first: $first, orderBy: timestamp, orderDirection: desc, where: { slot: $slotId }) {
+    id
+    newPercentage
+    timestamp
+    tx
+  }
+  moduleUpdateProposedEvents(first: $first, orderBy: timestamp, orderDirection: desc, where: { slot: $slotId }) {
+    id
+    newModule
+    timestamp
+    tx
+  }
+  pendingUpdateCancelledEvents(first: $first, orderBy: timestamp, orderDirection: desc, where: { slot: $slotId }) {
+    id
     timestamp
     tx
   }
