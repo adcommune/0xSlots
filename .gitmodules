@@ -1,24 +1,32 @@
 [submodule "apps/contracts/lib/forge-std"]
 	path = apps/contracts/lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
+	ignore = dirty
 [submodule "apps/contracts/lib/prb-test"]
 	path = apps/contracts/lib/prb-test
 	url = https://github.com/PaulRBerg/prb-test.git
+	ignore = dirty
 [submodule "apps/contracts/lib/protocol-monorepo"]
 	path = apps/contracts/lib/protocol-monorepo
 	url = https://github.com/superfluid-finance/protocol-monorepo
+	ignore = dirty
 [submodule "apps/contracts/lib/openzeppelin-contracts"]
 	path = apps/contracts/lib/openzeppelin-contracts
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts
+	ignore = dirty
 [submodule "apps/contracts/lib/openzeppelin-contracts-upgradeable"]
 	path = apps/contracts/lib/openzeppelin-contracts-upgradeable
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable
+	ignore = dirty
 [submodule "apps/contracts/lib/splits-contracts-monorepo"]
 	path = apps/contracts/lib/splits-contracts-monorepo
 	url = https://github.com/0xSplits/splits-contracts-monorepo
+	ignore = dirty
 [submodule "apps/contracts/lib/v3-core"]
 	path = apps/contracts/lib/v3-core
 	url = https://github.com/Uniswap/v3-core
+	ignore = dirty
 [submodule "apps/contracts/lib/solady"]
 	path = apps/contracts/lib/solady
 	url = https://github.com/vectorized/solady
+	ignore = dirty
