@@ -328,17 +328,21 @@ export class Slot extends Entity {
     this.set("taxPercentage", Value.fromBigInt(value));
   }
 
-  get module(): Bytes {
+  get module(): string | null {
     let value = this.get("module");
     if (!value || value.kind == ValueKind.NULL) {
-      throw new Error("Cannot return null for a required field.");
+      return null;
     } else {
-      return value.toBytes();
+      return value.toString();
     }
   }
 
-  set module(value: Bytes) {
-    this.set("module", Value.fromBytes(value));
+  set module(value: string | null) {
+    if (!value) {
+      this.unset("module");
+    } else {
+      this.set("module", Value.fromString(<string>value));
+    }
   }
 
   get liquidationBountyBps(): BigInt {

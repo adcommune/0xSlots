@@ -10,7 +10,7 @@ fragment SlotFields on Slot {
   mutableTax
   mutableModule
   taxPercentage
-  module
+  module { id verified name version }
   occupant
   occupantAccount { id slotCount occupiedCount }
   price

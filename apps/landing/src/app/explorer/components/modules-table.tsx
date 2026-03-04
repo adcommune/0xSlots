@@ -78,7 +78,7 @@ export function ModulesTable() {
                   <td className="px-4 py-2.5 text-right">
                     <Badge
                       variant={m.verified ? "default" : "secondary"}
-                      className="text-[10px]"
+                      className={`text-[10px] ${m.verified ? "border-green-200 bg-green-50 text-green-700" : ""}`}
                     >
                       {m.verified ? "VERIFIED" : "UNVERIFIED"}
                     </Badge>

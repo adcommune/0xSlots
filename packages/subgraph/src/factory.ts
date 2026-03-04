@@ -1,4 +1,4 @@
-import { BigInt, Bytes, Address } from "@graphprotocol/graph-ts";
+import { BigInt, Bytes, Address, DataSourceContext } from "@graphprotocol/graph-ts";
 import {
   SlotDeployed,
   ModuleVerified,
@@ -7,7 +7,7 @@ import {
 import { ERC20 } from "../generated/SlotFactory/ERC20";
 import { Slot as SlotTemplate } from "../generated/templates";
 import { Factory, Slot, Module } from "../generated/schema";
-import { getOrCreateAccount } from "./helpers";
+import { getOrCreateAccount, getOrCreateModule } from "./helpers";
 
 function getOrCreateFactory(address: string): Factory {
   let factory = Factory.load(address);
@@ -52,7 +52,11 @@ export function handleSlotDeployed(event: SlotDeployed): void {
 
   // Init params
   slot.taxPercentage = event.params.initParams.taxPercentage;
-  slot.module = event.params.initParams.module;
+  const moduleAddr = event.params.initParams.module;
+  if (!moduleAddr.equals(Address.zero())) {
+    const mod = getOrCreateModule(moduleAddr, event.address.toHexString());
+    slot.module = mod.id;
+  }
   slot.liquidationBountyBps = event.params.initParams.liquidationBountyBps;
   slot.minDepositSeconds = event.params.initParams.minDepositSeconds;
 
@@ -70,7 +74,9 @@ export function handleSlotDeployed(event: SlotDeployed): void {
   slot.save();
 
   // Start indexing events on this slot contract
-  SlotTemplate.create(event.params.slot);
+  let context = new DataSourceContext();
+  context.setString("factory", event.address.toHexString());
+  SlotTemplate.createWithContext(event.params.slot, context);
 }
 
 export function handleModuleVerified(event: ModuleVerified): void {

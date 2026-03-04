@@ -29,7 +29,7 @@ type Slot @entity(immutable: false) {
   mutableModule: Boolean!
   manager: Bytes!
   taxPercentage: BigInt!
-  module: Bytes!
+  module: Module
   liquidationBountyBps: BigInt!
   minDepositSeconds: BigInt!
   occupant: Bytes # null = vacant

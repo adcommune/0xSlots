@@ -1,6 +1,7 @@
 "use client";
 
 import { slotAbi } from "@0xslots/contracts";
+import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { type Address, erc20Abi, parseUnits } from "viem";
 import {
@@ -167,7 +168,7 @@ export function BuySection({
 
       <Button disabled={busy} onClick={handleBuy} className="w-full">
         {busy
-          ? "Processing..."
+          ? <><Loader2 className="size-4 animate-spin mr-2" /> Processing...</>
           : isOccupied
             ? `Buy @ ${currentPrice} ${symbol}`
             : "Buy Slot"}

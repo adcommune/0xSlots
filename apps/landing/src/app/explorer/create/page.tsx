@@ -34,7 +34,7 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { truncateAddress } from "@/utils";
-import { HandCoins, Sparkles } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, HandCoins, Sparkles } from "lucide-react";
 
 import { AddressInput, useResolveAddress } from "./address-input";
 import { MobileBottomBar } from "./components/mobile-bottom-bar";
@@ -67,6 +67,7 @@ export default function CreatePage() {
   const { switchChain } = useSwitchChain();
   const { writeContract, data: hash, isPending } = useWriteContract();
   const [slotCount, setSlotCount] = useState(1);
+  const [step, setStep] = useState(1);
   const [moduleMode, setModuleMode] = useState<"none" | "verified" | "custom">("none");
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash,
@@ -195,205 +196,246 @@ export default function CreatePage() {
             <div className="flex-1 min-w-0 rounded-lg border">
               {/* Card header */}
               <div className="bg-muted/50 border-b px-4 py-3">
-                <h2 className="text-sm font-semibold">Configure Your Slot</h2>
+                <h2 className="text-sm font-semibold">
+                  Step {step} of 3 — {step === 1 ? "Recipient" : step === 2 ? "Parameters" : "Extra"}
+                </h2>
               </div>
 
-              <div className="p-6 space-y-6">
-                {/* ── Recipient ── */}
-                <div>
-                  <FormField
-                    control={form.control}
-                    name="recipientMode"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Recipient</FormLabel>
-                        <div className="flex gap-2">
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant={
-                              field.value === "self" ? "default" : "outline"
-                            }
-                            onClick={() => {
-                              field.onChange("self");
-                              form.setValue("recipient", "");
-                            }}
-                          >
-                            My Address
-                          </Button>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant={
-                              field.value === "custom" ? "default" : "outline"
-                            }
-                            onClick={() => field.onChange("custom")}
-                          >
-                            Custom
-                          </Button>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            disabled
-                          >
-                            Group
-                          </Button>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
+              {/* Step indicator */}
+              <div className="px-6 pt-5 pb-1">
+                <div className="flex items-center">
+                  {[
+                    { n: 1, label: "Recipient" },
+                    { n: 2, label: "Parameters" },
+                    { n: 3, label: "Extra" },
+                  ].map(({ n, label }, i) => (
+                    <div key={n} className="flex items-center flex-1 last:flex-none">
+                      <button
+                        type="button"
+                        onClick={() => n <= step && setStep(n)}
+                        className={`flex items-center gap-2 ${n <= step ? "cursor-pointer" : "cursor-default"}`}
+                      >
+                        <span
+                          className={`size-6 rounded-full flex items-center justify-center text-xs font-medium transition-colors ${
+                            n === step
+                              ? "bg-primary text-primary-foreground"
+                              : n < step
+                                ? "bg-primary/15 text-primary"
+                                : "bg-muted text-muted-foreground"
+                          }`}
+                        >
+                          {n < step ? <Check className="size-3" /> : n}
+                        </span>
+                        <span className={`text-xs hidden sm:inline ${n === step ? "font-medium" : "text-muted-foreground"}`}>
+                          {label}
+                        </span>
+                      </button>
+                      {i < 2 && (
+                        <div className={`flex-1 h-px mx-3 ${n < step ? "bg-primary/30" : "bg-border"}`} />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
 
-                  {watchedRecipientMode === "self" && address && (
-                    <p className="mt-2 text-xs text-muted-foreground">
-                      Tax revenue goes to {truncateAddress(address)}
-                    </p>
-                  )}
-                  {watchedRecipientMode === "self" && !address && (
-                    <p className="mt-2 text-xs text-muted-foreground">
-                      Connect your wallet to use your address.
-                    </p>
-                  )}
-
-                  {watchedRecipientMode === "custom" && (
-                    <div className="mt-3">
+              {/* Step content */}
+              <div key={step} className="p-6 space-y-6 animate-in fade-in duration-200">
+                {step === 1 && (
+                  <>
+                    {/* ── Recipient ── */}
+                    <div>
                       <FormField
                         control={form.control}
-                        name="recipient"
+                        name="recipientMode"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Recipient</FormLabel>
+                            <div className="flex gap-2">
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant={
+                                  field.value === "self" ? "default" : "outline"
+                                }
+                                onClick={() => {
+                                  field.onChange("self");
+                                  form.setValue("recipient", "");
+                                }}
+                              >
+                                My Address
+                              </Button>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant={
+                                  field.value === "custom" ? "default" : "outline"
+                                }
+                                onClick={() => field.onChange("custom")}
+                              >
+                                Custom
+                              </Button>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                disabled
+                              >
+                                Group
+                              </Button>
+                            </div>
+                          </FormItem>
+                        )}
+                      />
+
+                      {watchedRecipientMode === "self" && address && (
+                        <p className="mt-2 text-xs text-muted-foreground">
+                          Tax revenue goes to {truncateAddress(address)}
+                        </p>
+                      )}
+                      {watchedRecipientMode === "self" && !address && (
+                        <p className="mt-2 text-xs text-muted-foreground">
+                          Connect your wallet to use your address.
+                        </p>
+                      )}
+
+                      {watchedRecipientMode === "custom" && (
+                        <div className="mt-3">
+                          <FormField
+                            control={form.control}
+                            name="recipient"
+                            render={({ field, fieldState }) => (
+                              <FormItem>
+                                <AddressInput
+                                  value={field.value}
+                                  onChange={field.onChange}
+                                  onBlur={field.onBlur}
+                                  placeholder="0x… or vitalik.eth"
+                                  hint="Supports ENS names (.eth, .xyz, .id)"
+                                  error={fieldState.error?.message}
+                                />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+
+                {step === 2 && (
+                  <>
+                    {/* ── Currency ── */}
+                    <FormField
+                      control={form.control}
+                      name="currencyMode"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Currency</FormLabel>
+                          <div className="flex gap-2">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant={
+                                field.value === "usdc" ? "default" : "outline"
+                              }
+                              onClick={() => field.onChange("usdc")}
+                            >
+                              USDC
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant={
+                                field.value === "custom" ? "default" : "outline"
+                              }
+                              onClick={() => field.onChange("custom")}
+                            >
+                              Custom
+                            </Button>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+
+                    {watchedCurrencyMode === "custom" && (
+                      <FormField
+                        control={form.control}
+                        name="customCurrency"
                         render={({ field, fieldState }) => (
                           <FormItem>
                             <AddressInput
                               value={field.value}
                               onChange={field.onChange}
                               onBlur={field.onBlur}
-                              placeholder="0x… or vitalik.eth"
-                              hint="Supports ENS names (.eth, .xyz, .id)"
+                              placeholder="0x… ERC-20 address or ENS"
                               error={fieldState.error?.message}
                             />
                           </FormItem>
                         )}
                       />
-                    </div>
-                  )}
-                </div>
-
-                <Separator />
-
-                {/* ── Currency ── */}
-                <FormField
-                  control={form.control}
-                  name="currencyMode"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Currency</FormLabel>
-                      <div className="flex gap-2">
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant={
-                            field.value === "usdc" ? "default" : "outline"
-                          }
-                          onClick={() => field.onChange("usdc")}
-                        >
-                          USDC
-                        </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant={
-                            field.value === "custom" ? "default" : "outline"
-                          }
-                          onClick={() => field.onChange("custom")}
-                        >
-                          Custom
-                        </Button>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-
-                {watchedCurrencyMode === "custom" && (
-                  <FormField
-                    control={form.control}
-                    name="customCurrency"
-                    render={({ field, fieldState }) => (
-                      <FormItem>
-                        <AddressInput
-                          value={field.value}
-                          onChange={field.onChange}
-                          onBlur={field.onBlur}
-                          placeholder="0x… ERC-20 address or ENS"
-                          error={fieldState.error?.message}
-                        />
-                      </FormItem>
                     )}
-                  />
-                )}
 
-                <Separator />
+                    <Separator />
 
-                {/* ── Slot Parameters ── */}
-                <div>
-                  <p className="text-sm font-medium mb-4">Slot Parameters</p>
+                    {/* Tax Rate — Slider */}
+                    <FormField
+                      control={form.control}
+                      name="taxPercentage"
+                      render={({ field }) => (
+                        <FormItem>
+                          <div className="flex items-center justify-between">
+                            <FormLabel className="flex items-center gap-1.5"><HandCoins className="size-3.5" /> Tax Rate</FormLabel>
+                            <span className="text-sm font-semibold">
+                              {parseFloat(field.value).toFixed(1) || "0"}%/mo
+                            </span>
+                          </div>
+                          <input
+                            type="range"
+                            min="0"
+                            max="100"
+                            step="0.5"
+                            value={Number(field.value) || 0}
+                            onChange={(e) => field.onChange(e.target.value)}
+                            className="w-full h-2 appearance-none bg-secondary rounded-full cursor-pointer accent-primary [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:rounded-full [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:bg-primary [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0"
+                          />
+                          <div className="flex justify-between text-[9px] text-muted-foreground">
+                            <span>0%</span>
+                            <span>25%</span>
+                            <span>50%</span>
+                            <span>75%</span>
+                            <span>100%</span>
+                          </div>
+                          {(() => {
+                            const v = Number(field.value) || 0;
+                            const isLow = v <= 20;
+                            const isHigh = v >= 30;
+                            return (
+                              <div className="flex justify-between mt-1.5 text-[9px] leading-tight gap-4">
+                                <span
+                                  className={
+                                    isLow
+                                      ? "font-bold text-foreground"
+                                      : "text-muted-foreground"
+                                  }
+                                >
+                                  Predictability · low churn · squat risk
+                                </span>
+                                <span
+                                  className={`text-right ${isHigh ? "font-bold text-foreground" : "text-muted-foreground"}`}
+                                >
+                                  Allocative efficiency · anti-squat · volatility
+                                </span>
+                              </div>
+                            );
+                          })()}
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  {/* Tax Rate — Slider */}
-                  <FormField
-                    control={form.control}
-                    name="taxPercentage"
-                    render={({ field }) => (
-                      <FormItem>
-                        <div className="flex items-center justify-between">
-                          <FormLabel className="flex items-center gap-1.5"><HandCoins className="size-3.5" /> Tax Rate</FormLabel>
-                          <span className="text-sm font-semibold">
-                            {parseFloat(field.value).toFixed(1) || "0"}%/mo
-                          </span>
-                        </div>
-                        <input
-                          type="range"
-                          min="0"
-                          max="100"
-                          step="0.5"
-                          value={Number(field.value) || 0}
-                          onChange={(e) => field.onChange(e.target.value)}
-                          className="w-full h-2 appearance-none bg-secondary rounded-full cursor-pointer accent-primary [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:rounded-full [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:bg-primary [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0"
-                        />
-                        <div className="flex justify-between text-[9px] text-muted-foreground">
-                          <span>0%</span>
-                          <span>25%</span>
-                          <span>50%</span>
-                          <span>75%</span>
-                          <span>100%</span>
-                        </div>
-                        {(() => {
-                          const v = Number(field.value) || 0;
-                          const isLow = v <= 20;
-                          const isHigh = v >= 30;
-                          return (
-                            <div className="flex justify-between mt-1.5 text-[9px] leading-tight gap-4">
-                              <span
-                                className={
-                                  isLow
-                                    ? "font-bold text-foreground"
-                                    : "text-muted-foreground"
-                                }
-                              >
-                                Predictability · low churn · squat risk
-                              </span>
-                              <span
-                                className={`text-right ${isHigh ? "font-bold text-foreground" : "text-muted-foreground"}`}
-                              >
-                                Allocative efficiency · anti-squat · volatility
-                              </span>
-                            </div>
-                          );
-                        })()}
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <Separator />
 
-                  {/* Min Deposit Time */}
-                  <div className="mt-4">
+                    {/* Min Deposit Time */}
                     <FormField
                       control={form.control}
                       name="minDepositValue"
@@ -434,10 +476,10 @@ export default function CreatePage() {
                         </FormItem>
                       )}
                     />
-                  </div>
 
-                  {/* Module */}
-                  <div className="mt-4">
+                    <Separator />
+
+                    {/* Module */}
                     <FormField
                       control={form.control}
                       name="module"
@@ -496,104 +538,133 @@ export default function CreatePage() {
                         );
                       }}
                     />
-                  </div>
-                </div>
+                  </>
+                )}
 
-                <Separator />
+                {step === 3 && (
+                  <>
+                    {/* ── Mutability & Manager ── */}
+                    <div>
+                      <p className="text-sm font-medium mb-4">
+                        Mutability & Manager
+                      </p>
 
-                {/* ── Mutability & Manager ── */}
-                <div>
-                  <p className="text-sm font-medium mb-4">
-                    Mutability & Manager
-                  </p>
-
-                  <div className="flex gap-6">
-                    <FormField
-                      control={form.control}
-                      name="mutableTax"
-                      render={({ field }) => (
-                        <FormItem className="flex items-center gap-2">
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                          <FormLabel className="cursor-pointer mt-0!">
-                            Mutable Tax
-                          </FormLabel>
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="mutableModule"
-                      render={({ field }) => (
-                        <FormItem className="flex items-center gap-2">
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                          <FormLabel className="cursor-pointer mt-0!">
-                            Mutable Module
-                          </FormLabel>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  {needsManager && (
-                    <div className="mt-4">
-                      <FormField
-                        control={form.control}
-                        name="manager"
-                        render={({ field, fieldState }) => (
-                          <FormItem>
-                            <FormLabel>Manager Address (required)</FormLabel>
-                            <AddressInput
-                              value={field.value}
-                              onChange={field.onChange}
-                              onBlur={field.onBlur}
-                              placeholder="0x… or ENS name"
-                              error={fieldState.error?.message}
-                            />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  )}
-
-                  {!needsManager && (
-                    <p className="text-xs text-muted-foreground mt-2">
-                      No manager needed when both flags are off.
-                    </p>
-                  )}
-                </div>
-
-                <Separator />
-
-                {/* ── Liquidation Bounty ── */}
-                <FormField
-                  control={form.control}
-                  name="liquidationBountyPercent"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center gap-1.5"><Sparkles className="size-3.5 text-amber-500" /> Liquidation Bounty</FormLabel>
-                      <div className="relative">
-                        <Input
-                          {...field}
-                          type="text"
-                          inputMode="decimal"
-                          className="pr-8"
+                      <div className="flex gap-6">
+                        <FormField
+                          control={form.control}
+                          name="mutableTax"
+                          render={({ field }) => (
+                            <FormItem className="flex items-center gap-2">
+                              <Checkbox
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                              <FormLabel className="cursor-pointer mt-0!">
+                                Mutable Tax
+                              </FormLabel>
+                            </FormItem>
+                          )}
                         />
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                          %
-                        </span>
+
+                        <FormField
+                          control={form.control}
+                          name="mutableModule"
+                          render={({ field }) => (
+                            <FormItem className="flex items-center gap-2">
+                              <Checkbox
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                              <FormLabel className="cursor-pointer mt-0!">
+                                Mutable Module
+                              </FormLabel>
+                            </FormItem>
+                          )}
+                        />
                       </div>
-                      <FormDescription>Reward for liquidators</FormDescription>
-                      <FormMessage />
-                    </FormItem>
+
+                      {needsManager && (
+                        <div className="mt-4">
+                          <FormField
+                            control={form.control}
+                            name="manager"
+                            render={({ field, fieldState }) => (
+                              <FormItem>
+                                <FormLabel>Manager Address (required)</FormLabel>
+                                <AddressInput
+                                  value={field.value}
+                                  onChange={field.onChange}
+                                  onBlur={field.onBlur}
+                                  placeholder="0x… or ENS name"
+                                  error={fieldState.error?.message}
+                                />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      )}
+
+                      {!needsManager && (
+                        <p className="text-xs text-muted-foreground mt-2">
+                          No manager needed when both flags are off.
+                        </p>
+                      )}
+                    </div>
+
+                    <Separator />
+
+                    {/* ── Liquidation Bounty ── */}
+                    <FormField
+                      control={form.control}
+                      name="liquidationBountyPercent"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-1.5"><Sparkles className="size-3.5 text-amber-500" /> Liquidation Bounty</FormLabel>
+                          <div className="relative">
+                            <Input
+                              {...field}
+                              type="text"
+                              inputMode="decimal"
+                              className="pr-8"
+                            />
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                              %
+                            </span>
+                          </div>
+                          <FormDescription>Reward for liquidators</FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </>
+                )}
+
+                {/* Navigation */}
+                <div className="flex justify-between pt-2">
+                  {step > 1 ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setStep(step - 1)}
+                    >
+                      <ChevronLeft className="size-4 mr-1" />
+                      Back
+                    </Button>
+                  ) : (
+                    <div />
                   )}
-                />
+                  {step < 3 && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => setStep(step + 1)}
+                    >
+                      Next
+                      <ChevronRight className="size-4 ml-1" />
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
 
