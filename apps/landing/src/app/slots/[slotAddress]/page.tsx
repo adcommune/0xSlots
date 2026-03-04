@@ -2,6 +2,7 @@
 
 import { slotAbi } from "@0xslots/contracts";
 import {
+  AlertTriangle,
   Banknote,
   CircleDollarSign,
   Clock,
@@ -13,12 +14,13 @@ import {
   Settings,
   Shield,
   Sparkles,
+  Loader2,
   Timer,
   User,
   Wallet,
 } from "lucide-react";
 import Link from "next/link";
-import { use, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { type Address, parseUnits } from "viem";
 import {
   useAccount,
@@ -27,20 +29,20 @@ import {
   useWriteContract,
 } from "wagmi";
 import { baseSepolia } from "wagmi/chains";
-import { Badge } from "@/components/ui/badge";
 import { ConnectButton } from "@/components/connect-button";
 import { PageHeader } from "@/components/page-header";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useChain } from "@/context/chain";
 import { useCurrencyBalance } from "@/hooks/use-currency-balance";
 import { useSlotOnChain } from "@/hooks/use-slot-onchain";
-import { useSlotActivity } from "@/hooks/use-v3";
+import { useModules, useSlotActivity } from "@/hooks/use-v3";
 import {
-  truncateAddress,
   formatBalance,
-  formatDuration,
   formatBps,
+  formatDuration,
+  truncateAddress,
 } from "@/utils";
 
 import { BuySection } from "./components/buy-section";
@@ -64,17 +66,30 @@ export default function SlotPage({
   const { data: activityData } = useSlotActivity(slotAddress);
   const { address, isConnected, chainId } = useAccount();
   const { switchChain } = useSwitchChain();
-  const {
-    writeContract,
-    data: hash,
-    isPending,
-  } = useWriteContract();
+  const { writeContract, data: hash, isPending } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash,
   });
 
+  const { data: modules } = useModules();
   const [newPrice, setNewPrice] = useState("");
+  const [newTaxPct, setNewTaxPct] = useState<number | null>(null);
+  const [activeAction, setActiveAction] = useState<string | null>(null);
   const walletBalance = useCurrencyBalance(slot?.currency as Address);
+
+  // Initialize tax slider from current on-chain value
+  useEffect(() => {
+    if (slot && newTaxPct === null) {
+      setNewTaxPct(Number(slot.taxPercentage) / 100);
+    }
+  }, [slot, newTaxPct]);
+
+  // Clear active action when tx completes
+  useEffect(() => {
+    if (!isPending && !isConfirming) {
+      setActiveAction(null);
+    }
+  }, [isPending, isConfirming]);
 
   const wrongChain = chainId !== CHAIN_ID;
   const busy = isPending || isConfirming;
@@ -122,8 +137,16 @@ export default function SlotPage({
   const isOccupied = slot.occupant != null;
   const isOccupant = address?.toLowerCase() === slot.occupant?.toLowerCase();
   const isRecipient = address?.toLowerCase() === slot.recipient.toLowerCase();
+  const isManager = address?.toLowerCase() === slot.manager.toLowerCase();
   const remaining =
     slot.deposit > slot.taxOwed ? slot.deposit - slot.taxOwed : 0n;
+
+  const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
+  const hasModule = slot.module !== ZERO_ADDRESS;
+  const moduleEntity = hasModule
+    ? modules?.find((m) => m.id.toLowerCase() === slot.module.toLowerCase())
+    : null;
+  const moduleUnverified = hasModule && moduleEntity && !moduleEntity.verified;
 
   const role = isConnected
     ? isOccupant && isRecipient
@@ -168,10 +191,7 @@ export default function SlotPage({
               · Base Sepolia
             </p>
             {role && (
-              <Badge
-                variant="outline"
-                className={role.badge}
-              >
+              <Badge variant="outline" className={role.badge}>
                 {role.label}
               </Badge>
             )}
@@ -192,7 +212,9 @@ export default function SlotPage({
               <div className="p-4 space-y-3 text-sm">
                 {/* Identity */}
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground flex items-center gap-1.5"><LandPlot className="size-3" /> Address</span>
+                  <span className="text-muted-foreground flex items-center gap-1.5">
+                    <LandPlot className="size-3" /> Address
+                  </span>
                   <a
                     href={`${explorerUrl}/address/${slot.id}`}
                     target="_blank"
@@ -203,7 +225,9 @@ export default function SlotPage({
                   </a>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground flex items-center gap-1.5"><User className="size-3" /> Recipient</span>
+                  <span className="text-muted-foreground flex items-center gap-1.5">
+                    <User className="size-3" /> Recipient
+                  </span>
                   <Link
                     href={`/recipient/${slot.recipient}`}
                     className="text-primary hover:underline font-mono text-xs"
@@ -212,13 +236,18 @@ export default function SlotPage({
                   </Link>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground flex items-center gap-1.5"><CircleDollarSign className="size-3" /> Currency</span>
+                  <span className="text-muted-foreground flex items-center gap-1.5">
+                    <CircleDollarSign className="size-3" /> Currency
+                  </span>
                   <span className="font-mono text-xs">
-                    {slot.currencyName ?? truncateAddress(slot.currency)} ({symbol})
+                    {slot.currencyName ?? truncateAddress(slot.currency)} (
+                    {symbol})
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground flex items-center gap-1.5"><Shield className="size-3" /> Manager</span>
+                  <span className="text-muted-foreground flex items-center gap-1.5">
+                    <Shield className="size-3" /> Manager
+                  </span>
                   <span className="font-mono text-xs">
                     {truncateAddress(slot.manager)}
                   </span>
@@ -228,80 +257,107 @@ export default function SlotPage({
 
                 {/* Economics */}
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground flex items-center gap-1.5"><HandCoins className="size-3" /> Tax Rate</span>
+                  <span className="text-muted-foreground flex items-center gap-1.5">
+                    <HandCoins className="size-3" /> Tax Rate
+                  </span>
                   <span>{formatBps(slot.taxPercentage.toString())}/mo</span>
                 </div>
+                {slot.hasPendingTax && (
+                  <div className="flex justify-between pl-5">
+                    <p className="text-xs text-amber-600">
+                      Pending update{" "}
+                      <span className="text-[10px]">
+                        Will be applied on next ownership transition (ie. buy,
+                        price update, liquidationà)
+                      </span>
+                    </p>
+                    <span className="text-[11px] text-amber-600">
+                      {formatBps(slot.pendingTaxPercentage.toString())}/mo
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground flex items-center gap-1.5"><Sparkles className="size-3 text-amber-500" /> Liq. Bounty</span>
-                  <span>{formatBps(slot.liquidationBountyBps.toString())}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground flex items-center gap-1.5"><Timer className="size-3" /> Min. Deposit</span>
+                  <span className="text-muted-foreground flex items-center gap-1.5">
+                    <Timer className="size-3" /> Min. Deposit
+                  </span>
                   <span>{formatDuration(Number(slot.minDepositSeconds))}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground flex items-center gap-1.5"><Receipt className="size-3" /> Tax Collected</span>
+                  <span className="text-muted-foreground flex items-center gap-1.5">
+                    <Receipt className="size-3" /> Tax Collected
+                  </span>
                   <span>
                     {formatBalance(slot.collectedTax, decimals)} {symbol}
                   </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground flex items-center gap-1.5">
+                    <Sparkles className="size-3 text-amber-500" /> Liq. Bounty
+                  </span>
+                  <span>{formatBps(slot.liquidationBountyBps.toString())}</span>
                 </div>
 
                 <div className="border-t" />
 
                 {/* Configuration */}
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground flex items-center gap-1.5"><Lock className="size-3" /> Mutable Tax</span>
+                  <span className="text-muted-foreground flex items-center gap-1.5">
+                    <Lock className="size-3" /> Mutable Tax
+                  </span>
                   <span>{slot.mutableTax ? "Yes" : "No"}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground flex items-center gap-1.5"><Settings className="size-3" /> Mutable Module</span>
+                  <span className="text-muted-foreground flex items-center gap-1.5">
+                    <Settings className="size-3" /> Mutable Module
+                  </span>
                   <span>{slot.mutableModule ? "Yes" : "No"}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground flex items-center gap-1.5"><FileBox className="size-3" /> Module</span>
+                  <span className="text-muted-foreground flex items-center gap-1.5">
+                    <FileBox className="size-3" /> Module
+                  </span>
                   <span className="font-mono text-xs">
-                    {slot.module ===
-                    "0x0000000000000000000000000000000000000000"
+                    {!hasModule
                       ? "None"
-                      : truncateAddress(slot.module)}
+                      : moduleEntity?.name || truncateAddress(slot.module)}
                   </span>
                 </div>
+
+                {moduleUnverified && (
+                  <>
+                    <div className="border-t" />
+                    <div className="flex items-start gap-1.5 rounded-md border border-destructive/50 bg-destructive/5 px-2.5 py-2 text-[11px] text-destructive">
+                      <AlertTriangle className="size-3 mt-0.5 shrink-0" />
+                      <span>
+                        This slot uses an <strong>unverified module</strong>.
+                        Unverified modules have not been reviewed by the factory
+                        admin and may behave unexpectedly. Make sure you trust
+                        the module before interacting with this slot.
+                      </span>
+                    </div>
+                  </>
+                )}
+
+                {(slot.mutableTax || slot.mutableModule) && (
+                  <>
+                    <div className="border-t" />
+                    <div className="flex items-start gap-1.5 rounded-md border border-amber-500/50 bg-amber-500/5 px-2.5 py-2 text-[11px] text-amber-700">
+                      <AlertTriangle className="size-3 mt-0.5 shrink-0" />
+                      <span>
+                        The owner can change{" "}
+                        {slot.mutableTax && slot.mutableModule
+                          ? "the tax rate and module"
+                          : slot.mutableTax
+                            ? "the tax rate"
+                            : "the module"}{" "}
+                        on this slot. Changes take effect on the next ownership
+                        transition.
+                      </span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
-
-            {/* Pending Updates */}
-            {(slot.hasPendingTax || slot.hasPendingModule) && (
-              <div className="rounded-lg border border-yellow-500/50 bg-yellow-500/5">
-                <div className="bg-yellow-500/10 border-b border-yellow-500/20 px-4 py-3">
-                  <h2 className="text-sm font-semibold text-yellow-600">
-                    Pending Updates
-                  </h2>
-                </div>
-                <div className="p-4 space-y-1.5 text-sm">
-                  {slot.hasPendingTax && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">
-                        New Tax Rate
-                      </span>
-                      <span>
-                        {formatBps(slot.pendingTaxPercentage.toString())}/mo
-                      </span>
-                    </div>
-                  )}
-                  {slot.hasPendingModule && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">New Module</span>
-                      <span className="font-mono text-xs">
-                        {truncateAddress(slot.pendingModule)}
-                      </span>
-                    </div>
-                  )}
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Applied on next ownership transition
-                  </p>
-                </div>
-              </div>
-            )}
 
             <SlotEventHistory
               events={normalizeSlotActivity(activityData, decimals)}
@@ -311,9 +367,7 @@ export default function SlotPage({
 
           {/* Right: Actions */}
           <div className="lg:sticky lg:top-6">
-            <div
-              className={`rounded-lg border ${role ? role.accent : ""}`}
-            >
+            <div className={`rounded-lg border ${role ? role.accent : ""}`}>
               <div className="bg-muted/50 border-b px-3 py-3 flex items-center justify-between">
                 <h2 className="text-sm font-semibold">
                   {isOccupied
@@ -333,19 +387,25 @@ export default function SlotPage({
               {isOccupied && (
                 <div className="p-4 border-b space-y-2.5 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground flex items-center gap-1.5"><Banknote className="size-3" /> Deposit</span>
+                    <span className="text-muted-foreground flex items-center gap-1.5">
+                      <Banknote className="size-3" /> Deposit
+                    </span>
                     <span>
                       {formatBalance(slot.deposit, decimals)} {symbol}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground flex items-center gap-1.5"><HandCoins className="size-3" /> Tax Owed</span>
+                    <span className="text-muted-foreground flex items-center gap-1.5">
+                      <HandCoins className="size-3" /> Tax Owed
+                    </span>
                     <span>
                       {formatBalance(slot.taxOwed, decimals)} {symbol}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground flex items-center gap-1.5"><Wallet className="size-3" /> Net Balance</span>
+                    <span className="text-muted-foreground flex items-center gap-1.5">
+                      <Wallet className="size-3" /> Net Balance
+                    </span>
                     <span
                       className={`font-bold ${slot.insolvent ? "text-destructive" : ""}`}
                     >
@@ -428,16 +488,17 @@ export default function SlotPage({
                               size="sm"
                               variant="outline"
                               disabled={busy}
-                              onClick={() =>
+                              onClick={() => {
+                                setActiveAction("selfAssess");
                                 writeContract({
                                   address: slotAddress as Address,
                                   abi: slotAbi,
                                   functionName: "selfAssess",
                                   args: [toUnits(newPrice)],
-                                })
-                              }
+                                });
+                              }}
                             >
-                              {busy ? "..." : "Set"}
+                              {busy && activeAction === "selfAssess" ? <Loader2 className="size-4 animate-spin" /> : "Set"}
                             </Button>
                           </div>
                         </div>
@@ -454,16 +515,17 @@ export default function SlotPage({
                           variant="destructive"
                           className="w-full"
                           disabled={busy}
-                          onClick={() =>
+                          onClick={() => {
+                            setActiveAction("release");
                             writeContract({
                               address: slotAddress as Address,
                               abi: slotAbi,
                               functionName: "release",
                               args: [],
-                            })
-                          }
+                            });
+                          }}
                         >
-                          {busy ? "..." : "Release Slot"}
+                          {busy && activeAction === "release" ? <Loader2 className="size-4 animate-spin" /> : "Release Slot"}
                         </Button>
                       </div>
                     )}
@@ -472,17 +534,18 @@ export default function SlotPage({
                       <Button
                         variant="destructive"
                         className="w-full"
-                        disabled={busy}
-                        onClick={() =>
+                        disabled={busy || !slot.insolvent}
+                        onClick={() => {
+                          setActiveAction("liquidate");
                           writeContract({
                             address: slotAddress as Address,
                             abi: slotAbi,
                             functionName: "liquidate",
                             args: [],
-                          })
-                        }
+                          });
+                        }}
                       >
-                        {busy ? "..." : "Liquidate"}
+                        {busy && activeAction === "liquidate" ? <Loader2 className="size-4 animate-spin" /> : "Liquidate"}
                       </Button>
                     )}
 
@@ -491,21 +554,95 @@ export default function SlotPage({
                         variant="outline"
                         className="w-full"
                         disabled={busy || slot.taxOwed === 0n}
-                        onClick={() =>
+                        onClick={() => {
+                          setActiveAction("collect");
                           writeContract({
                             address: slotAddress as Address,
                             abi: slotAbi,
                             functionName: "collect",
                             args: [],
-                          })
-                        }
+                          });
+                        }}
                       >
-                        {busy
-                          ? "..."
+                        {busy && activeAction === "collect"
+                          ? <Loader2 className="size-4 animate-spin" />
                           : slot.taxOwed === 0n
                             ? "Nothing to Collect"
                             : `Collect Tax (${formatBalance(slot.taxOwed, decimals)} ${symbol})`}
                       </Button>
+                    )}
+
+                    {/* Manager: Propose Tax Update */}
+                    {isManager && slot.mutableTax && (
+                      <div className="border-t pt-3 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <label className="text-xs text-muted-foreground flex items-center gap-1">
+                            <HandCoins className="size-3" /> Propose Tax Rate
+                          </label>
+                          <span className="text-xs font-semibold">
+                            {(newTaxPct ?? 0).toFixed(1)}%/mo
+                          </span>
+                        </div>
+                        <input
+                          type="range"
+                          min="0"
+                          max="100"
+                          step="0.5"
+                          value={newTaxPct ?? 0}
+                          onChange={(e) => setNewTaxPct(Number(e.target.value))}
+                          className="w-full h-2 appearance-none bg-secondary rounded-full cursor-pointer accent-primary [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:rounded-full [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:bg-primary [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0"
+                        />
+                        <div className="flex justify-between text-[9px] text-muted-foreground">
+                          <span>0%</span>
+                          <span>25%</span>
+                          <span>50%</span>
+                          <span>75%</span>
+                          <span>100%</span>
+                        </div>
+                        {newTaxPct !== null &&
+                          Math.round(newTaxPct * 100) !==
+                            Number(slot.taxPercentage) && (
+                            <Button
+                              size="sm"
+                              className="w-full"
+                              disabled={busy}
+                              onClick={() => {
+                                setActiveAction("proposeTax");
+                                writeContract({
+                                  address: slotAddress as Address,
+                                  abi: slotAbi,
+                                  functionName: "proposeTaxUpdate",
+                                  args: [
+                                    BigInt(Math.round((newTaxPct ?? 0) * 100)),
+                                  ],
+                                });
+                              }}
+                            >
+                              {busy && activeAction === "proposeTax"
+                                ? <Loader2 className="size-4 animate-spin" />
+                                : `Propose ${(newTaxPct ?? 0).toFixed(1)}%/mo (currently ${formatBps(slot.taxPercentage.toString())}/mo)`}
+                            </Button>
+                          )}
+                        {slot.hasPendingTax && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="w-full text-xs text-destructive hover:text-destructive"
+                            disabled={busy}
+                            onClick={() => {
+                              setActiveAction("cancelPending");
+                              writeContract({
+                                address: slotAddress as Address,
+                                abi: slotAbi,
+                                functionName: "cancelPendingUpdates",
+                                args: [],
+                              });
+                            }}
+                          >
+                            {busy && activeAction === "cancelPending" ? <Loader2 className="size-4 animate-spin" /> : "Cancel Pending Update"}
+                          </Button>
+                        )}
+                      </div>
                     )}
 
                     {isSuccess && (

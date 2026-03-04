@@ -58,6 +58,9 @@ export function SlotsTable() {
                   Tax
                 </th>
                 <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
+                  Module
+                </th>
+                <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
                   Flags
                 </th>
               </tr>
@@ -100,6 +103,11 @@ export function SlotsTable() {
                     </td>
                     <td className="px-4 py-2.5 text-right font-mono text-xs">
                       {Number(slot.taxPercentage) / 100}%
+                    </td>
+                    <td className="px-4 py-2.5 font-mono text-xs text-muted-foreground">
+                      {slot.module
+                        ? `${slot.module.name || truncateAddress(slot.module.id)}${slot.module.verified ? " ✓" : ""}`
+                        : "—"}
                     </td>
                     <td className="px-4 py-2.5">
                       <div className="flex gap-1">

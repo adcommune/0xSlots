@@ -1,4 +1,4 @@
-import { BigInt, Bytes, Address } from "@graphprotocol/graph-ts";
+import { BigInt, Bytes, Address, dataSource } from "@graphprotocol/graph-ts";
 import {
   Bought,
   Released,
@@ -24,7 +24,7 @@ import {
   SettledEvent,
   TaxCollectedEvent,
 } from "../generated/schema";
-import { getOrCreateAccount } from "./helpers";
+import { getOrCreateAccount, getOrCreateModule } from "./helpers";
 
 function evtId(txHash: Bytes, logIndex: BigInt): string {
   return txHash.toHexString() + "-" + logIndex.toString();
@@ -214,7 +214,14 @@ export function handleModuleUpdateProposed(event: ModuleUpdateProposed): void {}
 export function handlePendingUpdateApplied(event: PendingUpdateApplied): void {
   let slot = getSlot(event.address);
   slot.taxPercentage = event.params.newTaxPercentage;
-  slot.module = event.params.newModule;
+  const moduleAddr = event.params.newModule;
+  if (moduleAddr.equals(Address.zero())) {
+    slot.module = null;
+  } else {
+    const factoryId = dataSource.context().getString("factory");
+    const mod = getOrCreateModule(moduleAddr, factoryId);
+    slot.module = mod.id;
+  }
   slot.updatedAt = event.block.timestamp;
   slot.save();
 }
