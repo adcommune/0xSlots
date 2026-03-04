@@ -32,9 +32,10 @@ contract DeployV3 is BaseScript {
         console2.log("Factory implementation:", address(factoryImpl));
 
         // 3. Deploy ERC1967Proxy for factory, calling initialize
+        address deployer = vm.addr(deployerPrivateKey);
         bytes memory initData = abi.encodeCall(
             SlotFactory.initialize,
-            (msg.sender, address(slotImpl))
+            (deployer, address(slotImpl))
         );
         ERC1967Proxy proxy = new ERC1967Proxy(address(factoryImpl), initData);
         console2.log("Factory proxy:", address(proxy));

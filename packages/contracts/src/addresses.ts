@@ -5,7 +5,7 @@ import { baseSepolia } from "viem/chains";
  * SlotsHub contract addresses by chain ID
  */
 export const slotFactoryAddress = {
-  [baseSepolia.id]: "0x167022C83ce995b2D72232e000538264329e91d0",
+  [baseSepolia.id]: "0x57759A2094cbE24313B826b453d4e7760279f79D",
 } as const;
 
 export const batchCollectorAddress = {

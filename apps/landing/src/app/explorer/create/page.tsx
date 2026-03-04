@@ -52,6 +52,14 @@ const FACTORY_ADDRESS = slotFactoryAddress[CHAIN_ID];
 
 const USDC_ADDRESS = "0x036CbD53842c5426634e7929541eC2318f3dCF7e";
 
+const VERIFIED_MODULES = [
+  {
+    name: "Metadata",
+    address: "0x6c5A8A7f061bEd94b1b88CFAd4e1a1a8C5c4e527",
+    description: "Store IPFS URIs per slot. Occupant controls the data.",
+  },
+] as const;
+
 export default function CreatePage() {
   const router = useRouter();
   const { address, isConnected, chainId: walletChainId } = useAccount();
@@ -434,6 +442,19 @@ export default function CreatePage() {
                       render={({ field, fieldState }) => (
                         <FormItem>
                           <FormLabel>Module (optional)</FormLabel>
+                          <div className="flex gap-2 mb-2">
+                            {VERIFIED_MODULES.map((m) => (
+                              <Button
+                                key={m.address}
+                                type="button"
+                                variant={field.value === m.address ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => field.onChange(field.value === m.address ? "" : m.address)}
+                              >
+                                {m.name}
+                              </Button>
+                            ))}
+                          </div>
                           <AddressInput
                             value={field.value}
                             onChange={field.onChange}
