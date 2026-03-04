@@ -1,3 +1,4 @@
+import { HandCoins, Sparkles } from "lucide-react";
 import { isAddress } from "viem";
 import { ConnectButton } from "@/components/connect-button";
 import { Button } from "@/components/ui/button";
@@ -97,13 +98,13 @@ export function SummaryCard({
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Tax Rate</span>
+              <span className="text-muted-foreground flex items-center gap-1"><HandCoins className="size-3" /> Tax Rate</span>
               <span className="font-semibold">
                 {watchedTaxPercentage || "0"}%/mo
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Liq. Bounty</span>
+              <span className="text-muted-foreground flex items-center gap-1"><Sparkles className="size-3 text-amber-500" /> Liq. Bounty</span>
               <span className="font-semibold">{watchedBounty || "0"}%</span>
             </div>
             <div className="flex justify-between">

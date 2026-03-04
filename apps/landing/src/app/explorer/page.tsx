@@ -1,5 +1,6 @@
 "use client";
 
+import { FileBox, LandPlot, List, User } from "lucide-react";
 import Link from "next/link";
 import { ConnectButton } from "@/components/connect-button";
 import { ExplorerTabs } from "@/components/explorer-tabs";
@@ -42,21 +43,25 @@ export default function ExplorerPage() {
             {
               id: "recipients",
               label: "Recipients",
+              icon: User,
               content: () => <RecipientsTable />,
             },
             {
               id: "slots",
               label: "Slots",
+              icon: LandPlot,
               content: () => <SlotsTable />,
             },
             {
               id: "modules",
               label: "Modules",
+              icon: FileBox,
               content: () => <ModulesTable />,
             },
             {
               id: "events",
               label: "Events",
+              icon: List,
               content: () => <EventsTable />,
             },
           ]}

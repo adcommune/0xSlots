@@ -1,5 +1,6 @@
 "use client";
 
+import { LandPlot } from "lucide-react";
 import { useFactory, useSlots } from "@/hooks/use-v3";
 
 export function StatsBar() {
@@ -11,6 +12,7 @@ export function StatsBar() {
   return (
     <div className="flex items-center gap-5">
       <div className="flex items-center gap-1.5">
+        <LandPlot className="size-3 text-muted-foreground" />
         <span className="text-xs text-muted-foreground">Slots</span>
         <span className="text-sm font-bold">{factory?.slotCount ?? 0}</span>
       </div>

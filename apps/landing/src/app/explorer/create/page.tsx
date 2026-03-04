@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { truncateAddress } from "@/utils";
+import { HandCoins, Sparkles } from "lucide-react";
 
 import { AddressInput, useResolveAddress } from "./address-input";
 import { MobileBottomBar } from "./components/mobile-bottom-bar";
@@ -342,7 +343,7 @@ export default function CreatePage() {
                     render={({ field }) => (
                       <FormItem>
                         <div className="flex items-center justify-between">
-                          <FormLabel>Tax Rate</FormLabel>
+                          <FormLabel className="flex items-center gap-1.5"><HandCoins className="size-3.5" /> Tax Rate</FormLabel>
                           <span className="text-sm font-semibold">
                             {parseFloat(field.value).toFixed(1) || "0"}%/mo
                           </span>
@@ -576,7 +577,7 @@ export default function CreatePage() {
                   name="liquidationBountyPercent"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Liquidation Bounty</FormLabel>
+                      <FormLabel className="flex items-center gap-1.5"><Sparkles className="size-3.5 text-amber-500" /> Liquidation Bounty</FormLabel>
                       <div className="relative">
                         <Input
                           {...field}

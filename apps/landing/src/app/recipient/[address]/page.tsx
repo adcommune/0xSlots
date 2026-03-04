@@ -1,5 +1,12 @@
 "use client";
 
+import {
+  Banknote,
+  HandCoins,
+  LandPlot,
+  UserCheck,
+  XCircle,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { use } from "react";
@@ -89,23 +96,31 @@ export default function RecipientPage({
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
           {[
-            { label: "Total Slots", value: slots.length.toString() },
-            { label: "Occupied", value: occupied.length.toString() },
-            { label: "Vacant", value: vacant.toString() },
+            { label: "Total Slots", value: slots.length.toString(), icon: LandPlot },
+            { label: "Occupied", value: occupied.length.toString(), icon: UserCheck },
+            { label: "Vacant", value: vacant.toString(), icon: XCircle },
             {
               label: "Pending Tax",
               value: `${formatBalance(totalTaxOwed, decimals)} ${symbol}`,
+              icon: HandCoins,
             },
             {
               label: "Total Deposit",
               value: `${formatBalance(totalDeposit, decimals)} ${symbol}`,
+              icon: Banknote,
             },
-          ].map((stat) => (
-            <div key={stat.label} className="rounded-lg border p-3">
-              <p className="text-xs text-muted-foreground">{stat.label}</p>
-              <p className="text-lg font-bold">{stat.value}</p>
-            </div>
-          ))}
+          ].map((stat) => {
+            const Icon = stat.icon;
+            return (
+              <div key={stat.label} className="rounded-lg border p-3">
+                <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                  <Icon className="size-3" />
+                  {stat.label}
+                </p>
+                <p className="text-lg font-bold">{stat.value}</p>
+              </div>
+            );
+          })}
         </div>
 
         {/* Slots Table */}

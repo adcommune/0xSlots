@@ -2,10 +2,12 @@
 
 import { useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import type { LucideIcon } from "lucide-react";
 
 interface Tab {
   id: string;
   label: string;
+  icon?: LucideIcon;
   content: () => ReactNode;
 }
 
@@ -15,20 +17,24 @@ export function ExplorerTabs({ tabs }: { tabs: Tab[] }) {
   return (
     <div>
       <div className="flex border-b mb-6">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActive(tab.id)}
-            className={cn(
-              "text-sm px-6 py-3 border-b-2 -mb-px transition-colors",
-              active === tab.id
-                ? "border-primary font-semibold text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            )}
-          >
-            {tab.label}
-          </button>
-        ))}
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActive(tab.id)}
+              className={cn(
+                "text-sm px-6 py-3 border-b-2 -mb-px transition-colors flex items-center gap-1.5",
+                active === tab.id
+                  ? "border-primary font-semibold text-foreground"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {Icon && <Icon className="size-3.5" />}
+              {tab.label}
+            </button>
+          );
+        })}
       </div>
       {tabs.find((t) => t.id === active)?.content()}
     </div>
