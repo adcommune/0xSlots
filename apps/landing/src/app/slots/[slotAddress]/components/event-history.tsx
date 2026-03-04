@@ -20,6 +20,9 @@ const TYPE_COLORS: Record<string, string> = {
   Deposit: "bg-emerald-500/10 text-emerald-600",
   Withdraw: "bg-orange-500/10 text-orange-600",
   Collect: "bg-purple-500/10 text-purple-600",
+  "Tax Proposed": "bg-indigo-500/10 text-indigo-600",
+  "Module Proposed": "bg-cyan-500/10 text-cyan-600",
+  "Update Cancelled": "bg-gray-500/10 text-gray-600",
 };
 
 export function normalizeSlotActivity(data: any, decimals: number = 6): UnifiedEvent[] {
@@ -77,16 +80,34 @@ export function normalizeSlotActivity(data: any, decimals: number = 6): UnifiedE
       timestamp: Number(e.timestamp), tx: e.tx,
     });
   }
+  for (const e of data.taxUpdateProposedEvents ?? []) {
+    events.push({
+      id: e.id, type: "Tax Proposed", actor: "",
+      detail: `→ ${(Number(e.newPercentage) / 100).toFixed(1)}%/mo`,
+      timestamp: Number(e.timestamp), tx: e.tx,
+    });
+  }
+  for (const e of data.moduleUpdateProposedEvents ?? []) {
+    events.push({
+      id: e.id, type: "Module Proposed", actor: "",
+      detail: truncateAddress(e.newModule),
+      timestamp: Number(e.timestamp), tx: e.tx,
+    });
+  }
+  for (const e of data.pendingUpdateCancelledEvents ?? []) {
+    events.push({
+      id: e.id, type: "Update Cancelled", actor: "",
+      detail: "",
+      timestamp: Number(e.timestamp), tx: e.tx,
+    });
+  }
 
   return events.sort((a, b) => b.timestamp - a.timestamp);
 }
 
 export function SlotEventHistory({ events, explorerUrl }: { events: UnifiedEvent[]; explorerUrl: string }) {
   return (
-    <div className="rounded-lg border">
-      <div className="bg-muted/50 border-b px-4 py-3">
-        <h2 className="text-sm font-semibold">Activity</h2>
-      </div>
+    <div>
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>

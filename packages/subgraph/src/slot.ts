@@ -11,6 +11,7 @@ import {
   TaxUpdateProposed,
   ModuleUpdateProposed,
   PendingUpdateApplied,
+  PendingUpdateCancelled,
   LiquidationBountyUpdated,
 } from "../generated/templates/Slot/Slot";
 import {
@@ -23,6 +24,9 @@ import {
   WithdrawnEvent,
   SettledEvent,
   TaxCollectedEvent,
+  TaxUpdateProposedEvent,
+  ModuleUpdateProposedEvent,
+  PendingUpdateCancelledEvent,
 } from "../generated/schema";
 import { getOrCreateAccount, getOrCreateModule } from "./helpers";
 
@@ -207,9 +211,34 @@ export function handleTaxCollected(event: TaxCollected): void {
   ev.save();
 }
 
-export function handleTaxUpdateProposed(event: TaxUpdateProposed): void {}
+export function handleTaxUpdateProposed(event: TaxUpdateProposed): void {
+  let ev = new TaxUpdateProposedEvent(evtId(event.transaction.hash, event.logIndex));
+  ev.slot = event.address.toHexString();
+  ev.newPercentage = event.params.newPercentage;
+  ev.timestamp = event.block.timestamp;
+  ev.blockNumber = event.block.number;
+  ev.tx = event.transaction.hash;
+  ev.save();
+}
 
-export function handleModuleUpdateProposed(event: ModuleUpdateProposed): void {}
+export function handleModuleUpdateProposed(event: ModuleUpdateProposed): void {
+  let ev = new ModuleUpdateProposedEvent(evtId(event.transaction.hash, event.logIndex));
+  ev.slot = event.address.toHexString();
+  ev.newModule = event.params.newModule;
+  ev.timestamp = event.block.timestamp;
+  ev.blockNumber = event.block.number;
+  ev.tx = event.transaction.hash;
+  ev.save();
+}
+
+export function handlePendingUpdateCancelled(event: PendingUpdateCancelled): void {
+  let ev = new PendingUpdateCancelledEvent(evtId(event.transaction.hash, event.logIndex));
+  ev.slot = event.address.toHexString();
+  ev.timestamp = event.block.timestamp;
+  ev.blockNumber = event.block.number;
+  ev.tx = event.transaction.hash;
+  ev.save();
+}
 
 export function handlePendingUpdateApplied(event: PendingUpdateApplied): void {
   let slot = getSlot(event.address);
