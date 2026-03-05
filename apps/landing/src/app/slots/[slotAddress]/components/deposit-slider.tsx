@@ -134,7 +134,7 @@ export function DepositSlider({
         }}
         placeholder={currentNum.toFixed(2)}
         className={cn(
-          "font-mono text-xs",
+          "text-xs",
           belowMin && "border-destructive focus-visible:ring-destructive/30",
         )}
       />

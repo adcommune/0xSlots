@@ -4,12 +4,9 @@ import { slotAbi } from "@0xslots/contracts";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { type Address, erc20Abi, parseUnits } from "viem";
-import {
-  useWaitForTransactionReceipt,
-  useWriteContract,
-} from "wagmi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useTransact } from "@/hooks/use-transact";
 import type { SlotOnChain } from "@/hooks/use-slot-onchain";
 import { formatBalance } from "@/utils";
 
@@ -32,16 +29,7 @@ export function BuySection({
 }) {
   const decimals = slot.currencyDecimals ?? 6;
   const symbol = slot.currencySymbol ?? "USDC";
-  const {
-    writeContract,
-    writeContractAsync,
-    data: hash,
-    isPending,
-  } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
-    hash,
-  });
-  const busy = isPending || isConfirming;
+  const { transactBatch, busy } = useTransact();
   const [buyPrice, setBuyPrice] = useState("");
   const [buyDeposit, setBuyDeposit] = useState("");
 
@@ -73,28 +61,25 @@ export function BuySection({
     }
   }
 
-  async function handleBuy() {
+  function handleBuy() {
     const dep = toUnits(effectiveDeposit || "0", decimals);
     const price = isOccupied ? slot.price : 0n;
     const totalApproval = dep + price;
 
-    try {
-      await writeContractAsync({
-        address: slot.currency as Address,
+    transactBatch("Buy slot", [
+      {
+        to: slot.currency as Address,
         abi: erc20Abi,
         functionName: "approve",
         args: [slotAddress as Address, totalApproval],
-      });
-    } catch {
-      return;
-    }
-
-    writeContract({
-      address: slotAddress as Address,
-      abi: slotAbi,
-      functionName: "buy",
-      args: [dep, toUnits(effectivePrice || "0", decimals)],
-    });
+      },
+      {
+        to: slotAddress as Address,
+        abi: slotAbi,
+        functionName: "buy",
+        args: [dep, toUnits(effectivePrice || "0", decimals)],
+      },
+    ]);
   }
 
   return (
@@ -117,7 +102,7 @@ export function BuySection({
           placeholder={defaultPrice || "1.00"}
           value={buyPrice}
           onChange={(e) => setBuyPrice(e.target.value)}
-          className="font-mono text-xs"
+          className="text-xs"
         />
         <p className="text-[10px] text-muted-foreground mt-0.5">
           Others can force-buy at this price
@@ -133,7 +118,7 @@ export function BuySection({
           placeholder={minDep !== "0" ? `Min: ${minDep}` : "0.00"}
           value={buyDeposit}
           onChange={(e) => setBuyDeposit(e.target.value)}
-          className="font-mono text-xs"
+          className="text-xs"
         />
         {minDep !== "0" && (
           <p className="text-[10px] text-muted-foreground mt-0.5">
@@ -173,12 +158,6 @@ export function BuySection({
             ? `Buy @ ${currentPrice} ${symbol}`
             : "Buy Slot"}
       </Button>
-
-      {isSuccess && (
-        <p className="text-sm text-green-600 text-center">
-          Transaction confirmed
-        </p>
-      )}
     </div>
   );
 }

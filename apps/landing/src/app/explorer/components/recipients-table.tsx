@@ -73,7 +73,7 @@ export function RecipientsTable() {
                         onClick={(e) => e.stopPropagation()}
                       />
                     </td>
-                    <td className="px-4 py-2.5 text-right font-mono text-xs">
+                    <td className="px-4 py-2.5 text-right text-xs">
                       {a.slotCount}
                     </td>
                     <td className="px-4 py-2.5 text-right">

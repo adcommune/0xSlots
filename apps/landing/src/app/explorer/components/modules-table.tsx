@@ -65,14 +65,14 @@ export function ModulesTable() {
                       href={`${explorerUrl}/address/${m.id}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline font-mono text-xs"
+                      className="text-blue-600 hover:underline text-xs"
                       title={m.id}
                     >
                       {truncateAddress(m.id)}
                     </a>
                   </td>
                   <td className="px-4 py-2.5 font-medium">{m.name}</td>
-                  <td className="px-4 py-2.5 font-mono text-xs text-muted-foreground">
+                  <td className="px-4 py-2.5 text-xs text-muted-foreground">
                     {m.version}
                   </td>
                   <td className="px-4 py-2.5 text-right">

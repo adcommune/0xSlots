@@ -91,20 +91,20 @@ export function SlotsTable() {
                         {isOccupied ? "OCCUPIED" : "VACANT"}
                       </Badge>
                     </td>
-                    <td className="px-4 py-2.5 text-muted-foreground font-mono text-xs">
+                    <td className="px-4 py-2.5 text-muted-foreground text-xs">
                       {isOccupied && slot.occupant
                         ? truncateAddress(slot.occupant)
                         : "—"}
                     </td>
-                    <td className="px-4 py-2.5 text-right font-bold font-mono text-xs">
+                    <td className="px-4 py-2.5 text-right font-bold text-xs">
                       {isOccupied
                         ? formatPrice(slot.price, slot.currencyDecimals ?? 18)
                         : "0"}
                     </td>
-                    <td className="px-4 py-2.5 text-right font-mono text-xs">
+                    <td className="px-4 py-2.5 text-right text-xs">
                       {Number(slot.taxPercentage) / 100}%
                     </td>
-                    <td className="px-4 py-2.5 font-mono text-xs text-muted-foreground">
+                    <td className="px-4 py-2.5 text-xs text-muted-foreground">
                       {slot.module
                         ? `${slot.module.name || truncateAddress(slot.module.id)}${slot.module.verified ? " ✓" : ""}`
                         : "—"}

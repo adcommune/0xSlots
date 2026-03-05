@@ -6,7 +6,6 @@ import { ConnectButton } from "@/components/connect-button";
 import { ExplorerTabs } from "@/components/explorer-tabs";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
-
 import { EventsTable } from "./components/events-table";
 import { ModulesTable } from "./components/modules-table";
 import { RecipientsTable } from "./components/recipients-table";
@@ -22,9 +21,7 @@ export default function ExplorerPage() {
             <h1 className="text-xl font-bold tracking-tight leading-tight">
               Explorer
             </h1>
-            <p className="text-muted-foreground text-xs">
-              Base Sepolia · v3
-            </p>
+            <p className="text-muted-foreground text-xs">Base Sepolia · v3</p>
           </div>
           <div className="w-px h-6 bg-border" />
           <StatsBar />
