@@ -9,12 +9,11 @@ import {
   FileBox,
   HandCoins,
   LandPlot,
+  Loader2,
   Lock,
-  Receipt,
   Settings,
   Shield,
   Sparkles,
-  Loader2,
   Timer,
   User,
   Wallet,
@@ -22,12 +21,7 @@ import {
 import Link from "next/link";
 import { use, useEffect, useState } from "react";
 import { type Address, parseUnits } from "viem";
-import {
-  useAccount,
-  useSwitchChain,
-  useWaitForTransactionReceipt,
-  useWriteContract,
-} from "wagmi";
+import { useAccount, useSwitchChain } from "wagmi";
 import { baseSepolia } from "wagmi/chains";
 import { ConnectButton } from "@/components/connect-button";
 import { PageHeader } from "@/components/page-header";
@@ -37,6 +31,7 @@ import { Input } from "@/components/ui/input";
 import { useChain } from "@/context/chain";
 import { useCurrencyBalance } from "@/hooks/use-currency-balance";
 import { useSlotOnChain } from "@/hooks/use-slot-onchain";
+import { useTransact } from "@/hooks/use-transact";
 import { useModules, useSlotActivity } from "@/hooks/use-v3";
 import {
   formatBalance,
@@ -66,17 +61,14 @@ export default function SlotPage({
   const { data: activityData } = useSlotActivity(slotAddress);
   const { address, isConnected, chainId } = useAccount();
   const { switchChain } = useSwitchChain();
-  const { writeContract, data: hash, isPending } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
-    hash,
-  });
-
+  const { transact, busy, activeAction } = useTransact();
   const { data: modules } = useModules();
   const [newPrice, setNewPrice] = useState("");
   const [newTaxPct, setNewTaxPct] = useState<number | null>(null);
-  const [activeAction, setActiveAction] = useState<string | null>(null);
   const [newModule, setNewModule] = useState("");
-  const [activeTab, setActiveTab] = useState<"details" | "activity" | "manage">("details");
+  const [activeTab, setActiveTab] = useState<"details" | "activity" | "manage">(
+    "details",
+  );
   const walletBalance = useCurrencyBalance(slot?.currency as Address);
 
   // Initialize tax slider from current on-chain value
@@ -86,15 +78,7 @@ export default function SlotPage({
     }
   }, [slot, newTaxPct]);
 
-  // Clear active action when tx completes
-  useEffect(() => {
-    if (!isPending && !isConfirming) {
-      setActiveAction(null);
-    }
-  }, [isPending, isConfirming]);
-
   const wrongChain = chainId !== CHAIN_ID;
-  const busy = isPending || isConfirming;
   const decimals = slot?.currencyDecimals ?? 6;
   const symbol = slot?.currencySymbol ?? "USDC";
 
@@ -243,7 +227,7 @@ export default function SlotPage({
                       href={`${explorerUrl}/address/${slot.id}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-primary hover:underline font-mono text-xs"
+                      className="text-primary hover:underline text-xs"
                     >
                       {truncateAddress(slot.id)}
                     </a>
@@ -254,7 +238,7 @@ export default function SlotPage({
                     </span>
                     <Link
                       href={`/recipient/${slot.recipient}`}
-                      className="text-primary hover:underline font-mono text-xs"
+                      className="text-primary hover:underline text-xs"
                     >
                       {truncateAddress(slot.recipient)}
                     </Link>
@@ -263,7 +247,7 @@ export default function SlotPage({
                     <span className="text-muted-foreground flex items-center gap-1.5">
                       <CircleDollarSign className="size-3" /> Currency
                     </span>
-                    <span className="font-mono text-xs">
+                    <span className="text-xs">
                       {slot.currencyName ?? truncateAddress(slot.currency)} (
                       {symbol})
                     </span>
@@ -272,7 +256,7 @@ export default function SlotPage({
                     <span className="text-muted-foreground flex items-center gap-1.5">
                       <Shield className="size-3" /> Manager
                     </span>
-                    <span className="font-mono text-xs">
+                    <span className="text-xs">
                       {truncateAddress(slot.manager)}
                     </span>
                   </div>
@@ -303,13 +287,17 @@ export default function SlotPage({
                     <span className="text-muted-foreground flex items-center gap-1.5">
                       <Timer className="size-3" /> Min. Deposit
                     </span>
-                    <span>{formatDuration(Number(slot.minDepositSeconds))}</span>
+                    <span>
+                      {formatDuration(Number(slot.minDepositSeconds))}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground flex items-center gap-1.5">
                       <Sparkles className="size-3 text-amber-500" /> Liq. Bounty
                     </span>
-                    <span>{formatBps(slot.liquidationBountyBps.toString())}</span>
+                    <span>
+                      {formatBps(slot.liquidationBountyBps.toString())}
+                    </span>
                   </div>
 
                   <div className="border-t" />
@@ -319,7 +307,7 @@ export default function SlotPage({
                     <span className="text-muted-foreground flex items-center gap-1.5">
                       <FileBox className="size-3" /> Module
                     </span>
-                    <span className="font-mono text-xs">
+                    <span className="text-xs">
                       {!hasModule
                         ? "None"
                         : moduleEntity?.name || truncateAddress(slot.module)}
@@ -328,7 +316,8 @@ export default function SlotPage({
                   {slot.hasPendingModule && (
                     <div className="pl-5">
                       <p className="text-xs text-indigo-600">
-                        Pending module update — applied on next ownership transition
+                        Pending module update — applied on next ownership
+                        transition
                       </p>
                     </div>
                   )}
@@ -356,8 +345,8 @@ export default function SlotPage({
                         <AlertTriangle className="size-3 mt-0.5 shrink-0" />
                         <span>
                           This slot uses an <strong>unverified module</strong>.
-                          Unverified modules have not been reviewed by the factory
-                          admin and may behave unexpectedly.
+                          Unverified modules have not been reviewed by the
+                          factory admin and may behave unexpectedly.
                         </span>
                       </div>
                     </>
@@ -375,8 +364,8 @@ export default function SlotPage({
                             : slot.mutableTax
                               ? "the tax rate"
                               : "the module"}{" "}
-                          on this slot. Changes take effect on the next ownership
-                          transition.
+                          on this slot. Changes take effect on the next
+                          ownership transition.
                         </span>
                       </div>
                     </>
@@ -425,55 +414,79 @@ export default function SlotPage({
                     </div>
                     {slot.hasPendingTax && (
                       <div className="text-sm bg-amber-500/10 text-amber-600 rounded px-3 py-2">
-                        Pending: {formatBps(slot.pendingTaxPercentage.toString())}/mo — applied on next ownership transition
+                        Pending:{" "}
+                        {formatBps(slot.pendingTaxPercentage.toString())}/mo —
+                        applied on next ownership transition
                       </div>
                     )}
                     <Button
                       className="w-full"
-                      disabled={busy || newTaxPct === null || Math.round(newTaxPct * 100) === Number(slot.taxPercentage)}
-                      onClick={() => {
-                        setActiveAction("proposeTax");
-                        writeContract({
+                      disabled={
+                        busy ||
+                        newTaxPct === null ||
+                        Math.round(newTaxPct * 100) ===
+                          Number(slot.taxPercentage)
+                      }
+                      onClick={() =>
+                        transact("Propose tax", {
                           address: slotAddress as Address,
                           abi: slotAbi,
                           functionName: "proposeTaxUpdate",
-                          args: [
-                            BigInt(Math.round((newTaxPct ?? 0) * 100)),
-                          ],
-                        });
-                      }}
+                          args: [BigInt(Math.round((newTaxPct ?? 0) * 100))],
+                        })
+                      }
                     >
-                      {busy && activeAction === "proposeTax"
-                        ? <Loader2 className="size-4 animate-spin" />
-                        : `Propose ${(newTaxPct ?? 0).toFixed(1)}%/mo (currently ${formatBps(slot.taxPercentage.toString())}/mo)`}
+                      {busy && activeAction === "Propose tax" ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        `Propose ${(newTaxPct ?? 0).toFixed(1)}%/mo (currently ${formatBps(slot.taxPercentage.toString())}/mo)`
+                      )}
                     </Button>
                   </div>
                 )}
 
                 {/* Module Update */}
                 {slot.mutableModule && (
-                  <div className={`space-y-4 ${slot.mutableTax ? "border-t pt-6" : ""}`}>
+                  <div
+                    className={`space-y-4 ${slot.mutableTax ? "border-t pt-6" : ""}`}
+                  >
                     <label className="text-sm text-muted-foreground flex items-center gap-1.5">
                       <Settings className="size-4" /> Propose Module
                     </label>
                     {slot.hasPendingModule && (
                       <div className="text-sm bg-indigo-500/10 text-indigo-600 rounded px-3 py-2">
-                        Pending module update — applied on next ownership transition
+                        Pending module update — applied on next ownership
+                        transition
                       </div>
                     )}
                     <div className="flex flex-wrap gap-2">
-                      {modules?.filter((m) => m.verified).map((m) => (
-                        <Button
-                          key={m.id}
-                          variant={newModule.toLowerCase() === m.id.toLowerCase() ? "default" : "outline"}
-                          onClick={() => setNewModule(m.id)}
-                        >
-                          {m.name || truncateAddress(m.id)}
-                        </Button>
-                      ))}
+                      {modules
+                        ?.filter((m) => m.verified)
+                        .map((m) => (
+                          <Button
+                            key={m.id}
+                            variant={
+                              newModule.toLowerCase() === m.id.toLowerCase()
+                                ? "default"
+                                : "outline"
+                            }
+                            onClick={() => setNewModule(m.id)}
+                          >
+                            {m.name || truncateAddress(m.id)}
+                          </Button>
+                        ))}
                       <Button
-                        variant={newModule === "0x0000000000000000000000000000000000000000" ? "default" : "outline"}
-                        onClick={() => setNewModule("0x0000000000000000000000000000000000000000")}
+                        variant={
+                          newModule ===
+                          "0x0000000000000000000000000000000000000000"
+                            ? "default"
+                            : "outline"
+                        }
+                        onClick={() =>
+                          setNewModule(
+                            "0x0000000000000000000000000000000000000000",
+                          )
+                        }
                       >
                         None
                       </Button>
@@ -483,24 +496,28 @@ export default function SlotPage({
                       placeholder="Or paste module address..."
                       value={newModule}
                       onChange={(e) => setNewModule(e.target.value)}
-                      className="font-mono"
                     />
                     <Button
                       className="w-full"
-                      disabled={busy || !newModule || newModule.toLowerCase() === slot.module.toLowerCase()}
-                      onClick={() => {
-                        setActiveAction("proposeModule");
-                        writeContract({
+                      disabled={
+                        busy ||
+                        !newModule ||
+                        newModule.toLowerCase() === slot.module.toLowerCase()
+                      }
+                      onClick={() =>
+                        transact("Propose module", {
                           address: slotAddress as Address,
                           abi: slotAbi,
                           functionName: "proposeModuleUpdate",
                           args: [newModule as Address],
-                        });
-                      }}
+                        })
+                      }
                     >
-                      {busy && activeAction === "proposeModule"
-                        ? <Loader2 className="size-4 animate-spin" />
-                        : `Propose Module ${newModule ? truncateAddress(newModule) : ""}`}
+                      {busy && activeAction === "Propose module" ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        `Propose Module ${newModule ? truncateAddress(newModule) : ""}`
+                      )}
                     </Button>
                   </div>
                 )}
@@ -512,17 +529,20 @@ export default function SlotPage({
                       variant="outline"
                       className="w-full text-destructive hover:text-destructive"
                       disabled={busy}
-                      onClick={() => {
-                        setActiveAction("cancelPending");
-                        writeContract({
+                      onClick={() =>
+                        transact("Cancel updates", {
                           address: slotAddress as Address,
                           abi: slotAbi,
                           functionName: "cancelPendingUpdates",
                           args: [],
-                        });
-                      }}
+                        })
+                      }
                     >
-                      {busy && activeAction === "cancelPending" ? <Loader2 className="size-4 animate-spin" /> : "Cancel Pending Updates"}
+                      {busy && activeAction === "Cancel updates" ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        "Cancel Pending Updates"
+                      )}
                     </Button>
                   </div>
                 )}
@@ -530,12 +550,6 @@ export default function SlotPage({
                 {!slot.mutableTax && !slot.mutableModule && (
                   <p className="text-muted-foreground text-center py-6">
                     This slot has no mutable parameters
-                  </p>
-                )}
-
-                {isSuccess && (
-                  <p className="text-sm text-green-600 text-center">
-                    Transaction confirmed
                   </p>
                 )}
               </div>
@@ -659,23 +673,26 @@ export default function SlotPage({
                               placeholder="1.00"
                               value={newPrice}
                               onChange={(e) => setNewPrice(e.target.value)}
-                              className="font-mono text-xs flex-1"
+                              className="text-xs flex-1"
                             />
                             <Button
                               size="sm"
                               variant="outline"
                               disabled={busy}
-                              onClick={() => {
-                                setActiveAction("selfAssess");
-                                writeContract({
+                              onClick={() =>
+                                transact("Set price", {
                                   address: slotAddress as Address,
                                   abi: slotAbi,
                                   functionName: "selfAssess",
                                   args: [toUnits(newPrice)],
-                                });
-                              }}
+                                })
+                              }
                             >
-                              {busy && activeAction === "selfAssess" ? <Loader2 className="size-4 animate-spin" /> : "Set"}
+                              {busy && activeAction === "Set price" ? (
+                                <Loader2 className="size-4 animate-spin" />
+                              ) : (
+                                "Set"
+                              )}
                             </Button>
                           </div>
                         </div>
@@ -692,38 +709,22 @@ export default function SlotPage({
                           variant="destructive"
                           className="w-full"
                           disabled={busy}
-                          onClick={() => {
-                            setActiveAction("release");
-                            writeContract({
+                          onClick={() =>
+                            transact("Release slot", {
                               address: slotAddress as Address,
                               abi: slotAbi,
                               functionName: "release",
                               args: [],
-                            });
-                          }}
+                            })
+                          }
                         >
-                          {busy && activeAction === "release" ? <Loader2 className="size-4 animate-spin" /> : "Release Slot"}
+                          {busy && activeAction === "Release slot" ? (
+                            <Loader2 className="size-4 animate-spin" />
+                          ) : (
+                            "Release Slot"
+                          )}
                         </Button>
                       </div>
-                    )}
-
-                    {isOccupied && !isOccupant && (
-                      <Button
-                        variant="destructive"
-                        className="w-full"
-                        disabled={busy || !slot.insolvent}
-                        onClick={() => {
-                          setActiveAction("liquidate");
-                          writeContract({
-                            address: slotAddress as Address,
-                            abi: slotAbi,
-                            functionName: "liquidate",
-                            args: [],
-                          });
-                        }}
-                      >
-                        {busy && activeAction === "liquidate" ? <Loader2 className="size-4 animate-spin" /> : "Liquidate"}
-                      </Button>
                     )}
 
                     {isRecipient && (
@@ -731,28 +732,45 @@ export default function SlotPage({
                         variant="outline"
                         className="w-full"
                         disabled={busy || slot.taxOwed === 0n}
-                        onClick={() => {
-                          setActiveAction("collect");
-                          writeContract({
+                        onClick={() =>
+                          transact("Collect tax", {
                             address: slotAddress as Address,
                             abi: slotAbi,
                             functionName: "collect",
                             args: [],
-                          });
-                        }}
+                          })
+                        }
                       >
-                        {busy && activeAction === "collect"
-                          ? <Loader2 className="size-4 animate-spin" />
-                          : slot.taxOwed === 0n
-                            ? "Nothing to Collect"
-                            : `Collect Tax (${formatBalance(slot.taxOwed, decimals)} ${symbol})`}
+                        {busy && activeAction === "Collect tax" ? (
+                          <Loader2 className="size-4 animate-spin" />
+                        ) : slot.taxOwed === 0n ? (
+                          "Nothing to Collect"
+                        ) : (
+                          `Collect Tax (${formatBalance(slot.taxOwed, decimals)} ${symbol})`
+                        )}
                       </Button>
                     )}
 
-                    {isSuccess && (
-                      <p className="text-sm text-green-600 text-center">
-                        Transaction confirmed
-                      </p>
+                    {isOccupied && !isOccupant && (
+                      <Button
+                        variant="destructive"
+                        className="w-full"
+                        disabled={busy || !slot.insolvent}
+                        onClick={() =>
+                          transact("Liquidate", {
+                            address: slotAddress as Address,
+                            abi: slotAbi,
+                            functionName: "liquidate",
+                            args: [],
+                          })
+                        }
+                      >
+                        {busy && activeAction === "Liquidate" ? (
+                          <Loader2 className="size-4 animate-spin" />
+                        ) : (
+                          "Liquidate"
+                        )}
+                      </Button>
                     )}
                   </>
                 )}

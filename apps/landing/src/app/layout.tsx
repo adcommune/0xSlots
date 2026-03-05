@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
+import { Toaster } from "sonner";
 import "./globals.css";
 import { ChainSelector } from "@/app/explorer/chain-selector";
 import { ConnectButton } from "@/components/connect-button";
 import { Providers } from "@/components/providers";
+import { ChainCapabilities } from "@/components/chain-capabilities";
 import { SubgraphStatus } from "@/components/subgraph-status";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -46,13 +48,15 @@ export default function RootLayout({
                   Profile
                 </a>
                 <SubgraphStatus />
+                <ChainCapabilities />
                 <ChainSelector />
                 <ConnectButton />
               </div>
             </nav>
 
             {/* Main Content */}
-            <main className="flex-1">{children}</main>
+            <Toaster position="bottom-right" richColors />
+          <main className="flex-1">{children}</main>
 
             {/* Footer */}
             <footer className="px-6 py-6 border-t">

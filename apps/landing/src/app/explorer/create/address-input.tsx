@@ -56,7 +56,7 @@ export const AddressInput = forwardRef<HTMLInputElement, AddressInputProps>(
           onChange={(e) => onChange(e.target.value)}
           onBlur={onBlur}
           className={cn(
-            "font-mono text-xs",
+            "text-xs",
             (value && !isValid && !isResolving) && "border-destructive",
             error && "border-destructive",
           )}

@@ -44,9 +44,13 @@ export function toRawUnits(value: string, decimals: number): bigint {
 
 export function formatDuration(totalSeconds: number): string {
   if (totalSeconds >= 2 ** 128) return "∞";
-  const days = Math.floor(totalSeconds / 86400);
+  const years = Math.floor(totalSeconds / 31_536_000);
+  const months = Math.floor((totalSeconds % 31_536_000) / 2_592_000);
+  const days = Math.floor((totalSeconds % 2_592_000) / 86400);
   const hours = Math.floor((totalSeconds % 86400) / 3600);
   const mins = Math.floor((totalSeconds % 3600) / 60);
+  if (years > 0) return `${years}y ${months}mo`;
+  if (months > 0) return `${months}mo ${days}d`;
   if (days > 0) return `${days}d ${hours}h`;
   if (hours > 0) return `${hours}h ${mins}m`;
   if (mins > 0) return `${mins}m`;

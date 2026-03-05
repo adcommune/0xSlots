@@ -14,6 +14,7 @@ import { type Address, formatUnits } from "viem";
 import { normalize } from "viem/ens";
 import { useEnsAvatar, useEnsName } from "wagmi";
 import { mainnet } from "wagmi/chains";
+import { Badge } from "@/components/ui/badge";
 import { ConnectButton } from "@/components/connect-button";
 import { PageHeader } from "@/components/page-header";
 import { useChain } from "@/context/chain";
@@ -83,7 +84,7 @@ export default function RecipientPage({
               href={`${explorerUrl}/address/${address}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="font-mono text-xs text-primary hover:underline"
+              className="text-xs text-primary hover:underline"
             >
               {truncateAddress(address)}
             </a>
@@ -161,27 +162,18 @@ export default function RecipientPage({
                         push(`/slots/${s.id}`);
                       }}
                     >
-                      <td className="px-4 py-2 font-mono text-xs">
+                      <td className="px-4 py-2 text-xs">
                         {truncateAddress(s.id)}
                       </td>
                       <td className="px-4 py-2">
-                        <span
-                          className={`inline-block px-1.5 py-0.5 rounded text-xs font-medium ${
-                            s.insolvent
-                              ? "bg-destructive/10 text-destructive"
-                              : s.occupant
-                                ? "bg-green-500/10 text-green-600"
-                                : "bg-muted text-muted-foreground"
-                          }`}
+                        <Badge
+                          variant={s.insolvent ? "destructive" : s.occupant ? "default" : "secondary"}
+                          className="text-[10px]"
                         >
-                          {s.insolvent
-                            ? "INSOLVENT"
-                            : s.occupant
-                              ? "OCCUPIED"
-                              : "VACANT"}
-                        </span>
+                          {s.insolvent ? "INSOLVENT" : s.occupant ? "OCCUPIED" : "VACANT"}
+                        </Badge>
                       </td>
-                      <td className="px-4 py-2 font-mono text-xs">
+                      <td className="px-4 py-2 text-xs">
                         {s.occupant ? truncateAddress(s.occupant) : "—"}
                       </td>
                       <td className="px-4 py-2 text-right">

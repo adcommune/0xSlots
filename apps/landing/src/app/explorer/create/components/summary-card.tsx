@@ -89,7 +89,7 @@ export function SummaryCard({
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Recipient</span>
-              <span className="font-semibold truncate max-w-32 font-mono text-xs">
+              <span className="font-semibold truncate max-w-32 text-xs">
                 {isAddress(effectiveRecipient as `0x${string}`)
                   ? truncateAddress(effectiveRecipient)
                   : address

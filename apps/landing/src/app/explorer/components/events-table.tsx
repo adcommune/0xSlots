@@ -199,12 +199,12 @@ export function EventsTable() {
               <td className="px-4 py-2.5">
                 <Link
                   href={`/slots/${ev.slot}`}
-                  className="text-primary hover:underline font-mono text-xs"
+                  className="text-primary hover:underline text-xs"
                 >
                   {truncateAddress(ev.slot)}
                 </Link>
               </td>
-              <td className="px-4 py-2.5 font-mono text-xs">
+              <td className="px-4 py-2.5 text-xs">
                 {ev.actor ? (
                   <a
                     href={`${explorerUrl}/address/${ev.actor}`}
@@ -229,7 +229,7 @@ export function EventsTable() {
                   href={`${explorerUrl}/tx/${ev.tx}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-primary hover:underline font-mono text-xs"
+                  className="text-primary hover:underline text-xs"
                 >
                   {truncateAddress(ev.tx)}
                 </a>

@@ -62,7 +62,7 @@ function SlotTable({
                 className="border-b hover:bg-muted/30 cursor-pointer transition-colors"
                 onClick={() => push(`/slots/${s.id}`)}
               >
-                <td className="px-4 py-2 font-mono text-xs">
+                <td className="px-4 py-2 text-xs">
                   {truncateAddress(s.id)}
                 </td>
                 <td className="px-4 py-2">
@@ -82,10 +82,10 @@ function SlotTable({
                         : "VACANT"}
                   </span>
                 </td>
-                <td className="px-4 py-2 font-mono text-xs">
+                <td className="px-4 py-2 text-xs">
                   {truncateAddress(s.recipient)}
                 </td>
-                <td className="px-4 py-2 font-mono text-xs">
+                <td className="px-4 py-2 text-xs">
                   {s.occupant ? truncateAddress(s.occupant) : "—"}
                 </td>
                 <td className="px-4 py-2 text-right">
@@ -203,7 +203,7 @@ export default function ProfilePage() {
             My Profile
           </h1>
           {address && (
-            <p className="text-xs text-muted-foreground font-mono">
+            <p className="text-xs text-muted-foreground">
               {truncateAddress(address)}
             </p>
           )}

@@ -129,7 +129,7 @@ export function SlotEventHistory({ events, explorerUrl }: { events: UnifiedEvent
                     {ev.type}
                   </span>
                 </td>
-                <td className="px-4 py-2.5 font-mono text-xs">
+                <td className="px-4 py-2.5 text-xs">
                   {ev.actor ? (
                     <a href={`${explorerUrl}/address/${ev.actor}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
                       {truncateAddress(ev.actor)}
@@ -141,7 +141,7 @@ export function SlotEventHistory({ events, explorerUrl }: { events: UnifiedEvent
                   {formatDistanceToNow(new Date(ev.timestamp * 1000), { addSuffix: true })}
                 </td>
                 <td className="px-4 py-2.5">
-                  <a href={`${explorerUrl}/tx/${ev.tx}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-mono text-xs">
+                  <a href={`${explorerUrl}/tx/${ev.tx}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-xs">
                     {truncateAddress(ev.tx)}
                   </a>
                 </td>
