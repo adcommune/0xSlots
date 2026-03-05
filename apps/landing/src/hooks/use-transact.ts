@@ -42,7 +42,8 @@ export function useTransact() {
   // --- batch/atomic path ---
   const chainId = useChainId();
   const { data: capabilities } = useCapabilities();
-  const { sendCalls, data: batchId, isPending: isBatchPending } = useSendCalls();
+  const { sendCalls, data: batchResult, isPending: isBatchPending } = useSendCalls();
+  const batchId = typeof batchResult === "string" ? batchResult : batchResult?.id;
   const [batchDone, setBatchDone] = useState(false);
   const { data: callsStatus } = useCallsStatus({
     id: batchId as string,
@@ -90,12 +91,12 @@ export function useTransact() {
   useEffect(() => {
     if (!callsStatus || !labelRef.current) return;
     const status = callsStatus.status;
-    if (status === "CONFIRMED") {
+    if (status === "success") {
       toast.success(`${labelRef.current} confirmed`);
       setActiveAction(null);
       labelRef.current = "";
       setBatchDone(true);
-    } else if (status === "REVERTED") {
+    } else if (status === "failure") {
       toast.error(`${labelRef.current} reverted`);
       setActiveAction(null);
       labelRef.current = "";
