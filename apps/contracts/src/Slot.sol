@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import {Multicall} from "@openzeppelin/contracts/utils/Multicall.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ISlotsModule} from "./ISlotsModule.sol";
@@ -9,7 +10,7 @@ import {SlotConfig, SlotInitParams, PendingUpdate, SlotInfo, ISlotEvents} from "
 
 /// @title Slot (v3) — Immutable & modular Harberger-taxed slot
 /// @notice One slot = one contract. Deployed deterministically via SlotFactory.
-contract Slot is ISlotEvents, ReentrancyGuard {
+contract Slot is ISlotEvents, ReentrancyGuard, Multicall {
     using SafeERC20 for IERC20;
 
     uint256 public constant BASIS_POINTS = 10_000;
