@@ -349,9 +349,9 @@ contract Slot is ISlotEvents, ReentrancyGuard {
         if (occupant == address(0)) return type(uint256).max;
         uint256 owed = taxOwed();
         uint256 remaining = deposit > owed ? deposit - owed : 0;
-        uint256 ratePerSec = (price * taxPercentage) / (MONTH * BASIS_POINTS);
-        if (ratePerSec == 0) return type(uint256).max;
-        return remaining / ratePerSec;
+        uint256 taxNumerator = price * taxPercentage;
+        if (taxNumerator == 0) return type(uint256).max;
+        return (remaining * MONTH * BASIS_POINTS) / taxNumerator;
     }
 
     function isInsolvent() public view returns (bool) {
