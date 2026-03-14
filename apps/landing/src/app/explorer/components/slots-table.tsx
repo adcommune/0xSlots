@@ -1,5 +1,6 @@
 "use client";
 
+import { AccountTypeIcon } from "@/components/account-type-icon";
 import { EnsAddress } from "@/components/ens-address";
 import { Badge } from "@/components/ui/badge";
 import { useSlots } from "@/hooks/use-v3";
@@ -77,11 +78,14 @@ export function SlotsTable() {
                     }}
                   >
                     <td className="px-4 py-2.5">
-                      <EnsAddress
-                        address={slot.recipient}
-                        href={`/recipient/${slot.recipient}`}
-                        onClick={(e) => e.stopPropagation()}
-                      />
+                      <span className="inline-flex items-center gap-1.5">
+                        <AccountTypeIcon type={slot.recipientAccount.type} className="h-3 w-3" />
+                        <EnsAddress
+                          address={slot.recipient}
+                          href={`/recipient/${slot.recipient}`}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </span>
                     </td>
                     <td className="px-4 py-2.5">
                       <Badge
@@ -92,9 +96,14 @@ export function SlotsTable() {
                       </Badge>
                     </td>
                     <td className="px-4 py-2.5 text-muted-foreground text-xs">
-                      {isOccupied && slot.occupant
-                        ? truncateAddress(slot.occupant)
-                        : "—"}
+                      {isOccupied && slot.occupant && slot.occupantAccount ? (
+                        <span className="inline-flex items-center gap-1.5">
+                          <AccountTypeIcon type={slot.occupantAccount.type} className="h-3 w-3" />
+                          {truncateAddress(slot.occupant)}
+                        </span>
+                      ) : (
+                        "—"
+                      )}
                     </td>
                     <td className="px-4 py-2.5 text-right font-bold text-xs">
                       {isOccupied
