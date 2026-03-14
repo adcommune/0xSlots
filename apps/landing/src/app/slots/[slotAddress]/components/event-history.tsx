@@ -31,54 +31,61 @@ export function normalizeSlotActivity(data: any): UnifiedEvent[] {
 
   for (const e of data.boughtEvents ?? []) {
     const d = e.currency?.decimals ?? 6;
+    const s = e.currency?.symbol ?? "";
     events.push({
       id: e.id, type: "Buy", actor: e.buyer,
       detail: e.previousOccupant === "0x0000000000000000000000000000000000000000"
-        ? `claimed @ ${formatPrice(e.selfAssessedPrice, d)}`
-        : `force-bought @ ${formatPrice(e.price, d)} → ${formatPrice(e.selfAssessedPrice, d)}`,
+        ? `claimed @ ${formatPrice(e.selfAssessedPrice, d)} ${s}`
+        : `force-bought @ ${formatPrice(e.price, d)} → ${formatPrice(e.selfAssessedPrice, d)} ${s}`,
       timestamp: Number(e.timestamp), tx: e.tx,
     });
   }
   for (const e of data.releasedEvents ?? []) {
+    const s = e.currency?.symbol ?? "";
     events.push({
       id: e.id, type: "Release", actor: e.occupant,
-      detail: `refund ${formatPrice(e.refund, e.currency?.decimals ?? 6)}`,
+      detail: `refund ${formatPrice(e.refund, e.currency?.decimals ?? 6)} ${s}`,
       timestamp: Number(e.timestamp), tx: e.tx,
     });
   }
   for (const e of data.liquidatedEvents ?? []) {
+    const s = e.currency?.symbol ?? "";
     events.push({
       id: e.id, type: "Liquidate", actor: e.liquidator,
-      detail: `bounty ${formatPrice(e.bounty, e.currency?.decimals ?? 6)}`,
+      detail: `bounty ${formatPrice(e.bounty, e.currency?.decimals ?? 6)} ${s}`,
       timestamp: Number(e.timestamp), tx: e.tx,
     });
   }
   for (const e of data.priceUpdatedEvents ?? []) {
     const d = e.currency?.decimals ?? 6;
+    const s = e.currency?.symbol ?? "";
     events.push({
       id: e.id, type: "Price", actor: "",
-      detail: `${formatPrice(e.oldPrice, d)} → ${formatPrice(e.newPrice, d)}`,
+      detail: `${formatPrice(e.oldPrice, d)} → ${formatPrice(e.newPrice, d)} ${s}`,
       timestamp: Number(e.timestamp), tx: e.tx,
     });
   }
   for (const e of data.depositedEvents ?? []) {
+    const s = e.currency?.symbol ?? "";
     events.push({
       id: e.id, type: "Deposit", actor: e.depositor,
-      detail: `+${formatPrice(e.amount, e.currency?.decimals ?? 6)}`,
+      detail: `+${formatPrice(e.amount, e.currency?.decimals ?? 6)} ${s}`,
       timestamp: Number(e.timestamp), tx: e.tx,
     });
   }
   for (const e of data.withdrawnEvents ?? []) {
+    const s = e.currency?.symbol ?? "";
     events.push({
       id: e.id, type: "Withdraw", actor: e.occupant,
-      detail: `-${formatPrice(e.amount, e.currency?.decimals ?? 6)}`,
+      detail: `-${formatPrice(e.amount, e.currency?.decimals ?? 6)} ${s}`,
       timestamp: Number(e.timestamp), tx: e.tx,
     });
   }
   for (const e of data.taxCollectedEvents ?? []) {
+    const s = e.currency?.symbol ?? "";
     events.push({
       id: e.id, type: "Collect", actor: e.recipient,
-      detail: `${formatPrice(e.amount, e.currency?.decimals ?? 6)}`,
+      detail: `${formatPrice(e.amount, e.currency?.decimals ?? 6)} ${s}`,
       timestamp: Number(e.timestamp), tx: e.tx,
     });
   }

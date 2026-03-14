@@ -98,7 +98,7 @@ export function SlotsTable() {
                     </td>
                     <td className="px-4 py-2.5 text-right font-bold text-xs">
                       {isOccupied
-                        ? formatPrice(slot.price, slot.currency.decimals ?? 18)
+                        ? `${formatPrice(slot.price, slot.currency.decimals ?? 18)} ${slot.currency.symbol}`
                         : "0"}
                     </td>
                     <td className="px-4 py-2.5 text-right text-xs">
