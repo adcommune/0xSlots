@@ -6,7 +6,7 @@ import {
 } from "../generated/SlotFactory/SlotFactory";
 import { Slot as SlotTemplate } from "../generated/templates";
 import { Factory, Slot, Module } from "../generated/schema";
-import { getOrCreateAccount, getOrCreateCurrency, getOrCreateModule } from "./helpers";
+import { getOrCreateAccount, getOrCreateCurrency, getOrCreateModule, markAccountAsContract } from "./helpers";
 
 function getOrCreateFactory(address: string): Factory {
   let factory = Factory.load(address);
@@ -63,6 +63,9 @@ export function handleSlotDeployed(event: SlotDeployed): void {
   slot.updatedAt = event.block.timestamp;
 
   slot.save();
+
+  // Mark the slot address as a contract account
+  markAccountAsContract(event.params.slot);
 
   // Start indexing events on this slot contract
   let context = new DataSourceContext();

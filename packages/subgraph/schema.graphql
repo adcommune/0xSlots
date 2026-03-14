@@ -9,8 +9,15 @@ type Factory @entity(immutable: false) {
   modules: [Module!]! @derivedFrom(field: "factory")
 }
 
+enum AccountType {
+  EOA
+  CONTRACT
+  SPLIT
+}
+
 type Account @entity(immutable: false) {
   id: ID! # address (lowercase)
+  type: AccountType!
   slotsAsRecipient: [Slot!]! @derivedFrom(field: "recipientAccount")
   slotsAsOccupant: [Slot!]! @derivedFrom(field: "occupantAccount")
   slotCount: Int!
