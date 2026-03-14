@@ -1,5 +1,11 @@
 # @0xslots/contracts
 
+## 0.5.0
+
+### Minor Changes
+
+- c453c38: add write methods to sdk
+
 ## 0.4.0
 
 ### Minor Changes
