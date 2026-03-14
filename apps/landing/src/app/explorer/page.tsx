@@ -1,6 +1,6 @@
 "use client";
 
-import { FileBox, LandPlot, List, User } from "lucide-react";
+import { FileBox, LandPlot, List, PlusIcon, User } from "lucide-react";
 import Link from "next/link";
 import { ConnectButton } from "@/components/connect-button";
 import { ExplorerTabs } from "@/components/explorer-tabs";
@@ -27,9 +27,11 @@ export default function ExplorerPage() {
           <StatsBar />
         </div>
         <div className="flex items-center gap-3">
-          <ConnectButton />
           <Button size="sm" asChild>
-            <Link href="/explorer/create">+ Create Slot</Link>
+            <div>
+              <PlusIcon className="w-5 h-5" />
+              <Link href="/explorer/create">Create Slot</Link>
+            </div>
           </Button>
         </div>
       </PageHeader>

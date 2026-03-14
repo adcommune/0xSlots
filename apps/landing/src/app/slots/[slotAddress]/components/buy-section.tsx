@@ -1,12 +1,11 @@
 "use client";
 
-import { slotAbi } from "@0xslots/contracts";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
-import { type Address, erc20Abi, parseUnits } from "viem";
+import { type Address, parseUnits } from "viem";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useTransact } from "@/hooks/use-transact";
+import { useSlotAction } from "@/hooks/use-slot-action";
 import type { SlotOnChain } from "@/hooks/use-slot-onchain";
 import { formatBalance } from "@/utils";
 
@@ -29,7 +28,7 @@ export function BuySection({
 }) {
   const decimals = slot.currencyDecimals ?? 6;
   const symbol = slot.currencySymbol ?? "USDC";
-  const { transactBatch, busy } = useTransact();
+  const { buy, busy } = useSlotAction();
   const [buyPrice, setBuyPrice] = useState("");
   const [buyDeposit, setBuyDeposit] = useState("");
 
@@ -37,7 +36,8 @@ export function BuySection({
 
   function computeMinDeposit(price: bigint): string {
     if (slot.minDepositSeconds === 0n) return "0";
-    const min = (price * slot.taxPercentage * slot.minDepositSeconds) / (MONTH * 10000n);
+    const min =
+      (price * slot.taxPercentage * slot.minDepositSeconds) / (MONTH * 10000n);
     return formatBalance(min, decimals);
   }
 
@@ -63,23 +63,11 @@ export function BuySection({
 
   function handleBuy() {
     const dep = toUnits(effectiveDeposit || "0", decimals);
-    const price = isOccupied ? slot.price : 0n;
-    const totalApproval = dep + price;
-
-    transactBatch("Buy slot", [
-      {
-        to: slot.currency as Address,
-        abi: erc20Abi,
-        functionName: "approve",
-        args: [slotAddress as Address, totalApproval],
-      },
-      {
-        to: slotAddress as Address,
-        abi: slotAbi,
-        functionName: "buy",
-        args: [dep, toUnits(effectivePrice || "0", decimals)],
-      },
-    ]);
+    buy({
+      slot: slotAddress as Address,
+      depositAmount: dep,
+      selfAssessedPrice: toUnits(effectivePrice || "0", decimals),
+    });
   }
 
   return (
@@ -152,11 +140,15 @@ export function BuySection({
       </div>
 
       <Button disabled={busy} onClick={handleBuy} className="w-full">
-        {busy
-          ? <><Loader2 className="size-4 animate-spin mr-2" /> Processing...</>
-          : isOccupied
-            ? `Buy @ ${currentPrice} ${symbol}`
-            : "Buy Slot"}
+        {busy ? (
+          <>
+            <Loader2 className="size-4 animate-spin mr-2" /> Processing...
+          </>
+        ) : isOccupied ? (
+          `Buy @ ${currentPrice} ${symbol}`
+        ) : (
+          "Buy Slot"
+        )}
       </Button>
     </div>
   );

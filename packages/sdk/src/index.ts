@@ -1,4 +1,4 @@
-// Main client
+// Unified client (read + write)
 export {
   SlotsClient,
   createSlotsClient,
@@ -6,6 +6,11 @@ export {
   SUBGRAPH_URLS,
   type SlotsClientConfig,
   type SubgraphMeta,
+  type SlotConfig,
+  type SlotInitParams,
+  type CreateSlotParams,
+  type CreateSlotsParams,
+  type BuyParams,
 } from "./client";
 
 // Re-export generated types and SDK

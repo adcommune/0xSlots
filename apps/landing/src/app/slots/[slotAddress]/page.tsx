@@ -1,13 +1,15 @@
 "use client";
 
-import { slotAbi } from "@0xslots/contracts";
 import {
+  Activity,
   AlertTriangle,
   Banknote,
   CircleDollarSign,
   Clock,
+  Cog,
   FileBox,
   HandCoins,
+  Info,
   LandPlot,
   Loader2,
   Lock,
@@ -23,15 +25,14 @@ import { use, useEffect, useState } from "react";
 import { type Address, parseUnits } from "viem";
 import { useAccount, useSwitchChain } from "wagmi";
 import { baseSepolia } from "wagmi/chains";
-import { ConnectButton } from "@/components/connect-button";
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useChain } from "@/context/chain";
 import { useCurrencyBalance } from "@/hooks/use-currency-balance";
+import { useSlotAction } from "@/hooks/use-slot-action";
 import { useSlotOnChain } from "@/hooks/use-slot-onchain";
-import { useTransact } from "@/hooks/use-transact";
 import { useModules, useSlotActivity } from "@/hooks/use-v3";
 import {
   formatBalance,
@@ -61,7 +62,18 @@ export default function SlotPage({
   const { data: activityData } = useSlotActivity(slotAddress);
   const { address, isConnected, chainId } = useAccount();
   const { switchChain } = useSwitchChain();
-  const { transact, busy, activeAction } = useTransact();
+  const {
+    selfAssess,
+    release,
+    collect,
+    payTax,
+    liquidate,
+    proposeTaxUpdate,
+    proposeModuleUpdate,
+    cancelPendingUpdates,
+    busy,
+    activeAction,
+  } = useSlotAction();
   const { data: modules } = useModules();
   const [newPrice, setNewPrice] = useState("");
   const [newTaxPct, setNewTaxPct] = useState<number | null>(null);
@@ -183,7 +195,6 @@ export default function SlotPage({
             )}
           </div>
         </div>
-        <ConnectButton />
       </PageHeader>
 
       <div className="max-w-6xl mx-auto px-6 py-6">
@@ -193,23 +204,23 @@ export default function SlotPage({
             {/* Tab bar in card header */}
             <div className="bg-muted/50 border-b px-4 flex items-center gap-0">
               <button
-                className={`px-3 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${activeTab === "details" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+                className={`px-3 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors flex items-center gap-1.5 ${activeTab === "details" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
                 onClick={() => setActiveTab("details")}
               >
-                Details
+                <Info className="size-3.5" /> Info
               </button>
               <button
-                className={`px-3 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${activeTab === "activity" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+                className={`px-3 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors flex items-center gap-1.5 ${activeTab === "activity" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
                 onClick={() => setActiveTab("activity")}
               >
-                Activity
+                <Activity className="size-3.5" /> Activity
               </button>
               {isManager && (
                 <button
-                  className={`px-3 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${activeTab === "manage" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+                  className={`px-3 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors flex items-center gap-1.5 ${activeTab === "manage" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
                   onClick={() => setActiveTab("manage")}
                 >
-                  Manage
+                  <Cog className="size-3.5" /> Manage
                 </button>
               )}
             </div>
@@ -221,7 +232,7 @@ export default function SlotPage({
                   {/* Identity */}
                   <div className="flex justify-between">
                     <span className="text-muted-foreground flex items-center gap-1.5">
-                      <LandPlot className="size-3" /> Address
+                      <LandPlot className="size-3" /> Slot contract
                     </span>
                     <a
                       href={`${explorerUrl}/address/${slot.id}`}
@@ -428,12 +439,10 @@ export default function SlotPage({
                           Number(slot.taxPercentage)
                       }
                       onClick={() =>
-                        transact("Propose tax", {
-                          address: slotAddress as Address,
-                          abi: slotAbi,
-                          functionName: "proposeTaxUpdate",
-                          args: [BigInt(Math.round((newTaxPct ?? 0) * 100))],
-                        })
+                        proposeTaxUpdate(
+                          slotAddress as Address,
+                          BigInt(Math.round((newTaxPct ?? 0) * 100)),
+                        )
                       }
                     >
                       {busy && activeAction === "Propose tax" ? (
@@ -505,12 +514,10 @@ export default function SlotPage({
                         newModule.toLowerCase() === slot.module.toLowerCase()
                       }
                       onClick={() =>
-                        transact("Propose module", {
-                          address: slotAddress as Address,
-                          abi: slotAbi,
-                          functionName: "proposeModuleUpdate",
-                          args: [newModule as Address],
-                        })
+                        proposeModuleUpdate(
+                          slotAddress as Address,
+                          newModule as Address,
+                        )
                       }
                     >
                       {busy && activeAction === "Propose module" ? (
@@ -530,12 +537,7 @@ export default function SlotPage({
                       className="w-full text-destructive hover:text-destructive"
                       disabled={busy}
                       onClick={() =>
-                        transact("Cancel updates", {
-                          address: slotAddress as Address,
-                          abi: slotAbi,
-                          functionName: "cancelPendingUpdates",
-                          args: [],
-                        })
+                        cancelPendingUpdates(slotAddress as Address)
                       }
                     >
                       {busy && activeAction === "Cancel updates" ? (
@@ -680,12 +682,10 @@ export default function SlotPage({
                               variant="outline"
                               disabled={busy}
                               onClick={() =>
-                                transact("Set price", {
-                                  address: slotAddress as Address,
-                                  abi: slotAbi,
-                                  functionName: "selfAssess",
-                                  args: [toUnits(newPrice)],
-                                })
+                                selfAssess(
+                                  slotAddress as Address,
+                                  toUnits(newPrice),
+                                )
                               }
                             >
                               {busy && activeAction === "Set price" ? (
@@ -709,14 +709,7 @@ export default function SlotPage({
                           variant="destructive"
                           className="w-full"
                           disabled={busy}
-                          onClick={() =>
-                            transact("Release slot", {
-                              address: slotAddress as Address,
-                              abi: slotAbi,
-                              functionName: "release",
-                              args: [],
-                            })
-                          }
+                          onClick={() => release(slotAddress as Address)}
                         >
                           {busy && activeAction === "Release slot" ? (
                             <Loader2 className="size-4 animate-spin" />
@@ -732,14 +725,7 @@ export default function SlotPage({
                         variant="outline"
                         className="w-full"
                         disabled={busy || slot.taxOwed === 0n}
-                        onClick={() =>
-                          transact("Collect tax", {
-                            address: slotAddress as Address,
-                            abi: slotAbi,
-                            functionName: "collect",
-                            args: [],
-                          })
-                        }
+                        onClick={() => collect(slotAddress as Address)}
                       >
                         {busy && activeAction === "Collect tax" ? (
                           <Loader2 className="size-4 animate-spin" />
@@ -751,19 +737,29 @@ export default function SlotPage({
                       </Button>
                     )}
 
+                    {isOccupant && !isRecipient && (
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        disabled={busy || slot.taxOwed === 0n}
+                        onClick={() => payTax(slotAddress as Address)}
+                      >
+                        {busy && activeAction === "Pay tax" ? (
+                          <Loader2 className="size-4 animate-spin" />
+                        ) : slot.taxOwed === 0n ? (
+                          "No Tax Due"
+                        ) : (
+                          `Pay Tax (${formatBalance(slot.taxOwed, decimals)} ${symbol})`
+                        )}
+                      </Button>
+                    )}
+
                     {isOccupied && !isOccupant && (
                       <Button
                         variant="destructive"
                         className="w-full"
                         disabled={busy || !slot.insolvent}
-                        onClick={() =>
-                          transact("Liquidate", {
-                            address: slotAddress as Address,
-                            abi: slotAbi,
-                            functionName: "liquidate",
-                            args: [],
-                          })
-                        }
+                        onClick={() => liquidate(slotAddress as Address)}
                       >
                         {busy && activeAction === "Liquidate" ? (
                           <Loader2 className="size-4 animate-spin" />

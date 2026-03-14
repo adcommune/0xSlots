@@ -14,9 +14,8 @@ import { type Address, formatUnits } from "viem";
 import { normalize } from "viem/ens";
 import { useEnsAvatar, useEnsName } from "wagmi";
 import { mainnet } from "wagmi/chains";
-import { Badge } from "@/components/ui/badge";
-import { ConnectButton } from "@/components/connect-button";
 import { PageHeader } from "@/components/page-header";
+import { Badge } from "@/components/ui/badge";
 import { useChain } from "@/context/chain";
 import { useSlotsOnChain } from "@/hooks/use-slot-onchain";
 import { useSlotsByRecipient } from "@/hooks/use-v3";
@@ -90,15 +89,22 @@ export default function RecipientPage({
             </a>
           </div>
         </div>
-        <ConnectButton />
       </PageHeader>
 
       <div className="max-w-6xl mx-auto px-6 py-6">
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
           {[
-            { label: "Total Slots", value: slots.length.toString(), icon: LandPlot },
-            { label: "Occupied", value: occupied.length.toString(), icon: UserCheck },
+            {
+              label: "Total Slots",
+              value: slots.length.toString(),
+              icon: LandPlot,
+            },
+            {
+              label: "Occupied",
+              value: occupied.length.toString(),
+              icon: UserCheck,
+            },
             { label: "Vacant", value: vacant.toString(), icon: XCircle },
             {
               label: "Pending Tax",
@@ -167,10 +173,20 @@ export default function RecipientPage({
                       </td>
                       <td className="px-4 py-2">
                         <Badge
-                          variant={s.insolvent ? "destructive" : s.occupant ? "default" : "secondary"}
+                          variant={
+                            s.insolvent
+                              ? "destructive"
+                              : s.occupant
+                                ? "default"
+                                : "secondary"
+                          }
                           className="text-[10px]"
                         >
-                          {s.insolvent ? "INSOLVENT" : s.occupant ? "OCCUPIED" : "VACANT"}
+                          {s.insolvent
+                            ? "INSOLVENT"
+                            : s.occupant
+                              ? "OCCUPIED"
+                              : "VACANT"}
                         </Badge>
                       </td>
                       <td className="px-4 py-2 text-xs">

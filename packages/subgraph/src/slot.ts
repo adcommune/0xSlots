@@ -63,6 +63,7 @@ export function handleBought(event: Bought): void {
 
   let ev = new BoughtEvent(evtId(event.transaction.hash, event.logIndex));
   ev.slot = slot.id;
+  ev.currency = slot.currency;
   ev.buyer = event.params.buyer;
   ev.previousOccupant = event.params.previousOccupant;
   ev.price = event.params.price;
@@ -93,6 +94,7 @@ export function handleReleased(event: Released): void {
 
   let ev = new ReleasedEvent(evtId(event.transaction.hash, event.logIndex));
   ev.slot = slot.id;
+  ev.currency = slot.currency;
   ev.occupant = event.params.occupant;
   ev.refund = event.params.refund;
   ev.timestamp = event.block.timestamp;
@@ -120,6 +122,7 @@ export function handleLiquidated(event: Liquidated): void {
 
   let ev = new LiquidatedEvent(evtId(event.transaction.hash, event.logIndex));
   ev.slot = slot.id;
+  ev.currency = slot.currency;
   ev.liquidator = event.params.liquidator;
   ev.occupant = event.params.occupant;
   ev.bounty = event.params.bounty;
@@ -137,6 +140,7 @@ export function handlePriceUpdated(event: PriceUpdated): void {
 
   let ev = new PriceUpdatedEvent(evtId(event.transaction.hash, event.logIndex));
   ev.slot = slot.id;
+  ev.currency = slot.currency;
   ev.oldPrice = event.params.oldPrice;
   ev.newPrice = event.params.newPrice;
   ev.timestamp = event.block.timestamp;
@@ -153,6 +157,7 @@ export function handleDeposited(event: Deposited): void {
 
   let ev = new DepositedEvent(evtId(event.transaction.hash, event.logIndex));
   ev.slot = slot.id;
+  ev.currency = slot.currency;
   ev.depositor = event.params.depositor;
   ev.amount = event.params.amount;
   ev.timestamp = event.block.timestamp;
@@ -169,6 +174,7 @@ export function handleWithdrawn(event: Withdrawn): void {
 
   let ev = new WithdrawnEvent(evtId(event.transaction.hash, event.logIndex));
   ev.slot = slot.id;
+  ev.currency = slot.currency;
   ev.occupant = event.params.occupant;
   ev.amount = event.params.amount;
   ev.timestamp = event.block.timestamp;
@@ -185,6 +191,7 @@ export function handleSettled(event: Settled): void {
 
   let ev = new SettledEvent(evtId(event.transaction.hash, event.logIndex));
   ev.slot = slot.id;
+  ev.currency = slot.currency;
   ev.taxOwed = event.params.taxOwed;
   ev.taxPaid = event.params.taxPaid;
   ev.depositRemaining = event.params.depositRemaining;
@@ -203,6 +210,7 @@ export function handleTaxCollected(event: TaxCollected): void {
 
   let ev = new TaxCollectedEvent(evtId(event.transaction.hash, event.logIndex));
   ev.slot = slot.id;
+  ev.currency = slot.currency;
   ev.recipient = event.params.recipient;
   ev.amount = event.params.amount;
   ev.timestamp = event.block.timestamp;

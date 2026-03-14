@@ -4,12 +4,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { formatUnits } from "viem";
 import { useAccount } from "wagmi";
-import { ConnectButton } from "@/components/connect-button";
 import { ExplorerTabs } from "@/components/explorer-tabs";
 import { PageHeader } from "@/components/page-header";
 import { useSlotsOnChain } from "@/hooks/use-slot-onchain";
-import { useSlotsByRecipient, useSlotsByOccupant } from "@/hooks/use-v3";
-import { truncateAddress, formatBalance } from "@/utils";
+import { useSlotsByOccupant, useSlotsByRecipient } from "@/hooks/use-v3";
+import { formatBalance, truncateAddress } from "@/utils";
 
 function SlotTable({
   slots,
@@ -62,9 +61,7 @@ function SlotTable({
                 className="border-b hover:bg-muted/30 cursor-pointer transition-colors"
                 onClick={() => push(`/slots/${s.id}`)}
               >
-                <td className="px-4 py-2 text-xs">
-                  {truncateAddress(s.id)}
-                </td>
+                <td className="px-4 py-2 text-xs">{truncateAddress(s.id)}</td>
                 <td className="px-4 py-2">
                   <span
                     className={`inline-block px-1.5 py-0.5 rounded text-xs font-medium ${
@@ -123,8 +120,14 @@ function ProfileContent({ address }: { address: string }) {
   const recipientLoading = recipientSubLoading || recipientOnchainLoading;
   const occupantLoading = occupantSubLoading || occupantOnchainLoading;
 
-  const decimals = recipientSlots[0]?.currencyDecimals ?? occupantSlots[0]?.currencyDecimals ?? 6;
-  const symbol = recipientSlots[0]?.currencySymbol ?? occupantSlots[0]?.currencySymbol ?? "USDC";
+  const decimals =
+    recipientSlots[0]?.currencyDecimals ??
+    occupantSlots[0]?.currencyDecimals ??
+    6;
+  const symbol =
+    recipientSlots[0]?.currencySymbol ??
+    occupantSlots[0]?.currencySymbol ??
+    "USDC";
 
   const totalTaxOwed = recipientSlots.reduce((sum, s) => sum + s.taxOwed, 0n);
   const totalDeposit = occupantSlots.reduce((sum, s) => sum + s.deposit, 0n);
@@ -208,7 +211,6 @@ export default function ProfilePage() {
             </p>
           )}
         </div>
-        <ConnectButton />
       </PageHeader>
 
       <div className="max-w-6xl mx-auto px-6 py-6">

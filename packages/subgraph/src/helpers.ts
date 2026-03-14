@@ -1,5 +1,6 @@
 import { Address } from "@graphprotocol/graph-ts";
-import { Account, Module } from "../generated/schema";
+import { Account, Currency, Module } from "../generated/schema";
+import { ERC20 } from "../generated/SlotFactory/ERC20";
 
 export function getOrCreateAccount(address: Address): Account {
   let id = address.toHexString();
@@ -11,6 +12,24 @@ export function getOrCreateAccount(address: Address): Account {
     account.save();
   }
   return account;
+}
+
+export function getOrCreateCurrency(address: Address): Currency {
+  let id = address.toHexString();
+  let currency = Currency.load(id);
+  if (!currency) {
+    let erc20 = ERC20.bind(address);
+    let nameResult = erc20.try_name();
+    let symbolResult = erc20.try_symbol();
+    let decimalsResult = erc20.try_decimals();
+
+    currency = new Currency(id);
+    currency.name = nameResult.reverted ? null : nameResult.value;
+    currency.symbol = symbolResult.reverted ? null : symbolResult.value;
+    currency.decimals = decimalsResult.reverted ? 18 : decimalsResult.value;
+    currency.save();
+  }
+  return currency;
 }
 
 export function getOrCreateModule(address: Address, factoryId: string): Module {

@@ -1,13 +1,12 @@
-import { BigInt, Bytes, Address, DataSourceContext } from "@graphprotocol/graph-ts";
+import { BigInt, Address, DataSourceContext } from "@graphprotocol/graph-ts";
 import {
   SlotDeployed,
   ModuleVerified,
   AdminTransferred,
 } from "../generated/SlotFactory/SlotFactory";
-import { ERC20 } from "../generated/SlotFactory/ERC20";
 import { Slot as SlotTemplate } from "../generated/templates";
 import { Factory, Slot, Module } from "../generated/schema";
-import { getOrCreateAccount, getOrCreateModule } from "./helpers";
+import { getOrCreateAccount, getOrCreateCurrency, getOrCreateModule } from "./helpers";
 
 function getOrCreateFactory(address: string): Factory {
   let factory = Factory.load(address);
@@ -34,16 +33,8 @@ export function handleSlotDeployed(event: SlotDeployed): void {
   slot.recipient = event.params.recipient;
   slot.recipientAccount = recipientAccount.id;
   slot.occupantAccount = null;
-  slot.currency = event.params.currency;
-
-  // Fetch ERC20 metadata
-  let erc20 = ERC20.bind(event.params.currency);
-  let nameResult = erc20.try_name();
-  let symbolResult = erc20.try_symbol();
-  let decimalsResult = erc20.try_decimals();
-  slot.currencyName = nameResult.reverted ? null : nameResult.value;
-  slot.currencySymbol = symbolResult.reverted ? null : symbolResult.value;
-  slot.currencyDecimals = decimalsResult.reverted ? 18 : decimalsResult.value;
+  let currency = getOrCreateCurrency(event.params.currency);
+  slot.currency = currency.id;
 
   // Config
   slot.mutableTax = event.params.config.mutableTax;

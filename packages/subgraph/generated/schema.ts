@@ -151,6 +151,93 @@ export class Account extends Entity {
   }
 }
 
+export class Currency extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id != null, "Cannot save Currency entity without an ID");
+    if (id) {
+      assert(
+        id.kind == ValueKind.STRING,
+        `Entities of type Currency must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`,
+      );
+      store.set("Currency", id.toString(), this);
+    }
+  }
+
+  static loadInBlock(id: string): Currency | null {
+    return changetype<Currency | null>(store.get_in_block("Currency", id));
+  }
+
+  static load(id: string): Currency | null {
+    return changetype<Currency | null>(store.get("Currency", id));
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get name(): string | null {
+    let value = this.get("name");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set name(value: string | null) {
+    if (!value) {
+      this.unset("name");
+    } else {
+      this.set("name", Value.fromString(<string>value));
+    }
+  }
+
+  get symbol(): string | null {
+    let value = this.get("symbol");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set symbol(value: string | null) {
+    if (!value) {
+      this.unset("symbol");
+    } else {
+      this.set("symbol", Value.fromString(<string>value));
+    }
+  }
+
+  get decimals(): i32 {
+    let value = this.get("decimals");
+    if (!value || value.kind == ValueKind.NULL) {
+      return 0;
+    } else {
+      return value.toI32();
+    }
+  }
+
+  set decimals(value: i32) {
+    this.set("decimals", Value.fromI32(value));
+  }
+}
+
 export class Slot extends Entity {
   constructor(id: string) {
     super();
@@ -216,64 +303,17 @@ export class Slot extends Entity {
     this.set("recipientAccount", Value.fromString(value));
   }
 
-  get currency(): Bytes {
+  get currency(): string {
     let value = this.get("currency");
     if (!value || value.kind == ValueKind.NULL) {
       throw new Error("Cannot return null for a required field.");
     } else {
-      return value.toBytes();
-    }
-  }
-
-  set currency(value: Bytes) {
-    this.set("currency", Value.fromBytes(value));
-  }
-
-  get currencyName(): string | null {
-    let value = this.get("currencyName");
-    if (!value || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
       return value.toString();
     }
   }
 
-  set currencyName(value: string | null) {
-    if (!value) {
-      this.unset("currencyName");
-    } else {
-      this.set("currencyName", Value.fromString(<string>value));
-    }
-  }
-
-  get currencySymbol(): string | null {
-    let value = this.get("currencySymbol");
-    if (!value || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toString();
-    }
-  }
-
-  set currencySymbol(value: string | null) {
-    if (!value) {
-      this.unset("currencySymbol");
-    } else {
-      this.set("currencySymbol", Value.fromString(<string>value));
-    }
-  }
-
-  get currencyDecimals(): i32 {
-    let value = this.get("currencyDecimals");
-    if (!value || value.kind == ValueKind.NULL) {
-      return 0;
-    } else {
-      return value.toI32();
-    }
-  }
-
-  set currencyDecimals(value: i32) {
-    this.set("currencyDecimals", Value.fromI32(value));
+  set currency(value: string) {
+    this.set("currency", Value.fromString(value));
   }
 
   get mutableTax(): boolean {
@@ -483,6 +523,23 @@ export class Slot extends Entity {
     this.set("createdTx", Value.fromBytes(value));
   }
 
+  get metadataURI(): string | null {
+    let value = this.get("metadataURI");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set metadataURI(value: string | null) {
+    if (!value) {
+      this.unset("metadataURI");
+    } else {
+      this.set("metadataURI", Value.fromString(<string>value));
+    }
+  }
+
   get updatedAt(): BigInt {
     let value = this.get("updatedAt");
     if (!value || value.kind == ValueKind.NULL) {
@@ -583,6 +640,14 @@ export class Slot extends Entity {
       "pendingUpdateCancellations",
     );
   }
+
+  get metadataUpdates(): MetadataUpdatedEventLoader {
+    return new MetadataUpdatedEventLoader(
+      "Slot",
+      this.get("id")!.toString(),
+      "metadataUpdates",
+    );
+  }
 }
 
 export class BoughtEvent extends Entity {
@@ -637,6 +702,19 @@ export class BoughtEvent extends Entity {
 
   set slot(value: string) {
     this.set("slot", Value.fromString(value));
+  }
+
+  get currency(): string {
+    let value = this.get("currency");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set currency(value: string) {
+    this.set("currency", Value.fromString(value));
   }
 
   get buyer(): Bytes {
@@ -798,6 +876,19 @@ export class ReleasedEvent extends Entity {
     this.set("slot", Value.fromString(value));
   }
 
+  get currency(): string {
+    let value = this.get("currency");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set currency(value: string) {
+    this.set("currency", Value.fromString(value));
+  }
+
   get occupant(): Bytes {
     let value = this.get("occupant");
     if (!value || value.kind == ValueKind.NULL) {
@@ -916,6 +1007,19 @@ export class LiquidatedEvent extends Entity {
 
   set slot(value: string) {
     this.set("slot", Value.fromString(value));
+  }
+
+  get currency(): string {
+    let value = this.get("currency");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set currency(value: string) {
+    this.set("currency", Value.fromString(value));
   }
 
   get liquidator(): Bytes {
@@ -1053,6 +1157,19 @@ export class PriceUpdatedEvent extends Entity {
     this.set("slot", Value.fromString(value));
   }
 
+  get currency(): string {
+    let value = this.get("currency");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set currency(value: string) {
+    this.set("currency", Value.fromString(value));
+  }
+
   get oldPrice(): BigInt {
     let value = this.get("oldPrice");
     if (!value || value.kind == ValueKind.NULL) {
@@ -1171,6 +1288,19 @@ export class DepositedEvent extends Entity {
 
   set slot(value: string) {
     this.set("slot", Value.fromString(value));
+  }
+
+  get currency(): string {
+    let value = this.get("currency");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set currency(value: string) {
+    this.set("currency", Value.fromString(value));
   }
 
   get depositor(): Bytes {
@@ -1293,6 +1423,19 @@ export class WithdrawnEvent extends Entity {
     this.set("slot", Value.fromString(value));
   }
 
+  get currency(): string {
+    let value = this.get("currency");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set currency(value: string) {
+    this.set("currency", Value.fromString(value));
+  }
+
   get occupant(): Bytes {
     let value = this.get("occupant");
     if (!value || value.kind == ValueKind.NULL) {
@@ -1411,6 +1554,19 @@ export class SettledEvent extends Entity {
 
   set slot(value: string) {
     this.set("slot", Value.fromString(value));
+  }
+
+  get currency(): string {
+    let value = this.get("currency");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set currency(value: string) {
+    this.set("currency", Value.fromString(value));
   }
 
   get taxOwed(): BigInt {
@@ -1546,6 +1702,19 @@ export class TaxCollectedEvent extends Entity {
 
   set slot(value: string) {
     this.set("slot", Value.fromString(value));
+  }
+
+  get currency(): string {
+    let value = this.get("currency");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set currency(value: string) {
+    this.set("currency", Value.fromString(value));
   }
 
   get recipient(): Bytes {
@@ -1937,6 +2106,115 @@ export class PendingUpdateCancelledEvent extends Entity {
   }
 }
 
+export class MetadataUpdatedEvent extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id != null, "Cannot save MetadataUpdatedEvent entity without an ID");
+    if (id) {
+      assert(
+        id.kind == ValueKind.STRING,
+        `Entities of type MetadataUpdatedEvent must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`,
+      );
+      store.set("MetadataUpdatedEvent", id.toString(), this);
+    }
+  }
+
+  static loadInBlock(id: string): MetadataUpdatedEvent | null {
+    return changetype<MetadataUpdatedEvent | null>(
+      store.get_in_block("MetadataUpdatedEvent", id),
+    );
+  }
+
+  static load(id: string): MetadataUpdatedEvent | null {
+    return changetype<MetadataUpdatedEvent | null>(
+      store.get("MetadataUpdatedEvent", id),
+    );
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get slot(): string {
+    let value = this.get("slot");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set slot(value: string) {
+    this.set("slot", Value.fromString(value));
+  }
+
+  get uri(): string {
+    let value = this.get("uri");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set uri(value: string) {
+    this.set("uri", Value.fromString(value));
+  }
+
+  get timestamp(): BigInt {
+    let value = this.get("timestamp");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set timestamp(value: BigInt) {
+    this.set("timestamp", Value.fromBigInt(value));
+  }
+
+  get blockNumber(): BigInt {
+    let value = this.get("blockNumber");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set blockNumber(value: BigInt) {
+    this.set("blockNumber", Value.fromBigInt(value));
+  }
+
+  get tx(): Bytes {
+    let value = this.get("tx");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set tx(value: Bytes) {
+    this.set("tx", Value.fromBytes(value));
+  }
+}
+
 export class Module extends Entity {
   constructor(id: string) {
     super();
@@ -2260,5 +2538,23 @@ export class PendingUpdateCancelledEventLoader extends Entity {
   load(): PendingUpdateCancelledEvent[] {
     let value = store.loadRelated(this._entity, this._id, this._field);
     return changetype<PendingUpdateCancelledEvent[]>(value);
+  }
+}
+
+export class MetadataUpdatedEventLoader extends Entity {
+  _entity: string;
+  _field: string;
+  _id: string;
+
+  constructor(entity: string, id: string, field: string) {
+    super();
+    this._entity = entity;
+    this._id = id;
+    this._field = field;
+  }
+
+  load(): MetadataUpdatedEvent[] {
+    let value = store.loadRelated(this._entity, this._id, this._field);
+    return changetype<MetadataUpdatedEvent[]>(value);
   }
 }
