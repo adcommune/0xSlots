@@ -2,7 +2,6 @@
 
 import { AccountTypeIcon } from "@/components/account-type-icon";
 import { EnsAddress } from "@/components/ens-address";
-import { Badge } from "@/components/ui/badge";
 import { useAccounts } from "@/hooks/use-v3";
 
 export function RecipientsTable() {
@@ -48,14 +47,8 @@ export function RecipientsTable() {
                 <th className="px-4 py-2.5 text-center text-xs font-medium text-muted-foreground">
                   Type
                 </th>
-                <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">
+                <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
                   Slots
-                </th>
-                <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">
-                  Occupied
-                </th>
-                <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">
-                  Vacant
                 </th>
               </tr>
             </thead>
@@ -81,18 +74,20 @@ export function RecipientsTable() {
                     <td className="px-4 py-2.5 text-center">
                       <AccountTypeIcon type={accountType} />
                     </td>
-                    <td className="px-4 py-2.5 text-right text-xs">
-                      {a.slotCount}
-                    </td>
-                    <td className="px-4 py-2.5 text-right">
-                      <Badge variant="default" className="text-[10px]">
-                        {a.occupiedCount}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-2.5 text-right">
-                      <Badge variant="secondary" className="text-[10px]">
-                        {vacant}
-                      </Badge>
+                    <td className="px-4 py-2.5">
+                      <div className="flex items-center gap-1.5">
+                        <div className="flex gap-px">
+                          {Array.from({ length: a.slotCount }).map((_, i) => (
+                            <span
+                              key={i}
+                              className={`block w-2 h-2 rounded-sm ${i < a.occupiedCount ? "bg-foreground" : "bg-muted-foreground/25"}`}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-[10px] text-muted-foreground">
+                          {a.occupiedCount}/{a.slotCount}
+                        </span>
+                      </div>
                     </td>
                   </tr>
                 );
