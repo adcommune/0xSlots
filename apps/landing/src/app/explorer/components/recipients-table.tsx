@@ -44,9 +44,6 @@ export function RecipientsTable() {
                 <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
                   Recipient
                 </th>
-                <th className="px-4 py-2.5 text-center text-xs font-medium text-muted-foreground">
-                  Type
-                </th>
                 <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
                   Slots
                 </th>
@@ -65,14 +62,14 @@ export function RecipientsTable() {
                     }}
                   >
                     <td className="px-4 py-2.5">
-                      <EnsAddress
-                        address={a.id}
-                        href={`/recipient/${a.id}`}
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    </td>
-                    <td className="px-4 py-2.5 text-center">
-                      <AccountTypeIcon type={accountType} />
+                      <span className="inline-flex items-center gap-1.5">
+                        <AccountTypeIcon type={accountType} className="h-3 w-3" />
+                        <EnsAddress
+                          address={a.id}
+                          href={`/recipient/${a.id}`}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </span>
                     </td>
                     <td className="px-4 py-2.5">
                       <div className="flex items-center gap-1.5">
