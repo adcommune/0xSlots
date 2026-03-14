@@ -55,7 +55,7 @@ export function SlotsTable() {
                   Price
                 </th>
                 <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">
-                  Tax
+                  Tax /week
                 </th>
                 <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
                   Module

@@ -1,5 +1,5 @@
 import { Address } from "@graphprotocol/graph-ts";
-import { Account, Currency, Module } from "../generated/schema";
+import { Account, Currency, Module, Slot } from "../generated/schema";
 import { ERC20 } from "../generated/SlotFactory/ERC20";
 
 export function getOrCreateAccount(address: Address): Account {
@@ -7,11 +7,34 @@ export function getOrCreateAccount(address: Address): Account {
   let account = Account.load(id);
   if (!account) {
     account = new Account(id);
+    account.type = "EOA"; // default — upgraded by markAccountAsContract/markAccountAsSplit
     account.slotCount = 0;
     account.occupiedCount = 0;
     account.save();
   }
   return account;
+}
+
+/**
+ * Mark an account as a contract. Called when we know the address is a contract
+ * (e.g., it's a slot address created by our factory).
+ */
+export function markAccountAsContract(address: Address): void {
+  let account = getOrCreateAccount(address);
+  if (account.type == "EOA") {
+    account.type = "CONTRACT";
+    account.save();
+  }
+}
+
+/**
+ * Mark an account as a 0xSplits split. Call from frontend or admin tool
+ * by triggering a specific event, or detect via factory creation events.
+ */
+export function markAccountAsSplit(address: Address): void {
+  let account = getOrCreateAccount(address);
+  account.type = "SPLIT";
+  account.save();
 }
 
 export function getOrCreateCurrency(address: Address): Currency {
