@@ -1,5 +1,16 @@
 # @0xslots/sdk
 
+## 0.7.0
+
+### Minor Changes
+
+- c453c38: add write methods to sdk
+
+### Patch Changes
+
+- Updated dependencies [c453c38]
+  - @0xslots/contracts@0.5.0
+
 ## 0.5.0
 
 ### Minor Changes
