@@ -27,6 +27,17 @@ import { useAccount, useSwitchChain } from "wagmi";
 import { baseSepolia } from "wagmi/chains";
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useChain } from "@/context/chain";
@@ -705,18 +716,37 @@ export default function SlotPage({
                           />
                         </div>
 
-                        <Button
-                          variant="destructive"
-                          className="w-full"
-                          disabled={busy}
-                          onClick={() => release(slotAddress as Address)}
-                        >
-                          {busy && activeAction === "Release slot" ? (
-                            <Loader2 className="size-4 animate-spin" />
-                          ) : (
-                            "Release Slot"
-                          )}
-                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="destructive"
+                              className="w-full"
+                              disabled={busy}
+                            >
+                              {busy && activeAction === "Release slot" ? (
+                                <Loader2 className="size-4 animate-spin" />
+                              ) : (
+                                "Release Slot"
+                              )}
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Release this slot?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This will give up your occupancy and return your remaining deposit. You will lose your position and someone else can claim the slot.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => release(slotAddress as Address)}
+                              >
+                                Release
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     )}
 
