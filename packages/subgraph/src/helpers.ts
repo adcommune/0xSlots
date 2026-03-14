@@ -6,13 +6,20 @@ import { SplitV2 } from "../generated/SlotFactory/SplitV2";
 /**
  * Detect account type using ethereum.hasCode() + 0xSplits interface check.
  * - EOA: no code at address
+ * - DELEGATED: has code but is a transaction sender (ERC-7702)
  * - SPLIT: has code AND responds to splitHash()
- * - CONTRACT: has code but not a split
+ * - CONTRACT: has code but not a split or delegated
  */
-function detectAccountType(address: Address): string {
+function detectAccountType(address: Address, isTxSender: bool): string {
   let hasCode = ethereum.hasCode(address);
   if (!hasCode.inner) {
     return "EOA";
+  }
+
+  // Has code but is a tx sender → ERC-7702 delegated EOA
+  // Real contracts can never be transaction.from
+  if (isTxSender) {
+    return "DELEGATED";
   }
 
   // Has code — check if it's a 0xSplits contract
@@ -25,14 +32,18 @@ function detectAccountType(address: Address): string {
   return "CONTRACT";
 }
 
-export function getOrCreateAccount(address: Address): Account {
+export function getOrCreateAccount(address: Address, isTxSender: bool = false): Account {
   let id = address.toHexString();
   let account = Account.load(id);
   if (!account) {
     account = new Account(id);
-    account.type = detectAccountType(address);
+    account.type = detectAccountType(address, isTxSender);
     account.slotCount = 0;
     account.occupiedCount = 0;
+    account.save();
+  } else if (account.type == "CONTRACT" && isTxSender) {
+    // Upgrade: previously classified as CONTRACT but now seen as tx sender
+    account.type = "DELEGATED";
     account.save();
   }
   return account;

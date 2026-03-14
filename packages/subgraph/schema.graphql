@@ -12,6 +12,7 @@ type Factory @entity(immutable: false) {
 enum AccountType {
   EOA
   CONTRACT
+  DELEGATED
   SPLIT
 }
 

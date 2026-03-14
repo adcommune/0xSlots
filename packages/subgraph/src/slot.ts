@@ -49,8 +49,8 @@ export function handleBought(event: Bought): void {
     prevAccount.save();
   }
 
-  // Set new occupant
-  let buyerAccount = getOrCreateAccount(event.params.buyer);
+  // Set new occupant — buyer is always the tx sender
+  let buyerAccount = getOrCreateAccount(event.params.buyer, true);
   buyerAccount.occupiedCount += 1;
   buyerAccount.save();
 
