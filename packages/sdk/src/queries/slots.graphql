@@ -1,7 +1,7 @@
 fragment SlotFields on Slot {
   id
   recipient
-  recipientAccount { id slotCount occupiedCount }
+  recipientAccount { id type slotCount occupiedCount }
   currency { id name symbol decimals }
   manager
   mutableTax
@@ -9,7 +9,7 @@ fragment SlotFields on Slot {
   taxPercentage
   module { id verified name version }
   occupant
-  occupantAccount { id slotCount occupiedCount }
+  occupantAccount { id type slotCount occupiedCount }
   price
   deposit
   collectedTax

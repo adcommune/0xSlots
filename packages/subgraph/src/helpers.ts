@@ -1,40 +1,41 @@
-import { Address } from "@graphprotocol/graph-ts";
-import { Account, Currency, Module, Slot } from "../generated/schema";
+import { Address, ethereum } from "@graphprotocol/graph-ts";
+import { Account, Currency, Module } from "../generated/schema";
 import { ERC20 } from "../generated/SlotFactory/ERC20";
+import { SplitV2 } from "../generated/SlotFactory/SplitV2";
+
+/**
+ * Detect account type using ethereum.hasCode() + 0xSplits interface check.
+ * - EOA: no code at address
+ * - SPLIT: has code AND responds to splitHash()
+ * - CONTRACT: has code but not a split
+ */
+function detectAccountType(address: Address): string {
+  let hasCode = ethereum.hasCode(address);
+  if (!hasCode.inner) {
+    return "EOA";
+  }
+
+  // Has code — check if it's a 0xSplits contract
+  let split = SplitV2.bind(address);
+  let splitResult = split.try_splitHash();
+  if (!splitResult.reverted) {
+    return "SPLIT";
+  }
+
+  return "CONTRACT";
+}
 
 export function getOrCreateAccount(address: Address): Account {
   let id = address.toHexString();
   let account = Account.load(id);
   if (!account) {
     account = new Account(id);
-    account.type = "EOA"; // default — upgraded by markAccountAsContract/markAccountAsSplit
+    account.type = detectAccountType(address);
     account.slotCount = 0;
     account.occupiedCount = 0;
     account.save();
   }
   return account;
-}
-
-/**
- * Mark an account as a contract. Called when we know the address is a contract
- * (e.g., it's a slot address created by our factory).
- */
-export function markAccountAsContract(address: Address): void {
-  let account = getOrCreateAccount(address);
-  if (account.type == "EOA") {
-    account.type = "CONTRACT";
-    account.save();
-  }
-}
-
-/**
- * Mark an account as a 0xSplits split. Call from frontend or admin tool
- * by triggering a specific event, or detect via factory creation events.
- */
-export function markAccountAsSplit(address: Address): void {
-  let account = getOrCreateAccount(address);
-  account.type = "SPLIT";
-  account.save();
 }
 
 export function getOrCreateCurrency(address: Address): Currency {

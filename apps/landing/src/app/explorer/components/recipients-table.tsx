@@ -1,5 +1,6 @@
 "use client";
 
+import { AccountTypeIcon } from "@/components/account-type-icon";
 import { EnsAddress } from "@/components/ens-address";
 import { Badge } from "@/components/ui/badge";
 import { useAccounts } from "@/hooks/use-v3";
@@ -44,6 +45,9 @@ export function RecipientsTable() {
                 <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
                   Recipient
                 </th>
+                <th className="px-4 py-2.5 text-center text-xs font-medium text-muted-foreground">
+                  Type
+                </th>
                 <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">
                   Slots
                 </th>
@@ -58,6 +62,7 @@ export function RecipientsTable() {
             <tbody className="divide-y">
               {accounts.map((a) => {
                 const vacant = a.slotCount - a.occupiedCount;
+                const accountType = a.type;
                 return (
                   <tr
                     key={a.id}
@@ -72,6 +77,9 @@ export function RecipientsTable() {
                         href={`/recipient/${a.id}`}
                         onClick={(e) => e.stopPropagation()}
                       />
+                    </td>
+                    <td className="px-4 py-2.5 text-center">
+                      <AccountTypeIcon type={accountType} />
                     </td>
                     <td className="px-4 py-2.5 text-right text-xs">
                       {a.slotCount}
