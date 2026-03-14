@@ -388,7 +388,7 @@ export default function SlotPage({
             {/* Activity tab */}
             {activeTab === "activity" && (
               <SlotEventHistory
-                events={normalizeSlotActivity(activityData, decimals)}
+                events={normalizeSlotActivity(activityData)}
                 explorerUrl={explorerUrl}
               />
             )}

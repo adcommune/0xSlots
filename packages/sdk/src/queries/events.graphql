@@ -1,9 +1,19 @@
+# ── Currency fragment ──
+
+fragment CurrencyFields on Currency {
+  id
+  name
+  symbol
+  decimals
+}
+
 # ── Global (explorer) ──
 
 query GetRecentEvents($first: Int!) {
   boughtEvents(first: $first, orderBy: timestamp, orderDirection: desc) {
     id
     slot { id }
+    currency { ...CurrencyFields }
     buyer
     previousOccupant
     price
@@ -15,6 +25,7 @@ query GetRecentEvents($first: Int!) {
   releasedEvents(first: $first, orderBy: timestamp, orderDirection: desc) {
     id
     slot { id }
+    currency { ...CurrencyFields }
     occupant
     refund
     timestamp
@@ -23,6 +34,7 @@ query GetRecentEvents($first: Int!) {
   liquidatedEvents(first: $first, orderBy: timestamp, orderDirection: desc) {
     id
     slot { id }
+    currency { ...CurrencyFields }
     liquidator
     occupant
     bounty
@@ -32,6 +44,7 @@ query GetRecentEvents($first: Int!) {
   priceUpdatedEvents(first: $first, orderBy: timestamp, orderDirection: desc) {
     id
     slot { id }
+    currency { ...CurrencyFields }
     oldPrice
     newPrice
     timestamp
@@ -40,6 +53,7 @@ query GetRecentEvents($first: Int!) {
   depositedEvents(first: $first, orderBy: timestamp, orderDirection: desc) {
     id
     slot { id }
+    currency { ...CurrencyFields }
     depositor
     amount
     timestamp
@@ -48,6 +62,7 @@ query GetRecentEvents($first: Int!) {
   withdrawnEvents(first: $first, orderBy: timestamp, orderDirection: desc) {
     id
     slot { id }
+    currency { ...CurrencyFields }
     occupant
     amount
     timestamp
@@ -56,6 +71,7 @@ query GetRecentEvents($first: Int!) {
   taxCollectedEvents(first: $first, orderBy: timestamp, orderDirection: desc) {
     id
     slot { id }
+    currency { ...CurrencyFields }
     recipient
     amount
     timestamp
@@ -103,6 +119,7 @@ query GetBoughtEvents(
   ) {
     id
     slot { id }
+    currency { ...CurrencyFields }
     buyer
     previousOccupant
     price
@@ -132,6 +149,7 @@ query GetReleasedEvents(
   ) {
     id
     slot { id }
+    currency { ...CurrencyFields }
     occupant
     refund
     timestamp
@@ -158,6 +176,7 @@ query GetLiquidatedEvents(
   ) {
     id
     slot { id }
+    currency { ...CurrencyFields }
     liquidator
     occupant
     bounty
@@ -185,6 +204,7 @@ query GetSettledEvents(
   ) {
     id
     slot { id }
+    currency { ...CurrencyFields }
     taxOwed
     taxPaid
     depositRemaining
@@ -212,6 +232,7 @@ query GetTaxCollectedEvents(
   ) {
     id
     slot { id }
+    currency { ...CurrencyFields }
     recipient
     amount
     timestamp
@@ -238,6 +259,7 @@ query GetDepositedEvents(
   ) {
     id
     slot { id }
+    currency { ...CurrencyFields }
     depositor
     amount
     timestamp
@@ -264,6 +286,7 @@ query GetWithdrawnEvents(
   ) {
     id
     slot { id }
+    currency { ...CurrencyFields }
     occupant
     amount
     timestamp
@@ -290,6 +313,7 @@ query GetPriceUpdatedEvents(
   ) {
     id
     slot { id }
+    currency { ...CurrencyFields }
     oldPrice
     newPrice
     timestamp
@@ -303,6 +327,7 @@ query GetPriceUpdatedEvents(
 query GetSlotActivity($slotId: String!, $first: Int!) {
   boughtEvents(first: $first, orderBy: timestamp, orderDirection: desc, where: { slot: $slotId }) {
     id
+    currency { ...CurrencyFields }
     buyer
     previousOccupant
     price
@@ -313,6 +338,7 @@ query GetSlotActivity($slotId: String!, $first: Int!) {
   }
   releasedEvents(first: $first, orderBy: timestamp, orderDirection: desc, where: { slot: $slotId }) {
     id
+    currency { ...CurrencyFields }
     occupant
     refund
     timestamp
@@ -320,6 +346,7 @@ query GetSlotActivity($slotId: String!, $first: Int!) {
   }
   liquidatedEvents(first: $first, orderBy: timestamp, orderDirection: desc, where: { slot: $slotId }) {
     id
+    currency { ...CurrencyFields }
     liquidator
     occupant
     bounty
@@ -328,6 +355,7 @@ query GetSlotActivity($slotId: String!, $first: Int!) {
   }
   priceUpdatedEvents(first: $first, orderBy: timestamp, orderDirection: desc, where: { slot: $slotId }) {
     id
+    currency { ...CurrencyFields }
     oldPrice
     newPrice
     timestamp
@@ -335,6 +363,7 @@ query GetSlotActivity($slotId: String!, $first: Int!) {
   }
   depositedEvents(first: $first, orderBy: timestamp, orderDirection: desc, where: { slot: $slotId }) {
     id
+    currency { ...CurrencyFields }
     depositor
     amount
     timestamp
@@ -342,6 +371,7 @@ query GetSlotActivity($slotId: String!, $first: Int!) {
   }
   withdrawnEvents(first: $first, orderBy: timestamp, orderDirection: desc, where: { slot: $slotId }) {
     id
+    currency { ...CurrencyFields }
     occupant
     amount
     timestamp
@@ -349,6 +379,7 @@ query GetSlotActivity($slotId: String!, $first: Int!) {
   }
   taxCollectedEvents(first: $first, orderBy: timestamp, orderDirection: desc, where: { slot: $slotId }) {
     id
+    currency { ...CurrencyFields }
     recipient
     amount
     timestamp

@@ -2,10 +2,7 @@ fragment SlotFields on Slot {
   id
   recipient
   recipientAccount { id slotCount occupiedCount }
-  currency
-  currencyName
-  currencySymbol
-  currencyDecimals
+  currency { id name symbol decimals }
   manager
   mutableTax
   mutableModule
