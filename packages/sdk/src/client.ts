@@ -310,13 +310,20 @@ export class SlotsClient {
   // READ — On-chain (RPC)
   // ═══════════════════════════════════════════════════════════════════════════
 
-  /** Read full slot info from on-chain (RPC, not subgraph). */
-  async getSlotInfo(slot: Address) {
-    return this.publicClient.readContract({
-      address: slot,
-      abi: slotAbi,
-      functionName: "getSlotInfo",
-    });
+  /**
+   * Read full slot info from on-chain (RPC, not subgraph).
+   * @param slot - Slot contract address.
+   * @returns On-chain slot info tuple.
+   * @throws {SlotsError} If the RPC call fails.
+   */
+  getSlotInfo(slot: Address) {
+    return this.query("getSlotInfo", () =>
+      this.publicClient.readContract({
+        address: slot,
+        abi: slotAbi,
+        functionName: "getSlotInfo",
+      }),
+    );
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -327,7 +334,6 @@ export class SlotsClient {
    * Deploy a new slot via the factory contract.
    * @param params - Slot creation parameters (recipient, currency, config, initParams).
    * @returns Transaction hash.
-   * @throws {SlotsError} If the transaction fails.
    */
   async createSlot(params: CreateSlotParams): Promise<Hash> {
     return this.wallet.writeContract({
@@ -344,7 +350,6 @@ export class SlotsClient {
    * Deploy multiple identical slots in a single transaction via the factory contract.
    * @param params - Slot creation parameters including count.
    * @returns Transaction hash.
-   * @throws {SlotsError} If the transaction fails.
    */
   async createSlots(params: CreateSlotsParams): Promise<Hash> {
     return this.wallet.writeContract({
@@ -383,7 +388,6 @@ export class SlotsClient {
    * @param slot - The slot contract address.
    * @param newPrice - The new self-assessed price (can be 0).
    * @returns Transaction hash.
-   * @throws {SlotsError} If the transaction fails.
    */
   async selfAssess(slot: Address, newPrice: bigint): Promise<Hash> {
     return this.wallet.writeContract({
@@ -436,7 +440,6 @@ export class SlotsClient {
    * Release a slot (occupant only). Returns remaining deposit to the occupant.
    * @param slot - The slot contract address.
    * @returns Transaction hash.
-   * @throws {SlotsError} If the transaction fails.
    */
   async release(slot: Address): Promise<Hash> {
     return this.wallet.writeContract({
@@ -452,7 +455,6 @@ export class SlotsClient {
    * Collect accumulated tax (permissionless).
    * @param slot - The slot contract address.
    * @returns Transaction hash.
-   * @throws {SlotsError} If the transaction fails.
    */
   async collect(slot: Address): Promise<Hash> {
     return this.wallet.writeContract({
@@ -468,7 +470,6 @@ export class SlotsClient {
    * Liquidate an insolvent slot (permissionless). Caller receives bounty.
    * @param slot - The slot contract address.
    * @returns Transaction hash.
-   * @throws {SlotsError} If the transaction fails.
    */
   async liquidate(slot: Address): Promise<Hash> {
     return this.wallet.writeContract({
@@ -489,7 +490,6 @@ export class SlotsClient {
    * @param slot - The slot contract address.
    * @param newPct - The new tax percentage.
    * @returns Transaction hash.
-   * @throws {SlotsError} If the transaction fails.
    */
   async proposeTaxUpdate(slot: Address, newPct: bigint): Promise<Hash> {
     return this.wallet.writeContract({
@@ -507,7 +507,6 @@ export class SlotsClient {
    * @param slot - The slot contract address.
    * @param newModule - The new module contract address.
    * @returns Transaction hash.
-   * @throws {SlotsError} If the transaction fails.
    */
   async proposeModuleUpdate(slot: Address, newModule: Address): Promise<Hash> {
     return this.wallet.writeContract({
@@ -524,7 +523,6 @@ export class SlotsClient {
    * Cancel pending updates (manager only).
    * @param slot - The slot contract address.
    * @returns Transaction hash.
-   * @throws {SlotsError} If the transaction fails.
    */
   async cancelPendingUpdates(slot: Address): Promise<Hash> {
     return this.wallet.writeContract({
@@ -544,7 +542,7 @@ export class SlotsClient {
    * @throws {SlotsError} If newBps is outside 0-10000, or the transaction fails.
    */
   async setLiquidationBounty(slot: Address, newBps: bigint): Promise<Hash> {
-    if (newBps < 0n || newBps > 10000n) throw new SlotsError("setLiquidationBounty", "newBps must be 0\u201310000");
+    if (newBps < 0n || newBps > 10000n) throw new SlotsError("setLiquidationBounty", "newBps must be 0-10000");
     return this.wallet.writeContract({
       address: slot,
       abi: slotAbi,
