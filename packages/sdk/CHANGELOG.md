@@ -1,5 +1,11 @@
 # @0xslots/sdk
 
+## 0.8.0
+
+### Minor Changes
+
+- 5c27235: upgrade sdk
+
 ## 0.7.0
 
 ### Minor Changes
