@@ -1,18 +1,14 @@
 "use client";
 
-import { slotAbi } from "@0xslots/contracts";
 import { AlertTriangle, Banknote } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { type Address, erc20Abi, formatUnits, parseUnits } from "viem";
-import {
-  useWaitForTransactionReceipt,
-  useWriteContract,
-} from "wagmi";
+import { type Address, formatUnits, parseUnits } from "viem";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useSlotAction } from "@/hooks/use-slot-action";
 import type { SlotOnChain } from "@/hooks/use-slot-onchain";
-import { formatBalance, formatDuration } from "@/utils";
 import { cn } from "@/lib/utils";
+import { formatBalance, formatDuration } from "@/utils";
 
 const MONTH = 30n * 24n * 60n * 60n;
 
@@ -29,6 +25,7 @@ export function DepositSlider({
 }: DepositSliderProps) {
   const decimals = slot.currencyDecimals ?? 6;
   const symbol = slot.currencySymbol ?? "USDC";
+  const { topUp, withdraw, busy, isSuccess } = useSlotAction();
 
   // On-chain derived values
   const remaining =
@@ -67,51 +64,22 @@ export function DepositSlider({
   const invalid = belowMin || exceedsWallet;
 
   // Coverage estimate
-  const taxPerSecond =
-    (slot.price * slot.taxPercentage) / (MONTH * 10000n);
+  const taxPerSecond = (slot.price * slot.taxPercentage) / (MONTH * 10000n);
   const coverageSeconds =
     taxPerSecond > 0n
-      ? Number(parseUnits(Math.max(targetDeposit, 0).toFixed(decimals), decimals) / taxPerSecond)
+      ? Number(
+          parseUnits(Math.max(targetDeposit, 0).toFixed(decimals), decimals) /
+            taxPerSecond,
+        )
       : Infinity;
-
-  // Transaction state
-  const {
-    writeContract,
-    writeContractAsync,
-    data: hash,
-    isPending,
-  } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess } =
-    useWaitForTransactionReceipt({ hash });
-  const busy = isPending || isConfirming;
 
   async function handleAction() {
     const deltaUnits = parseUnits(absDelta.toFixed(decimals), decimals);
 
     if (isTopUp) {
-      try {
-        await writeContractAsync({
-          address: slot.currency as Address,
-          abi: erc20Abi,
-          functionName: "approve",
-          args: [slotAddress as Address, deltaUnits],
-        });
-      } catch {
-        return;
-      }
-      writeContract({
-        address: slotAddress as Address,
-        abi: slotAbi,
-        functionName: "topUp",
-        args: [deltaUnits],
-      });
+      await topUp(slotAddress as Address, deltaUnits);
     } else if (isWithdraw) {
-      writeContract({
-        address: slotAddress as Address,
-        abi: slotAbi,
-        functionName: "withdraw",
-        args: [deltaUnits],
-      });
+      await withdraw(slotAddress as Address, deltaUnits);
     }
   }
 
@@ -141,8 +109,12 @@ export function DepositSlider({
 
       {/* Current balance context */}
       <div className="flex justify-between text-[10px] text-muted-foreground">
-        <span>Current: {formatBalance(remaining, decimals)} {symbol}</span>
-        <span>Wallet: {walletNum.toFixed(2)} {symbol}</span>
+        <span>
+          Current: {formatBalance(remaining, decimals)} {symbol}
+        </span>
+        <span>
+          Wallet: {walletNum.toFixed(2)} {symbol}
+        </span>
       </div>
 
       {/* Below-minimum alert */}
@@ -150,7 +122,12 @@ export function DepositSlider({
         <div className="flex items-start gap-1.5 rounded-md border border-destructive/50 bg-destructive/5 px-2.5 py-2 text-[11px] text-destructive">
           <AlertTriangle className="size-3 mt-0.5 shrink-0" />
           <span>
-            Deposit must be at least <strong>{minDepositNum.toFixed(2)} {symbol}</strong> (minimum coverage of {formatDuration(Number(slot.minDepositSeconds))})
+            Deposit must be at least{" "}
+            <strong>
+              {minDepositNum.toFixed(2)} {symbol}
+            </strong>{" "}
+            (minimum coverage of{" "}
+            {formatDuration(Number(slot.minDepositSeconds))})
           </span>
         </div>
       )}
@@ -177,7 +154,8 @@ export function DepositSlider({
                 isWithdraw && "text-orange-600",
               )}
             >
-              {isTopUp ? "+" : "-"}{absDelta.toFixed(2)} {symbol}
+              {isTopUp ? "+" : "-"}
+              {absDelta.toFixed(2)} {symbol}
             </span>
           </div>
           <div className="flex justify-between text-[10px] text-muted-foreground">
@@ -201,7 +179,7 @@ export function DepositSlider({
         {busy
           ? "Processing..."
           : isTopUp
-            ? `Approve & Add ${absDelta.toFixed(2)} ${symbol}`
+            ? `Add ${absDelta.toFixed(2)} ${symbol}`
             : isWithdraw
               ? `Withdraw ${absDelta.toFixed(2)} ${symbol}`
               : "Enter new deposit amount"}

@@ -17,14 +17,18 @@ type Account @entity(immutable: false) {
   occupiedCount: Int!
 }
 
+type Currency @entity(immutable: true) {
+  id: ID! # token address (lowercase)
+  name: String
+  symbol: String
+  decimals: Int!
+}
+
 type Slot @entity(immutable: false) {
   id: ID! # slot contract address (lowercase)
   recipient: Bytes!
   recipientAccount: Account!
-  currency: Bytes!
-  currencyName: String
-  currencySymbol: String
-  currencyDecimals: Int
+  currency: Currency!
   mutableTax: Boolean!
   mutableModule: Boolean!
   manager: Bytes!
@@ -40,6 +44,7 @@ type Slot @entity(immutable: false) {
   totalCollected: BigInt!
   createdAt: BigInt!
   createdTx: Bytes!
+  metadataURI: String # current URI from MetadataModule
   updatedAt: BigInt!
   purchases: [BoughtEvent!]! @derivedFrom(field: "slot")
   releases: [ReleasedEvent!]! @derivedFrom(field: "slot")
@@ -52,6 +57,7 @@ type Slot @entity(immutable: false) {
   taxUpdateProposals: [TaxUpdateProposedEvent!]! @derivedFrom(field: "slot")
   moduleUpdateProposals: [ModuleUpdateProposedEvent!]! @derivedFrom(field: "slot")
   pendingUpdateCancellations: [PendingUpdateCancelledEvent!]! @derivedFrom(field: "slot")
+  metadataUpdates: [MetadataUpdatedEvent!]! @derivedFrom(field: "slot")
 }
 
 # ──────────────────────────────────────────
@@ -61,6 +67,7 @@ type Slot @entity(immutable: false) {
 type BoughtEvent @entity(immutable: true) {
   id: ID!
   slot: Slot!
+  currency: Currency!
   buyer: Bytes!
   previousOccupant: Bytes!
   price: BigInt!
@@ -74,6 +81,7 @@ type BoughtEvent @entity(immutable: true) {
 type ReleasedEvent @entity(immutable: true) {
   id: ID!
   slot: Slot!
+  currency: Currency!
   occupant: Bytes!
   refund: BigInt!
   timestamp: BigInt!
@@ -84,6 +92,7 @@ type ReleasedEvent @entity(immutable: true) {
 type LiquidatedEvent @entity(immutable: true) {
   id: ID!
   slot: Slot!
+  currency: Currency!
   liquidator: Bytes!
   occupant: Bytes!
   bounty: BigInt!
@@ -95,6 +104,7 @@ type LiquidatedEvent @entity(immutable: true) {
 type PriceUpdatedEvent @entity(immutable: true) {
   id: ID!
   slot: Slot!
+  currency: Currency!
   oldPrice: BigInt!
   newPrice: BigInt!
   timestamp: BigInt!
@@ -105,6 +115,7 @@ type PriceUpdatedEvent @entity(immutable: true) {
 type DepositedEvent @entity(immutable: true) {
   id: ID!
   slot: Slot!
+  currency: Currency!
   depositor: Bytes!
   amount: BigInt!
   timestamp: BigInt!
@@ -115,6 +126,7 @@ type DepositedEvent @entity(immutable: true) {
 type WithdrawnEvent @entity(immutable: true) {
   id: ID!
   slot: Slot!
+  currency: Currency!
   occupant: Bytes!
   amount: BigInt!
   timestamp: BigInt!
@@ -125,6 +137,7 @@ type WithdrawnEvent @entity(immutable: true) {
 type SettledEvent @entity(immutable: true) {
   id: ID!
   slot: Slot!
+  currency: Currency!
   taxOwed: BigInt!
   taxPaid: BigInt!
   depositRemaining: BigInt!
@@ -136,6 +149,7 @@ type SettledEvent @entity(immutable: true) {
 type TaxCollectedEvent @entity(immutable: true) {
   id: ID!
   slot: Slot!
+  currency: Currency!
   recipient: Bytes!
   amount: BigInt!
   timestamp: BigInt!
@@ -164,6 +178,15 @@ type ModuleUpdateProposedEvent @entity(immutable: true) {
 type PendingUpdateCancelledEvent @entity(immutable: true) {
   id: ID!
   slot: Slot!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  tx: Bytes!
+}
+
+type MetadataUpdatedEvent @entity(immutable: true) {
+  id: ID!
+  slot: Slot!
+  uri: String!
   timestamp: BigInt!
   blockNumber: BigInt!
   tx: Bytes!

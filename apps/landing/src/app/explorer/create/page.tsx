@@ -1,17 +1,11 @@
 "use client";
 
-import { slotFactoryAbi, slotFactoryAddress } from "@0xslots/contracts";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { type Address, isAddress, zeroAddress } from "viem";
-import {
-  useAccount,
-  useSwitchChain,
-  useWaitForTransactionReceipt,
-  useWriteContract,
-} from "wagmi";
+import { useAccount, useSwitchChain } from "wagmi";
 import { baseSepolia } from "wagmi/chains";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -33,6 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { useSlotAction } from "@/hooks/use-slot-action";
 import { truncateAddress } from "@/utils";
 import { Check, ChevronLeft, ChevronRight, HandCoins, Sparkles } from "lucide-react";
 
@@ -49,7 +44,6 @@ import {
 } from "./schema";
 
 const CHAIN_ID = baseSepolia.id;
-const FACTORY_ADDRESS = slotFactoryAddress[CHAIN_ID];
 
 const USDC_ADDRESS = "0x036CbD53842c5426634e7929541eC2318f3dCF7e";
 
@@ -65,13 +59,16 @@ export default function CreatePage() {
   const router = useRouter();
   const { address, isConnected, chainId: walletChainId } = useAccount();
   const { switchChain } = useSwitchChain();
-  const { writeContract, data: hash, isPending } = useWriteContract();
+  const {
+    createSlot: sdkCreateSlot,
+    createSlots: sdkCreateSlots,
+    isPending,
+    isConfirming,
+    isSuccess,
+  } = useSlotAction();
   const [slotCount, setSlotCount] = useState(1);
   const [step, setStep] = useState(1);
   const [moduleMode, setModuleMode] = useState<"none" | "verified" | "custom">("none");
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
-    hash,
-  });
 
   // ── Form ──
   const form = useForm<CreateSlotFormValues>({
@@ -150,24 +147,19 @@ export default function CreatePage() {
     };
 
     if (slotCount === 1) {
-      writeContract({
-        address: FACTORY_ADDRESS,
-        abi: slotFactoryAbi,
-        functionName: "createSlot",
-        args: [recipient as Address, currency as Address, config, initParams],
+      sdkCreateSlot({
+        recipient: recipient as Address,
+        currency: currency as Address,
+        config,
+        initParams,
       });
     } else {
-      writeContract({
-        address: FACTORY_ADDRESS,
-        abi: slotFactoryAbi,
-        functionName: "createSlots",
-        args: [
-          recipient as Address,
-          currency as Address,
-          config,
-          initParams,
-          BigInt(slotCount),
-        ],
+      sdkCreateSlots({
+        recipient: recipient as Address,
+        currency: currency as Address,
+        config,
+        initParams,
+        count: BigInt(slotCount),
       });
     }
   }
