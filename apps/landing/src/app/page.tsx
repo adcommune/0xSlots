@@ -29,15 +29,6 @@ export default function Home() {
         </p>
 
         <div className="mt-10 flex flex-wrap gap-3">
-          <Button asChild>
-            <a
-              href="https://github.com/adcommune/0xSlots"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Source Code
-            </a>
-          </Button>
           <Button variant="outline" asChild>
             <a href="/explorer">Explore</a>
           </Button>
