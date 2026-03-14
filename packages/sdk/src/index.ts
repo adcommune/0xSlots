@@ -13,5 +13,8 @@ export {
   type BuyParams,
 } from "./client";
 
+// Errors
+export { SlotsError } from "./errors";
+
 // Re-export generated types and SDK
 export * from "./generated/graphql";
