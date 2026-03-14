@@ -1,10 +1,19 @@
-import { User, File, Split } from "lucide-react";
 import type { AccountType } from "@0xslots/sdk";
+import { File, FileUser, Split, User } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
-const CONFIG: Record<AccountType, { Icon: typeof User; label: string; className?: string }> = {
+const CONFIG: Record<
+  AccountType,
+  { Icon: typeof User; label: string; className?: string }
+> = {
   EOA: { Icon: User, label: "EOA" },
   CONTRACT: { Icon: File, label: "Contract" },
   SPLIT: { Icon: Split, label: "Split", className: "rotate-90" },
+  DELEGATED: { Icon: FileUser, label: "Delegated" },
 };
 
 export function AccountTypeIcon({
@@ -16,10 +25,17 @@ export function AccountTypeIcon({
 }) {
   const { Icon, label, className: iconClassName } = CONFIG[type] ?? CONFIG.EOA;
   return (
-    <span title={label}>
-      <Icon
-        className={`inline-block text-muted-foreground ${className} ${iconClassName ?? ""}`}
-      />
-    </span>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span>
+          <Icon
+            className={`inline-block text-muted-foreground ${className} ${iconClassName ?? ""}`}
+          />
+        </span>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="text-xs">
+        {label}
+      </TooltipContent>
+    </Tooltip>
   );
 }

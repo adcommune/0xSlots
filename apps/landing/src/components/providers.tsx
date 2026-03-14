@@ -6,7 +6,7 @@ import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { type ReactNode, useState } from "react";
 import { WagmiProvider } from "wagmi";
-
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { config } from "@/config/wagmi";
 import { ChainProvider } from "@/context/chain";
 
@@ -17,7 +17,9 @@ export function Providers({ children }: { children: ReactNode }) {
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider>
-          <ChainProvider>{children}</ChainProvider>
+          <ChainProvider>
+            <TooltipProvider>{children}</TooltipProvider>
+          </ChainProvider>
         </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>
