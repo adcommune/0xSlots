@@ -23,6 +23,7 @@ function normalizeEvents(
   const events: UnifiedEvent[] = [];
 
   for (const e of data.boughtEvents) {
+    const d = e.currency.decimals;
     events.push({
       id: e.id,
       type: "Buy",
@@ -30,8 +31,8 @@ function normalizeEvents(
       actor: e.buyer,
       detail:
         e.previousOccupant === "0x0000000000000000000000000000000000000000"
-          ? `claimed @ ${formatPrice(e.selfAssessedPrice, 6)}`
-          : `force-bought @ ${formatPrice(e.price, 6)} → ${formatPrice(e.selfAssessedPrice, 6)}`,
+          ? `claimed @ ${formatPrice(e.selfAssessedPrice, d)}`
+          : `force-bought @ ${formatPrice(e.price, d)} → ${formatPrice(e.selfAssessedPrice, d)}`,
       timestamp: Number(e.timestamp),
       tx: e.tx,
     });
@@ -42,7 +43,7 @@ function normalizeEvents(
       type: "Release",
       slot: e.slot.id,
       actor: e.occupant,
-      detail: `refund ${formatPrice(e.refund, 6)}`,
+      detail: `refund ${formatPrice(e.refund, e.currency.decimals)}`,
       timestamp: Number(e.timestamp),
       tx: e.tx,
     });
@@ -53,18 +54,19 @@ function normalizeEvents(
       type: "Liquidate",
       slot: e.slot.id,
       actor: e.liquidator,
-      detail: `bounty ${formatPrice(e.bounty, 6)}`,
+      detail: `bounty ${formatPrice(e.bounty, e.currency.decimals)}`,
       timestamp: Number(e.timestamp),
       tx: e.tx,
     });
   }
   for (const e of data.priceUpdatedEvents) {
+    const d = e.currency.decimals;
     events.push({
       id: e.id,
       type: "Price",
       slot: e.slot.id,
       actor: "",
-      detail: `${formatPrice(e.oldPrice, 6)} → ${formatPrice(e.newPrice, 6)}`,
+      detail: `${formatPrice(e.oldPrice, d)} → ${formatPrice(e.newPrice, d)}`,
       timestamp: Number(e.timestamp),
       tx: e.tx,
     });
@@ -75,7 +77,7 @@ function normalizeEvents(
       type: "Deposit",
       slot: e.slot.id,
       actor: e.depositor,
-      detail: `+${formatPrice(e.amount, 6)}`,
+      detail: `+${formatPrice(e.amount, e.currency.decimals)}`,
       timestamp: Number(e.timestamp),
       tx: e.tx,
     });
@@ -86,7 +88,7 @@ function normalizeEvents(
       type: "Withdraw",
       slot: e.slot.id,
       actor: e.occupant,
-      detail: `-${formatPrice(e.amount, 6)}`,
+      detail: `-${formatPrice(e.amount, e.currency.decimals)}`,
       timestamp: Number(e.timestamp),
       tx: e.tx,
     });
@@ -97,7 +99,7 @@ function normalizeEvents(
       type: "Collect",
       slot: e.slot.id,
       actor: e.recipient,
-      detail: `${formatPrice(e.amount, 6)}`,
+      detail: `${formatPrice(e.amount, e.currency.decimals)}`,
       timestamp: Number(e.timestamp),
       tx: e.tx,
     });
