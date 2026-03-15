@@ -1,5 +1,5 @@
-import { z } from "zod";
 import { isAddress } from "viem";
+import { z } from "zod";
 
 function isValidAddressOrEns(val: string) {
   if (!val) return true;
@@ -24,6 +24,9 @@ export const splitRecipientSchema = z.object({
 
 export type SplitRecipientInput = z.infer<typeof splitRecipientSchema>;
 
+export const moduleModes = ["none", "verified", "custom"] as const;
+export type ModuleMode = (typeof moduleModes)[number];
+
 export const createSlotSchema = z
   .object({
     recipientMode: z.enum(["single", "group"]),
@@ -36,6 +39,7 @@ export const createSlotSchema = z
     customCurrency: z.string().refine(isValidAddressOrEns, {
       message: "Enter a valid address (0x…) or ENS name",
     }),
+    moduleMode: z.enum(moduleModes),
     taxPercentage: z
       .string()
       .min(1, "Required")
@@ -72,7 +76,10 @@ export const createSlotSchema = z
       if (d.mutableTax || d.mutableModule) return d.manager.length > 0;
       return true;
     },
-    { message: "Manager is required when mutability is enabled", path: ["manager"] },
+    {
+      message: "Manager is required when mutability is enabled",
+      path: ["manager"],
+    },
   )
   .refine(
     (d) => {
@@ -141,12 +148,11 @@ export type CreateSlotFormValues = z.input<typeof createSlotSchema>;
 export const defaultValues: CreateSlotFormValues = {
   recipientMode: "single" as const,
   recipient: "",
-  splitRecipients: [
-    { address: "", percentAllocation: 0 },
-  ],
+  splitRecipients: [{ address: "", percentAllocation: 0 }],
   distributorFeePercent: 0,
   currencyMode: "usdc",
   customCurrency: "",
+  moduleMode: "none",
   taxPercentage: "1",
   liquidationBountyPercent: "5",
   minDepositValue: "1",
