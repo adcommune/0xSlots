@@ -2,10 +2,12 @@
 
 import { AccountTypeIcon } from "@/components/account-type-icon";
 import { EnsAddress } from "@/components/ens-address";
+import { TablePagination, usePagination } from "@/components/table-pagination";
 import { useAccounts } from "@/hooks/use-v3";
 
 export function RecipientsTable() {
   const { data: accounts, isLoading, refetch, isFetching } = useAccounts();
+  const { page, setPage, pageSize, setPageSize, totalPages, paged } = usePagination(accounts ?? []);
 
   if (isLoading) {
     return (
@@ -50,7 +52,7 @@ export function RecipientsTable() {
               </tr>
             </thead>
             <tbody className="divide-y">
-              {accounts.map((a) => {
+              {paged.map((a) => {
                 const vacant = a.slotCount - a.occupiedCount;
                 const accountType = a.type;
                 return (
@@ -92,6 +94,7 @@ export function RecipientsTable() {
             </tbody>
           </table>
         </div>
+        <TablePagination page={page} totalPages={totalPages} pageSize={pageSize} total={accounts.length} onPageChange={setPage} onPageSizeChange={setPageSize} />
       </div>
     </div>
   );

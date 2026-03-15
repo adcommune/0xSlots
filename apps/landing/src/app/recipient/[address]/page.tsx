@@ -14,6 +14,7 @@ import { type Address, formatUnits } from "viem";
 import { normalize } from "viem/ens";
 import { useEnsAvatar, useEnsName } from "wagmi";
 import { mainnet } from "wagmi/chains";
+import { AccountTypeIcon } from "@/components/account-type-icon";
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { useChain } from "@/context/chain";
@@ -49,6 +50,7 @@ export default function RecipientPage({
   });
 
   const isLoading = subgraphLoading || onchainLoading;
+  const subgraphMap = new Map((subgraphSlots ?? []).map((s) => [s.id, s]));
   const occupied = slots.filter((s) => s.occupant != null);
   const vacant = slots.length - occupied.length;
   const decimals = slots[0]?.currencyDecimals ?? 6;
@@ -190,7 +192,16 @@ export default function RecipientPage({
                         </Badge>
                       </td>
                       <td className="px-4 py-2 text-xs">
-                        {s.occupant ? truncateAddress(s.occupant) : "—"}
+                        {(() => {
+                          if (!s.occupant) return "—";
+                          const occupantType = subgraphMap.get(s.id)?.occupantAccount?.type;
+                          return (
+                            <span className="inline-flex items-center gap-1.5">
+                              {occupantType && <AccountTypeIcon type={occupantType} className="h-3 w-3" />}
+                              {truncateAddress(s.occupant)}
+                            </span>
+                          );
+                        })()}
                       </td>
                       <td className="px-4 py-2 text-right">
                         {formatUnits(s.price, decimals)}

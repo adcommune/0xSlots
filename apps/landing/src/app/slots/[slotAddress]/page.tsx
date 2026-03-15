@@ -21,12 +21,12 @@ import {
   Wallet,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { use, useEffect, useState } from "react";
 import { type Address, parseUnits } from "viem";
 import { useAccount, useSwitchChain } from "wagmi";
 import { baseSepolia } from "wagmi/chains";
 import { PageHeader } from "@/components/page-header";
-import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,6 +38,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useChain } from "@/context/chain";
@@ -68,6 +69,7 @@ export default function SlotPage({
   params: Promise<{ slotAddress: string }>;
 }) {
   const { slotAddress } = use(params);
+  const router = useRouter();
   const { explorerUrl } = useChain();
   const { data: slot, isLoading } = useSlotOnChain(slotAddress);
   const { data: activityData } = useSlotActivity(slotAddress);
@@ -183,12 +185,13 @@ export default function SlotPage({
     <div className="min-h-screen">
       <PageHeader>
         <div>
-          <Link
-            href="/explorer"
+          <button
+            type="button"
+            onClick={() => router.back()}
             className="text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
-            ← Explorer
-          </Link>
+            ← Back
+          </button>
           <h1 className="text-xl font-bold tracking-tight leading-tight">
             Slot {truncateAddress(slot.id)}
           </h1>
@@ -732,9 +735,13 @@ export default function SlotPage({
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
-                              <AlertDialogTitle>Release this slot?</AlertDialogTitle>
+                              <AlertDialogTitle>
+                                Release this slot?
+                              </AlertDialogTitle>
                               <AlertDialogDescription>
-                                This will give up your occupancy and return your remaining deposit. You will lose your position and someone else can claim the slot.
+                                This will give up your occupancy and return your
+                                remaining deposit. You will lose your position
+                                and someone else can claim the slot.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
