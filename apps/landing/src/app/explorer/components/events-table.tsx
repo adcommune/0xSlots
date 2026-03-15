@@ -5,6 +5,7 @@ import Link from "next/link";
 
 import { EventTypeBadge } from "@/components/event-type-badge";
 import { TablePagination, usePagination } from "@/components/table-pagination";
+import { TableEmpty, TableSkeleton } from "@/components/table-states";
 import { useChain } from "@/context/chain";
 import { useRecentEvents } from "@/hooks/use-v3";
 import { formatPrice, truncateAddress } from "@/utils";
@@ -170,21 +171,8 @@ export function EventsTable() {
   const events = normalizeEvents(data);
   const { page, setPage, pageSize, setPageSize, totalPages, paged } = usePagination(events);
 
-  if (isLoading) {
-    return (
-      <div className="rounded-lg border p-8 text-center animate-pulse">
-        <p className="text-sm text-muted-foreground">Loading events...</p>
-      </div>
-    );
-  }
-
-  if (events.length === 0) {
-    return (
-      <div className="rounded-lg border p-8 text-center text-muted-foreground text-sm">
-        No events yet
-      </div>
-    );
-  }
+  if (isLoading) return <TableSkeleton />;
+  if (events.length === 0) return <TableEmpty message="No events yet" />;
 
   return (
     <div className="rounded-lg border">

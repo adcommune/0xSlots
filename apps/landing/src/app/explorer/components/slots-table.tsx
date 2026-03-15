@@ -2,7 +2,9 @@
 
 import { AccountTypeIcon } from "@/components/account-type-icon";
 import { EnsAddress } from "@/components/ens-address";
+import { RefreshButton } from "@/components/refresh-button";
 import { TablePagination, usePagination } from "@/components/table-pagination";
+import { TableEmpty, TableSkeleton } from "@/components/table-states";
 import { Badge } from "@/components/ui/badge";
 import { useSlots } from "@/hooks/use-v3";
 import { formatPrice, truncateAddress } from "@/utils";
@@ -11,35 +13,12 @@ export function SlotsTable() {
   const { data: slots, isLoading, refetch, isFetching } = useSlots();
   const { page, setPage, pageSize, setPageSize, totalPages, paged } = usePagination(slots ?? []);
 
-  if (isLoading) {
-    return (
-      <div className="rounded-lg border p-8">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="h-6 bg-muted animate-pulse mb-2 rounded" />
-        ))}
-      </div>
-    );
-  }
-
-  if (!slots || slots.length === 0) {
-    return (
-      <div className="rounded-lg border p-8 text-center">
-        <p className="text-sm text-muted-foreground">No slots found</p>
-      </div>
-    );
-  }
+  if (isLoading) return <TableSkeleton />;
+  if (!slots || slots.length === 0) return <TableEmpty message="No slots found" />;
 
   return (
     <div>
-      <div className="flex justify-end mb-3">
-        <button
-          onClick={() => refetch()}
-          disabled={isFetching}
-          className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-50 transition-colors"
-        >
-          {isFetching ? "Refreshing..." : "Refresh"}
-        </button>
-      </div>
+      <RefreshButton onRefresh={() => refetch()} isFetching={isFetching} />
       <div className="rounded-lg border">
         <div className="overflow-x-auto">
           <table className="w-full">
