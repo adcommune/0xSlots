@@ -30,8 +30,8 @@ export const createSlotSchema = z
     recipient: z.string().refine(isValidAddressOrEns, {
       message: "Enter a valid address (0x…) or ENS name",
     }),
-    splitRecipients: z.array(splitRecipientSchema).default([]),
-    distributorFeePercent: z.number().min(0).max(10).default(0),
+    splitRecipients: z.array(splitRecipientSchema),
+    distributorFeePercent: z.number().min(0).max(10),
     currencyMode: z.enum(["usdc", "custom"]),
     customCurrency: z.string().refine(isValidAddressOrEns, {
       message: "Enter a valid address (0x…) or ENS name",
