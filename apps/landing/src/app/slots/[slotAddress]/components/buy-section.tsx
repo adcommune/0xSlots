@@ -2,20 +2,13 @@
 
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
-import { type Address, parseUnits } from "viem";
+import { type Address } from "viem";
+import { MONTH_SECONDS } from "@/constants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useSlotAction } from "@/hooks/use-slot-action";
 import type { SlotOnChain } from "@/hooks/use-slot-onchain";
-import { formatBalance } from "@/utils";
-
-function toUnits(v: string, decimals: number = 6): bigint {
-  try {
-    return parseUnits(v || "0", decimals);
-  } catch {
-    return 0n;
-  }
-}
+import { formatBalance, toRawUnits } from "@/utils";
 
 export function BuySection({
   slot,
@@ -32,12 +25,10 @@ export function BuySection({
   const [buyPrice, setBuyPrice] = useState("");
   const [buyDeposit, setBuyDeposit] = useState("");
 
-  const MONTH = 30n * 24n * 60n * 60n;
-
   function computeMinDeposit(price: bigint): string {
     if (slot.minDepositSeconds === 0n) return "0";
     const min =
-      (price * slot.taxPercentage * slot.minDepositSeconds) / (MONTH * 10000n);
+      (price * slot.taxPercentage * slot.minDepositSeconds) / (MONTH_SECONDS * 10000n);
     return formatBalance(min, decimals);
   }
 
@@ -45,7 +36,7 @@ export function BuySection({
   const defaultPrice = isOccupied ? formatBalance(slot.price, decimals) : "";
 
   const effectivePrice = buyPrice || defaultPrice;
-  const priceForMin = effectivePrice ? toUnits(effectivePrice, decimals) : 0n;
+  const priceForMin = effectivePrice ? toRawUnits(effectivePrice, decimals) : 0n;
   const minDep = computeMinDeposit(priceForMin);
   const effectiveDeposit = buyDeposit || (minDep !== "0" ? minDep : "");
 
@@ -62,11 +53,11 @@ export function BuySection({
   }
 
   function handleBuy() {
-    const dep = toUnits(effectiveDeposit || "0", decimals);
+    const dep = toRawUnits(effectiveDeposit || "0", decimals);
     buy({
       slot: slotAddress as Address,
       depositAmount: dep,
-      selfAssessedPrice: toUnits(effectivePrice || "0", decimals),
+      selfAssessedPrice: toRawUnits(effectivePrice || "0", decimals),
     });
   }
 
