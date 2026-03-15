@@ -18,7 +18,7 @@ const jetbrains = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "0xSlots — Immutable & Modular Collective Ownership Slots",
   description:
-    "Immutable & modular collective ownership slots on Ethereum. Perpetual onchain real estate powered by partial common ownership and Harberger tax. Any ERC-20.",
+    "Immutable & modular collective ownership slots on Ethereum. Perpetual onchain real estate powered by partial common ownership. Any ERC-20.",
 };
 
 export default function RootLayout({
