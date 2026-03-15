@@ -7,6 +7,8 @@ import { useAccount } from "wagmi";
 import { AccountTypeIcon } from "@/components/account-type-icon";
 import { ExplorerTabs } from "@/components/explorer-tabs";
 import { PageHeader } from "@/components/page-header";
+import { SlotStatusBadge } from "@/components/slot-status-badge";
+import { StatCard } from "@/components/stat-card";
 import { useSlotsOnChain } from "@/hooks/use-slot-onchain";
 import { type V3Slot, useSlotsByOccupant, useSlotsByRecipient } from "@/hooks/use-v3";
 import { formatBalance, truncateAddress } from "@/utils";
@@ -70,21 +72,7 @@ function SlotTable({
               >
                 <td className="px-4 py-2 text-xs">{truncateAddress(s.id)}</td>
                 <td className="px-4 py-2">
-                  <span
-                    className={`inline-block px-1.5 py-0.5 rounded text-xs font-medium ${
-                      s.insolvent
-                        ? "bg-destructive/10 text-destructive"
-                        : s.occupant
-                          ? "bg-green-500/10 text-green-600"
-                          : "bg-muted text-muted-foreground"
-                    }`}
-                  >
-                    {s.insolvent
-                      ? "INSOLVENT"
-                      : s.occupant
-                        ? "OCCUPIED"
-                        : "VACANT"}
-                  </span>
+                  <SlotStatusBadge occupant={s.occupant} insolvent={s.insolvent} />
                 </td>
                 <td className="px-4 py-2 text-xs">
                   <span className="inline-flex items-center gap-1.5">
@@ -156,26 +144,10 @@ function ProfileContent({ address }: { address: string }) {
     <>
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="rounded-lg border p-3">
-          <p className="text-xs text-muted-foreground">Owned Slots</p>
-          <p className="text-lg font-bold">{recipientSlots.length}</p>
-        </div>
-        <div className="rounded-lg border p-3">
-          <p className="text-xs text-muted-foreground">Occupying</p>
-          <p className="text-lg font-bold">{occupantSlots.length}</p>
-        </div>
-        <div className="rounded-lg border p-3">
-          <p className="text-xs text-muted-foreground">Collectable Tax</p>
-          <p className="text-lg font-bold">
-            {formatBalance(totalTaxOwed, decimals)} {symbol}
-          </p>
-        </div>
-        <div className="rounded-lg border p-3">
-          <p className="text-xs text-muted-foreground">Total Deposit</p>
-          <p className="text-lg font-bold">
-            {formatBalance(totalDeposit, decimals)} {symbol}
-          </p>
-        </div>
+        <StatCard label="Owned Slots" value={recipientSlots.length.toString()} />
+        <StatCard label="Occupying" value={occupantSlots.length.toString()} />
+        <StatCard label="Collectable Tax" value={`${formatBalance(totalTaxOwed, decimals)} ${symbol}`} />
+        <StatCard label="Total Deposit" value={`${formatBalance(totalDeposit, decimals)} ${symbol}`} />
       </div>
 
       {/* Tabs */}

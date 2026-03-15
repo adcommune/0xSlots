@@ -16,7 +16,7 @@ import { useEnsAvatar, useEnsName } from "wagmi";
 import { mainnet } from "wagmi/chains";
 import { AccountTypeIcon } from "@/components/account-type-icon";
 import { PageHeader } from "@/components/page-header";
-import { Badge } from "@/components/ui/badge";
+import { SlotStatusBadge } from "@/components/slot-status-badge";
 import { useChain } from "@/context/chain";
 import { useSlotsOnChain } from "@/hooks/use-slot-onchain";
 import { useSlotsByRecipient } from "@/hooks/use-v3";
@@ -174,22 +174,7 @@ export default function RecipientPage({
                         {truncateAddress(s.id)}
                       </td>
                       <td className="px-4 py-2">
-                        <Badge
-                          variant={
-                            s.insolvent
-                              ? "destructive"
-                              : s.occupant
-                                ? "default"
-                                : "secondary"
-                          }
-                          className="text-[10px]"
-                        >
-                          {s.insolvent
-                            ? "INSOLVENT"
-                            : s.occupant
-                              ? "OCCUPIED"
-                              : "VACANT"}
-                        </Badge>
+                        <SlotStatusBadge occupant={s.occupant} insolvent={s.insolvent} />
                       </td>
                       <td className="px-4 py-2 text-xs">
                         {(() => {
