@@ -7,7 +7,8 @@ import { useAccounts } from "@/hooks/use-v3";
 
 export function RecipientsTable() {
   const { data: accounts, isLoading, refetch, isFetching } = useAccounts();
-  const { page, setPage, pageSize, setPageSize, totalPages, paged } = usePagination(accounts ?? []);
+  const { page, setPage, pageSize, setPageSize, totalPages, paged } =
+    usePagination(accounts ?? []);
 
   if (isLoading) {
     return (
@@ -65,7 +66,10 @@ export function RecipientsTable() {
                   >
                     <td className="px-4 py-2.5">
                       <span className="inline-flex items-center gap-1.5">
-                        <AccountTypeIcon type={accountType} className="h-3 w-3" />
+                        <AccountTypeIcon
+                          type={accountType}
+                          className="h-3 w-3"
+                        />
                         <EnsAddress
                           address={a.id}
                           href={`/recipient/${a.id}`}
@@ -79,12 +83,12 @@ export function RecipientsTable() {
                           {Array.from({ length: a.slotCount }).map((_, i) => (
                             <span
                               key={i}
-                              className={`block w-2 h-2 rounded-sm ${i < a.occupiedCount ? "bg-foreground" : "bg-muted-foreground/25"}`}
+                              className={`block w-2 h-2 ${i < a.occupiedCount ? "animate-pulse bg-green-600" : "bg-muted-foreground/25"}`}
                             />
                           ))}
                         </div>
                         <span className="text-[10px] text-muted-foreground">
-                          {a.occupiedCount}/{a.slotCount}
+                          {a.occupiedCount}/{a.slotCount} occupied
                         </span>
                       </div>
                     </td>
@@ -94,7 +98,14 @@ export function RecipientsTable() {
             </tbody>
           </table>
         </div>
-        <TablePagination page={page} totalPages={totalPages} pageSize={pageSize} total={accounts.length} onPageChange={setPage} onPageSizeChange={setPageSize} />
+        <TablePagination
+          page={page}
+          totalPages={totalPages}
+          pageSize={pageSize}
+          total={accounts.length}
+          onPageChange={setPage}
+          onPageSizeChange={setPageSize}
+        />
       </div>
     </div>
   );
