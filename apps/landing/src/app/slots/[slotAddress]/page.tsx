@@ -26,7 +26,7 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { use, useEffect, useState } from "react";
-import { type Address, parseUnits, zeroAddress } from "viem";
+import { type Address, zeroAddress } from "viem";
 import { useAccount, useSwitchChain } from "wagmi";
 import { PageHeader } from "@/components/page-header";
 import {
@@ -52,6 +52,7 @@ import {
   formatBalance,
   formatBps,
   formatDuration,
+  toRawUnits,
   truncateAddress,
 } from "@/utils";
 
@@ -106,14 +107,6 @@ export default function SlotPage({
   const wrongChain = chainId !== selectedChainId;
   const decimals = slot?.currencyDecimals ?? 6;
   const symbol = slot?.currencySymbol ?? "USDC";
-
-  function toUnits(v: string): bigint {
-    try {
-      return parseUnits(v || "0", decimals);
-    } catch {
-      return 0n;
-    }
-  }
 
   if (isLoading) {
     return (
@@ -697,7 +690,7 @@ export default function SlotPage({
                               onClick={() =>
                                 selfAssess(
                                   slotAddress as Address,
-                                  toUnits(newPrice),
+                                  toRawUnits(newPrice, decimals),
                                 )
                               }
                             >
