@@ -17,6 +17,7 @@ import { mainnet } from "wagmi/chains";
 import { AccountTypeIcon } from "@/components/account-type-icon";
 import { PageHeader } from "@/components/page-header";
 import { SlotStatusBadge } from "@/components/slot-status-badge";
+import { StatCard } from "@/components/stat-card";
 import { useChain } from "@/context/chain";
 import { useSlotsOnChain } from "@/hooks/use-slot-onchain";
 import { useSlotsByRecipient } from "@/hooks/use-v3";
@@ -96,40 +97,11 @@ export default function RecipientPage({
       <div className="max-w-6xl mx-auto px-6 py-6">
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-          {[
-            {
-              label: "Total Slots",
-              value: slots.length.toString(),
-              icon: LandPlot,
-            },
-            {
-              label: "Occupied",
-              value: occupied.length.toString(),
-              icon: UserCheck,
-            },
-            { label: "Vacant", value: vacant.toString(), icon: XCircle },
-            {
-              label: "Pending Tax",
-              value: `${formatBalance(totalTaxOwed, decimals)} ${symbol}`,
-              icon: HandCoins,
-            },
-            {
-              label: "Total Deposit",
-              value: `${formatBalance(totalDeposit, decimals)} ${symbol}`,
-              icon: Banknote,
-            },
-          ].map((stat) => {
-            const Icon = stat.icon;
-            return (
-              <div key={stat.label} className="rounded-lg border p-3">
-                <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                  <Icon className="size-3" />
-                  {stat.label}
-                </p>
-                <p className="text-lg font-bold">{stat.value}</p>
-              </div>
-            );
-          })}
+          <StatCard label="Total Slots" value={slots.length.toString()} icon={LandPlot} />
+          <StatCard label="Occupied" value={occupied.length.toString()} icon={UserCheck} />
+          <StatCard label="Vacant" value={vacant.toString()} icon={XCircle} />
+          <StatCard label="Pending Tax" value={`${formatBalance(totalTaxOwed, decimals)} ${symbol}`} icon={HandCoins} />
+          <StatCard label="Total Deposit" value={`${formatBalance(totalDeposit, decimals)} ${symbol}`} icon={Banknote} />
         </div>
 
         {/* Slots Table */}
