@@ -658,7 +658,7 @@ export default function SlotPage({
                   <Button
                     variant="destructive"
                     className="w-full"
-                    onClick={() => switchChain({ chainId: CHAIN_ID })}
+                    onClick={() => switchChain({ chainId: selectedChainId })}
                   >
                     Switch to Base Sepolia
                   </Button>
