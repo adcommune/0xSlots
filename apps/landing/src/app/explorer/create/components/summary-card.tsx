@@ -21,11 +21,13 @@ interface SummaryCardProps {
   isSuccess: boolean;
   isPending: boolean;
   isConfirming: boolean;
+  creatingSplit: boolean;
   busy: boolean;
   anyResolving: boolean;
   isFormValid: boolean;
   switchChain: (params: { chainId: number }) => void;
   chainId: number;
+  recipientMode: string;
 }
 
 export function SummaryCard({
@@ -44,11 +46,13 @@ export function SummaryCard({
   isSuccess,
   isPending,
   isConfirming,
+  creatingSplit,
   busy,
   anyResolving,
   isFormValid,
   switchChain,
   chainId,
+  recipientMode,
 }: SummaryCardProps) {
   return (
     <div className="hidden lg:block w-72 shrink-0">
@@ -162,13 +166,19 @@ export function SummaryCard({
               className="w-full"
               disabled={busy || anyResolving || !isFormValid}
             >
-              {isPending
-                ? "Confirm in wallet…"
-                : isConfirming
-                  ? "Confirming…"
-                  : slotCount > 1
-                    ? `Create ${slotCount} Slots`
-                    : "Create Slot"}
+              {creatingSplit
+                ? "1/2 — Creating split…"
+                : isPending
+                  ? recipientMode === "group"
+                    ? "2/2 — Confirm in wallet…"
+                    : "Confirm in wallet…"
+                  : isConfirming
+                    ? recipientMode === "group"
+                      ? "2/2 — Creating slot…"
+                      : "Confirming…"
+                    : slotCount > 1
+                      ? `Create ${slotCount} Slots`
+                      : "Create Slot"}
             </Button>
           )}
         </div>

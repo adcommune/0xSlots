@@ -23,9 +23,8 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { use, useEffect, useState } from "react";
-import { type Address, parseUnits } from "viem";
+import { type Address, parseUnits, zeroAddress } from "viem";
 import { useAccount, useSwitchChain } from "wagmi";
-import { baseSepolia } from "wagmi/chains";
 import { PageHeader } from "@/components/page-header";
 import {
   AlertDialog,
@@ -61,8 +60,6 @@ import {
 } from "./components/event-history";
 import { UserCurrencyBalance } from "./components/user-balance";
 
-const CHAIN_ID = baseSepolia.id;
-
 export default function SlotPage({
   params,
 }: {
@@ -70,7 +67,7 @@ export default function SlotPage({
 }) {
   const { slotAddress } = use(params);
   const router = useRouter();
-  const { explorerUrl } = useChain();
+  const { explorerUrl, chainId: selectedChainId } = useChain();
   const { data: slot, isLoading } = useSlotOnChain(slotAddress);
   const { data: activityData } = useSlotActivity(slotAddress);
   const { address, isConnected, chainId } = useAccount();
@@ -103,7 +100,7 @@ export default function SlotPage({
     }
   }, [slot, newTaxPct]);
 
-  const wrongChain = chainId !== CHAIN_ID;
+  const wrongChain = chainId !== selectedChainId;
   const decimals = slot?.currencyDecimals ?? 6;
   const symbol = slot?.currencySymbol ?? "USDC";
 
@@ -152,8 +149,7 @@ export default function SlotPage({
   const remaining =
     slot.deposit > slot.taxOwed ? slot.deposit - slot.taxOwed : 0n;
 
-  const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
-  const hasModule = slot.module !== ZERO_ADDRESS;
+  const hasModule = slot.module !== zeroAddress;
   const moduleEntity = hasModule
     ? modules?.find((m) => m.id.toLowerCase() === slot.module.toLowerCase())
     : null;

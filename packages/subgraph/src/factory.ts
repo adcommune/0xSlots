@@ -5,7 +5,7 @@ import {
   AdminTransferred,
 } from "../generated/SlotFactory/SlotFactory";
 import { Slot as SlotTemplate } from "../generated/templates";
-import { Factory, Slot, Module } from "../generated/schema";
+import { Factory, Slot, Module, SlotDeployedEvent } from "../generated/schema";
 import { getOrCreateAccount, getOrCreateCurrency, getOrCreateModule } from "./helpers";
 
 function getOrCreateFactory(address: string): Factory {
@@ -63,6 +63,25 @@ export function handleSlotDeployed(event: SlotDeployed): void {
   slot.updatedAt = event.block.timestamp;
 
   slot.save();
+
+  // Record deploy event
+  let evId = event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
+  let ev = new SlotDeployedEvent(evId);
+  ev.slot = slot.id;
+  ev.recipient = event.params.recipient;
+  ev.currency = currency.id;
+  ev.manager = event.params.config.manager;
+  ev.mutableTax = event.params.config.mutableTax;
+  ev.mutableModule = event.params.config.mutableModule;
+  ev.taxPercentage = event.params.initParams.taxPercentage;
+  ev.module = event.params.initParams.module;
+  ev.liquidationBountyBps = event.params.initParams.liquidationBountyBps;
+  ev.minDepositSeconds = event.params.initParams.minDepositSeconds;
+  ev.deployer = event.transaction.from;
+  ev.timestamp = event.block.timestamp;
+  ev.blockNumber = event.block.number;
+  ev.tx = event.transaction.hash;
+  ev.save();
 
   // Start indexing events on this slot contract
   let context = new DataSourceContext();

@@ -54,6 +54,7 @@ type Slot @entity(immutable: false) {
   createdTx: Bytes!
   metadataURI: String # current URI from MetadataModule
   updatedAt: BigInt!
+  deployEvent: SlotDeployedEvent @derivedFrom(field: "slot")
   purchases: [BoughtEvent!]! @derivedFrom(field: "slot")
   releases: [ReleasedEvent!]! @derivedFrom(field: "slot")
   liquidations: [LiquidatedEvent!]! @derivedFrom(field: "slot")
@@ -71,6 +72,24 @@ type Slot @entity(immutable: false) {
 # ──────────────────────────────────────────
 # Event Entities (immutable)
 # ──────────────────────────────────────────
+
+type SlotDeployedEvent @entity(immutable: true) {
+  id: ID!
+  slot: Slot!
+  recipient: Bytes!
+  currency: Currency!
+  manager: Bytes!
+  mutableTax: Boolean!
+  mutableModule: Boolean!
+  taxPercentage: BigInt!
+  module: Bytes!
+  liquidationBountyBps: BigInt!
+  minDepositSeconds: BigInt!
+  deployer: Bytes!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  tx: Bytes!
+}
 
 type BoughtEvent @entity(immutable: true) {
   id: ID!

@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm --filter landing exec tsc --noEmit)",
+      "Bash(git check-ignore:*)",
+      "Bash(echo \"exit: $?\")",
+      "WebFetch(domain:docs.splits.org)"
+    ]
+  }
+}
