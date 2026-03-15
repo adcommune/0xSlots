@@ -1,27 +1,32 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { formatUnits } from "viem";
 import { useAccount } from "wagmi";
+
+import { AccountTypeIcon } from "@/components/account-type-icon";
 import { ExplorerTabs } from "@/components/explorer-tabs";
 import { PageHeader } from "@/components/page-header";
 import { useSlotsOnChain } from "@/hooks/use-slot-onchain";
-import { useSlotsByOccupant, useSlotsByRecipient } from "@/hooks/use-v3";
+import { type V3Slot, useSlotsByOccupant, useSlotsByRecipient } from "@/hooks/use-v3";
 import { formatBalance, truncateAddress } from "@/utils";
 
 function SlotTable({
   slots,
+  subgraphSlots,
   isLoading,
   emptyMessage,
 }: {
   slots: ReturnType<typeof useSlotsOnChain>["data"];
+  subgraphSlots: V3Slot[];
   isLoading: boolean;
   emptyMessage: string;
 }) {
-  const { push } = useRouter();
   const decimals = slots[0]?.currencyDecimals ?? 6;
   const symbol = slots[0]?.currencySymbol ?? "USDC";
+
+  // Build lookup map for account types from subgraph data
+  const subgraphMap = new Map(subgraphSlots.map((s) => [s.id, s]));
 
   if (isLoading) {
     return (
@@ -55,11 +60,13 @@ function SlotTable({
             </tr>
           </thead>
           <tbody>
-            {slots.map((s) => (
+            {slots.map((s) => {
+              const sg = subgraphMap.get(s.id);
+              return (
               <tr
                 key={s.id}
                 className="border-b hover:bg-muted/30 cursor-pointer transition-colors"
-                onClick={() => push(`/slots/${s.id}`)}
+                onClick={() => { window.location.href = `/slots/${s.id}`; }}
               >
                 <td className="px-4 py-2 text-xs">{truncateAddress(s.id)}</td>
                 <td className="px-4 py-2">
@@ -80,10 +87,22 @@ function SlotTable({
                   </span>
                 </td>
                 <td className="px-4 py-2 text-xs">
-                  {truncateAddress(s.recipient)}
+                  <span className="inline-flex items-center gap-1.5">
+                    {sg?.recipientAccount?.type && (
+                      <AccountTypeIcon type={sg.recipientAccount.type} className="h-3 w-3" />
+                    )}
+                    {truncateAddress(s.recipient)}
+                  </span>
                 </td>
                 <td className="px-4 py-2 text-xs">
-                  {s.occupant ? truncateAddress(s.occupant) : "—"}
+                  {s.occupant ? (
+                    <span className="inline-flex items-center gap-1.5">
+                      {sg?.occupantAccount?.type && (
+                        <AccountTypeIcon type={sg.occupantAccount.type} className="h-3 w-3" />
+                      )}
+                      {truncateAddress(s.occupant)}
+                    </span>
+                  ) : "—"}
                 </td>
                 <td className="px-4 py-2 text-right">
                   {formatUnits(s.price, decimals)} {symbol}
@@ -95,7 +114,8 @@ function SlotTable({
                   {formatUnits(s.taxOwed, decimals)} {symbol}
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -167,6 +187,7 @@ function ProfileContent({ address }: { address: string }) {
             content: () => (
               <SlotTable
                 slots={recipientSlots}
+                subgraphSlots={recipientSubgraph ?? []}
                 isLoading={recipientLoading}
                 emptyMessage="You don't own any slots yet"
               />
@@ -178,6 +199,7 @@ function ProfileContent({ address }: { address: string }) {
             content: () => (
               <SlotTable
                 slots={occupantSlots}
+                subgraphSlots={occupantSubgraph ?? []}
                 isLoading={occupantLoading}
                 emptyMessage="You're not occupying any slots"
               />

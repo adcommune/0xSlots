@@ -2,6 +2,7 @@
 
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
+import { TablePagination, usePagination } from "@/components/table-pagination";
 import { useChain } from "@/context/chain";
 import { useRecentEvents } from "@/hooks/use-v3";
 import { formatPrice, truncateAddress } from "@/utils";
@@ -165,6 +166,7 @@ export function EventsTable() {
   const { data, isLoading } = useRecentEvents();
   const { explorerUrl } = useChain();
   const events = normalizeEvents(data);
+  const { page, setPage, pageSize, setPageSize, totalPages, paged } = usePagination(events);
 
   if (isLoading) {
     return (
@@ -183,70 +185,73 @@ export function EventsTable() {
   }
 
   return (
-    <div className="rounded-lg border overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b text-left text-xs text-muted-foreground">
-            <th className="px-4 py-2.5">Type</th>
-            <th className="px-4 py-2.5">Slot</th>
-            <th className="px-4 py-2.5">Actor</th>
-            <th className="px-4 py-2.5">Detail</th>
-            <th className="px-4 py-2.5">Time</th>
-            <th className="px-4 py-2.5">Tx</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y">
-          {events.map((ev) => (
-            <tr key={ev.id} className="hover:bg-muted/30 transition-colors">
-              <td className="px-4 py-2.5">
-                <span
-                  className={`inline-block px-1.5 py-0.5 rounded text-xs font-medium ${TYPE_COLORS[ev.type] ?? "bg-muted text-muted-foreground"}`}
-                >
-                  {ev.type}
-                </span>
-              </td>
-              <td className="px-4 py-2.5">
-                <Link
-                  href={`/slots/${ev.slot}`}
-                  className="text-primary hover:underline text-xs"
-                >
-                  {truncateAddress(ev.slot)}
-                </Link>
-              </td>
-              <td className="px-4 py-2.5 text-xs">
-                {ev.actor ? (
+    <div className="rounded-lg border">
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b text-left text-xs text-muted-foreground">
+              <th className="px-4 py-2.5">Type</th>
+              <th className="px-4 py-2.5">Slot</th>
+              <th className="px-4 py-2.5">Actor</th>
+              <th className="px-4 py-2.5">Detail</th>
+              <th className="px-4 py-2.5">Time</th>
+              <th className="px-4 py-2.5">Tx</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y">
+            {paged.map((ev) => (
+              <tr key={ev.id} className="hover:bg-muted/30 transition-colors">
+                <td className="px-4 py-2.5">
+                  <span
+                    className={`inline-block px-1.5 py-0.5 rounded text-xs font-medium ${TYPE_COLORS[ev.type] ?? "bg-muted text-muted-foreground"}`}
+                  >
+                    {ev.type}
+                  </span>
+                </td>
+                <td className="px-4 py-2.5">
+                  <Link
+                    href={`/slots/${ev.slot}`}
+                    className="text-primary hover:underline text-xs"
+                  >
+                    {truncateAddress(ev.slot)}
+                  </Link>
+                </td>
+                <td className="px-4 py-2.5 text-xs">
+                  {ev.actor ? (
+                    <a
+                      href={`${explorerUrl}/address/${ev.actor}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline"
+                    >
+                      {truncateAddress(ev.actor)}
+                    </a>
+                  ) : (
+                    "—"
+                  )}
+                </td>
+                <td className="px-4 py-2.5 text-muted-foreground">{ev.detail}</td>
+                <td className="px-4 py-2.5 text-muted-foreground text-xs whitespace-nowrap">
+                  {formatDistanceToNow(new Date(ev.timestamp * 1000), {
+                    addSuffix: true,
+                  })}
+                </td>
+                <td className="px-4 py-2.5">
                   <a
-                    href={`${explorerUrl}/address/${ev.actor}`}
+                    href={`${explorerUrl}/tx/${ev.tx}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-primary hover:underline"
+                    className="text-primary hover:underline text-xs"
                   >
-                    {truncateAddress(ev.actor)}
+                    {truncateAddress(ev.tx)}
                   </a>
-                ) : (
-                  "—"
-                )}
-              </td>
-              <td className="px-4 py-2.5 text-muted-foreground">{ev.detail}</td>
-              <td className="px-4 py-2.5 text-muted-foreground text-xs whitespace-nowrap">
-                {formatDistanceToNow(new Date(ev.timestamp * 1000), {
-                  addSuffix: true,
-                })}
-              </td>
-              <td className="px-4 py-2.5">
-                <a
-                  href={`${explorerUrl}/tx/${ev.tx}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline text-xs"
-                >
-                  {truncateAddress(ev.tx)}
-                </a>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <TablePagination page={page} totalPages={totalPages} pageSize={pageSize} total={events.length} onPageChange={setPage} onPageSizeChange={setPageSize} />
     </div>
   );
 }

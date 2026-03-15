@@ -2,12 +2,14 @@
 
 import { AccountTypeIcon } from "@/components/account-type-icon";
 import { EnsAddress } from "@/components/ens-address";
+import { TablePagination, usePagination } from "@/components/table-pagination";
 import { Badge } from "@/components/ui/badge";
 import { useSlots } from "@/hooks/use-v3";
 import { formatPrice, truncateAddress } from "@/utils";
 
 export function SlotsTable() {
   const { data: slots, isLoading, refetch, isFetching } = useSlots();
+  const { page, setPage, pageSize, setPageSize, totalPages, paged } = usePagination(slots ?? []);
 
   if (isLoading) {
     return (
@@ -67,7 +69,7 @@ export function SlotsTable() {
               </tr>
             </thead>
             <tbody className="divide-y">
-              {slots.map((slot) => {
+              {paged.map((slot) => {
                 const isOccupied = slot.occupant != null;
                 return (
                   <tr
@@ -138,6 +140,7 @@ export function SlotsTable() {
             </tbody>
           </table>
         </div>
+        <TablePagination page={page} totalPages={totalPages} pageSize={pageSize} total={slots.length} onPageChange={setPage} onPageSizeChange={setPageSize} />
       </div>
     </div>
   );

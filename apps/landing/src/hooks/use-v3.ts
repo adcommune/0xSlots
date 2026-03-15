@@ -169,7 +169,7 @@ export function useSlotActivity(slotId: string) {
     queryFn: async () => {
       const data = await client.getSlotActivity({
         slotId: slotId.toLowerCase(),
-        first: 50,
+        first: 100,
       });
       return data;
     },
@@ -184,7 +184,7 @@ export function useRecentEvents() {
   return useQuery({
     queryKey: ["recent-events", chainId],
     queryFn: async () => {
-      return client.getRecentEvents({ first: 50 });
+      return client.getRecentEvents({ first: 100 });
     },
     staleTime: 10_000,
   });
