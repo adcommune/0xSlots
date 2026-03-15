@@ -1,6 +1,8 @@
 "use client";
 
 import { formatDistanceToNow } from "date-fns";
+
+import { EventTypeBadge } from "@/components/event-type-badge";
 import { formatPrice, truncateAddress } from "@/utils";
 
 type UnifiedEvent = {
@@ -12,18 +14,6 @@ type UnifiedEvent = {
   tx: string;
 };
 
-const TYPE_COLORS: Record<string, string> = {
-  Buy: "bg-green-500/10 text-green-600",
-  Release: "bg-yellow-500/10 text-yellow-600",
-  Liquidate: "bg-red-500/10 text-red-600",
-  Price: "bg-blue-500/10 text-blue-600",
-  Deposit: "bg-emerald-500/10 text-emerald-600",
-  Withdraw: "bg-orange-500/10 text-orange-600",
-  Collect: "bg-purple-500/10 text-purple-600",
-  "Tax Proposed": "bg-indigo-500/10 text-indigo-600",
-  "Module Proposed": "bg-cyan-500/10 text-cyan-600",
-  "Update Cancelled": "bg-gray-500/10 text-gray-600",
-};
 
 export function normalizeSlotActivity(data: any): UnifiedEvent[] {
   if (!data) return [];
@@ -134,9 +124,7 @@ export function SlotEventHistory({ events, explorerUrl }: { events: UnifiedEvent
             ) : events.map((ev) => (
               <tr key={ev.id} className="text-sm hover:bg-muted/30 transition-colors">
                 <td className="px-4 py-2.5">
-                  <span className={`inline-block px-1.5 py-0.5 rounded text-xs font-medium ${TYPE_COLORS[ev.type] ?? "bg-muted text-muted-foreground"}`}>
-                    {ev.type}
-                  </span>
+                  <EventTypeBadge type={ev.type} />
                 </td>
                 <td className="px-4 py-2.5 text-xs">
                   {ev.actor ? (
