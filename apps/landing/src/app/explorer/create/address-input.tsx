@@ -57,23 +57,19 @@ export const AddressInput = forwardRef<HTMLInputElement, AddressInputProps>(
           onBlur={onBlur}
           className={cn(
             "text-xs",
-            (value && !isValid && !isResolving) && "border-destructive",
+            value && !isValid && !isResolving && "border-destructive",
             error && "border-destructive",
           )}
         />
         {isResolving && (
-          <p className="text-[10px] text-blue-500">
-            Resolving {value}…
-          </p>
+          <p className="text-[10px] text-blue-500">Resolving {value}…</p>
         )}
         {ensName && isAddress(resolved) && (
           <p className="text-[10px] text-green-600">
             {ensName} → {resolved.slice(0, 6)}…{resolved.slice(-4)}
           </p>
         )}
-        {error && (
-          <p className="text-[10px] text-destructive">{error}</p>
-        )}
+        {error && <p className="text-[10px] text-destructive">{error}</p>}
         {hint && !isResolving && !ensName && !error && (
           <p className="text-[10px] text-muted-foreground">{hint}</p>
         )}

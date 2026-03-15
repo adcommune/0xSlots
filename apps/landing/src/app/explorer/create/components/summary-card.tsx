@@ -1,59 +1,44 @@
 import { HandCoins, Sparkles } from "lucide-react";
+import { useFormContext } from "react-hook-form";
 import { isAddress } from "viem";
-import { ConnectButton } from "@/components/connect-button";
-import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { truncateAddress } from "@/utils";
+import { useResolveAddress } from "../address-input";
+import type { CreateSlotFormValues } from "../schema";
+import { SlotCounter } from "./slot-counter";
+import { SubmitButton, type SubmitState } from "./submit-button";
 
 interface SummaryCardProps {
   slotCount: number;
   setSlotCount: (count: number) => void;
-  effectiveRecipient: string;
-  address: string | undefined;
-  watchedTaxPercentage: string;
-  watchedBounty: string;
-  watchedMinDepositValue: string;
-  watchedMinDepositUnit: string;
-  watchedMutableTax: boolean;
-  watchedMutableModule: boolean;
-  isConnected: boolean;
-  wrongChain: boolean;
-  isSuccess: boolean;
-  isPending: boolean;
-  isConfirming: boolean;
-  creatingSplit: boolean;
-  busy: boolean;
-  anyResolving: boolean;
-  isFormValid: boolean;
+  submitState: SubmitState;
   switchChain: (params: { chainId: number }) => void;
   chainId: number;
-  recipientMode: string;
 }
 
 export function SummaryCard({
   slotCount,
   setSlotCount,
-  effectiveRecipient,
-  address,
-  watchedTaxPercentage,
-  watchedBounty,
-  watchedMinDepositValue,
-  watchedMinDepositUnit,
-  watchedMutableTax,
-  watchedMutableModule,
-  isConnected,
-  wrongChain,
-  isSuccess,
-  isPending,
-  isConfirming,
-  creatingSplit,
-  busy,
-  anyResolving,
-  isFormValid,
+  submitState,
   switchChain,
   chainId,
-  recipientMode,
 }: SummaryCardProps) {
+  const form = useFormContext<CreateSlotFormValues>();
+  const recipientMode = form.watch("recipientMode");
+  const recipient = form.watch("recipient");
+  const taxPercentage = form.watch("taxPercentage");
+  const bounty = form.watch("liquidationBountyPercent");
+  const minDepositValue = form.watch("minDepositValue");
+  const minDepositUnit = form.watch("minDepositUnit");
+  const mutableTax = form.watch("mutableTax");
+  const mutableModule = form.watch("mutableModule");
+
+  const recipientResolved = useResolveAddress(recipient);
+  const effectiveRecipient =
+    recipientMode === "group"
+      ? "Group (created on submit)"
+      : recipientResolved.resolved || "";
+
   return (
     <div className="hidden lg:block w-72 shrink-0">
       <div className="sticky top-8 rounded-lg border">
@@ -65,27 +50,7 @@ export function SummaryCard({
           {/* Slot count selector */}
           <div className="flex items-center justify-between">
             <span className="text-sm font-semibold">Slots</span>
-            <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="icon-xs"
-                onClick={() => setSlotCount(Math.max(1, slotCount - 1))}
-              >
-                −
-              </Button>
-              <span className="w-10 h-6 border rounded-md flex items-center justify-center text-sm font-semibold">
-                {slotCount}
-              </span>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon-xs"
-                onClick={() => setSlotCount(Math.min(50, slotCount + 1))}
-              >
-                +
-              </Button>
-            </div>
+            <SlotCounter value={slotCount} onChange={setSlotCount} />
           </div>
 
           <Separator />
@@ -96,35 +61,35 @@ export function SummaryCard({
               <span className="font-semibold truncate max-w-32 text-xs">
                 {isAddress(effectiveRecipient as `0x${string}`)
                   ? truncateAddress(effectiveRecipient)
-                  : address
-                    ? truncateAddress(address)
-                    : "—"}
+                  : "—"}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground flex items-center gap-1"><HandCoins className="size-3" /> Tax Rate</span>
-              <span className="font-semibold">
-                {watchedTaxPercentage || "0"}%/mo
+              <span className="text-muted-foreground flex items-center gap-1">
+                <HandCoins className="size-3" /> Tax Rate
               </span>
+              <span className="font-semibold">{taxPercentage || "0"}%/mo</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground flex items-center gap-1"><Sparkles className="size-3 text-amber-500" /> Liq. Bounty</span>
-              <span className="font-semibold">{watchedBounty || "0"}%</span>
+              <span className="text-muted-foreground flex items-center gap-1">
+                <Sparkles className="size-3 text-amber-500" /> Liq. Bounty
+              </span>
+              <span className="font-semibold">{bounty || "0"}%</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Min Deposit</span>
               <span className="font-semibold">
-                {watchedMinDepositValue || "0"} {watchedMinDepositUnit}
+                {minDepositValue || "0"} {minDepositUnit}
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Mutable</span>
               <span className="font-semibold">
-                {watchedMutableTax && watchedMutableModule
+                {mutableTax && mutableModule
                   ? "Tax + Module"
-                  : watchedMutableTax
+                  : mutableTax
                     ? "Tax"
-                    : watchedMutableModule
+                    : mutableModule
                       ? "Module"
                       : "None"}
               </span>
@@ -139,48 +104,12 @@ export function SummaryCard({
 
           <Separator />
 
-          {/* Actions */}
-          {!isConnected ? (
-            <div className="flex justify-center">
-              <ConnectButton />
-            </div>
-          ) : wrongChain ? (
-            <Button
-              type="button"
-              variant="destructive"
-              className="w-full"
-              onClick={() => switchChain({ chainId })}
-            >
-              Switch to Base Sepolia
-            </Button>
-          ) : isSuccess ? (
-            <div className="text-center space-y-1 py-2">
-              <p className="text-sm text-green-600 font-bold">
-                {slotCount > 1 ? `${slotCount} SLOTS CREATED` : "SLOT CREATED"}
-              </p>
-              <p className="text-xs text-muted-foreground">Redirecting…</p>
-            </div>
-          ) : (
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={busy || anyResolving || !isFormValid}
-            >
-              {creatingSplit
-                ? "1/2 — Creating split…"
-                : isPending
-                  ? recipientMode === "group"
-                    ? "2/2 — Confirm in wallet…"
-                    : "Confirm in wallet…"
-                  : isConfirming
-                    ? recipientMode === "group"
-                      ? "2/2 — Creating slot…"
-                      : "Confirming…"
-                    : slotCount > 1
-                      ? `Create ${slotCount} Slots`
-                      : "Create Slot"}
-            </Button>
-          )}
+          <SubmitButton
+            state={submitState}
+            switchChain={switchChain}
+            chainId={chainId}
+            className="w-full"
+          />
         </div>
       </div>
     </div>
