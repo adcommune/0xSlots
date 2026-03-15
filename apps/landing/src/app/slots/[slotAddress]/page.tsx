@@ -28,7 +28,9 @@ import { useRouter } from "next/navigation";
 import { use, useEffect, useState } from "react";
 import { type Address, zeroAddress } from "viem";
 import { useAccount, useSwitchChain } from "wagmi";
+import { AccountTypeIcon } from "@/components/account-type-icon";
 import { PageHeader } from "@/components/page-header";
+import { SplitRecipientsBar } from "@/components/split-recipients-bar";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -47,7 +49,7 @@ import { useChain } from "@/context/chain";
 import { useCurrencyBalance } from "@/hooks/use-currency-balance";
 import { useSlotAction } from "@/hooks/use-slot-action";
 import { useSlotOnChain } from "@/hooks/use-slot-onchain";
-import { useModules, useSlotActivity } from "@/hooks/use-v3";
+import { useModules, useSlot, useSlotActivity } from "@/hooks/use-v3";
 import {
   formatBalance,
   formatBps,
@@ -73,6 +75,7 @@ export default function SlotPage({
   const router = useRouter();
   const { explorerUrl, chainId: selectedChainId } = useChain();
   const { data: slot, isLoading } = useSlotOnChain(slotAddress);
+  const { data: subgraphSlot } = useSlot(slotAddress);
   const { data: activityData } = useSlotActivity(slotAddress);
   const { address, isConnected, chainId } = useAccount();
   const { switchChain } = useSwitchChain();
@@ -251,7 +254,12 @@ export default function SlotPage({
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground flex items-center gap-1.5">
-                      <User className="size-3" /> Recipient
+                      {subgraphSlot?.recipientAccount?.type ? (
+                        <AccountTypeIcon type={subgraphSlot.recipientAccount.type} className="size-3" />
+                      ) : (
+                        <User className="size-3" />
+                      )}{" "}
+                      Recipient
                     </span>
                     <Link
                       href={`/recipient/${slot.recipient}`}
@@ -260,6 +268,10 @@ export default function SlotPage({
                       {truncateAddress(slot.recipient)}
                     </Link>
                   </div>
+                  <SplitRecipientsBar
+                    chainId={selectedChainId}
+                    splitAddress={slot.recipient}
+                  />
                   <div className="flex justify-between">
                     <span className="text-muted-foreground flex items-center gap-1.5">
                       <CircleDollarSign className="size-3" /> Currency

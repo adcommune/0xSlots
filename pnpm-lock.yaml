@@ -29,6 +29,9 @@ importers:
       '@0xsplits/splits-sdk':
         specifier: ^6.4.1
         version: 6.4.1(viem@2.45.2(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))
+      '@0xsplits/splits-sdk-react':
+        specifier: ^4.3.1
+        version: 4.3.1(react@19.2.4)(viem@2.45.2(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))
       '@hookform/resolvers':
         specifier: ^5.2.2
         version: 5.2.2(react-hook-form@7.71.2(react@19.2.4))
@@ -211,6 +214,15 @@ packages:
       graphql: ^14.0.0 || ^15.0.0 || ^16.0.0
     peerDependenciesMeta:
       graphql:
+        optional: true
+
+  '@0xsplits/splits-sdk-react@4.3.1':
+    resolution: {integrity: sha512-FyXoFjUnLRIasm5AQLCHFC+ApsoOHi905+Y05z9MgjH9S2UOIpd30tgxYwOfpvk9cTFBTTuJZvaPsB+F8tBqkQ==}
+    peerDependencies:
+      react: 17.x.x || 18.x.x
+      viem: ^2.0.0
+    peerDependenciesMeta:
+      viem:
         optional: true
 
   '@0xsplits/splits-sdk@6.4.1':
@@ -7191,6 +7203,13 @@ snapshots:
   '@0no-co/graphql.web@1.2.0(graphql@16.12.0)':
     optionalDependencies:
       graphql: 16.12.0
+
+  '@0xsplits/splits-sdk-react@4.3.1(react@19.2.4)(viem@2.45.2(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))':
+    dependencies:
+      '@0xsplits/splits-sdk': 6.4.1(viem@2.45.2(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))
+      react: 19.2.4
+    optionalDependencies:
+      viem: 2.45.2(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)
 
   '@0xsplits/splits-sdk@6.4.1(viem@2.45.2(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))':
     dependencies:
