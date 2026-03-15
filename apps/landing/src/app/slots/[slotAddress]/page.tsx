@@ -3,16 +3,19 @@
 import {
   Activity,
   AlertTriangle,
+  ArrowUpFromLine,
   Banknote,
   CircleDollarSign,
   Clock,
   Cog,
   FileBox,
+  Flame,
   HandCoins,
   Info,
   LandPlot,
   Loader2,
   Lock,
+  Receipt,
   Settings,
   Shield,
   Sparkles,
@@ -725,7 +728,7 @@ export default function SlotPage({
                               {busy && activeAction === "Release slot" ? (
                                 <Loader2 className="size-4 animate-spin" />
                               ) : (
-                                "Release Slot"
+                                <><ArrowUpFromLine className="size-4 mr-1" /> Release Slot</>
                               )}
                             </Button>
                           </AlertDialogTrigger>
@@ -765,7 +768,7 @@ export default function SlotPage({
                         ) : slot.taxOwed === 0n ? (
                           "Nothing to Collect"
                         ) : (
-                          `Collect Tax (${formatBalance(slot.taxOwed, decimals)} ${symbol})`
+                          <><HandCoins className="size-4 mr-1" /> Collect Tax ({formatBalance(slot.taxOwed, decimals)} {symbol})</>
                         )}
                       </Button>
                     )}
@@ -782,7 +785,7 @@ export default function SlotPage({
                         ) : slot.taxOwed === 0n ? (
                           "No Tax Due"
                         ) : (
-                          `Pay Tax (${formatBalance(slot.taxOwed, decimals)} ${symbol})`
+                          <><Receipt className="size-4 mr-1" /> Pay Tax ({formatBalance(slot.taxOwed, decimals)} {symbol})</>
                         )}
                       </Button>
                     )}
@@ -797,7 +800,7 @@ export default function SlotPage({
                         {busy && activeAction === "Liquidate" ? (
                           <Loader2 className="size-4 animate-spin" />
                         ) : (
-                          "Liquidate"
+                          <><Flame className="size-4 mr-1" /> Liquidate</>
                         )}
                       </Button>
                     )}

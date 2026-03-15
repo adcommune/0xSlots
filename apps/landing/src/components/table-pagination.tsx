@@ -5,7 +5,7 @@ import { useCallback, useMemo, useState } from "react";
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50] as const;
 
-export function usePagination<T>(items: T[], defaultPageSize = 10) {
+export function usePagination<T>(items: T[], defaultPageSize = 25) {
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(defaultPageSize);
 

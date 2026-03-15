@@ -2,6 +2,8 @@
 
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
+
+import { EventTypeBadge } from "@/components/event-type-badge";
 import { TablePagination, usePagination } from "@/components/table-pagination";
 import { useChain } from "@/context/chain";
 import { useRecentEvents } from "@/hooks/use-v3";
@@ -161,19 +163,6 @@ function normalizeEvents(
   return events.sort((a, b) => b.timestamp - a.timestamp);
 }
 
-const TYPE_COLORS: Record<string, string> = {
-  Deploy: "bg-sky-500/10 text-sky-600",
-  Buy: "bg-green-500/10 text-green-600",
-  Release: "bg-yellow-500/10 text-yellow-600",
-  Liquidate: "bg-red-500/10 text-red-600",
-  Price: "bg-blue-500/10 text-blue-600",
-  Deposit: "bg-emerald-500/10 text-emerald-600",
-  Withdraw: "bg-orange-500/10 text-orange-600",
-  Collect: "bg-purple-500/10 text-purple-600",
-  "Tax Proposed": "bg-indigo-500/10 text-indigo-600",
-  "Module Proposed": "bg-cyan-500/10 text-cyan-600",
-  "Update Cancelled": "bg-gray-500/10 text-gray-600",
-};
 
 export function EventsTable() {
   const { data, isLoading } = useRecentEvents();
@@ -215,11 +204,7 @@ export function EventsTable() {
             {paged.map((ev) => (
               <tr key={ev.id} className="hover:bg-muted/30 transition-colors">
                 <td className="px-4 py-2.5">
-                  <span
-                    className={`inline-block px-1.5 py-0.5 rounded text-xs font-medium ${TYPE_COLORS[ev.type] ?? "bg-muted text-muted-foreground"}`}
-                  >
-                    {ev.type}
-                  </span>
+                  <EventTypeBadge type={ev.type} />
                 </td>
                 <td className="px-4 py-2.5">
                   <Link
