@@ -3,14 +3,13 @@
 import { AlertTriangle, Banknote } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { type Address, formatUnits, parseUnits } from "viem";
+import { MONTH_SECONDS } from "@/constants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useSlotAction } from "@/hooks/use-slot-action";
 import type { SlotOnChain } from "@/hooks/use-slot-onchain";
 import { cn } from "@/lib/utils";
 import { formatBalance, formatDuration } from "@/utils";
-
-const MONTH = 30n * 24n * 60n * 60n;
 
 interface DepositSliderProps {
   slot: SlotOnChain;
@@ -34,7 +33,7 @@ export function DepositSlider({
     slot.minDepositSeconds === 0n
       ? 0n
       : (slot.price * slot.taxPercentage * slot.minDepositSeconds) /
-        (MONTH * 10000n);
+        (MONTH_SECONDS * 10000n);
 
   const currentNum = Number(formatUnits(remaining, decimals));
   const minDepositNum = Number(formatUnits(minDeposit, decimals));
@@ -64,7 +63,7 @@ export function DepositSlider({
   const invalid = belowMin || exceedsWallet;
 
   // Coverage estimate
-  const taxPerSecond = (slot.price * slot.taxPercentage) / (MONTH * 10000n);
+  const taxPerSecond = (slot.price * slot.taxPercentage) / (MONTH_SECONDS * 10000n);
   const coverageSeconds =
     taxPerSecond > 0n
       ? Number(
