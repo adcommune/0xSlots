@@ -6,30 +6,21 @@ export const truncateAddress = (address: string) => {
 };
 
 /**
- * Format a raw token amount (string) using viem's formatUnits.
+ * Format a raw token amount (string or bigint) using viem's formatUnits.
  * Trims trailing zeros for clean display.
  */
-export function formatPrice(raw: string, decimals: number = 18): string {
-  if (!raw || raw === "0") return "0";
-  const formatted = formatUnits(BigInt(raw), decimals);
+export function formatAmount(raw: string | bigint, decimals: number = 18): string {
+  const val = typeof raw === "bigint" ? raw : BigInt(raw || "0");
+  if (val === 0n) return "0";
+  const formatted = formatUnits(val, decimals);
   const num = parseFloat(formatted);
   if (num === 0) return "0";
   if (num < 0.0001) return "<0.0001";
-  // Show up to 6 decimal places, trim trailing zeros
   return parseFloat(num.toFixed(Math.min(decimals, 6))).toString();
 }
 
-/**
- * Format a bigint balance using viem's formatUnits.
- */
-export function formatBalance(value: bigint, decimals: number): string {
-  if (value === 0n) return "0";
-  const formatted = formatUnits(value, decimals);
-  const num = parseFloat(formatted);
-  if (num === 0) return "0";
-  if (num < 0.0001) return "<0.0001";
-  return parseFloat(num.toFixed(Math.min(decimals, 6))).toString();
-}
+export const formatPrice = formatAmount;
+export const formatBalance = formatAmount;
 
 /**
  * Parse a human-readable amount to raw units using viem's parseUnits.
