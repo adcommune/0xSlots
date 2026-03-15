@@ -40,7 +40,7 @@ const STEPS = [
 
 export default function CreatePage() {
   const router = useRouter();
-  const { address, isConnected, chainId: walletChainId } = useAccount();
+  const { address, isConnected, chainId: walletChainId, chain } = useAccount();
   const { switchChain } = useSwitchChain();
   const { chainId: selectedChainId } = useChain();
   const mainnetClient = usePublicClient({ chainId: mainnet.id });
@@ -198,7 +198,7 @@ export default function CreatePage() {
             Create Slot
           </h1>
           <p className="text-muted-foreground text-xs">
-            Deploy a new Harberger tax slot on Base Sepolia
+            Deploy a new slot on {chain?.name}
           </p>
         </div>
       </PageHeader>
