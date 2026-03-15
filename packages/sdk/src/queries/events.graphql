@@ -9,7 +9,50 @@ fragment CurrencyFields on Currency {
 
 # ── Global (explorer) ──
 
+query GetSlotDeployedEvents(
+  $first: Int!
+  $skip: Int
+  $orderBy: SlotDeployedEvent_orderBy
+  $orderDirection: OrderDirection
+  $where: SlotDeployedEvent_filter
+  $block: Block_height
+) {
+  slotDeployedEvents(
+    first: $first
+    skip: $skip
+    orderBy: $orderBy
+    orderDirection: $orderDirection
+    where: $where
+    block: $block
+  ) {
+    id
+    slot { id }
+    recipient
+    currency { ...CurrencyFields }
+    manager
+    mutableTax
+    mutableModule
+    taxPercentage
+    module
+    liquidationBountyBps
+    minDepositSeconds
+    deployer
+    timestamp
+    blockNumber
+    tx
+  }
+}
+
 query GetRecentEvents($first: Int!, $skip: Int) {
+  slotDeployedEvents(first: $first, skip: $skip, orderBy: timestamp, orderDirection: desc) {
+    id
+    slot { id }
+    recipient
+    currency { ...CurrencyFields }
+    deployer
+    timestamp
+    tx
+  }
   boughtEvents(first: $first, skip: $skip, orderBy: timestamp, orderDirection: desc) {
     id
     slot { id }

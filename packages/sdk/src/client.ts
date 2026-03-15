@@ -224,6 +224,12 @@ export class SlotsClient {
 
   // Event queries
 
+  /** Fetch slot deployed events with optional filters. */
+  getSlotDeployedEvents(
+    ...args: Parameters<ReturnType<typeof getSdk>["GetSlotDeployedEvents"]>
+  ) {
+    return this.query("getSlotDeployedEvents", () => this.sdk.GetSlotDeployedEvents(...args));
+  }
   /** Fetch bought events with optional filters. */
   getBoughtEvents(
     ...args: Parameters<ReturnType<typeof getSdk>["GetBoughtEvents"]>

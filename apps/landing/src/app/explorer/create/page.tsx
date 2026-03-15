@@ -1,12 +1,25 @@
 "use client";
 
+import { SplitV2Type } from "@0xsplits/splits-sdk/types";
 import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  HandCoins,
+  Plus,
+  Sparkles,
+  Trash2,
+  Users,
+  Wallet,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useFieldArray, useForm } from "react-hook-form";
 import { type Address, isAddress, zeroAddress } from "viem";
-import { useAccount, useSwitchChain } from "wagmi";
-import { baseSepolia } from "wagmi/chains";
+import { normalize } from "viem/ens";
+import { useAccount, usePublicClient, useSwitchChain } from "wagmi";
+import { mainnet } from "wagmi/chains";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -27,10 +40,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { useChain } from "@/context/chain";
 import { useSlotAction } from "@/hooks/use-slot-action";
+import { useSplitClient } from "@/hooks/use-split-client";
 import { truncateAddress } from "@/utils";
-import { Check, ChevronLeft, ChevronRight, HandCoins, Sparkles } from "lucide-react";
-
 import { AddressInput, useResolveAddress } from "./address-input";
 import { MobileBottomBar } from "./components/mobile-bottom-bar";
 import { SummaryCard } from "./components/summary-card";
@@ -42,8 +55,6 @@ import {
   timeDenominations,
   toSeconds,
 } from "./schema";
-
-const CHAIN_ID = baseSepolia.id;
 
 const USDC_ADDRESS = "0x036CbD53842c5426634e7929541eC2318f3dCF7e";
 
@@ -59,6 +70,8 @@ export default function CreatePage() {
   const router = useRouter();
   const { address, isConnected, chainId: walletChainId } = useAccount();
   const { switchChain } = useSwitchChain();
+  const { chainId: selectedChainId } = useChain();
+  const mainnetClient = usePublicClient({ chainId: mainnet.id });
   const {
     createSlot: sdkCreateSlot,
     createSlots: sdkCreateSlots,
@@ -66,15 +79,28 @@ export default function CreatePage() {
     isConfirming,
     isSuccess,
   } = useSlotAction();
+  const splitClient = useSplitClient();
   const [slotCount, setSlotCount] = useState(1);
   const [step, setStep] = useState(1);
-  const [moduleMode, setModuleMode] = useState<"none" | "verified" | "custom">("none");
+  const [moduleMode, setModuleMode] = useState<"none" | "verified" | "custom">(
+    "none",
+  );
+  const [creatingSplit, setCreatingSplit] = useState(false);
 
   // ── Form ──
   const form = useForm<CreateSlotFormValues>({
     resolver: zodResolver(createSlotSchema),
     defaultValues,
     mode: "onChange",
+  });
+
+  const {
+    fields: splitFields,
+    append: appendSplitRecipient,
+    remove: removeSplitRecipient,
+  } = useFieldArray({
+    control: form.control,
+    name: "splitRecipients",
   });
 
   const watchedRecipientMode = form.watch("recipientMode");
@@ -99,11 +125,11 @@ export default function CreatePage() {
   const managerResolved = useResolveAddress(watchedManager);
 
   const effectiveRecipient =
-    watchedRecipientMode === "self"
-      ? (address ?? "")
-      : recipientResolved.resolved || "";
-  const wrongChain = walletChainId !== CHAIN_ID;
-  const busy = isPending || isConfirming;
+    watchedRecipientMode === "group"
+      ? "Group (created on submit)"
+      : recipientResolved.resolved || address || "";
+  const wrongChain = walletChainId !== selectedChainId;
+  const busy = isPending || isConfirming || creatingSplit;
   const anyResolving =
     recipientResolved.isResolving ||
     currencyResolved.isResolving ||
@@ -117,11 +143,7 @@ export default function CreatePage() {
     }
   }, [isSuccess, router]);
 
-  function onSubmit(data: CreateSlotFormValues) {
-    const recipient =
-      data.recipientMode === "self"
-        ? (address ?? "")
-        : recipientResolved.resolved || data.recipient;
+  async function onSubmit(data: CreateSlotFormValues) {
     const currency =
       data.currencyMode === "usdc"
         ? USDC_ADDRESS
@@ -129,8 +151,48 @@ export default function CreatePage() {
     const module = moduleResolved.resolved || "";
     const manager = needsManager ? managerResolved.resolved : zeroAddress;
 
-    if (!isAddress(recipient as string) || !isAddress(currency as string))
-      return;
+    if (!isAddress(currency as string)) return;
+
+    let recipient: string;
+
+    if (data.recipientMode === "group") {
+      // Create split on-chain first
+      setCreatingSplit(true);
+      try {
+        const resolvedRecipients = await Promise.all(
+          data.splitRecipients.map(async (r) => {
+            let addr = r.address;
+            if (!isAddress(addr) && mainnetClient) {
+              const resolved = await mainnetClient.getEnsAddress({
+                name: normalize(addr),
+              });
+              if (!resolved) throw new Error(`Could not resolve ${addr}`);
+              addr = resolved;
+            }
+            return {
+              address: addr as Address,
+              percentAllocation: r.percentAllocation,
+            };
+          }),
+        );
+        const { splitAddress } = await splitClient.createSplit({
+          recipients: resolvedRecipients,
+          splitType: SplitV2Type.Pull,
+          distributorFeePercent: data.distributorFeePercent,
+        });
+        recipient = splitAddress;
+      } catch (err) {
+        console.error("Failed to create split:", err);
+        setCreatingSplit(false);
+        return;
+      }
+      setCreatingSplit(false);
+    } else {
+      recipient =
+        recipientResolved.resolved || data.recipient || (address ?? "");
+    }
+
+    if (!isAddress(recipient as string)) return;
 
     const config = {
       mutableTax: data.mutableTax,
@@ -189,7 +251,12 @@ export default function CreatePage() {
               {/* Card header */}
               <div className="bg-muted/50 border-b px-4 py-3">
                 <h2 className="text-sm font-semibold">
-                  Step {step} of 3 — {step === 1 ? "Recipient" : step === 2 ? "Parameters" : "Extra"}
+                  Step {step} of 3 —{" "}
+                  {step === 1
+                    ? "Recipient"
+                    : step === 2
+                      ? "Parameters"
+                      : "Extra"}
                 </h2>
               </div>
 
@@ -201,7 +268,10 @@ export default function CreatePage() {
                     { n: 2, label: "Parameters" },
                     { n: 3, label: "Extra" },
                   ].map(({ n, label }, i) => (
-                    <div key={n} className="flex items-center flex-1 last:flex-none">
+                    <div
+                      key={n}
+                      className="flex items-center flex-1 last:flex-none"
+                    >
                       <button
                         type="button"
                         onClick={() => n <= step && setStep(n)}
@@ -218,12 +288,16 @@ export default function CreatePage() {
                         >
                           {n < step ? <Check className="size-3" /> : n}
                         </span>
-                        <span className={`text-xs hidden sm:inline ${n === step ? "font-medium" : "text-muted-foreground"}`}>
+                        <span
+                          className={`text-xs hidden sm:inline ${n === step ? "font-medium" : "text-muted-foreground"}`}
+                        >
                           {label}
                         </span>
                       </button>
                       {i < 2 && (
-                        <div className={`flex-1 h-px mx-3 ${n < step ? "bg-primary/30" : "bg-border"}`} />
+                        <div
+                          className={`flex-1 h-px mx-3 ${n < step ? "bg-primary/30" : "bg-border"}`}
+                        />
                       )}
                     </div>
                   ))}
@@ -231,7 +305,10 @@ export default function CreatePage() {
               </div>
 
               {/* Step content */}
-              <div key={step} className="p-6 space-y-6 animate-in fade-in duration-200">
+              <div
+                key={step}
+                className="p-6 space-y-6 animate-in fade-in duration-200"
+              >
                 {step === 1 && (
                   <>
                     {/* ── Recipient ── */}
@@ -242,69 +319,224 @@ export default function CreatePage() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Recipient</FormLabel>
-                            <div className="flex gap-2">
-                              <Button
+                            <div className="grid grid-cols-2 gap-3">
+                              <button
                                 type="button"
-                                size="sm"
-                                variant={
-                                  field.value === "self" ? "default" : "outline"
-                                }
-                                onClick={() => {
-                                  field.onChange("self");
-                                  form.setValue("recipient", "");
-                                }}
+                                onClick={() => field.onChange("single")}
+                                className={`flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-colors ${
+                                  field.value === "single"
+                                    ? "border-primary bg-primary/5"
+                                    : "border-border hover:border-muted-foreground/40"
+                                }`}
                               >
-                                My Address
-                              </Button>
-                              <Button
+                                <Wallet className="size-5" />
+                                <span className="text-sm font-medium">
+                                  Account
+                                </span>
+                              </button>
+                              <button
                                 type="button"
-                                size="sm"
-                                variant={
-                                  field.value === "custom" ? "default" : "outline"
-                                }
-                                onClick={() => field.onChange("custom")}
+                                onClick={() => field.onChange("group")}
+                                className={`flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-colors ${
+                                  field.value === "group"
+                                    ? "border-primary bg-primary/5"
+                                    : "border-border hover:border-muted-foreground/40"
+                                }`}
                               >
-                                Custom
-                              </Button>
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                disabled
-                              >
-                                Group
-                              </Button>
+                                <Users className="size-5" />
+                                <span className="text-sm font-medium">
+                                  Group
+                                </span>
+                              </button>
                             </div>
                           </FormItem>
                         )}
                       />
 
-                      {watchedRecipientMode === "self" && address && (
-                        <p className="mt-2 text-xs text-muted-foreground">
-                          Tax revenue goes to {truncateAddress(address)}
-                        </p>
-                      )}
-                      {watchedRecipientMode === "self" && !address && (
-                        <p className="mt-2 text-xs text-muted-foreground">
-                          Connect your wallet to use your address.
-                        </p>
-                      )}
-
-                      {watchedRecipientMode === "custom" && (
+                      {watchedRecipientMode === "single" && (
                         <div className="mt-3">
                           <FormField
                             control={form.control}
                             name="recipient"
                             render={({ field, fieldState }) => (
                               <FormItem>
-                                <AddressInput
-                                  value={field.value}
-                                  onChange={field.onChange}
-                                  onBlur={field.onBlur}
-                                  placeholder="0x… or vitalik.eth"
-                                  hint="Supports ENS names (.eth, .xyz, .id)"
-                                  error={fieldState.error?.message}
+                                <div className="flex items-start gap-2">
+                                  <div className="flex-1">
+                                    <AddressInput
+                                      value={field.value}
+                                      onChange={field.onChange}
+                                      onBlur={field.onBlur}
+                                      placeholder="0x… or vitalik.eth"
+                                      hint={
+                                        address && !field.value
+                                          ? `Defaults to ${truncateAddress(address)}`
+                                          : undefined
+                                      }
+                                      error={fieldState.error?.message}
+                                    />
+                                  </div>
+                                  {address && (
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      className="shrink-0 text-xs h-9"
+                                      onClick={() => field.onChange(address)}
+                                    >
+                                      Use my address
+                                    </Button>
+                                  )}
+                                </div>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      )}
+
+                      {watchedRecipientMode === "group" && (
+                        <div className="mt-3 space-y-3">
+                          <p className="text-xs text-muted-foreground">
+                            Create a recipient group. Tax revenue will be
+                            distributed to all members below via a Pull Split.{" "}
+                            <a
+                              href="https://splits.org"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="underline"
+                            >
+                              Powered by 0xSplits
+                            </a>
+                          </p>
+
+                          {splitFields.map((field, index) => (
+                            <div
+                              key={field.id}
+                              className="flex items-start gap-2"
+                            >
+                              <div className="flex-1">
+                                <FormField
+                                  control={form.control}
+                                  name={`splitRecipients.${index}.address`}
+                                  render={({
+                                    field: addrField,
+                                    fieldState,
+                                  }) => (
+                                    <AddressInput
+                                      value={addrField.value}
+                                      onChange={addrField.onChange}
+                                      onBlur={addrField.onBlur}
+                                      placeholder="0x… or ENS"
+                                      error={fieldState.error?.message}
+                                    />
+                                  )}
                                 />
+                              </div>
+                              <div className="w-24">
+                                <FormField
+                                  control={form.control}
+                                  name={`splitRecipients.${index}.percentAllocation`}
+                                  render={({ field: pctField }) => (
+                                    <div className="relative">
+                                      <Input
+                                        type="text"
+                                        inputMode="decimal"
+                                        value={pctField.value}
+                                        onChange={(e) => {
+                                          const v = parseFloat(e.target.value);
+                                          pctField.onChange(
+                                            Number.isNaN(v) ? 0 : v,
+                                          );
+                                        }}
+                                        className="pr-6 text-xs"
+                                      />
+                                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                                        %
+                                      </span>
+                                    </div>
+                                  )}
+                                />
+                              </div>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="size-9 shrink-0"
+                                disabled={splitFields.length <= 2}
+                                onClick={() => removeSplitRecipient(index)}
+                              >
+                                <Trash2 className="size-3.5" />
+                              </Button>
+                            </div>
+                          ))}
+
+                          {(() => {
+                            const total = form
+                              .watch("splitRecipients")
+                              .reduce(
+                                (sum, r) => sum + (r.percentAllocation || 0),
+                                0,
+                              );
+                            return (
+                              <div className="flex items-center justify-between text-xs">
+                                <span
+                                  className={
+                                    Math.abs(total - 100) < 0.01
+                                      ? "text-green-600"
+                                      : "text-destructive"
+                                  }
+                                >
+                                  Total: {total.toFixed(2)}%
+                                  {Math.abs(total - 100) >= 0.01 &&
+                                    " (must be 100%)"}
+                                </span>
+                              </div>
+                            );
+                          })()}
+
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              appendSplitRecipient({
+                                address: "",
+                                percentAllocation: 0,
+                              })
+                            }
+                          >
+                            <Plus className="size-3.5 mr-1" />
+                            Add Recipient
+                          </Button>
+
+                          <Separator />
+
+                          <FormField
+                            control={form.control}
+                            name="distributorFeePercent"
+                            render={({ field: feeField }) => (
+                              <FormItem>
+                                <FormLabel>Distributor Fee</FormLabel>
+                                <div className="relative">
+                                  <Input
+                                    type="text"
+                                    inputMode="decimal"
+                                    value={feeField.value}
+                                    onChange={(e) => {
+                                      const v = parseFloat(e.target.value);
+                                      feeField.onChange(
+                                        Number.isNaN(v) ? 0 : v,
+                                      );
+                                    }}
+                                    className="pr-6"
+                                  />
+                                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                                    %
+                                  </span>
+                                </div>
+                                <FormDescription>
+                                  Incentive for anyone who triggers distribution
+                                  (0–10%)
+                                </FormDescription>
                               </FormItem>
                             )}
                           />
@@ -376,7 +608,9 @@ export default function CreatePage() {
                       render={({ field }) => (
                         <FormItem>
                           <div className="flex items-center justify-between">
-                            <FormLabel className="flex items-center gap-1.5"><HandCoins className="size-3.5" /> Tax Rate</FormLabel>
+                            <FormLabel className="flex items-center gap-1.5">
+                              <HandCoins className="size-3.5" /> Tax Rate
+                            </FormLabel>
                             <span className="text-sm font-semibold">
                               {parseFloat(field.value).toFixed(1) || "0"}%/mo
                             </span>
@@ -415,7 +649,8 @@ export default function CreatePage() {
                                 <span
                                   className={`text-right ${isHigh ? "font-bold text-foreground" : "text-muted-foreground"}`}
                                 >
-                                  Allocative efficiency · anti-squat · volatility
+                                  Allocative efficiency · anti-squat ·
+                                  volatility
                                 </span>
                               </div>
                             );
@@ -511,7 +746,9 @@ export default function CreatePage() {
                                     {m.name} — {m.description}
                                   </SelectItem>
                                 ))}
-                                <SelectItem value="custom">Custom address</SelectItem>
+                                <SelectItem value="custom">
+                                  Custom address
+                                </SelectItem>
                               </SelectContent>
                             </Select>
                             {moduleMode === "custom" && (
@@ -582,7 +819,9 @@ export default function CreatePage() {
                             name="manager"
                             render={({ field, fieldState }) => (
                               <FormItem>
-                                <FormLabel>Manager Address (required)</FormLabel>
+                                <FormLabel>
+                                  Manager Address (required)
+                                </FormLabel>
                                 <AddressInput
                                   value={field.value}
                                   onChange={field.onChange}
@@ -611,7 +850,10 @@ export default function CreatePage() {
                       name="liquidationBountyPercent"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="flex items-center gap-1.5"><Sparkles className="size-3.5 text-amber-500" /> Liquidation Bounty</FormLabel>
+                          <FormLabel className="flex items-center gap-1.5">
+                            <Sparkles className="size-3.5 text-amber-500" />{" "}
+                            Liquidation Bounty
+                          </FormLabel>
                           <div className="relative">
                             <Input
                               {...field}
@@ -623,7 +865,9 @@ export default function CreatePage() {
                               %
                             </span>
                           </div>
-                          <FormDescription>Reward for liquidators</FormDescription>
+                          <FormDescription>
+                            Reward for liquidators
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -676,11 +920,13 @@ export default function CreatePage() {
               isSuccess={isSuccess}
               isPending={isPending}
               isConfirming={isConfirming}
+              creatingSplit={creatingSplit}
               busy={busy}
               anyResolving={anyResolving}
               isFormValid={form.formState.isValid}
               switchChain={switchChain}
-              chainId={CHAIN_ID}
+              chainId={selectedChainId}
+              recipientMode={watchedRecipientMode}
             />
 
             <MobileBottomBar
@@ -691,11 +937,13 @@ export default function CreatePage() {
               isSuccess={isSuccess}
               isPending={isPending}
               isConfirming={isConfirming}
+              creatingSplit={creatingSplit}
               busy={busy}
               anyResolving={anyResolving}
               isFormValid={form.formState.isValid}
               switchChain={switchChain}
-              chainId={CHAIN_ID}
+              chainId={selectedChainId}
+              recipientMode={watchedRecipientMode}
             />
           </form>
         </Form>

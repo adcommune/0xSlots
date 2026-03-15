@@ -17,12 +17,21 @@ export const TIME_MULTIPLIERS: Record<TimeDenomination, number> = {
   months: 2592000, // 30 days
 };
 
+export const splitRecipientSchema = z.object({
+  address: z.string(),
+  percentAllocation: z.number(),
+});
+
+export type SplitRecipientInput = z.infer<typeof splitRecipientSchema>;
+
 export const createSlotSchema = z
   .object({
-    recipientMode: z.enum(["self", "custom", "group"]),
+    recipientMode: z.enum(["single", "group"]),
     recipient: z.string().refine(isValidAddressOrEns, {
       message: "Enter a valid address (0x…) or ENS name",
     }),
+    splitRecipients: z.array(splitRecipientSchema).default([]),
+    distributorFeePercent: z.number().min(0).max(10).default(0),
     currencyMode: z.enum(["usdc", "custom"]),
     customCurrency: z.string().refine(isValidAddressOrEns, {
       message: "Enter a valid address (0x…) or ENS name",
@@ -74,17 +83,68 @@ export const createSlotSchema = z
   )
   .refine(
     (d) => {
-      if (d.recipientMode === "custom") return d.recipient.length > 0;
+      if (d.recipientMode === "group") return d.splitRecipients.length >= 2;
       return true;
     },
-    { message: "Recipient address is required", path: ["recipient"] },
+    {
+      message: "A split requires at least 2 recipients",
+      path: ["splitRecipients"],
+    },
+  )
+  .refine(
+    (d) => {
+      if (d.recipientMode === "group") {
+        return d.splitRecipients.every(
+          (r) => r.address.length > 0 && isValidAddressOrEns(r.address),
+        );
+      }
+      return true;
+    },
+    {
+      message: "All recipients must have a valid address",
+      path: ["splitRecipients"],
+    },
+  )
+  .refine(
+    (d) => {
+      if (d.recipientMode === "group") {
+        return d.splitRecipients.every(
+          (r) => r.percentAllocation > 0 && r.percentAllocation <= 100,
+        );
+      }
+      return true;
+    },
+    {
+      message: "All allocations must be between 0 and 100",
+      path: ["splitRecipients"],
+    },
+  )
+  .refine(
+    (d) => {
+      if (d.recipientMode === "group") {
+        const total = d.splitRecipients.reduce(
+          (sum, r) => sum + r.percentAllocation,
+          0,
+        );
+        return Math.abs(total - 100) < 0.01;
+      }
+      return true;
+    },
+    {
+      message: "Allocations must sum to 100%",
+      path: ["splitRecipients"],
+    },
   );
 
 export type CreateSlotFormValues = z.input<typeof createSlotSchema>;
 
 export const defaultValues: CreateSlotFormValues = {
-  recipientMode: "self",
+  recipientMode: "single" as const,
   recipient: "",
+  splitRecipients: [
+    { address: "", percentAllocation: 0 },
+  ],
+  distributorFeePercent: 0,
   currencyMode: "usdc",
   customCurrency: "",
   taxPercentage: "1",

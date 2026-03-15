@@ -204,16 +204,16 @@ export default function RecipientPage({
                         })()}
                       </td>
                       <td className="px-4 py-2 text-right">
-                        {formatUnits(s.price, decimals)}
+                        {formatUnits(s.price, decimals)} {symbol}
                       </td>
                       <td className="px-4 py-2 text-right">
                         {Number(s.taxPercentage) / 100}%
                       </td>
                       <td className="px-4 py-2 text-right">
-                        {formatUnits(s.deposit, decimals)}
+                        {formatUnits(s.deposit, decimals)} {symbol}
                       </td>
                       <td className="px-4 py-2 text-right">
-                        {formatUnits(s.taxOwed, decimals)}
+                        {formatUnits(s.taxOwed, decimals)} {symbol}
                       </td>
                     </tr>
                   ))}
