@@ -23,6 +23,18 @@ function normalizeEvents(
   if (!data) return [];
   const events: UnifiedEvent[] = [];
 
+  for (const e of data.slotDeployedEvents) {
+    const s = e.currency.symbol;
+    events.push({
+      id: e.id,
+      type: "Deploy",
+      slot: e.slot.id,
+      actor: e.deployer,
+      detail: `→ ${truncateAddress(e.recipient)}`,
+      timestamp: Number(e.timestamp),
+      tx: e.tx,
+    });
+  }
   for (const e of data.boughtEvents) {
     const d = e.currency.decimals;
     const s = e.currency.symbol;
@@ -150,6 +162,7 @@ function normalizeEvents(
 }
 
 const TYPE_COLORS: Record<string, string> = {
+  Deploy: "bg-sky-500/10 text-sky-600",
   Buy: "bg-green-500/10 text-green-600",
   Release: "bg-yellow-500/10 text-yellow-600",
   Liquidate: "bg-red-500/10 text-red-600",
