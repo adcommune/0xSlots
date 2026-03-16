@@ -4,7 +4,16 @@
       "Bash(pnpm --filter landing exec tsc --noEmit)",
       "Bash(git check-ignore:*)",
       "Bash(echo \"exit: $?\")",
-      "WebFetch(domain:docs.splits.org)"
+      "WebFetch(domain:docs.splits.org)",
+      "Bash(find /Users/nezzarkefif/Documents/GitHub/0xSlots/apps/landing/src/app/slots/[slotAddress] -type f)",
+      "Read(//Users/nezzarkefif/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.2/skills/subagent-driven-development/**)",
+      "Bash(pkill -f \"next build\")",
+      "Bash(rm -f /Users/nezzarkefif/Documents/GitHub/0xSlots/apps/landing/.next/lock)",
+      "Bash(pnpm --filter landing lint)",
+      "Bash(pnpm check:*)",
+      "Bash(find /Users/nezzarkefif/Documents/GitHub/0xSlots/apps/landing/public -type f -name *.svg)",
+      "Bash(npm run:*)",
+      "Bash(git diff:*)"
     ]
   }
 }

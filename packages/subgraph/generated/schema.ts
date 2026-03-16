@@ -536,23 +536,6 @@ export class Slot extends Entity {
     this.set("createdTx", Value.fromBytes(value));
   }
 
-  get metadataURI(): string | null {
-    let value = this.get("metadataURI");
-    if (!value || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toString();
-    }
-  }
-
-  set metadataURI(value: string | null) {
-    if (!value) {
-      this.unset("metadataURI");
-    } else {
-      this.set("metadataURI", Value.fromString(<string>value));
-    }
-  }
-
   get updatedAt(): BigInt {
     let value = this.get("updatedAt");
     if (!value || value.kind == ValueKind.NULL) {
@@ -564,6 +547,14 @@ export class Slot extends Entity {
 
   set updatedAt(value: BigInt) {
     this.set("updatedAt", Value.fromBigInt(value));
+  }
+
+  get metadata(): MetadataSlotLoader {
+    return new MetadataSlotLoader(
+      "Slot",
+      this.get("id")!.toString(),
+      "metadata",
+    );
   }
 
   get deployEvent(): SlotDeployedEventLoader {
@@ -668,6 +659,152 @@ export class Slot extends Entity {
       this.get("id")!.toString(),
       "metadataUpdates",
     );
+  }
+}
+
+export class MetadataSlot extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id != null, "Cannot save MetadataSlot entity without an ID");
+    if (id) {
+      assert(
+        id.kind == ValueKind.STRING,
+        `Entities of type MetadataSlot must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`,
+      );
+      store.set("MetadataSlot", id.toString(), this);
+    }
+  }
+
+  static loadInBlock(id: string): MetadataSlot | null {
+    return changetype<MetadataSlot | null>(
+      store.get_in_block("MetadataSlot", id),
+    );
+  }
+
+  static load(id: string): MetadataSlot | null {
+    return changetype<MetadataSlot | null>(store.get("MetadataSlot", id));
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get slot(): string {
+    let value = this.get("slot");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set slot(value: string) {
+    this.set("slot", Value.fromString(value));
+  }
+
+  get uri(): string {
+    let value = this.get("uri");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set uri(value: string) {
+    this.set("uri", Value.fromString(value));
+  }
+
+  get updatedBy(): Bytes {
+    let value = this.get("updatedBy");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set updatedBy(value: Bytes) {
+    this.set("updatedBy", Value.fromBytes(value));
+  }
+
+  get updateCount(): BigInt {
+    let value = this.get("updateCount");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set updateCount(value: BigInt) {
+    this.set("updateCount", Value.fromBigInt(value));
+  }
+
+  get createdAt(): BigInt {
+    let value = this.get("createdAt");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set createdAt(value: BigInt) {
+    this.set("createdAt", Value.fromBigInt(value));
+  }
+
+  get createdTx(): Bytes {
+    let value = this.get("createdTx");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set createdTx(value: Bytes) {
+    this.set("createdTx", Value.fromBytes(value));
+  }
+
+  get updatedAt(): BigInt {
+    let value = this.get("updatedAt");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set updatedAt(value: BigInt) {
+    this.set("updatedAt", Value.fromBigInt(value));
+  }
+
+  get updatedTx(): Bytes {
+    let value = this.get("updatedTx");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set updatedTx(value: Bytes) {
+    this.set("updatedTx", Value.fromBytes(value));
   }
 }
 
@@ -2587,6 +2724,24 @@ export class SlotLoader extends Entity {
   load(): Slot[] {
     let value = store.loadRelated(this._entity, this._id, this._field);
     return changetype<Slot[]>(value);
+  }
+}
+
+export class MetadataSlotLoader extends Entity {
+  _entity: string;
+  _field: string;
+  _id: string;
+
+  constructor(entity: string, id: string, field: string) {
+    super();
+    this._entity = entity;
+    this._id = id;
+    this._field = field;
+  }
+
+  load(): MetadataSlot[] {
+    let value = store.loadRelated(this._entity, this._id, this._field);
+    return changetype<MetadataSlot[]>(value);
   }
 }
 
