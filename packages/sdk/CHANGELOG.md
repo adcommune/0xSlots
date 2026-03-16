@@ -1,5 +1,11 @@
 # @0xslots/sdk
 
+## 0.8.3
+
+### Patch Changes
+
+- 5d86bd9: Add `subgraphApiKey` option to SDK config. When provided, sends `Authorization: Bearer <key>` header on all subgraph queries. Update Base Sepolia subgraph URL to decentralized gateway.
+
 ## 0.8.2
 
 ### Patch Changes
