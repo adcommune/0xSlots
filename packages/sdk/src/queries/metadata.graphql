@@ -1,0 +1,53 @@
+fragment MetadataSlotFields on MetadataSlot {
+  id
+  uri
+  updatedBy
+  updateCount
+  createdAt
+  createdTx
+  updatedAt
+  updatedTx
+  slot {
+    id
+    recipient
+    occupant
+    price
+    deposit
+    currency {
+      id
+      symbol
+      decimals
+    }
+  }
+}
+
+query GetMetadataSlots($first: Int = 100, $skip: Int = 0, $orderBy: MetadataSlot_orderBy = updatedAt, $orderDirection: OrderDirection = desc) {
+  metadataSlots(first: $first, skip: $skip, orderBy: $orderBy, orderDirection: $orderDirection) {
+    ...MetadataSlotFields
+  }
+}
+
+query GetMetadataSlot($id: ID!) {
+  metadataSlot(id: $id) {
+    ...MetadataSlotFields
+  }
+}
+
+query GetMetadataSlotsByRecipient($recipient: Bytes!, $first: Int = 100) {
+  metadataSlots(first: $first, where: { slot_: { recipient: $recipient } }, orderBy: updatedAt, orderDirection: desc) {
+    ...MetadataSlotFields
+  }
+}
+
+query GetMetadataUpdatedEvents($slot: String, $first: Int = 50, $orderBy: MetadataUpdatedEvent_orderBy = timestamp, $orderDirection: OrderDirection = desc) {
+  metadataUpdatedEvents(first: $first, where: { slot: $slot }, orderBy: $orderBy, orderDirection: $orderDirection) {
+    id
+    slot {
+      id
+    }
+    uri
+    timestamp
+    blockNumber
+    tx
+  }
+}
