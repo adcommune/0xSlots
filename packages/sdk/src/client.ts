@@ -44,7 +44,7 @@ export enum SlotsChain {
 
 export const SUBGRAPH_URLS: Record<SlotsChain, string> = {
   [SlotsChain.BASE_SEPOLIA]:
-    "https://api.studio.thegraph.com/query/958/0-x-slots-base-sepolia/version/latest",
+    "https://gateway.thegraph.com/api/subgraphs/id/Z361DLoMdPh9WAopH7shJP8WoXYAB9XeKrLUCTYjdZR",
   [SlotsChain.ARBITRUM]:
     "https://api.studio.thegraph.com/query/958/0-x-slots-arb/version/latest",
 };
@@ -87,6 +87,7 @@ export interface SlotsClientConfig {
   publicClient?: PublicClient;
   walletClient?: WalletClient;
   subgraphUrl?: string;
+  subgraphApiKey?: string;
   headers?: Record<string, string>;
 }
 
@@ -130,7 +131,11 @@ export class SlotsClient {
 
     const url = config.subgraphUrl || SUBGRAPH_URLS[config.chainId];
     if (!url) throw new Error(`No subgraph URL for chain ${config.chainId}`);
-    this.gqlClient = new GraphQLClient(url, { headers: config.headers });
+    const headers: Record<string, string> = { ...config.headers };
+    if (config.subgraphApiKey) {
+      headers["Authorization"] = `Bearer ${config.subgraphApiKey}`;
+    }
+    this.gqlClient = new GraphQLClient(url, { headers });
     this.sdk = getSdk(this.gqlClient);
 
     this.modules = {

@@ -14,7 +14,7 @@ export type { SlotFieldsFragment as V3Slot } from "@0xslots/sdk";
 
 export function useSlotsClient() {
   const { chainId } = useChain();
-  return useMemo(() => createSlotsClient({ chainId }), [chainId]);
+  return useMemo(() => createSlotsClient({ chainId, subgraphApiKey: process.env.NEXT_PUBLIC_SUBGRAPH_API_KEY }), [chainId]);
 }
 
 export function useSlots() {
