@@ -13,7 +13,8 @@
       "Bash(pnpm check:*)",
       "Bash(find /Users/nezzarkefif/Documents/GitHub/0xSlots/apps/landing/public -type f -name *.svg)",
       "Bash(npm run:*)",
-      "Bash(git diff:*)"
+      "Bash(git diff:*)",
+      "Read(//Users/nezzarkefif/Documents/GitHub/0xSlots/**)"
     ]
   }
 }

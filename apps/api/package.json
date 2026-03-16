@@ -1,0 +1,32 @@
+{
+  "name": "api",
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "lsof -ti:3069 | xargs kill -9 2>/dev/null || true; tsx watch src/index.ts",
+    "build": "tsup",
+    "start:api": "node dist/index.js"
+  },
+  "dependencies": {
+    "@adland/common": "workspace:*",
+    "@adland/data": "workspace:*",
+    "@adland/react": "workspace:*",
+    "@adland/utils": "latest",
+    "@hono/node-server": "^1.19.6",
+    "@neynar/nodejs-sdk": "^3.100.0",
+    "dotenv": "^16.4.5",
+    "graphql-request": "^6.1.0",
+    "hono": "^4.11.1",
+    "viem": "2.43.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.17",
+    "tsup": "^8.0.1",
+    "tsx": "^4.7.1",
+    "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@9.0.6"
+}
