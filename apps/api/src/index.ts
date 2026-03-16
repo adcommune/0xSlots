@@ -5,6 +5,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { erc20Abi } from "viem";
 import { neynar } from "./services/neynar";
+import { pinata } from "./services/pinata";
 import { slotsClient } from "./services/subgraph";
 import { getChainClient } from "@0xslots/config";
 
@@ -363,6 +364,17 @@ async function fetchTokenMetadata(
     logoURI: null,
   };
 }
+
+app.post("/ipfs/upload", async (c) => {
+  try {
+    const body = await c.req.json();
+    const result = await pinata.upload.public.json(body);
+    return c.json({ cid: result.cid, uri: `ipfs://${result.cid}` });
+  } catch (error) {
+    console.error("IPFS upload error:", error);
+    return c.json({ error: "IPFS upload failed" }, 500);
+  }
+});
 
 app.get("/metadata/link", async (c) => {
   try {

@@ -57,12 +57,15 @@ import {
   truncateAddress,
 } from "@/utils";
 
+import { getMetadataModuleAddress } from "@0xslots/contracts";
+
 import { BuySection } from "./components/buy-section";
 import { DepositSlider } from "./components/deposit-slider";
 import {
   normalizeSlotActivity,
   SlotEventHistory,
 } from "./components/event-history";
+import { MetadataForm } from "./components/metadata-form";
 import { UserCurrencyBalance } from "./components/user-balance";
 
 export default function SlotPage({
@@ -152,6 +155,10 @@ export default function SlotPage({
     ? modules?.find((m) => m.id.toLowerCase() === slot.module.toLowerCase())
     : null;
   const moduleUnverified = hasModule && moduleEntity && !moduleEntity.verified;
+  const isMetadataModule =
+    hasModule &&
+    slot.module.toLowerCase() ===
+      getMetadataModuleAddress(selectedChainId)?.toLowerCase();
 
   const role = isConnected
     ? isOccupant && isRecipient
@@ -208,6 +215,7 @@ export default function SlotPage({
       <div className="max-w-6xl mx-auto px-6 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 items-start">
           {/* Left: Tabbed content */}
+          <div className="space-y-6">
           <div className="rounded-lg border">
             {/* Tab bar in card header */}
             <div className="bg-muted/50 border-b px-4 flex items-center gap-0">
@@ -575,6 +583,23 @@ export default function SlotPage({
                 )}
               </div>
             )}
+          </div>
+
+          {/* Metadata Module card — below tabbed content, left column only */}
+          {isMetadataModule && (
+            <div className="rounded-lg border">
+              <div className="bg-muted/50 border-b px-4 py-3 flex items-center gap-1.5">
+                <FileBox className="size-3.5" />
+                <h2 className="text-sm font-semibold">Ad Metadata</h2>
+              </div>
+              <div className="p-4">
+                <MetadataForm
+                  slotAddress={slotAddress}
+                  isOccupant={!!isOccupant}
+                />
+              </div>
+            </div>
+          )}
           </div>
 
           {/* Right: Actions */}

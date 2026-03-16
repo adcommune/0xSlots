@@ -11,6 +11,7 @@
   "dependencies": {
     "@0xslots/config": "workspace:*",
     "@0xslots/contracts": "workspace:*",
+    "@adland/data": "workspace:*",
     "@0xslots/sdk": "workspace:*",
     "@0xsplits/splits-sdk": "^6.4.1",
     "@0xsplits/splits-sdk-react": "^4.3.1",

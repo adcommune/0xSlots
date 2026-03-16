@@ -89,6 +89,9 @@ export * from "./ads";
 // Export core utilities
 export * from "./core/ad-definition";
 
+// Export constants
+export { adlandApiUrl } from "./constants";
+
 // Export Farcaster utilities
 export * from "./farcaster";
 

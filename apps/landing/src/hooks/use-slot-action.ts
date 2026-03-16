@@ -157,6 +157,13 @@ export function useSlotAction() {
     [exec, client],
   );
 
+  // Metadata module
+  const updateMetadata = useCallback(
+    (slot: Address, uri: string) =>
+      exec("Update metadata", () => client.modules.metadata.updateMetadata(slot, uri)),
+    [exec, client],
+  );
+
   return {
     // Actions
     createSlot,
@@ -173,6 +180,7 @@ export function useSlotAction() {
     proposeModuleUpdate,
     cancelPendingUpdates,
     setLiquidationBounty,
+    updateMetadata,
     // State
     busy,
     isPending,
