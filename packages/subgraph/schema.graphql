@@ -52,8 +52,8 @@ type Slot @entity(immutable: false) {
   totalCollected: BigInt!
   createdAt: BigInt!
   createdTx: Bytes!
-  metadataURI: String # current URI from MetadataModule
   updatedAt: BigInt!
+  metadata: MetadataSlot @derivedFrom(field: "slot")
   deployEvent: SlotDeployedEvent @derivedFrom(field: "slot")
   purchases: [BoughtEvent!]! @derivedFrom(field: "slot")
   releases: [ReleasedEvent!]! @derivedFrom(field: "slot")
@@ -67,6 +67,22 @@ type Slot @entity(immutable: false) {
   moduleUpdateProposals: [ModuleUpdateProposedEvent!]! @derivedFrom(field: "slot")
   pendingUpdateCancellations: [PendingUpdateCancelledEvent!]! @derivedFrom(field: "slot")
   metadataUpdates: [MetadataUpdatedEvent!]! @derivedFrom(field: "slot")
+}
+
+# ──────────────────────────────────────────
+# Metadata (mutable, one per slot with a MetadataModule)
+# ──────────────────────────────────────────
+
+type MetadataSlot @entity(immutable: false) {
+  id: ID! # slot address (same as Slot.id)
+  slot: Slot!
+  uri: String!
+  updatedBy: Bytes! # last address that set the URI
+  updateCount: BigInt! # total number of URI changes
+  createdAt: BigInt!
+  createdTx: Bytes!
+  updatedAt: BigInt!
+  updatedTx: Bytes!
 }
 
 # ──────────────────────────────────────────

@@ -51,6 +51,7 @@ export default function RecipientPage({
   });
 
   const isLoading = subgraphLoading || onchainLoading;
+  const recipientType = subgraphSlots?.[0]?.recipientAccount?.type;
   const subgraphMap = new Map((subgraphSlots ?? []).map((s) => [s.id, s]));
   const occupied = slots.filter((s) => s.occupant != null);
   const vacant = slots.length - occupied.length;
@@ -86,8 +87,9 @@ export default function RecipientPage({
               href={`${explorerUrl}/address/${address}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs text-primary hover:underline"
+              className="text-xs text-primary hover:underline inline-flex items-center gap-1.5"
             >
+              {recipientType && <AccountTypeIcon type={recipientType} className="h-3 w-3" />}
               {truncateAddress(address)}
             </a>
           </div>

@@ -15,7 +15,6 @@ import {
   LandPlot,
   Loader2,
   Lock,
-  Receipt,
   Settings,
   Shield,
   Sparkles,
@@ -790,7 +789,7 @@ export default function SlotPage({
                         ) : slot.taxOwed === 0n ? (
                           "No Tax Due"
                         ) : (
-                          <><Receipt className="size-4 mr-1" /> Pay Tax ({formatBalance(slot.taxOwed, decimals)} {symbol})</>
+                          <><HandCoins className="size-4 mr-1" /> Pay Tax ({formatBalance(slot.taxOwed, decimals)} {symbol})</>
                         )}
                       </Button>
                     )}
