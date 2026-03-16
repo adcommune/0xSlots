@@ -11,6 +11,14 @@ export const slotFactoryAddress = {
 export const batchCollectorAddress = {
   [baseSepolia.id]: "0xDE5B9A3ce6Cbca935E33221909fA261F4EfC4c84",
 } as const;
+
+export const metadataModuleAddress = {
+  [baseSepolia.id]: "0x6c5A8A7f061bEd94b1b88CFAd4e1a1a8C5c4e527",
+} as const;
+
+export function getMetadataModuleAddress(chainId: number): Address | undefined {
+  return metadataModuleAddress[chainId as keyof typeof metadataModuleAddress];
+}
 /**
 
  * Supported chain IDs for 0xSlots protocol

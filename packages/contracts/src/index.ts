@@ -11,6 +11,8 @@ export { metadataModuleAbi } from "./abis/metadata-module";
 // Re-export addresses and utilities
 export {
   batchCollectorAddress,
+  metadataModuleAddress,
+  getMetadataModuleAddress,
   getSlotsHubAddress,
   getSupportedChainIds,
   isSlotsHubDeployed,

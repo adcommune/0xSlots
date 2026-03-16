@@ -11,6 +11,7 @@ import {
 } from "viem";
 import { slotAbi, slotFactoryAbi, getSlotsHubAddress } from "@0xslots/contracts";
 import { SlotsError } from "./errors";
+import { MetadataModuleClient } from "./modules/metadata";
 
 // ─── GraphQL Meta ─────────────────────────────────────────────────────────────
 
@@ -116,6 +117,11 @@ export class SlotsClient {
   private readonly _factory?: Address;
   private _atomicSupport: boolean | undefined;
 
+  /** Module namespaces for protocol extensions. */
+  public readonly modules: {
+    metadata: MetadataModuleClient;
+  };
+
   constructor(config: SlotsClientConfig) {
     this.chainId = config.chainId;
     this._publicClient = config.publicClient;
@@ -126,6 +132,15 @@ export class SlotsClient {
     if (!url) throw new Error(`No subgraph URL for chain ${config.chainId}`);
     this.gqlClient = new GraphQLClient(url, { headers: config.headers });
     this.sdk = getSdk(this.gqlClient);
+
+    this.modules = {
+      metadata: new MetadataModuleClient({
+        sdk: this.sdk,
+        chainId: config.chainId,
+        publicClient: config.publicClient,
+        walletClient: config.walletClient,
+      }),
+    };
   }
 
   // ─── Accessors ──────────────────────────────────────────────────────────────

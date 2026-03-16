@@ -13,6 +13,9 @@ export {
   type BuyParams,
 } from "./client";
 
+// Modules
+export { MetadataModuleClient } from "./modules/metadata";
+
 // Errors
 export { SlotsError } from "./errors";
 
