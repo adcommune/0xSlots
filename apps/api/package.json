@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "lsof -ti:3069 | xargs kill -9 2>/dev/null || true; tsx watch src/index.ts",
     "build": "tsup",
-    "start:api": "node dist/index.js"
+    "start": "node dist/index.js"
   },
   "dependencies": {
     "@0xslots/config": "workspace:*",
