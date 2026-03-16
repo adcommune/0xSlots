@@ -9,7 +9,7 @@ export default defineConfig({
   sourcemap: true,
   splitting: false,
   treeshake: true,
-  noExternal: ["@adland/webkit"],
+  noExternal: ["@0xslots/config"],
   esbuildOptions(options) {
     options.platform = "node";
   },
