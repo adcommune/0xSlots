@@ -267,10 +267,12 @@ export default function SlotPage({
                       {truncateAddress(slot.recipient)}
                     </Link>
                   </div>
-                  <SplitRecipientsBar
-                    chainId={selectedChainId}
-                    splitAddress={slot.recipient}
-                  />
+                  {subgraphSlot?.recipientAccount?.type === "SPLIT" && (
+                    <SplitRecipientsBar
+                      chainId={selectedChainId}
+                      splitAddress={slot.recipient}
+                    />
+                  )}
                   <div className="flex justify-between">
                     <span className="text-muted-foreground flex items-center gap-1.5">
                       <CircleDollarSign className="size-3" /> Currency
