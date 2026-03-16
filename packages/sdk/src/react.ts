@@ -18,7 +18,7 @@ import { type SlotsChain, SlotsClient } from "./client";
  * }
  * ```
  */
-export function useSlotsClient(chainId?: SlotsChain): SlotsClient {
+export function useSlotsClient(chainId?: SlotsChain, subgraphApiKey?: string): SlotsClient {
   const publicClient = usePublicClient({ chainId });
   const { data: walletClient } = useWalletClient({ chainId });
 
@@ -35,6 +35,7 @@ export function useSlotsClient(chainId?: SlotsChain): SlotsClient {
       factoryAddress,
       publicClient,
       walletClient: walletClient ?? undefined,
+      subgraphApiKey,
     });
-  }, [chainId, publicClient, walletClient]);
+  }, [chainId, publicClient, walletClient, subgraphApiKey]);
 }

@@ -20,6 +20,7 @@ export function useSlotsClient(): SlotsClient {
         chainId: chainId as SlotsChain,
         publicClient: publicClient ?? undefined,
         walletClient: walletClient ?? undefined,
+        subgraphApiKey: process.env.NEXT_PUBLIC_SUBGRAPH_API_KEY,
       }),
     [chainId, publicClient, walletClient],
   );
