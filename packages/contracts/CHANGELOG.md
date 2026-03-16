@@ -1,5 +1,11 @@
 # @0xslots/contracts
 
+## 0.5.1
+
+### Patch Changes
+
+- 34c4ec8: Add `client.modules.metadata` namespace to SDK for MetadataModule read/write operations. Includes subgraph queries for MetadataSlot entities, RPC `getURI()`, and `updateMetadata()` write. Export `metadataModuleAddress` and `getMetadataModuleAddress()` from contracts package.
+
 ## 0.5.0
 
 ### Minor Changes
