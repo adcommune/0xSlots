@@ -1,5 +1,11 @@
 # @0xslots/sdk
 
+## 0.8.1
+
+### Patch Changes
+
+- ef795a9: add deployement events to sdk
+
 ## 0.8.0
 
 ### Minor Changes
