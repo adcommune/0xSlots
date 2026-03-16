@@ -30,7 +30,8 @@
   ],
   "dependencies": {
     "zod": "4.1.12",
-    "tsup": "^8.0.1"
+    "tsup": "^8.0.1",
+    "@farcaster/miniapp-sdk": "latest"
   },
   "devDependencies": {
     "@types/node": "^20",

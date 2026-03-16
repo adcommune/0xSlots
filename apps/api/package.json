@@ -8,16 +8,15 @@
     "start:api": "node dist/index.js"
   },
   "dependencies": {
-    "@adland/common": "workspace:*",
+    "@0xslots/config": "workspace:*",
+    "@0xslots/sdk": "latest",
     "@adland/data": "workspace:*",
-    "@adland/react": "workspace:*",
-    "@adland/utils": "latest",
     "@hono/node-server": "^1.19.6",
     "@neynar/nodejs-sdk": "^3.100.0",
     "dotenv": "^16.4.5",
     "graphql-request": "^6.1.0",
     "hono": "^4.11.1",
-    "viem": "2.43.5"
+    "viem": "2.47.4"
   },
   "devDependencies": {
     "@types/node": "^20.11.17",

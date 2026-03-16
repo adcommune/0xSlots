@@ -1,0 +1,14 @@
+{
+  "name": "@0xslots/config",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./chains": "./src/chains.ts",
+    "./transports": "./src/transports.ts"
+  },
+  "peerDependencies": {
+    "viem": "2.47.4"
+  }
+}

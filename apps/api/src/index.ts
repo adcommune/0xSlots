@@ -1,13 +1,14 @@
 import "dotenv/config";
+import { FarcasterAPI } from "@adland/data";
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { FarcasterAPI } from "@adland/data";
+import { erc20Abi } from "viem";
 import { neynar } from "./services/neynar";
 import { slotsClient } from "./services/subgraph";
-import { client, getChainClient } from "./services/viem";
-import { erc20Abi } from "viem";
-import { alchemyKey } from "./constants";
+import { getChainClient } from "@0xslots/config";
+
+const alchemyKey = process.env.ALCHEMY_KEY as string
 
 const AdDataQueryError = {
   NO_AD: "NO_AD",
@@ -27,7 +28,9 @@ app.get("/ad/slot/:slotAddress", async (c) => {
   const { slotAddress } = c.req.param();
 
   try {
-    const { metadataSlot } = await slotsClient.modules.metadata.getSlot({ id: slotAddress.toLowerCase() });
+    const { metadataSlot } = await slotsClient.modules.metadata.getSlot({
+      id: slotAddress.toLowerCase(),
+    });
 
     if (!metadataSlot?.uri) {
       return c.json({ error: AdDataQueryError.NO_AD }, 404);
@@ -35,7 +38,10 @@ app.get("/ad/slot/:slotAddress", async (c) => {
 
     // Fetch ad content from URI (ipfs://, https://, etc.)
     const uri = metadataSlot.uri.startsWith("ipfs://")
-      ? metadataSlot.uri.replace("ipfs://", "https://gateway.pinata.cloud/ipfs/")
+      ? metadataSlot.uri.replace(
+          "ipfs://",
+          "https://gateway.pinata.cloud/ipfs/",
+        )
       : metadataSlot.uri;
 
     const ad = await fetch(uri).then((res) => res.json());
@@ -202,12 +208,10 @@ app.post("/verify/token", async (c) => {
       return c.json({ verified: false });
     }
 
-    console.log({ alchemyKey });
-
     // Try to fetch token metadata to verify it exists
     try {
       const [{ result: name }, { result: symbol }, { result: decimals }] =
-        await getChainClient(chainId).multicall({
+        await getChainClient(chainId, alchemyKey).multicall({
           contracts: [
             {
               abi: erc20Abi,
@@ -226,7 +230,7 @@ app.post("/verify/token", async (c) => {
             },
           ],
         });
-      console.log({ name, symbol, decimals });
+
       if (
         typeof name === "string" &&
         typeof symbol === "string" &&

@@ -41,6 +41,6 @@
     "typescript": "^5.4.4"
   },
   "dependencies": {
-    "viem": "^2.45.0"
+    "viem": "2.47.4"
   }
 }
