@@ -1,124 +1,395 @@
 "use client";
 
+import { Check, Filter, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { isAddress } from "viem";
+
 import { AccountTypeIcon } from "@/components/account-type-icon";
 import { EnsAddress } from "@/components/ens-address";
-import { RefreshButton } from "@/components/refresh-button";
 import { TablePagination, usePagination } from "@/components/table-pagination";
 import { TableEmpty, TableSkeleton } from "@/components/table-states";
 import { Badge } from "@/components/ui/badge";
-import { useSlots } from "@/hooks/use-v3";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import type { SlotFilters } from "@/hooks/use-v3";
+import { useModules, useSlots } from "@/hooks/use-v3";
 import { formatPrice, truncateAddress } from "@/utils";
 
+const STORAGE_KEY = "0xslots:slot-filters";
+
+function loadFilters(): SlotFilters {
+  if (typeof window === "undefined") return {};
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) return JSON.parse(stored);
+  } catch {}
+  return {};
+}
+
+function saveFilters(filters: SlotFilters) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(filters));
+}
+
 export function SlotsTable() {
-  const { data: slots, isLoading, refetch, isFetching } = useSlots();
-  const { page, setPage, pageSize, setPageSize, totalPages, paged } = usePagination(slots ?? []);
+  const [filters, setFilters] = useState<SlotFilters>({});
+  const [addressInput, setAddressInput] = useState("");
+  const [addressField, setAddressField] = useState<
+    "recipient" | "occupant" | null
+  >(null);
+  const { data: modules } = useModules();
+
+  useEffect(() => {
+    setFilters(loadFilters());
+  }, []);
+
+  const updateFilters = (next: SlotFilters) => {
+    // Clean empty values
+    const clean: SlotFilters = {};
+    if (next.moduleIds && next.moduleIds.length > 0)
+      clean.moduleIds = next.moduleIds;
+    if (next.recipient) clean.recipient = next.recipient;
+    if (next.occupant) clean.occupant = next.occupant;
+    setFilters(clean);
+    saveFilters(clean);
+  };
+
+  const hasFilters =
+    (filters.moduleIds && filters.moduleIds.length > 0) ||
+    !!filters.recipient ||
+    !!filters.occupant;
+
+  const {
+    data: slots,
+    isLoading,
+  } = useSlots(hasFilters ? filters : undefined);
+  const { page, setPage, pageSize, setPageSize, totalPages, paged } =
+    usePagination(slots ?? []);
+
+  const toggleModule = (moduleId: string) => {
+    const current = filters.moduleIds ?? [];
+    const next = current.includes(moduleId)
+      ? current.filter((id) => id !== moduleId)
+      : [...current, moduleId];
+    updateFilters({ ...filters, moduleIds: next });
+  };
+
+  const applyAddress = () => {
+    if (!addressField || !addressInput.trim()) return;
+    const addr = addressInput.trim();
+    if (!isAddress(addr)) return;
+    updateFilters({ ...filters, [addressField]: addr });
+    setAddressInput("");
+    setAddressField(null);
+  };
+
+  const removeFilter = (key: keyof SlotFilters, value?: string) => {
+    if (key === "moduleIds" && value) {
+      toggleModule(value);
+    } else {
+      const next = { ...filters };
+      delete next[key];
+      updateFilters(next);
+    }
+  };
+
+  const clearFilters = () => {
+    updateFilters({});
+    setAddressInput("");
+    setAddressField(null);
+  };
 
   if (isLoading) return <TableSkeleton />;
-  if (!slots || slots.length === 0) return <TableEmpty message="No slots found" />;
 
   return (
     <div>
-      <RefreshButton onRefresh={() => refetch()} isFetching={isFetching} />
-      <div className="rounded-lg border">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b bg-muted/50">
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
-                  Recipient
-                </th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
-                  Status
-                </th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
-                  Occupant
-                </th>
-                <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">
-                  Price
-                </th>
-                <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">
-                  Tax /week
-                </th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
-                  Module
-                </th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
-                  Flags
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {paged.map((slot) => {
-                const isOccupied = slot.occupant != null;
-                return (
-                  <tr
-                    key={slot.id}
-                    className="text-sm even:bg-muted/30 hover:bg-muted/50 cursor-pointer"
-                    onClick={() => {
-                      window.location.href = `/slots/${slot.id}`;
-                    }}
-                  >
-                    <td className="px-4 py-2.5">
-                      <span className="inline-flex items-center gap-1.5">
-                        <AccountTypeIcon type={slot.recipientAccount.type} className="h-3 w-3" />
-                        <EnsAddress
-                          address={slot.recipient}
-                        />
-                      </span>
-                    </td>
-                    <td className="px-4 py-2.5">
-                      <Badge
-                        variant={isOccupied ? "default" : "secondary"}
-                        className="text-[10px]"
-                      >
-                        {isOccupied ? "OCCUPIED" : "VACANT"}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-2.5 text-muted-foreground text-xs">
-                      {isOccupied && slot.occupant && slot.occupantAccount ? (
-                        <span className="inline-flex items-center gap-1.5">
-                          <AccountTypeIcon type={slot.occupantAccount.type} className="h-3 w-3" />
-                          {truncateAddress(slot.occupant)}
-                        </span>
-                      ) : (
-                        "—"
-                      )}
-                    </td>
-                    <td className="px-4 py-2.5 text-right font-bold text-xs">
-                      {isOccupied
-                        ? `${formatPrice(slot.price, slot.currency.decimals ?? 18)} ${slot.currency.symbol}`
-                        : "0"}
-                    </td>
-                    <td className="px-4 py-2.5 text-right text-xs">
-                      {Number(slot.taxPercentage) / 100}%
-                    </td>
-                    <td className="px-4 py-2.5 text-xs text-muted-foreground">
-                      {slot.module
-                        ? `${slot.module.name || truncateAddress(slot.module.id)}${slot.module.verified ? " ✓" : ""}`
-                        : "—"}
-                    </td>
-                    <td className="px-4 py-2.5">
-                      <div className="flex gap-1">
-                        {slot.mutableTax && (
-                          <Badge variant="outline" className="text-[9px]">
-                            TAX
-                          </Badge>
-                        )}
-                        {slot.mutableModule && (
-                          <Badge variant="outline" className="text-[9px]">
-                            MOD
-                          </Badge>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-        <TablePagination page={page} totalPages={totalPages} pageSize={pageSize} total={slots.length} onPageChange={setPage} onPageSizeChange={setPageSize} />
+      {/* Filter bar */}
+      <div className="flex items-center gap-2 mb-2 justify-end flex-wrap">
+        {/* Active filter pills */}
+        {hasFilters && (
+          <>
+            {filters.moduleIds?.map((id) => {
+              const mod = modules?.find((m) => m.id === id);
+              return (
+                <Badge
+                  key={`mod-${id}`}
+                  variant="secondary"
+                  className="gap-1 text-xs cursor-pointer"
+                  onClick={() => removeFilter("moduleIds", id)}
+                >
+                  {mod?.name || truncateAddress(id)}
+                  <X className="size-3" />
+                </Badge>
+              );
+            })}
+            {filters.recipient && (
+              <Badge
+                variant="secondary"
+                className="gap-1 text-xs cursor-pointer"
+                onClick={() => removeFilter("recipient")}
+              >
+                Recipient: {truncateAddress(filters.recipient)}
+                <X className="size-3" />
+              </Badge>
+            )}
+            {filters.occupant && (
+              <Badge
+                variant="secondary"
+                className="gap-1 text-xs cursor-pointer"
+                onClick={() => removeFilter("occupant")}
+              >
+                Occupant: {truncateAddress(filters.occupant)}
+                <X className="size-3" />
+              </Badge>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs text-muted-foreground h-6 px-2"
+              onClick={clearFilters}
+            >
+              Clear all
+            </Button>
+          </>
+        )}
+
+        {/* Address input (shown when a field is selected) */}
+        {addressField && (
+          <div className="flex items-center gap-1">
+            <Input
+              placeholder={`${addressField === "recipient" ? "Recipient" : "Occupant"} address (0x...)`}
+              value={addressInput}
+              onChange={(e) => setAddressInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && applyAddress()}
+              className="h-7 w-56 text-xs "
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 px-2"
+              onClick={applyAddress}
+              disabled={!isAddress(addressInput.trim())}
+            >
+              <Check className="size-3" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 px-1.5"
+              onClick={() => {
+                setAddressField(null);
+                setAddressInput("");
+              }}
+            >
+              <X className="size-3" />
+            </Button>
+          </div>
+        )}
+
+        {/* Filter dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+              <Filter className="size-3" />
+              Filters
+              {hasFilters && (
+                <Badge variant="secondary" className="text-[9px] px-1 py-0">
+                  {(filters.moduleIds?.length ?? 0) +
+                    (filters.recipient ? 1 : 0) +
+                    (filters.occupant ? 1 : 0)}
+                </Badge>
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            {/* Address filters */}
+            <DropdownMenuLabel className="text-xs">Address</DropdownMenuLabel>
+            <DropdownMenuGroup>
+              <DropdownMenuItem
+                onClick={() => {
+                  setAddressField("recipient");
+                  setAddressInput(filters.recipient ?? "");
+                }}
+              >
+                Recipient
+                {filters.recipient && (
+                  <span className="ml-auto text-[10px] text-muted-foreground ">
+                    {truncateAddress(filters.recipient)}
+                  </span>
+                )}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  setAddressField("occupant");
+                  setAddressInput(filters.occupant ?? "");
+                }}
+              >
+                Occupant
+                {filters.occupant && (
+                  <span className="ml-auto text-[10px] text-muted-foreground ">
+                    {truncateAddress(filters.occupant)}
+                  </span>
+                )}
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+
+            <DropdownMenuSeparator />
+
+            {/* Module filters */}
+            <DropdownMenuLabel className="text-xs">Module</DropdownMenuLabel>
+            {modules?.map((m) => (
+              <DropdownMenuCheckboxItem
+                key={m.id}
+                checked={filters.moduleIds?.includes(m.id) ?? false}
+                onCheckedChange={() => toggleModule(m.id)}
+              >
+                <span className="truncate">
+                  {m.name || truncateAddress(m.id)}
+                </span>
+                {m.verified && (
+                  <span className="ml-auto text-[10px] text-green-600">
+                    ✓
+                  </span>
+                )}
+              </DropdownMenuCheckboxItem>
+            ))}
+            {(!modules || modules.length === 0) && (
+              <p className="px-2 py-1.5 text-xs text-muted-foreground">
+                No modules found
+              </p>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
+
+      {!slots || slots.length === 0 ? (
+        <TableEmpty
+          message={hasFilters ? "No slots match filters" : "No slots found"}
+        />
+      ) : (
+        <div className="rounded-lg border">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b bg-muted/50">
+                  <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
+                    Recipient
+                  </th>
+                  <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
+                    Status
+                  </th>
+                  <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
+                    Occupant
+                  </th>
+                  <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">
+                    Price
+                  </th>
+                  <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">
+                    Tax /week
+                  </th>
+                  <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
+                    Module
+                  </th>
+                  <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
+                    Flags
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {paged.map((slot) => {
+                  const isOccupied = slot.occupant != null;
+                  return (
+                    <tr
+                      key={slot.id}
+                      className="text-sm even:bg-muted/30 hover:bg-muted/50 cursor-pointer"
+                      onClick={() => {
+                        window.location.href = `/slots/${slot.id}`;
+                      }}
+                    >
+                      <td className="px-4 py-2.5">
+                        <span className="inline-flex items-center gap-1.5">
+                          <AccountTypeIcon
+                            type={slot.recipientAccount.type}
+                            className="h-3 w-3"
+                          />
+                          <EnsAddress address={slot.recipient} />
+                        </span>
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <Badge
+                          variant={isOccupied ? "default" : "secondary"}
+                          className="text-[10px]"
+                        >
+                          {isOccupied ? "OCCUPIED" : "VACANT"}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-2.5 text-muted-foreground text-xs">
+                        {isOccupied &&
+                        slot.occupant &&
+                        slot.occupantAccount ? (
+                          <span className="inline-flex items-center gap-1.5">
+                            <AccountTypeIcon
+                              type={slot.occupantAccount.type}
+                              className="h-3 w-3"
+                            />
+                            {truncateAddress(slot.occupant)}
+                          </span>
+                        ) : (
+                          "—"
+                        )}
+                      </td>
+                      <td className="px-4 py-2.5 text-right font-bold text-xs">
+                        {isOccupied
+                          ? `${formatPrice(slot.price, slot.currency.decimals ?? 18)} ${slot.currency.symbol}`
+                          : "0"}
+                      </td>
+                      <td className="px-4 py-2.5 text-right text-xs">
+                        {Number(slot.taxPercentage) / 100}%
+                      </td>
+                      <td className="px-4 py-2.5 text-xs text-muted-foreground">
+                        {slot.module
+                          ? `${slot.module.name || truncateAddress(slot.module.id)}${slot.module.verified ? " ✓" : ""}`
+                          : "—"}
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <div className="flex gap-1">
+                          {slot.mutableTax && (
+                            <Badge variant="outline" className="text-[9px]">
+                              TAX
+                            </Badge>
+                          )}
+                          {slot.mutableModule && (
+                            <Badge variant="outline" className="text-[9px]">
+                              MOD
+                            </Badge>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <TablePagination
+            page={page}
+            totalPages={totalPages}
+            pageSize={pageSize}
+            total={slots.length}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+          />
+        </div>
+      )}
     </div>
   );
 }

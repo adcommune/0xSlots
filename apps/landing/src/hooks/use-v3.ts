@@ -5,7 +5,7 @@ import {
   type AccountFieldsFragment,
   type SlotFieldsFragment,
 } from "@0xslots/sdk";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useChain } from "@/context/chain";
 
@@ -17,16 +17,45 @@ export function useSlotsClient() {
   return useMemo(() => createSlotsClient({ chainId, subgraphApiKey: process.env.NEXT_PUBLIC_SUBGRAPH_API_KEY }), [chainId]);
 }
 
-export function useSlots() {
+export type SlotFilters = {
+  moduleIds?: string[];
+  recipient?: string;
+  occupant?: string;
+};
+
+export function useSlots(filters?: SlotFilters) {
   const { chainId } = useChain();
   const client = useSlotsClient();
+
+  const conditions: Record<string, unknown>[] = [];
+  if (filters?.moduleIds && filters.moduleIds.length > 0) {
+    conditions.push({ module_in: filters.moduleIds });
+  }
+  if (filters?.recipient) {
+    conditions.push({ recipient: filters.recipient.toLowerCase() });
+  }
+  if (filters?.occupant) {
+    conditions.push({ occupant: filters.occupant.toLowerCase() });
+  }
+
+  const where =
+    conditions.length > 1
+      ? { and: conditions }
+      : conditions.length === 1
+        ? conditions[0]
+        : undefined;
+
   return useQuery({
-    queryKey: ["slots", chainId],
+    queryKey: ["slots", chainId, filters],
     queryFn: async () => {
-      const { slots } = await client.getSlots({ first: 100 });
+      const { slots } = await client.getSlots({
+        first: 100,
+        where: where as any,
+      });
       return slots as SlotFieldsFragment[];
     },
     staleTime: 15_000,
+    placeholderData: keepPreviousData,
   });
 }
 
