@@ -1,6 +1,7 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
+import { humanizeKey, isImageUrl } from "../lib/ad-helpers";
 
 interface MetadataPreviewProps {
   type: string;
@@ -8,31 +9,9 @@ interface MetadataPreviewProps {
   metadata?: Record<string, unknown>;
 }
 
-function isImageUrl(value: unknown, key?: string): boolean {
-  if (typeof value !== "string") return false;
-  const imageFieldNames = ["pfpUrl", "image", "imageUrl", "icon", "logoURI"];
-  if (key && imageFieldNames.includes(key) && (value.startsWith("http") || value.startsWith("data:"))) return true;
-  return /\.(png|jpg|jpeg|gif|svg|webp)(\?.*)?$/i.test(value) || value.startsWith("data:image/");
-}
-
 function isUrl(value: unknown): boolean {
   if (typeof value !== "string") return false;
   return value.startsWith("http://") || value.startsWith("https://");
-}
-
-function humanizeKey(key: string): string {
-  const acronyms: Record<string, string> = {
-    url: "URL",
-    uri: "URI",
-    id: "ID",
-    fid: "FID",
-  };
-  if (acronyms[key.toLowerCase()]) return acronyms[key.toLowerCase()];
-
-  return key
-    .replace(/([a-z])([A-Z])/g, "$1 $2")
-    .replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2")
-    .replace(/^./, (s) => s.toUpperCase());
 }
 
 function FieldValue({ value, fieldKey }: { value: unknown; fieldKey?: string }) {
