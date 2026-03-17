@@ -29,8 +29,7 @@
       "a11y": {
         "noLabelWithoutControl": "off",
         "useButtonType": "off",
-        "noSvgWithoutTitle": "off",
-        "useImportType": "off"
+        "noSvgWithoutTitle": "off"
       },
       "suspicious": {
         "noArrayIndexKey": "warn"

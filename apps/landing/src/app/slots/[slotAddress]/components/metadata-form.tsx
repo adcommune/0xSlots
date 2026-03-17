@@ -1,11 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useForm, FormProvider } from "react-hook-form";
-import type { Resolver } from "react-hook-form";
-import { type AdType, adTypes, getAd, adlandApiUrl } from "@adland/data";
-import type { Address } from "viem";
-import { toast } from "sonner";
+import { type AdType, adTypes, getAd } from "@adland/data";
+import { useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import {
   Check,
@@ -15,7 +11,11 @@ import {
   Loader2,
   Upload,
 } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import type { Resolver } from "react-hook-form";
+import { FormProvider, useForm } from "react-hook-form";
+import { toast } from "sonner";
+import type { Address } from "viem";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -25,23 +25,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useSlotAction } from "@/hooks/use-slot-action";
 import { useChain } from "@/context/chain";
-
-import { ZodFormBuilder } from "./zod-form-builder";
-import { MetadataPreview } from "./metadata-preview";
-import { CurrentAdBanner } from "./current-ad-banner";
+import { useSlotAction } from "@/hooks/use-slot-action";
 import {
-  useMetadataUri,
+  useHistoryAdTypes,
   useIpfsContent,
   useMetadataHistory,
-  useHistoryAdTypes,
+  useMetadataUri,
 } from "../hooks/use-metadata";
-import {
-  type AdContent,
-  adTypeLabels,
-  adTypeColors,
-} from "../lib/ad-helpers";
+import { type AdContent, adTypeColors, adTypeLabels } from "../lib/ad-helpers";
+import { CurrentAdBanner } from "./current-ad-banner";
+import { MetadataPreview } from "./metadata-preview";
+import { ZodFormBuilder } from "./zod-form-builder";
 
 type Phase = "edit" | "verifying" | "preview" | "publishing" | "done";
 
@@ -59,7 +54,7 @@ export function MetadataForm({ slotAddress, isOccupant }: MetadataFormProps) {
 
   const queryClient = useQueryClient();
   const { chainId } = useChain();
-  const { updateMetadata, busy, activeAction } = useSlotAction();
+  const { updateMetadataWithUpload, busy, activeAction } = useSlotAction();
 
   const ad = selectedType ? getAd(selectedType as AdType) : null;
 
@@ -112,23 +107,11 @@ export function MetadataForm({ slotAddress, isOccupant }: MetadataFormProps) {
     if (!processedResult) return;
     setPhase("publishing");
     try {
-      const res = await fetch(`${adlandApiUrl}/ipfs/upload`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(processedResult),
-      });
-      if (!res.ok) {
-        throw new Error("IPFS upload failed");
-      }
-      const { uri } = await res.json();
-
-      await updateMetadata(slotAddress as Address, uri);
+      await updateMetadataWithUpload(slotAddress as Address, processedResult);
       setPhase("done");
-      setTimeout(() => invalidateMetadata(), 5000);
+      setTimeout(() => invalidateMetadata(), 3000);
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Publishing failed",
-      );
+      toast.error(error instanceof Error ? error.message : "Publishing failed");
       setPhase("preview");
     }
   };
@@ -295,9 +278,7 @@ export function MetadataForm({ slotAddress, isOccupant }: MetadataFormProps) {
                     className="text-sm hover:bg-muted/30 transition-colors"
                   >
                     <td className="px-4 py-2.5">
-                      <HistoryTypeBadge
-                        adType={historyAdTypes?.[event.uri]}
-                      />
+                      <HistoryTypeBadge adType={historyAdTypes?.[event.uri]} />
                     </td>
                     <td className="px-4 py-2.5 text-xs text-muted-foreground font-mono break-all">
                       {event.uri}

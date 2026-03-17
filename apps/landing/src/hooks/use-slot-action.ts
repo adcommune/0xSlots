@@ -6,10 +6,11 @@ import type {
   CreateSlotsParams,
 } from "@0xslots/sdk";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import type { Address, Hash } from "viem";
 import { useWaitForTransactionReceipt } from "wagmi";
-import { toast } from "sonner";
 import { useSlotsClient } from "./use-slots-client";
+import useIPFSUpload from "./use-upload";
 
 function extractErrorMessage(error: unknown): string {
   const message = error instanceof Error ? error.message : "";
@@ -20,6 +21,7 @@ function extractErrorMessage(error: unknown): string {
 
 export function useSlotAction() {
   const client = useSlotsClient();
+  const { upload } = useIPFSUpload();
 
   // --- state ---
   const [hash, setHash] = useState<Hash | undefined>();
@@ -64,25 +66,22 @@ export function useSlotAction() {
   /**
    * Execute an SDK method with shared pending/toast/receipt tracking.
    */
-  const exec = useCallback(
-    async (label: string, fn: () => Promise<Hash>) => {
-      labelRef.current = label;
-      setActiveAction(label);
-      setIsPending(true);
-      setHash(undefined);
-      try {
-        const txHash = await fn();
-        setHash(txHash);
-      } catch (error) {
-        setActiveAction(null);
-        labelRef.current = "";
-        toast.error(`${label}: ${extractErrorMessage(error)}`);
-      } finally {
-        setIsPending(false);
-      }
-    },
-    [],
-  );
+  const exec = useCallback(async (label: string, fn: () => Promise<Hash>) => {
+    labelRef.current = label;
+    setActiveAction(label);
+    setIsPending(true);
+    setHash(undefined);
+    try {
+      const txHash = await fn();
+      setHash(txHash);
+    } catch (error) {
+      setActiveAction(null);
+      labelRef.current = "";
+      toast.error(`${label}: ${extractErrorMessage(error)}`);
+    } finally {
+      setIsPending(false);
+    }
+  }, []);
 
   // ═══════════════════════════════════════════════════════════════════════════
   // Named actions — each calls one SDK method
@@ -90,11 +89,13 @@ export function useSlotAction() {
 
   // Factory
   const createSlot = useCallback(
-    (params: CreateSlotParams) => exec("Create slot", () => client.createSlot(params)),
+    (params: CreateSlotParams) =>
+      exec("Create slot", () => client.createSlot(params)),
     [exec, client],
   );
   const createSlots = useCallback(
-    (params: CreateSlotsParams) => exec("Create slots", () => client.createSlots(params)),
+    (params: CreateSlotsParams) =>
+      exec("Create slots", () => client.createSlots(params)),
     [exec, client],
   );
 
@@ -160,8 +161,19 @@ export function useSlotAction() {
   // Metadata module
   const updateMetadata = useCallback(
     (slot: Address, uri: string) =>
-      exec("Update metadata", () => client.modules.metadata.updateMetadata(slot, uri)),
+      exec("Update metadata", () =>
+        client.modules.metadata.updateMetadata(slot, uri),
+      ),
     [exec, client],
+  );
+
+  const updateMetadataWithUpload = useCallback(
+    (slot: Address, data: object) =>
+      exec("Update metadata", async () => {
+        const { uri } = await upload(data);
+        return client.modules.metadata.updateMetadata(slot, uri);
+      }),
+    [exec, upload, client],
   );
 
   return {
@@ -181,6 +193,7 @@ export function useSlotAction() {
     cancelPendingUpdates,
     setLiquidationBounty,
     updateMetadata,
+    updateMetadataWithUpload,
     // State
     busy,
     isPending,
