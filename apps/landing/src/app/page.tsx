@@ -40,28 +40,28 @@ export default function Home() {
         <ExplorerTabs
           tabs={[
             {
-              id: "recipients",
-              label: "Recipients",
-              icon: User,
-              content: () => <RecipientsTable />,
-            },
-            {
               id: "slots",
               label: "Slots",
               icon: LandPlot,
               content: () => <SlotsTable />,
             },
             {
-              id: "modules",
-              label: "Modules",
-              icon: FileBox,
-              content: () => <ModulesTable />,
+              id: "recipients",
+              label: "Recipients",
+              icon: User,
+              content: () => <RecipientsTable />,
             },
             {
               id: "events",
               label: "Events",
               icon: List,
               content: () => <EventsTable />,
+            },
+            {
+              id: "modules",
+              label: "Modules",
+              icon: FileBox,
+              content: () => <ModulesTable />,
             },
           ]}
         />
