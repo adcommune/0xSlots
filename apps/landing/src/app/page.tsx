@@ -1,39 +1,75 @@
-import Image from "next/image";
+"use client";
+
+import { FileBox, LandPlot, List, PlusIcon, User } from "lucide-react";
+import Link from "next/link";
+
+import { EventsTable } from "@/components/explorer/events-table";
+import { ModulesTable } from "@/components/explorer/modules-table";
+import { RecipientsTable } from "@/components/explorer/recipients-table";
+import { SlotsTable } from "@/components/explorer/slots-table";
+import { StatsBar } from "@/components/explorer/stats-bar";
+import { ExplorerTabs } from "@/components/explorer-tabs";
+import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 
 export default function Home() {
   return (
-    <>
-      {/* Hero */}
-      <section className="px-6 pt-16 pb-12 lg:pt-24 lg:pb-20 min-h-[85vh] flex flex-col justify-center items-start max-w-3xl mx-auto">
-        <div className="flex flex-row md:gap-4 items-center gap-2">
-          <div className="aspect-square h-24 w-24">
-            <Image
-              src={"/logo.png"}
-              alt="0xslots logo"
-              width={200}
-              height={200}
-            />
+    <div className="min-h-screen">
+      <PageHeader>
+        <div className="flex items-center gap-6">
+          <div>
+            <h1 className="text-xl font-bold tracking-tight leading-tight">
+              Explorer
+            </h1>
+            <p className="text-muted-foreground text-xs">Base Sepolia · v3</p>
           </div>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black leading-[0.95] tracking-tight">
-            0xSlots
-            <span className="block mt-2 text-xl lg:text-2xl font-bold normal-case tracking-normal leading-tight">
-              Modular & Immutable collective ownership slot.
-            </span>
-          </h1>
+          <div className="w-px h-6 bg-border" />
+          <StatsBar />
         </div>
-
-        <p className="mt-8 text-base leading-relaxed max-w-lg text-muted-foreground">
-          Perpetual onchain real estate powered by partial common ownership. No
-          permanent monopolies. No idle assets. Only recurring market selection.
-        </p>
-
-        <div className="mt-10 flex flex-wrap gap-3">
-          <Button variant="outline" asChild>
-            <a href="/explorer">Explore</a>
+        <div className="flex items-center gap-3">
+          <Button size="sm" asChild>
+            <div>
+              <PlusIcon className="w-5 h-5" />
+              <Link href="/create">Create Slot</Link>
+            </div>
           </Button>
         </div>
-      </section>
-    </>
+      </PageHeader>
+
+      <div className="max-w-6xl mx-auto px-6 py-4">
+        <ExplorerTabs
+          tabs={[
+            {
+              id: "recipients",
+              label: "Recipients",
+              icon: User,
+              content: () => <RecipientsTable />,
+            },
+            {
+              id: "slots",
+              label: "Slots",
+              icon: LandPlot,
+              content: () => <SlotsTable />,
+            },
+            {
+              id: "modules",
+              label: "Modules",
+              icon: FileBox,
+              content: () => <ModulesTable />,
+            },
+            {
+              id: "events",
+              label: "Events",
+              icon: List,
+              content: () => <EventsTable />,
+            },
+          ]}
+        />
+
+        <div className="mt-8 text-center text-xs text-muted-foreground">
+          Powered by 0xSlots · The Graph
+        </div>
+      </div>
+    </div>
   );
 }

@@ -74,7 +74,7 @@ export default function RecipientPage({
           <div>
             <div className="flex items-center gap-2 mb-1">
               <Link
-                href="/explorer"
+                href="/"
                 className="text-xs text-muted-foreground hover:text-foreground transition-colors"
               >
                 ← Explorer

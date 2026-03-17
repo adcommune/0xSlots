@@ -89,7 +89,7 @@ export default function CreatePage() {
 
   useEffect(() => {
     if (isSuccess) {
-      const timeout = setTimeout(() => router.push("/explorer"), 1500);
+      const timeout = setTimeout(() => router.push("/"), 1500);
       return () => clearTimeout(timeout);
     }
   }, [isSuccess, router]);

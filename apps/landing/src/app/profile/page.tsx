@@ -191,7 +191,7 @@ export default function ProfilePage() {
       <PageHeader>
         <div>
           <Link
-            href="/explorer"
+            href="/"
             className="text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             ← Explorer

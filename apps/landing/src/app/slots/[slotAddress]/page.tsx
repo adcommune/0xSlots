@@ -131,7 +131,7 @@ export default function SlotPage({
           <div className="rounded-lg border p-12 text-center">
             <p className="text-sm">Slot not found</p>
             <Link
-              href="/explorer"
+              href="/"
               className="text-sm text-primary underline mt-4 block"
             >
               ← Back to Explorer

@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
-import { Toaster } from "sonner";
-import "./globals.css";
 import Image from "next/image";
-import { ChainSelector } from "@/app/explorer/chain-selector";
+import { Toaster } from "sonner";
+
 import { ChainCapabilities } from "@/components/chain-capabilities";
-import { ConnectButton } from "@/components/connect-button";
 import { Providers } from "@/components/providers";
 import { SubgraphStatus } from "@/components/subgraph-status";
+import { UserMenu } from "@/components/user-menu";
+
+import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const jetbrains = JetBrains_Mono({
@@ -35,37 +36,26 @@ export default function RootLayout({
           <div className="min-h-screen flex flex-col">
             {/* Nav */}
             <nav className="flex items-center justify-between px-6 py-4 border-b">
-              <a
-                href="/"
-                className="text-2xl flex flex-row gap-2 items-center font-black tracking-tighter"
-              >
-                <Image
-                  src={"/logo.png"}
-                  width={100}
-                  height={100}
-                  alt=""
-                  className="w-6 aspect-square h-6"
-                />
-                0xSlots
-              </a>
-              <div className="flex items-center gap-4 text-sm">
+              <div className="flex flex-row items-center gap-6">
                 <a
-                  href="/explorer"
-                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  href="/"
+                  className="text-2xl flex flex-row gap-2 items-center font-black tracking-tighter"
                 >
-                  Explorer
+                  <Image
+                    src={"/logo.png"}
+                    width={100}
+                    height={100}
+                    alt=""
+                    className="w-6 aspect-square h-6"
+                  />
+                  0xSlots
                 </a>
-                <a
-                  href="/profile"
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Profile
-                </a>
-                <SubgraphStatus />
-                <ChainCapabilities />
-                <ChainSelector />
-                <ConnectButton />
+                <div className="flex flex-row items-center gap-2">
+                  <SubgraphStatus />
+                  <ChainCapabilities />
+                </div>
               </div>
+              <UserMenu />
             </nav>
 
             {/* Main Content */}
