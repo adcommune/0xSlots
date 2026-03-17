@@ -140,8 +140,15 @@ export function UserMenu() {
 
               <DropdownMenuSeparator />
 
-              {/* Network submenu */}
               <DropdownMenuGroup>
+                <DropdownMenuItem onClick={() => router.push("/profile")}>
+                  <User className="size-4" />
+                  My Slots
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push("/docs")}>
+                  <BookOpen className="size-4" />
+                  Docs
+                </DropdownMenuItem>
                 <DropdownMenuSub>
                   <DropdownMenuSubTrigger>
                     <Network className="size-4" />
@@ -168,21 +175,6 @@ export function UserMenu() {
 
               <DropdownMenuSeparator />
 
-              {/* Navigation */}
-              <DropdownMenuGroup>
-                <DropdownMenuItem onClick={() => router.push("/profile")}>
-                  <User className="size-4" />
-                  Profile
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => router.push("/docs")}>
-                  <BookOpen className="size-4" />
-                  Docs
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-
-              <DropdownMenuSeparator />
-
-              {/* Disconnect */}
               <DropdownMenuItem
                 variant="destructive"
                 onClick={() => disconnect()}
