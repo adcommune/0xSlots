@@ -38,7 +38,7 @@ export function ModulesTable() {
             </thead>
             <tbody className="divide-y">
               {modules.map((m) => (
-                <tr key={m.id} className="text-sm hover:bg-muted/50">
+                <tr key={m.id} className="text-sm even:bg-muted/30 hover:bg-muted/50">
                   <td className="px-4 py-2.5">
                     <a
                       href={`${explorerUrl}/address/${m.id}`}

@@ -37,7 +37,7 @@ export function EventsTable() {
           </thead>
           <tbody className="divide-y">
             {paged.map((ev) => (
-              <tr key={ev.id} className="hover:bg-muted/30 transition-colors">
+              <tr key={ev.id} className="even:bg-muted/30 hover:bg-muted/50 transition-colors">
                 <td className="px-4 py-2.5">
                   <EventTypeBadge type={ev.type} />
                 </td>

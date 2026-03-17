@@ -53,7 +53,7 @@ export function SlotsTable() {
                 return (
                   <tr
                     key={slot.id}
-                    className="text-sm hover:bg-muted/50 cursor-pointer"
+                    className="text-sm even:bg-muted/30 hover:bg-muted/50 cursor-pointer"
                     onClick={() => {
                       window.location.href = `/slots/${slot.id}`;
                     }}
@@ -63,8 +63,6 @@ export function SlotsTable() {
                         <AccountTypeIcon type={slot.recipientAccount.type} className="h-3 w-3" />
                         <EnsAddress
                           address={slot.recipient}
-                          href={`/recipient/${slot.recipient}`}
-                          onClick={(e) => e.stopPropagation()}
                         />
                       </span>
                     </td>

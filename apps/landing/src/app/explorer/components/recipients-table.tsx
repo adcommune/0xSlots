@@ -33,12 +33,11 @@ export function RecipientsTable() {
             </thead>
             <tbody className="divide-y">
               {paged.map((a) => {
-                const vacant = a.slotCount - a.occupiedCount;
                 const accountType = a.type;
                 return (
                   <tr
                     key={a.id}
-                    className="text-sm hover:bg-muted/50 cursor-pointer"
+                    className="text-sm even:bg-muted/30 hover:bg-muted/50 cursor-pointer"
                     onClick={() => {
                       window.location.href = `/recipient/${a.id}`;
                     }}
@@ -49,11 +48,7 @@ export function RecipientsTable() {
                           type={accountType}
                           className="h-3 w-3"
                         />
-                        <EnsAddress
-                          address={a.id}
-                          href={`/recipient/${a.id}`}
-                          onClick={(e) => e.stopPropagation()}
-                        />
+                        <EnsAddress address={a.id} />
                       </span>
                     </td>
                     <td className="px-4 py-2.5">
