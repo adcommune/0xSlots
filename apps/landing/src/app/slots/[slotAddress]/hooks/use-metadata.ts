@@ -58,6 +58,7 @@ type HistoryEntry = {
   uri: string;
   timestamp: string;
   tx: string;
+  author: { id: string; type: string };
 };
 
 /**
@@ -79,6 +80,7 @@ export function useMetadataHistory(slotAddress: string) {
         uri: e.uri,
         timestamp: e.timestamp,
         tx: e.tx,
+        author: { id: e.author.id, type: e.author.type },
       }));
     },
     staleTime: 10_000,

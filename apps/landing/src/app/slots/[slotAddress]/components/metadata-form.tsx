@@ -1,5 +1,6 @@
 "use client";
 
+import type { AccountType } from "@0xslots/sdk";
 import { type AdType, adTypes, getAd } from "@adland/data";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
@@ -17,6 +18,15 @@ import { FormProvider, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import type { Address } from "viem";
 
+import { AccountTypeIcon } from "@/components/account-type-icon";
+import { EnsAddress } from "@/components/ens-address";
+
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -33,7 +43,12 @@ import {
   useMetadataHistory,
   useMetadataUri,
 } from "../hooks/use-metadata";
-import { type AdContent, adTypeColors, adTypeLabels } from "../lib/ad-helpers";
+import {
+  type AdContent,
+  adTypeColors,
+  adTypeIcons,
+  adTypeLabels,
+} from "../lib/ad-helpers";
 import { CurrentAdBanner } from "./current-ad-banner";
 import { MetadataPreview } from "./metadata-preview";
 import { ZodFormBuilder } from "./zod-form-builder";
@@ -63,6 +78,8 @@ export function MetadataForm({ slotAddress, isOccupant }: MetadataFormProps) {
     useIpfsContent(currentUri);
   const { data: updateHistory } = useMetadataHistory(slotAddress);
   const { data: historyAdTypes } = useHistoryAdTypes(updateHistory);
+
+  console.log(updateHistory);
 
   const invalidateMetadata = () => {
     queryClient.invalidateQueries({
@@ -180,11 +197,15 @@ export function MetadataForm({ slotAddress, isOccupant }: MetadataFormProps) {
                   <SelectValue placeholder="Select ad type..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {adTypes.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {adTypeLabels[type]}
-                    </SelectItem>
-                  ))}
+                  {adTypes.map((type) => {
+                    const Icon = adTypeIcons[type];
+                    return (
+                      <SelectItem key={type} value={type}>
+                        <Icon className="size-3.5" />
+                        {adTypeLabels[type]}
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
 
@@ -244,57 +265,41 @@ export function MetadataForm({ slotAddress, isOccupant }: MetadataFormProps) {
         </>
       )}
 
-      {/* History table */}
+      {/* History */}
       <div className="border-t pt-3">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b">
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
-                  Type
-                </th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
-                  URI
-                </th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
-                  Time
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {!updateHistory || updateHistory.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={3}
-                    className="text-center text-muted-foreground py-6 text-sm"
-                  >
-                    No updates yet
-                  </td>
-                </tr>
-              ) : (
-                updateHistory.map((event) => (
-                  <tr
-                    key={event.tx}
-                    className="text-sm hover:bg-muted/30 transition-colors"
-                  >
-                    <td className="px-4 py-2.5">
-                      <HistoryTypeBadge adType={historyAdTypes?.[event.uri]} />
-                    </td>
-                    <td className="px-4 py-2.5 text-xs text-muted-foreground font-mono break-all">
-                      {event.uri}
-                    </td>
-                    <td className="px-4 py-2.5 text-muted-foreground text-xs whitespace-nowrap">
+        {!updateHistory || updateHistory.length === 0 ? (
+          <p className="text-center text-muted-foreground py-6 text-sm">
+            No updates yet
+          </p>
+        ) : (
+          <Accordion type="single" collapsible>
+            {updateHistory.map((event) => (
+              <AccordionItem key={event.tx} value={event.tx}>
+                <AccordionTrigger className="py-2.5 px-1 text-sm hover:no-underline">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 text-xs shrink-0">
+                      <AccountTypeIcon
+                        type={event.author.type as AccountType}
+                        className="size-3"
+                      />
+                      <EnsAddress address={event.author.id} />
+                    </div>
+                    <HistoryTypeBadge adType={historyAdTypes?.[event.uri]} />
+                    <span className="text-muted-foreground text-xs whitespace-nowrap ml-auto">
                       {formatDistanceToNow(
                         new Date(Number(event.timestamp) * 1000),
                         { addSuffix: true },
                       )}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                    </span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <HistoryItemContent uri={event.uri} />
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        )}
       </div>
     </div>
   );
@@ -311,15 +316,37 @@ function HistoryTypeBadge({ adType }: { adType?: string }) {
   }
 
   const label = adTypeLabels[adType as AdType] ?? adType;
+  const Icon = adTypeIcons[adType as AdType] ?? FileEdit;
 
   return (
     <span
       className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium ${adTypeColors[adType] ?? "bg-violet-500/10 text-violet-600"}`}
     >
-      <FileEdit className="size-3" />
+      <Icon className="size-3" />
       {label}
     </span>
   );
+}
+
+function HistoryItemContent({ uri }: { uri: string }) {
+  const { data: adContent, isLoading } = useIpfsContent(uri);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center gap-1.5 text-xs text-muted-foreground py-2">
+        <Loader2 className="size-3 animate-spin" />
+        Loading ad content...
+      </div>
+    );
+  }
+
+  if (!adContent) {
+    return (
+      <p className="text-xs text-muted-foreground">Could not load content</p>
+    );
+  }
+
+  return <CurrentAdBanner ad={adContent} uri={uri} />;
 }
 
 function createAdResolver(ad: ReturnType<typeof getAd>): Resolver {

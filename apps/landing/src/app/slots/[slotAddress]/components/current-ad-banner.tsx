@@ -4,6 +4,7 @@ import type { AdType } from "@adland/data";
 import { Badge } from "@/components/ui/badge";
 import {
   type AdContent,
+  adTypeIcons,
   adTypeLabels,
   imageFieldNames,
   humanizeKey,
@@ -16,6 +17,7 @@ interface CurrentAdBannerProps {
 
 export function CurrentAdBanner({ ad, uri }: CurrentAdBannerProps) {
   const typeLabel = adTypeLabels[ad.type as AdType] ?? ad.type;
+  const TypeIcon = adTypeIcons[ad.type as AdType];
 
   const displayFields = { ...ad.data, ...(ad.metadata ?? {}) };
 
@@ -81,7 +83,8 @@ export function CurrentAdBanner({ ad, uri }: CurrentAdBannerProps) {
           )}
         </div>
 
-        <Badge variant="outline" className="shrink-0 text-[10px]">
+        <Badge variant="outline" className="shrink-0 text-[10px] gap-1">
+          {TypeIcon && <TypeIcon className="size-3" />}
           {typeLabel}
         </Badge>
       </div>

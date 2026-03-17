@@ -12,7 +12,7 @@ const useIPFSUpload = () => {
     }
     const { uri } = await res.json();
 
-    return uri;
+    return { uri };
   };
 
   return { upload };

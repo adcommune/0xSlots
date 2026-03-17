@@ -2,6 +2,7 @@ import { unstable_cache } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 
 const PINATA_GATEWAY = "https://gateway.pinata.cloud/ipfs/";
+const CACHE_VERSION = "v1";
 
 function resolveIpfsUri(uri: string): string {
   if (uri.startsWith("ipfs://")) {
@@ -18,7 +19,7 @@ const fetchIpfsContent = unstable_cache(
     }
     return res.json();
   },
-  ["ipfs-content"],
+  ["ipfs-content", CACHE_VERSION],
   { revalidate: false }, // cache forever — IPFS content is immutable
 );
 

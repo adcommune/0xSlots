@@ -1,4 +1,20 @@
 import type { AdType } from "@adland/data";
+import type { LucideIcon } from "lucide-react";
+import {
+  AppWindow,
+  Coins,
+  ExternalLink,
+  MessageSquare,
+  UserCircle,
+} from "lucide-react";
+
+export const adTypeIcons: Record<AdType, LucideIcon> = {
+  link: ExternalLink,
+  cast: MessageSquare,
+  miniapp: AppWindow,
+  token: Coins,
+  farcasterProfile: UserCircle,
+};
 
 export const adTypeLabels: Record<AdType, string> = {
   link: "Link",
