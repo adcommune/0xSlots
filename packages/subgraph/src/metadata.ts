@@ -1,6 +1,7 @@
 import { MetadataUpdated } from "../generated/MetadataModule/MetadataModule";
 import { Slot, MetadataSlot, MetadataUpdatedEvent } from "../generated/schema";
 import { BigInt } from "@graphprotocol/graph-ts";
+import { getOrCreateAccount } from "./helpers";
 
 export function handleMetadataUpdated(event: MetadataUpdated): void {
   let slotId = event.params.slot.toHexString();
@@ -34,8 +35,11 @@ export function handleMetadataUpdated(event: MetadataUpdated): void {
     "-" +
     event.logIndex.toString();
 
+  let author = getOrCreateAccount(event.transaction.from, true);
+
   let metadataEvent = new MetadataUpdatedEvent(eventId);
   metadataEvent.slot = slotId;
+  metadataEvent.author = author.id;
   metadataEvent.uri = event.params.uri;
   metadataEvent.timestamp = event.block.timestamp;
   metadataEvent.blockNumber = event.block.number;

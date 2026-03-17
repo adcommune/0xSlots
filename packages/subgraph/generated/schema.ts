@@ -2546,6 +2546,19 @@ export class MetadataUpdatedEvent extends Entity {
     this.set("slot", Value.fromString(value));
   }
 
+  get author(): string {
+    let value = this.get("author");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set author(value: string) {
+    this.set("author", Value.fromString(value));
+  }
+
   get uri(): string {
     let value = this.get("uri");
     if (!value || value.kind == ValueKind.NULL) {

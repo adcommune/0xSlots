@@ -45,6 +45,10 @@ query GetMetadataUpdatedEvents($slot: String, $first: Int = 50, $orderBy: Metada
     slot {
       id
     }
+    author {
+      id
+      type
+    }
     uri
     timestamp
     blockNumber

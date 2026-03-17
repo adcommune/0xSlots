@@ -64,8 +64,10 @@ type Slot @entity(immutable: false) {
   settlements: [SettledEvent!]! @derivedFrom(field: "slot")
   taxCollections: [TaxCollectedEvent!]! @derivedFrom(field: "slot")
   taxUpdateProposals: [TaxUpdateProposedEvent!]! @derivedFrom(field: "slot")
-  moduleUpdateProposals: [ModuleUpdateProposedEvent!]! @derivedFrom(field: "slot")
-  pendingUpdateCancellations: [PendingUpdateCancelledEvent!]! @derivedFrom(field: "slot")
+  moduleUpdateProposals: [ModuleUpdateProposedEvent!]!
+    @derivedFrom(field: "slot")
+  pendingUpdateCancellations: [PendingUpdateCancelledEvent!]!
+    @derivedFrom(field: "slot")
   metadataUpdates: [MetadataUpdatedEvent!]! @derivedFrom(field: "slot")
 }
 
@@ -229,6 +231,7 @@ type PendingUpdateCancelledEvent @entity(immutable: true) {
 type MetadataUpdatedEvent @entity(immutable: true) {
   id: ID!
   slot: Slot!
+  author: Account!
   uri: String!
   timestamp: BigInt!
   blockNumber: BigInt!

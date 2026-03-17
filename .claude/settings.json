@@ -15,7 +15,17 @@
       "Bash(npm run:*)",
       "Bash(git diff:*)",
       "Read(//Users/nezzarkefif/Documents/GitHub/0xSlots/**)",
-      "Bash(pnpm exec:*)"
+      "Bash(pnpm exec:*)",
+      "Bash(ls /Users/nezzarkefif/Documents/GitHub/0xSlots/apps/landing/src/app/slots/[slotAddress]/components/)",
+      "Bash(find /Users/nezzarkefif/Documents/GitHub/0xSlots/node_modules/pinata -name *.d.ts -maxdepth 3)",
+      "Bash(find /Users/nezzarkefif/Documents/GitHub/0xSlots -path */pinata/dist/* -name *.d.ts)",
+      "Bash(pnpm --filter @adland/data build)",
+      "Bash(pnpm --filter api exec tsc --noEmit)",
+      "Bash(pnpm --filter api build)",
+      "Bash(ls /Users/nezzarkefif/Documents/GitHub/0xSlots/apps/landing/src/app/slots/[slotAddress]/)"
+    ],
+    "additionalDirectories": [
+      "/Users/nezzarkefif/Documents/GitHub/0xSlots/apps/landing/src/app/slots/[slotAddress]"
     ]
   }
 }
