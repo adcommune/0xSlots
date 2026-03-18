@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { ConnectButton } from "@/components/connect-button";
 import { Button } from "@/components/ui/button";
 import { useFarcaster } from "@/context/farcaster";
@@ -43,6 +44,13 @@ export function SubmitButton({
 }: SubmitButtonProps) {
   const { isMiniApp } = useFarcaster();
 
+  // In miniapp mode, auto-switch to the correct chain
+  useEffect(() => {
+    if (isMiniApp && state.wrongChain) {
+      switchChain({ chainId });
+    }
+  }, [isMiniApp, state.wrongChain, switchChain, chainId]);
+
   if (!state.isConnected && !isMiniApp) {
     return (
       <div className={className}>
@@ -51,7 +59,7 @@ export function SubmitButton({
     );
   }
 
-  if (state.wrongChain) {
+  if (state.wrongChain && !isMiniApp) {
     return (
       <Button
         type="button"
