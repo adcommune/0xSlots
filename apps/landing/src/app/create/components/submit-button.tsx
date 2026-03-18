@@ -1,5 +1,6 @@
 import { ConnectButton } from "@/components/connect-button";
 import { Button } from "@/components/ui/button";
+import { useFarcaster } from "@/context/farcaster";
 
 export interface SubmitState {
   isConnected: boolean;
@@ -40,7 +41,9 @@ export function SubmitButton({
   chainId,
   className,
 }: SubmitButtonProps) {
-  if (!state.isConnected) {
+  const { isMiniApp } = useFarcaster();
+
+  if (!state.isConnected && !isMiniApp) {
     return (
       <div className={className}>
         <ConnectButton />

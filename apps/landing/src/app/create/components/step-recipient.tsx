@@ -1,4 +1,5 @@
 import { Plus, Trash2, Users, Wallet } from "lucide-react";
+import { useState } from "react";
 import { useFieldArray, useFormContext } from "react-hook-form";
 import { useAccount } from "wagmi";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ export function StepRecipient() {
   const { address } = useAccount();
   const form = useFormContext<CreateSlotFormValues>();
   const recipientMode = form.watch("recipientMode");
+  const [useCustomRecipient, setUseCustomRecipient] = useState(false);
 
   const {
     fields: splitFields,
@@ -39,7 +41,11 @@ export function StepRecipient() {
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
-                onClick={() => field.onChange("single")}
+                onClick={() => {
+                  field.onChange("single");
+                  setUseCustomRecipient(false);
+                  form.setValue("recipient", "");
+                }}
                 className={`flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-colors ${
                   field.value === "single"
                     ? "border-primary bg-primary/5"
@@ -68,41 +74,59 @@ export function StepRecipient() {
 
       {recipientMode === "single" && (
         <div className="mt-3">
-          <FormField
-            control={form.control}
-            name="recipient"
-            render={({ field, fieldState }) => (
-              <FormItem>
-                <div className="flex items-start gap-2">
-                  <div className="flex-1">
-                    <AddressInput
-                      value={field.value}
-                      onChange={field.onChange}
-                      onBlur={field.onBlur}
-                      placeholder="0x… or vitalik.eth"
-                      hint={
-                        address && !field.value
-                          ? `Defaults to ${truncateAddress(address)}`
-                          : undefined
-                      }
-                      error={fieldState.error?.message}
-                    />
-                  </div>
-                  {address && (
+          {!useCustomRecipient ? (
+            <div className="rounded-lg border bg-muted/30 p-4 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium">My Account</p>
+                {address && (
+                  <p className="text-xs text-muted-foreground font-mono mt-0.5">
+                    {truncateAddress(address)}
+                  </p>
+                )}
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="text-xs"
+                onClick={() => setUseCustomRecipient(true)}
+              >
+                Use custom
+              </Button>
+            </div>
+          ) : (
+            <FormField
+              control={form.control}
+              name="recipient"
+              render={({ field, fieldState }) => (
+                <FormItem>
+                  <div className="flex items-start gap-2">
+                    <div className="flex-1">
+                      <AddressInput
+                        value={field.value}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        placeholder="0x… or vitalik.eth"
+                        error={fieldState.error?.message}
+                      />
+                    </div>
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
                       className="shrink-0 text-xs h-9"
-                      onClick={() => field.onChange(address)}
+                      onClick={() => {
+                        field.onChange("");
+                        setUseCustomRecipient(false);
+                      }}
                     >
-                      Use my address
+                      Use my account
                     </Button>
-                  )}
-                </div>
-              </FormItem>
-            )}
-          />
+                  </div>
+                </FormItem>
+              )}
+            />
+          )}
         </div>
       )}
 

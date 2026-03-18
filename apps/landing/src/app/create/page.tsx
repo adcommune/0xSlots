@@ -203,7 +203,7 @@ export default function CreatePage() {
         </div>
       </PageHeader>
 
-      <div className="max-w-6xl mx-auto px-6 py-8 pb-24 lg:pb-8">
+      <div className="max-w-6xl mx-auto px-2 md:px-6 py-4 md:py-8 pb-24 lg:pb-8">
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
