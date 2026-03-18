@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   other: {
     "fc:miniapp": JSON.stringify({
       version: "1",
-      imageUrl: `${APP_URL}/banner.png`,
+      imageUrl: `${APP_URL}/api/og`,
       button: {
         title: "Open 0xSlots",
         action: {
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
           name: "0xSlots",
           url: APP_URL,
           splashImageUrl: `${APP_URL}/logo.png`,
-          splashBackgroundColor: "#000000",
+          splashBackgroundColor: "#ffffff",
         },
       },
     }),

@@ -24,7 +24,7 @@ export function GET() {
       name: "0xSlots",
       iconUrl: `${APP_URL}/logo.png`,
       homeUrl: APP_URL,
-      imageUrl: `${APP_URL}/banner.png`,
+      imageUrl: `${APP_URL}/api/og`,
       buttonTitle: "Explore",
       splashImageUrl: `${APP_URL}/logo.png`,
       splashBackgroundColor: "#ffffff",
