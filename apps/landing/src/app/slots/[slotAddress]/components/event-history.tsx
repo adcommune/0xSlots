@@ -1,6 +1,7 @@
 "use client";
 
 import { formatDistanceToNow } from "date-fns";
+import Link from "next/link";
 
 import { EventTypeBadge } from "@/components/event-type-badge";
 import type { UnifiedEvent } from "@/lib/normalize-events";
@@ -32,9 +33,9 @@ export function SlotEventHistory({ events, explorerUrl }: { events: UnifiedEvent
                 </td>
                 <td className="px-4 py-2.5 text-xs">
                   {ev.actor ? (
-                    <a href={`${explorerUrl}/address/${ev.actor}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                    <Link href={`/recipient/${ev.actor}`} className="text-primary hover:underline">
                       {truncateAddress(ev.actor)}
-                    </a>
+                    </Link>
                   ) : "—"}
                 </td>
                 <td className="px-4 py-2.5 text-muted-foreground">{ev.detail}</td>

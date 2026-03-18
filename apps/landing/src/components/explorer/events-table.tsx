@@ -51,14 +51,12 @@ export function EventsTable() {
                 </td>
                 <td className="px-4 py-2.5 text-xs">
                   {ev.actor ? (
-                    <a
-                      href={`${explorerUrl}/address/${ev.actor}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <Link
+                      href={`/recipient/${ev.actor}`}
                       className="text-primary hover:underline"
                     >
                       {truncateAddress(ev.actor)}
-                    </a>
+                    </Link>
                   ) : (
                     "—"
                   )}

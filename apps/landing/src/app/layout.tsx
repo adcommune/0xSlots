@@ -1,12 +1,9 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
-import Image from "next/image";
 import { Toaster } from "sonner";
 
-import { ChainCapabilities } from "@/components/chain-capabilities";
+import { AppShell } from "@/components/app-shell";
 import { Providers } from "@/components/providers";
-import { SubgraphStatus } from "@/components/subgraph-status";
-import { UserMenu } from "@/components/user-menu";
 
 import "./globals.css";
 
@@ -16,10 +13,28 @@ const jetbrains = JetBrains_Mono({
   variable: "--font-mono",
 });
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.0xslots.org";
+
 export const metadata: Metadata = {
   title: "0xSlots — Immutable & Modular Collective Ownership Slots",
   description:
     "Immutable & modular collective ownership slots on Ethereum. Perpetual onchain real estate powered by partial common ownership. Any ERC-20.",
+  other: {
+    "fc:miniapp": JSON.stringify({
+      version: "1",
+      imageUrl: `${APP_URL}/banner.png`,
+      button: {
+        title: "Open 0xSlots",
+        action: {
+          type: "launch_miniapp",
+          name: "0xSlots",
+          url: APP_URL,
+          splashImageUrl: `${APP_URL}/logo.png`,
+          splashBackgroundColor: "#000000",
+        },
+      },
+    }),
+  },
 };
 
 export default function RootLayout({
@@ -33,60 +48,8 @@ export default function RootLayout({
         className={`${inter.variable} ${jetbrains.variable} font-sans bg-background text-foreground`}
       >
         <Providers>
-          <div className="min-h-screen flex flex-col">
-            {/* Nav */}
-            <nav className="flex items-center justify-between px-6 py-4 border-b">
-              <div className="flex flex-row items-center gap-6">
-                <a
-                  href="/"
-                  className="text-2xl flex flex-row gap-2 items-center font-black tracking-tighter"
-                >
-                  <Image
-                    src={"/logo.png"}
-                    width={100}
-                    height={100}
-                    alt=""
-                    className="w-6 aspect-square h-6"
-                  />
-                  0xSlots
-                </a>
-                <div className="flex flex-row items-center gap-2">
-                  <SubgraphStatus />
-                  <ChainCapabilities />
-                </div>
-              </div>
-              <UserMenu />
-            </nav>
-
-            {/* Main Content */}
-            <Toaster position="bottom-right" richColors />
-            <main className="flex-1">{children}</main>
-
-            {/* Footer */}
-            <footer className="px-6 py-6 border-t">
-              <div className="max-w-5xl mx-auto flex justify-between items-center text-sm text-muted-foreground">
-                <span>0xSlots</span>
-                <div className="flex items-center gap-6">
-                  <a
-                    href="https://github.com/adcommune/0xSlots"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:text-foreground transition-colors"
-                  >
-                    GitHub
-                  </a>
-                  <a
-                    href="https://github.com/adcommune"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:text-foreground transition-colors"
-                  >
-                    adcommune
-                  </a>
-                </div>
-              </div>
-            </footer>
-          </div>
+          <Toaster position="bottom-right" richColors />
+          <AppShell>{children}</AppShell>
         </Providers>
       </body>
     </html>
