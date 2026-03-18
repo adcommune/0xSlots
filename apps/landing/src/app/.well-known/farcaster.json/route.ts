@@ -27,7 +27,7 @@ export function GET() {
       imageUrl: `${APP_URL}/banner.png`,
       buttonTitle: "Explore",
       splashImageUrl: `${APP_URL}/logo.png`,
-      splashBackgroundColor: "#ffffffff",
+      splashBackgroundColor: "#ffffff",
       description: "Taxable Slots",
     },
   });
