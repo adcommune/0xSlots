@@ -17,13 +17,13 @@ export default function Home() {
     <div className="min-h-screen">
       <PageHeader>
         <div className="flex items-center gap-6">
-          <div>
+          <div className="hidden md:flex flex-col">
             <h1 className="text-xl font-bold tracking-tight leading-tight">
               Explorer
             </h1>
             <p className="text-muted-foreground text-xs">Base Sepolia · v3</p>
           </div>
-          <div className="w-px h-6 bg-border" />
+          <div className="hidden md:flex w-px h-6 bg-border" />
           <StatsBar />
         </div>
         <div className="flex items-center gap-3">
@@ -36,7 +36,7 @@ export default function Home() {
         </div>
       </PageHeader>
 
-      <div className="max-w-6xl mx-auto px-6 py-4">
+      <div className="max-w-6xl mx-auto px-2 md:px-6 py-1 md:py-4">
         <ExplorerTabs
           tabs={[
             {

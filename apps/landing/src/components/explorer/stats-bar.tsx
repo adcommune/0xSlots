@@ -10,7 +10,7 @@ export function StatsBar() {
   const occupied = (slots?.length ?? 0) - vacant;
 
   return (
-    <div className="flex items-center gap-5">
+    <div className="hidden md:flex items-center gap-5">
       <div className="flex items-center gap-1.5">
         <LandPlot className="size-3 text-muted-foreground" />
         <span className="text-xs text-muted-foreground">Slots</span>

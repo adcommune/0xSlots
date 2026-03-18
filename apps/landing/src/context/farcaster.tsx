@@ -9,6 +9,13 @@ import {
   type ReactNode,
 } from "react";
 
+interface FarcasterUser {
+  fid: number;
+  username?: string;
+  displayName?: string;
+  pfpUrl?: string;
+}
+
 interface FarcasterContext {
   /** Whether the app is running inside a Farcaster client */
   isMiniApp: boolean;
@@ -16,12 +23,15 @@ interface FarcasterContext {
   isReady: boolean;
   /** The Farcaster SDK instance (always available, but only meaningful in miniapp mode) */
   sdk: typeof sdk;
+  /** The connected Farcaster user (only available in miniapp mode) */
+  user: FarcasterUser | null;
 }
 
 const FarcasterCtx = createContext<FarcasterContext>({
   isMiniApp: false,
   isReady: false,
   sdk,
+  user: null,
 });
 
 export function useFarcaster() {
@@ -37,6 +47,7 @@ export function useFarcaster() {
 export function FarcasterProvider({ children }: { children: ReactNode }) {
   const [isMiniApp, setIsMiniApp] = useState(false);
   const [isReady, setIsReady] = useState(false);
+  const [user, setUser] = useState<FarcasterUser | null>(null);
 
   useEffect(() => {
     async function init() {
@@ -44,6 +55,14 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
         const context = await sdk.context;
         if (context) {
           setIsMiniApp(true);
+          if (context.user) {
+            setUser({
+              fid: context.user.fid,
+              username: context.user.username,
+              displayName: context.user.displayName,
+              pfpUrl: context.user.pfpUrl,
+            });
+          }
           await sdk.actions.ready();
         }
       } catch {
@@ -55,7 +74,7 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <FarcasterCtx.Provider value={{ isMiniApp, isReady, sdk }}>
+    <FarcasterCtx.Provider value={{ isMiniApp, isReady, sdk, user }}>
       {children}
     </FarcasterCtx.Provider>
   );

@@ -2,18 +2,64 @@
 
 import Image from "next/image";
 import type { ReactNode } from "react";
+import { useAccount } from "wagmi";
 
 import { ChainCapabilities } from "@/components/chain-capabilities";
 import { SubgraphStatus } from "@/components/subgraph-status";
 import { UserMenu } from "@/components/user-menu";
 import { useFarcaster } from "@/context/farcaster";
+import { truncateAddress } from "@/utils";
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { isMiniApp } = useFarcaster();
+  const { isMiniApp, user } = useFarcaster();
+  const { address } = useAccount();
 
   if (isMiniApp) {
-    // Inside Farcaster: render content only, no nav/footer chrome
-    return <main className="min-h-screen flex flex-col flex-1">{children}</main>;
+    return (
+      <div className="min-h-screen flex flex-col">
+        <nav className="flex items-center justify-between px-4 py-3 border-b">
+          <a
+            href="/"
+            className="text-xl flex flex-row gap-2 items-center font-black tracking-tighter"
+          >
+            <Image
+              src="/logo.png"
+              width={100}
+              height={100}
+              alt=""
+              className="w-5 aspect-square h-5"
+            />
+            0xSlots
+          </a>
+
+          <div className="flex items-center gap-2">
+            {user?.pfpUrl && (
+              <Image
+                src={user.pfpUrl}
+                alt=""
+                width={24}
+                height={24}
+                className="size-6 rounded-full"
+              />
+            )}
+            <div className="flex flex-col items-end">
+              {user?.username && (
+                <span className="text-sm font-medium leading-tight">
+                  {user.displayName ?? user.username}
+                </span>
+              )}
+              {address && (
+                <span className="text-xs text-muted-foreground font-mono leading-tight">
+                  {truncateAddress(address)}
+                </span>
+              )}
+            </div>
+          </div>
+        </nav>
+
+        <main className="flex-1 flex flex-col">{children}</main>
+      </div>
+    );
   }
 
   // Regular web: full nav + footer
