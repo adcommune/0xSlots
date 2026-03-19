@@ -729,6 +729,40 @@ export class MetadataSlot extends Entity {
     this.set("uri", Value.fromString(value));
   }
 
+  get rawJson(): string | null {
+    let value = this.get("rawJson");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set rawJson(value: string | null) {
+    if (!value) {
+      this.unset("rawJson");
+    } else {
+      this.set("rawJson", Value.fromString(<string>value));
+    }
+  }
+
+  get adType(): string | null {
+    let value = this.get("adType");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set adType(value: string | null) {
+    if (!value) {
+      this.unset("adType");
+    } else {
+      this.set("adType", Value.fromString(<string>value));
+    }
+  }
+
   get updatedBy(): Bytes {
     let value = this.get("updatedBy");
     if (!value || value.kind == ValueKind.NULL) {
@@ -2570,6 +2604,40 @@ export class MetadataUpdatedEvent extends Entity {
 
   set uri(value: string) {
     this.set("uri", Value.fromString(value));
+  }
+
+  get rawJson(): string | null {
+    let value = this.get("rawJson");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set rawJson(value: string | null) {
+    if (!value) {
+      this.unset("rawJson");
+    } else {
+      this.set("rawJson", Value.fromString(<string>value));
+    }
+  }
+
+  get adType(): string | null {
+    let value = this.get("adType");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set adType(value: string | null) {
+    if (!value) {
+      this.unset("adType");
+    } else {
+      this.set("adType", Value.fromString(<string>value));
+    }
   }
 
   get timestamp(): BigInt {

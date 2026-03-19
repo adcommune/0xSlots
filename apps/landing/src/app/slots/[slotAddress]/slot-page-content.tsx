@@ -160,8 +160,6 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
   const remaining =
     slot.deposit > slot.taxOwed ? slot.deposit - slot.taxOwed : 0n;
 
-  console.log({ slot, subgraphSlot });
-
   const hasModule =
     slot.module != null && slot.module.toLowerCase() !== zeroAddress;
   const moduleEntity = subgraphSlot?.module ?? null;
