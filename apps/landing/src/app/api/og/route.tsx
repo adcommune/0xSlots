@@ -12,45 +12,29 @@ export async function GET() {
           width: "100%",
           height: "100%",
           display: "flex",
-          flexDirection: "column",
+          flexDirection: "row",
           alignItems: "center",
           justifyContent: "center",
-          background: "#0a0a0a",
-          gap: 32,
+          background: "#ffffff",
+          gap: 24,
         }}
       >
-        {/* Logo */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={`${APP_URL}/logo.png`}
           alt=""
-          width={120}
-          height={120}
-          style={{ borderRadius: 24 }}
+          width={80}
+          height={80}
         />
-
-        {/* Title */}
         <div
           style={{
-            display: "flex",
             fontSize: 64,
             fontWeight: 900,
-            color: "#ffffff",
+            color: "#0a0a0a",
             letterSpacing: "-0.05em",
           }}
         >
           0xSlots
-        </div>
-
-        {/* Tagline */}
-        <div
-          style={{
-            display: "flex",
-            fontSize: 24,
-            color: "#a1a1aa",
-          }}
-        >
-          Taxable Slots
         </div>
       </div>
     ),
