@@ -3,7 +3,13 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**", "out/**", "dist/**"]
+      "outputs": [".next/**", "!.next/cache/**", "out/**", "dist/**"],
+      "passThroughEnv": [
+        "ALCHEMY_KEY",
+        "FARCASTER_API_KEY",
+        "NEYNAR_API_KEY",
+        "PINATA_JWT"
+      ]
     },
     "dev": {
       "cache": false,
@@ -12,7 +18,13 @@
     "start": {
       "dependsOn": ["build"],
       "cache": false,
-      "persistent": true
+      "persistent": true,
+      "passThroughEnv": [
+        "ALCHEMY_KEY",
+        "FARCASTER_API_KEY",
+        "NEYNAR_API_KEY",
+        "PINATA_JWT"
+      ]
     },
     "lint": {}
   }
