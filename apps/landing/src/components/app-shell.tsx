@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import type { ReactNode } from "react";
-import { useAccount } from "wagmi";
+import { useAccount, useConnect } from "wagmi";
 
 import { ChainCapabilities } from "@/components/chain-capabilities";
 import { SubgraphStatus } from "@/components/subgraph-status";
@@ -12,7 +12,7 @@ import { truncateAddress } from "@/utils";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { isMiniApp, user } = useFarcaster();
-  const { address, isConnected } = useAccount();
+  const { address } = useAccount();
 
   if (isMiniApp) {
     return (
@@ -31,9 +31,6 @@ export function AppShell({ children }: { children: ReactNode }) {
             />
             0xSlots
           </a>
-          <p className="text-xs">
-            {isConnected ? "Connected" : "Disconnected"}
-          </p>
           <div className="flex items-center gap-2">
             {user?.pfpUrl && (
               <Image

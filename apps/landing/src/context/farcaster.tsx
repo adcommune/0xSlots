@@ -3,10 +3,10 @@
 import { sdk } from "@farcaster/miniapp-sdk";
 import {
   createContext,
+  type ReactNode,
   useContext,
   useEffect,
   useState,
-  type ReactNode,
 } from "react";
 
 interface FarcasterUser {
