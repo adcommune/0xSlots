@@ -22,6 +22,8 @@ interface SubmitButtonProps {
   switchChain: (params: { chainId: number }) => void;
   chainId: number;
   className?: string;
+  /** Associate with a <form> by id (needed when rendered in a portal). */
+  formId?: string;
 }
 
 function getSubmitLabel(state: SubmitState): string {
@@ -41,6 +43,7 @@ export function SubmitButton({
   switchChain,
   chainId,
   className,
+  formId,
 }: SubmitButtonProps) {
   const { isMiniApp } = useFarcaster();
 
@@ -88,6 +91,7 @@ export function SubmitButton({
   return (
     <Button
       type="submit"
+      form={formId}
       className={className}
       disabled={state.busy || state.anyResolving || !state.isFormValid}
     >
