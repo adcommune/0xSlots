@@ -9,6 +9,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { miniAppConfig } from "@/config/wagmi-miniapp";
 import { ChainProvider } from "@/context/chain";
 import { FarcasterProvider, useFarcaster } from "@/context/farcaster";
+import { NavigationProvider } from "@/context/navigation";
 import { logOnServer } from "@/lib/logs";
 import { SplitsClientSync } from "./splits-client-sync";
 
@@ -46,7 +47,9 @@ function MiniAppProviders({ children }: { children: ReactNode }) {
         <ChainProvider>
           <SplitsProvider>
             <SplitsClientSync />
-            <TooltipProvider>{children}</TooltipProvider>
+            <TooltipProvider>
+              <NavigationProvider>{children}</NavigationProvider>
+            </TooltipProvider>
           </SplitsProvider>
         </ChainProvider>
       </QueryClientProvider>

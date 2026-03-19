@@ -1,7 +1,7 @@
 "use client";
 
 import { formatDistanceToNow } from "date-fns";
-import Link from "next/link";
+import { NavLink } from "@/context/navigation";
 
 import { EventTypeBadge } from "@/components/event-type-badge";
 import { TablePagination, usePagination } from "@/components/table-pagination";
@@ -49,21 +49,21 @@ export function EventsTable() {
                 <EventTypeBadge type={ev.type} />
               </TableCell>
               <TableCell>
-                <Link
+                <NavLink
                   href={`/slots/${ev.slot}`}
                   className="text-primary hover:underline"
                 >
                   {truncateAddress(ev.slot ?? "")}
-                </Link>
+                </NavLink>
               </TableCell>
               <TableCell>
                 {ev.actor ? (
-                  <Link
+                  <NavLink
                     href={`/recipient/${ev.actor}`}
                     className="text-primary hover:underline"
                   >
                     {truncateAddress(ev.actor)}
-                  </Link>
+                  </NavLink>
                 ) : (
                   "—"
                 )}

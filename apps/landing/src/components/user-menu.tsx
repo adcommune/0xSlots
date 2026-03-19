@@ -11,7 +11,7 @@ import {
   User,
 } from "lucide-react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useNavigation } from "@/context/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useDisconnect } from "wagmi";
@@ -33,7 +33,7 @@ import { useChain } from "@/context/chain";
 import { truncateAddress } from "@/utils";
 
 export function UserMenu() {
-  const router = useRouter();
+  const { push } = useNavigation();
   const { chainId, setChain } = useChain();
   const { disconnect } = useDisconnect();
   const [copied, setCopied] = useState(false);
@@ -138,11 +138,11 @@ export function UserMenu() {
               <DropdownMenuSeparator />
 
               <DropdownMenuGroup>
-                <DropdownMenuItem onClick={() => router.push("/profile")}>
+                <DropdownMenuItem onClick={() => push("/profile")}>
                   <User className="size-4" />
                   My Slots
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => router.push("/docs")}>
+                <DropdownMenuItem onClick={() => push("/docs")}>
                   <BookOpen className="size-4" />
                   Docs
                 </DropdownMenuItem>

@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { NavLink, useNavigation } from "@/context/navigation";
 import { formatUnits } from "viem";
 import { useAccount } from "wagmi";
 
@@ -68,7 +68,7 @@ function SlotTable({
               <tr
                 key={s.id}
                 className="border-b hover:bg-muted/30 cursor-pointer transition-colors"
-                onClick={() => { window.location.href = `/slots/${s.id}`; }}
+                onClick={() => push(`/slots/${s.id}`)}
               >
                 <td className="px-4 py-2 text-xs">{truncateAddress(s.id)}</td>
                 <td className="px-4 py-2">
@@ -184,18 +184,19 @@ function ProfileContent({ address }: { address: string }) {
 }
 
 export default function ProfilePage() {
+  const { push } = useNavigation();
   const { address, isConnected } = useAccount();
 
   return (
     <div className="min-h-screen">
       <PageHeader>
         <div>
-          <Link
+          <NavLink
             href="/"
             className="text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             ← Explorer
-          </Link>
+          </NavLink>
           <h1 className="text-xl font-bold tracking-tight leading-tight">
             My Profile
           </h1>

@@ -3,6 +3,7 @@
 import { Check, Filter, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { isAddress } from "viem";
+import { useNavigation } from "@/context/navigation";
 
 import { AccountTypeIcon } from "@/components/account-type-icon";
 import { EnsAddress } from "@/components/ens-address";
@@ -37,6 +38,7 @@ import { formatPrice, truncateAddress } from "@/utils";
 const STORAGE_KEY = "0xslots:slot-filters";
 
 export function SlotsTable() {
+  const { push } = useNavigation();
   const [filters, setFilters] = useState<SlotFilters>({});
   const [addressInput, setAddressInput] = useState("");
   const [addressField, setAddressField] = useState<
@@ -288,7 +290,7 @@ export function SlotsTable() {
                     key={slot.id}
                     className="cursor-pointer"
                     onClick={() => {
-                      window.location.href = `/slots/${slot.id}`;
+                      push(`/slots/${slot.id}`);
                     }}
                   >
                     <TableCell>

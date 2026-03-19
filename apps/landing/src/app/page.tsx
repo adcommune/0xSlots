@@ -1,7 +1,7 @@
 "use client";
 
 import { FileBox, LandPlot, List, PlusIcon, User } from "lucide-react";
-import Link from "next/link";
+import { NavLink } from "@/context/navigation";
 
 import { EventsTable } from "@/components/explorer/events-table";
 import { ModulesTable } from "@/components/explorer/modules-table";
@@ -30,7 +30,7 @@ export default function Home() {
           <Button size="sm" asChild>
             <div>
               <PlusIcon className="w-5 h-5" />
-              <Link href="/create">Create Slot</Link>
+              <NavLink href="/create">Create Slot</NavLink>
             </div>
           </Button>
         </div>

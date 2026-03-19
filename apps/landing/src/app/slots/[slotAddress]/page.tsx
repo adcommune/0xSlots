@@ -6,6 +6,7 @@ import {
   AlertTriangle,
   ArrowUpFromLine,
   Banknote,
+  ChevronUp,
   CircleDollarSign,
   Clock,
   Cog,
@@ -23,7 +24,7 @@ import {
   User,
   Wallet,
 } from "lucide-react";
-import Link from "next/link";
+import { NavLink } from "@/context/navigation";
 import { useRouter } from "next/navigation";
 import { use, useEffect, useState } from "react";
 import { type Address, zeroAddress } from "viem";
@@ -45,7 +46,17 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 import { useChain } from "@/context/chain";
+import { useFarcaster } from "@/context/farcaster";
 import { useCurrencyBalance } from "@/hooks/use-currency-balance";
 import { useSlotAction } from "@/hooks/use-slot-action";
 import { useSlotOnChain } from "@/hooks/use-slot-onchain";
@@ -75,6 +86,7 @@ export default function SlotPage({
   const { slotAddress } = use(params);
   const router = useRouter();
   const { explorerUrl, chainId: selectedChainId } = useChain();
+  const { isMiniApp } = useFarcaster();
   const { data: slot, isLoading } = useSlotOnChain(slotAddress);
   const { data: subgraphSlot } = useSlot(slotAddress);
   const { data: activityData } = useSlotActivity(slotAddress);
@@ -130,12 +142,12 @@ export default function SlotPage({
         <div className="max-w-6xl mx-auto px-6 py-12">
           <div className="rounded-lg border p-12 text-center">
             <p className="text-sm">Slot not found</p>
-            <Link
+            <NavLink
               href="/"
               className="text-sm text-primary underline mt-4 block"
             >
               ← Back to Explorer
-            </Link>
+            </NavLink>
           </div>
         </div>
       </div>
@@ -181,6 +193,15 @@ export default function SlotPage({
           : null
     : null;
 
+  // Contextual label for the mobile actions drawer trigger
+  const actionLabel = isOccupant
+    ? "Manage"
+    : isRecipient
+      ? "Collect"
+      : !isOccupied
+        ? "Buy Slot"
+        : "Buy";
+
   return (
     <div className="min-h-screen">
       <PageHeader>
@@ -211,7 +232,7 @@ export default function SlotPage({
         </div>
       </PageHeader>
 
-      <div className="max-w-6xl mx-auto p-2 md:p-6">
+      <div className="max-w-6xl mx-auto p-2 md:p-6 pb-32 lg:pb-6">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 items-start">
           {/* Left: Tabbed content */}
           <div className="space-y-6">
@@ -270,12 +291,12 @@ export default function SlotPage({
                         )}{" "}
                         Recipient
                       </span>
-                      <Link
+                      <NavLink
                         href={`/recipient/${slot.recipient}`}
                         className="text-primary hover:underline text-xs"
                       >
                         {truncateAddress(slot.recipient)}
-                      </Link>
+                      </NavLink>
                     </div>
                     {subgraphSlot?.recipientAccount?.type === "SPLIT" && (
                       <SplitRecipientsBar
@@ -588,9 +609,9 @@ export default function SlotPage({
               )}
             </div>
 
-            {/* Metadata Module card — below tabbed content, left column only */}
+            {/* Metadata Module card — desktop only */}
             {isMetadataModule && (
-              <div className="rounded-lg border">
+              <div className="hidden lg:block rounded-lg border">
                 <div className="bg-muted/50 border-b px-4 py-3 flex items-center gap-1.5">
                   <FileBox className="size-3.5" />
                   <h2 className="text-sm font-semibold">Ad Metadata</h2>
@@ -605,255 +626,360 @@ export default function SlotPage({
             )}
           </div>
 
-          {/* Right: Actions */}
-          <div className="lg:sticky lg:top-6">
-            <div className={`rounded-lg border ${role ? role.accent : ""}`}>
-              <div className="bg-muted/50 border-b px-3 py-3 flex items-center justify-between">
-                <h2 className="text-sm font-semibold">
-                  {isOccupied
-                    ? `Price: ${formatBalance(slot.price, decimals)} ${symbol}`
-                    : "Vacant Slot"}
-                </h2>
-                {role && (
-                  <span
-                    className={`text-[11px] font-medium rounded-full border px-2 py-0.5 ${role.badge}`}
-                  >
-                    {role.label}
-                  </span>
-                )}
+          {/* Right: Actions — desktop only */}
+          <div className="hidden lg:block lg:sticky lg:top-6">
+            {renderActionsCard()}
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile bottom bar with drawers */}
+      <MobileSlotBar
+        isMiniApp={isMiniApp}
+        actionLabel={actionLabel}
+        actionsTitle={
+          isOccupied
+            ? `Price: ${formatBalance(slot.price, decimals)} ${symbol}`
+            : "Vacant Slot"
+        }
+        actionsContent={renderActionsContent()}
+        showModule={!!isMetadataModule}
+        moduleContent={
+          <MetadataForm
+            slotAddress={slotAddress}
+            isOccupant={!!isOccupant}
+          />
+        }
+      />
+    </div>
+  );
+
+  function renderActionsCard() {
+    if (!slot) return null;
+    return (
+      <div className={`rounded-lg border ${role ? role.accent : ""}`}>
+        <div className="bg-muted/50 border-b px-3 py-3 flex items-center justify-between">
+          <h2 className="text-sm font-semibold">
+            {isOccupied
+              ? `Price: ${formatBalance(slot.price, decimals)} ${symbol}`
+              : "Vacant Slot"}
+          </h2>
+          {role && (
+            <span
+              className={`text-[11px] font-medium rounded-full border px-2 py-0.5 ${role.badge}`}
+            >
+              {role.label}
+            </span>
+          )}
+        </div>
+        {renderActionsContent()}
+      </div>
+    );
+  }
+
+  function renderActionsContent() {
+    if (!slot) return null;
+    return (
+      <>
+        {isOccupied && (
+          <div className="p-4 border-b space-y-2.5 text-sm">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground flex items-center gap-1.5">
+                <Banknote className="size-3" /> Deposit
+              </span>
+              <span>
+                {formatBalance(slot.deposit, decimals)} {symbol}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground flex items-center gap-1.5">
+                <HandCoins className="size-3" /> Tax Owed
+              </span>
+              <span>
+                {formatBalance(slot.taxOwed, decimals)} {symbol}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground flex items-center gap-1.5">
+                <Wallet className="size-3" /> Net Balance
+              </span>
+              <span
+                className={`font-bold ${slot.insolvent ? "text-destructive" : ""}`}
+              >
+                {formatBalance(remaining, decimals)} {symbol}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground flex items-center gap-1.5">
+                <Clock className="size-3" /> Liquidation In
+              </span>
+              <span
+                className={
+                  slot.insolvent ? "text-destructive font-bold" : ""
+                }
+              >
+                {slot.insolvent
+                  ? "NOW"
+                  : formatDuration(Number(slot.secondsUntilLiquidation))}
+              </span>
+            </div>
+            {slot.insolvent && (
+              <div className="rounded border border-destructive bg-destructive/10 text-destructive text-center py-1 text-xs font-bold">
+                INSOLVENT
               </div>
+            )}
+          </div>
+        )}
 
-              {/* Live on-chain financials */}
-              {isOccupied && (
-                <div className="p-4 border-b space-y-2.5 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground flex items-center gap-1.5">
-                      <Banknote className="size-3" /> Deposit
-                    </span>
-                    <span>
-                      {formatBalance(slot.deposit, decimals)} {symbol}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground flex items-center gap-1.5">
-                      <HandCoins className="size-3" /> Tax Owed
-                    </span>
-                    <span>
-                      {formatBalance(slot.taxOwed, decimals)} {symbol}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground flex items-center gap-1.5">
-                      <Wallet className="size-3" /> Net Balance
-                    </span>
-                    <span
-                      className={`font-bold ${slot.insolvent ? "text-destructive" : ""}`}
-                    >
-                      {formatBalance(remaining, decimals)} {symbol}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground flex items-center gap-1.5">
-                      <Clock className="size-3" /> Liquidation In
-                    </span>
-                    <span
-                      className={
-                        slot.insolvent ? "text-destructive font-bold" : ""
-                      }
-                    >
-                      {slot.insolvent
-                        ? "NOW"
-                        : formatDuration(Number(slot.secondsUntilLiquidation))}
-                    </span>
-                  </div>
-                  {slot.insolvent && (
-                    <div className="rounded border border-destructive bg-destructive/10 text-destructive text-center py-1 text-xs font-bold">
-                      INSOLVENT
-                    </div>
-                  )}
-                </div>
+        {!isOccupied && (
+          <div className="p-4 border-b">
+            <p className="text-sm text-muted-foreground">
+              Vacant — No escrow data
+            </p>
+          </div>
+        )}
+
+        {isConnected && (
+          <UserCurrencyBalance currency={slot.currency as Address} />
+        )}
+
+        <div className="p-4 space-y-3">
+          {!isConnected && !isMiniApp ? (
+            <p className="text-sm text-muted-foreground text-center py-2">
+              Connect wallet to interact
+            </p>
+          ) : wrongChain && !isMiniApp ? (
+            <Button
+              variant="destructive"
+              className="w-full"
+              onClick={() => switchChain({ chainId: selectedChainId })}
+            >
+              Switch to Base Sepolia
+            </Button>
+          ) : (
+            <>
+              {(slot.occupant == null || !isOccupant) && !isRecipient && (
+                <BuySection
+                  slot={slot}
+                  slotAddress={slotAddress}
+                  isOccupied={isOccupied}
+                />
               )}
 
-              {!isOccupied && (
-                <div className="p-4 border-b">
-                  <p className="text-sm text-muted-foreground">
-                    Vacant — No escrow data
-                  </p>
-                </div>
-              )}
-
-              {isConnected && (
-                <UserCurrencyBalance currency={slot.currency as Address} />
-              )}
-
-              <div className="p-4 space-y-3">
-                {!isConnected ? (
-                  <p className="text-sm text-muted-foreground text-center py-2">
-                    Connect wallet to interact
-                  </p>
-                ) : wrongChain ? (
-                  <Button
-                    variant="destructive"
-                    className="w-full"
-                    onClick={() => switchChain({ chainId: selectedChainId })}
-                  >
-                    Switch to Base Sepolia
-                  </Button>
-                ) : (
-                  <>
-                    {/* Buy / Force Buy */}
-                    {(slot.occupant == null || !isOccupant) && !isRecipient && (
-                      <BuySection
-                        slot={slot}
-                        slotAddress={slotAddress}
-                        isOccupied={isOccupied}
+              {isOccupant && (
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-xs text-muted-foreground block mb-1">
+                      New Price ({symbol})
+                    </label>
+                    <div className="flex gap-2">
+                      <Input
+                        type="text"
+                        placeholder="1.00"
+                        value={newPrice}
+                        onChange={(e) => setNewPrice(e.target.value)}
+                        className="text-xs flex-1"
                       />
-                    )}
-
-                    {isOccupant && (
-                      <div className="space-y-3">
-                        <div>
-                          <label className="text-xs text-muted-foreground block mb-1">
-                            New Price ({symbol})
-                          </label>
-                          <div className="flex gap-2">
-                            <Input
-                              type="text"
-                              placeholder="1.00"
-                              value={newPrice}
-                              onChange={(e) => setNewPrice(e.target.value)}
-                              className="text-xs flex-1"
-                            />
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              disabled={busy}
-                              onClick={() =>
-                                selfAssess(
-                                  slotAddress as Address,
-                                  toRawUnits(newPrice, decimals),
-                                )
-                              }
-                            >
-                              {busy && activeAction === "Set price" ? (
-                                <Loader2 className="size-4 animate-spin" />
-                              ) : (
-                                "Set"
-                              )}
-                            </Button>
-                          </div>
-                        </div>
-
-                        <div className="border-t pt-3">
-                          <DepositSlider
-                            slot={slot}
-                            slotAddress={slotAddress}
-                            walletBalance={walletBalance}
-                          />
-                        </div>
-
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              variant="destructive"
-                              className="w-full"
-                              disabled={busy}
-                            >
-                              {busy && activeAction === "Release slot" ? (
-                                <Loader2 className="size-4 animate-spin" />
-                              ) : (
-                                <>
-                                  <ArrowUpFromLine className="size-4 mr-1" />{" "}
-                                  Release Slot
-                                </>
-                              )}
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>
-                                Release this slot?
-                              </AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This will give up your occupancy and return your
-                                remaining deposit. You will lose your position
-                                and someone else can claim the slot.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => release(slotAddress as Address)}
-                              >
-                                Release
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    )}
-
-                    {isRecipient && (
                       <Button
+                        size="sm"
                         variant="outline"
-                        className="w-full"
-                        disabled={busy || slot.taxOwed === 0n}
-                        onClick={() => collect(slotAddress as Address)}
+                        disabled={busy}
+                        onClick={() =>
+                          selfAssess(
+                            slotAddress as Address,
+                            toRawUnits(newPrice, decimals),
+                          )
+                        }
                       >
-                        {busy && activeAction === "Collect tax" ? (
+                        {busy && activeAction === "Set price" ? (
                           <Loader2 className="size-4 animate-spin" />
-                        ) : slot.taxOwed === 0n ? (
-                          "Nothing to Collect"
                         ) : (
-                          <>
-                            <HandCoins className="size-4 mr-1" /> Collect Tax (
-                            {formatBalance(slot.taxOwed, decimals)} {symbol})
-                          </>
+                          "Set"
                         )}
                       </Button>
-                    )}
+                    </div>
+                  </div>
 
-                    {isOccupant && !isRecipient && (
-                      <Button
-                        variant="outline"
-                        className="w-full"
-                        disabled={busy || slot.taxOwed === 0n}
-                        onClick={() => payTax(slotAddress as Address)}
-                      >
-                        {busy && activeAction === "Pay tax" ? (
-                          <Loader2 className="size-4 animate-spin" />
-                        ) : slot.taxOwed === 0n ? (
-                          "No Tax Due"
-                        ) : (
-                          <>
-                            <HandCoins className="size-4 mr-1" /> Pay Tax (
-                            {formatBalance(slot.taxOwed, decimals)} {symbol})
-                          </>
-                        )}
-                      </Button>
-                    )}
+                  <div className="border-t pt-3">
+                    <DepositSlider
+                      slot={slot}
+                      slotAddress={slotAddress}
+                      walletBalance={walletBalance}
+                    />
+                  </div>
 
-                    {isOccupied && !isOccupant && (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
                       <Button
                         variant="destructive"
                         className="w-full"
-                        disabled={busy || !slot.insolvent}
-                        onClick={() => liquidate(slotAddress as Address)}
+                        disabled={busy}
                       >
-                        {busy && activeAction === "Liquidate" ? (
+                        {busy && activeAction === "Release slot" ? (
                           <Loader2 className="size-4 animate-spin" />
                         ) : (
                           <>
-                            <Flame className="size-4 mr-1" /> Liquidate
+                            <ArrowUpFromLine className="size-4 mr-1" />{" "}
+                            Release Slot
                           </>
                         )}
                       </Button>
-                    )}
-                  </>
-                )}
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>
+                          Release this slot?
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will give up your occupancy and return your
+                          remaining deposit. You will lose your position
+                          and someone else can claim the slot.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => release(slotAddress as Address)}
+                        >
+                          Release
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              )}
+
+              {isRecipient && (
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  disabled={busy || slot.taxOwed === 0n}
+                  onClick={() => collect(slotAddress as Address)}
+                >
+                  {busy && activeAction === "Collect tax" ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : slot.taxOwed === 0n ? (
+                    "Nothing to Collect"
+                  ) : (
+                    <>
+                      <HandCoins className="size-4 mr-1" /> Collect Tax (
+                      {formatBalance(slot.taxOwed, decimals)} {symbol})
+                    </>
+                  )}
+                </Button>
+              )}
+
+              {isOccupant && !isRecipient && (
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  disabled={busy || slot.taxOwed === 0n}
+                  onClick={() => payTax(slotAddress as Address)}
+                >
+                  {busy && activeAction === "Pay tax" ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : slot.taxOwed === 0n ? (
+                    "No Tax Due"
+                  ) : (
+                    <>
+                      <HandCoins className="size-4 mr-1" /> Pay Tax (
+                      {formatBalance(slot.taxOwed, decimals)} {symbol})
+                    </>
+                  )}
+                </Button>
+              )}
+
+              {isOccupied && !isOccupant && (
+                <Button
+                  variant="destructive"
+                  className="w-full"
+                  disabled={busy || !slot.insolvent}
+                  onClick={() => liquidate(slotAddress as Address)}
+                >
+                  {busy && activeAction === "Liquidate" ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Flame className="size-4 mr-1" /> Liquidate
+                    </>
+                  )}
+                </Button>
+              )}
+            </>
+          )}
+        </div>
+      </>
+    );
+  }
+}
+
+function MobileSlotBar({
+  actionLabel,
+  actionsTitle,
+  actionsContent,
+  showModule,
+  moduleContent,
+  isMiniApp,
+}: {
+  actionLabel: string;
+  actionsTitle: string;
+  actionsContent: React.ReactNode;
+  showModule: boolean;
+  moduleContent: React.ReactNode;
+  isMiniApp: boolean;
+}) {
+  return (
+    <div
+      className={`fixed left-0 right-0 lg:hidden z-40 ${isMiniApp ? "bottom-14" : "bottom-0"}`}
+    >
+      <div className="bg-background border-t p-3">
+        <div className="flex items-center gap-2 max-w-3xl mx-auto">
+          {showModule && (
+            <Drawer>
+              <DrawerTrigger asChild>
+                <Button variant="outline" size="icon" className="shrink-0">
+                  <FileBox className="size-4" />
+                </Button>
+              </DrawerTrigger>
+              <DrawerContent>
+                <DrawerHeader>
+                  <DrawerTitle>Ad Metadata</DrawerTitle>
+                </DrawerHeader>
+                <div className="px-4 pb-2">{moduleContent}</div>
+                <DrawerFooter>
+                  <DrawerClose asChild>
+                    <Button variant="outline" className="w-full">
+                      Close
+                    </Button>
+                  </DrawerClose>
+                </DrawerFooter>
+              </DrawerContent>
+            </Drawer>
+          )}
+
+          <Drawer>
+            <DrawerTrigger asChild>
+              <Button variant="default" className="flex-1 gap-2">
+                <ChevronUp className="size-4" />
+                {actionLabel}
+              </Button>
+            </DrawerTrigger>
+            <DrawerContent>
+              <DrawerHeader>
+                <DrawerTitle>{actionsTitle}</DrawerTitle>
+              </DrawerHeader>
+              <div className="px-4 pb-2 max-h-[70vh] overflow-y-auto">
+                {actionsContent}
               </div>
-            </div>
-          </div>
+              <DrawerFooter>
+                <DrawerClose asChild>
+                  <Button variant="outline" className="w-full">
+                    Close
+                  </Button>
+                </DrawerClose>
+              </DrawerFooter>
+            </DrawerContent>
+          </Drawer>
         </div>
       </div>
     </div>

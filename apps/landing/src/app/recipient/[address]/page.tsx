@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  Banknote,
-  HandCoins,
-  LandPlot,
-  UserCheck,
-  XCircle,
-} from "lucide-react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { Banknote, HandCoins, LandPlot } from "lucide-react";
 import { use } from "react";
 import { type Address, formatUnits } from "viem";
 import { normalize } from "viem/ens";
@@ -19,6 +11,7 @@ import { PageHeader } from "@/components/page-header";
 import { SlotStatusBadge } from "@/components/slot-status-badge";
 import { StatCard } from "@/components/stat-card";
 import { useChain } from "@/context/chain";
+import { NavLink, useNavigation } from "@/context/navigation";
 import { useSlotsOnChain } from "@/hooks/use-slot-onchain";
 import { useSlotsByRecipient } from "@/hooks/use-v3";
 import { formatBalance, truncateAddress } from "@/utils";
@@ -30,7 +23,7 @@ export default function RecipientPage({
 }) {
   const { address } = use(params);
   const { explorerUrl } = useChain();
-  const { push } = useRouter();
+  const { push } = useNavigation();
 
   // Step 1: Get slot addresses from subgraph (discovery only)
   const { data: subgraphSlots, isLoading: subgraphLoading } =
@@ -73,12 +66,12 @@ export default function RecipientPage({
           )}
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <Link
+              <NavLink
                 href="/"
                 className="text-xs text-muted-foreground hover:text-foreground transition-colors"
               >
                 ← Explorer
-              </Link>
+              </NavLink>
             </div>
             <h1 className="text-xl font-bold tracking-tight leading-tight">
               {ensName ?? "Recipient"}
@@ -89,21 +82,33 @@ export default function RecipientPage({
               rel="noopener noreferrer"
               className="text-xs text-primary hover:underline inline-flex items-center gap-1.5"
             >
-              {recipientType && <AccountTypeIcon type={recipientType} className="h-3 w-3" />}
+              {recipientType && (
+                <AccountTypeIcon type={recipientType} className="h-3 w-3" />
+              )}
               {truncateAddress(address)}
             </a>
           </div>
         </div>
       </PageHeader>
 
-      <div className="max-w-6xl mx-auto px-6 py-6">
+      <div className="max-w-6xl mx-auto p-2 md:p-4">
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-          <StatCard label="Total Slots" value={slots.length.toString()} icon={LandPlot} />
-          <StatCard label="Occupied" value={occupied.length.toString()} icon={UserCheck} />
-          <StatCard label="Vacant" value={vacant.toString()} icon={XCircle} />
-          <StatCard label="Pending Tax" value={`${formatBalance(totalTaxOwed, decimals)} ${symbol}`} icon={HandCoins} />
-          <StatCard label="Total Deposit" value={`${formatBalance(totalDeposit, decimals)} ${symbol}`} icon={Banknote} />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 mb-6">
+          <StatCard
+            label="Occupied / Vacant"
+            value={`${occupied.length} / ${vacant}`}
+            icon={LandPlot}
+          />
+          <StatCard
+            label="Pending Tax"
+            value={`${formatBalance(totalTaxOwed, decimals)} ${symbol}`}
+            icon={HandCoins}
+          />
+          <StatCard
+            label="Total Deposit"
+            value={`${formatBalance(totalDeposit, decimals)} ${symbol}`}
+            icon={Banknote}
+          />
         </div>
 
         {/* Slots Table */}
@@ -148,15 +153,24 @@ export default function RecipientPage({
                         {truncateAddress(s.id)}
                       </td>
                       <td className="px-4 py-2">
-                        <SlotStatusBadge occupant={s.occupant} insolvent={s.insolvent} />
+                        <SlotStatusBadge
+                          occupant={s.occupant}
+                          insolvent={s.insolvent}
+                        />
                       </td>
                       <td className="px-4 py-2 text-xs">
                         {(() => {
                           if (!s.occupant) return "—";
-                          const occupantType = subgraphMap.get(s.id)?.occupantAccount?.type;
+                          const occupantType = subgraphMap.get(s.id)
+                            ?.occupantAccount?.type;
                           return (
                             <span className="inline-flex items-center gap-1.5">
-                              {occupantType && <AccountTypeIcon type={occupantType} className="h-3 w-3" />}
+                              {occupantType && (
+                                <AccountTypeIcon
+                                  type={occupantType}
+                                  className="h-3 w-3"
+                                />
+                              )}
                               {truncateAddress(s.occupant)}
                             </span>
                           );

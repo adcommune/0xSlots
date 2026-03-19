@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { NavLink } from "@/context/navigation";
 import { Button } from "@/components/ui/button";
 
 export default function DocsPage() {
@@ -30,7 +31,7 @@ export default function DocsPage() {
 
         <div className="mt-10 flex flex-wrap gap-3">
           <Button variant="outline" asChild>
-            <a href="/">Explore</a>
+            <NavLink href="/">Explore</NavLink>
           </Button>
         </div>
       </section>

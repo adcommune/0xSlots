@@ -10,6 +10,7 @@ import { WagmiProvider } from "wagmi";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { config } from "@/config/wagmi";
 import { ChainProvider } from "@/context/chain";
+import { NavigationProvider } from "@/context/navigation";
 import { SplitsClientSync } from "./splits-client-sync";
 
 export function WebProviders({ children }: { children: ReactNode }) {
@@ -22,7 +23,9 @@ export function WebProviders({ children }: { children: ReactNode }) {
           <ChainProvider>
             <SplitsProvider>
               <SplitsClientSync />
-              <TooltipProvider>{children}</TooltipProvider>
+              <TooltipProvider>
+                <NavigationProvider>{children}</NavigationProvider>
+              </TooltipProvider>
             </SplitsProvider>
           </ChainProvider>
         </RainbowKitProvider>

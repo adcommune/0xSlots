@@ -1,5 +1,6 @@
 "use client";
 
+import { useNavigation } from "@/context/navigation";
 import { AccountTypeIcon } from "@/components/account-type-icon";
 import { EnsAddress } from "@/components/ens-address";
 import { RefreshButton } from "@/components/refresh-button";
@@ -16,6 +17,7 @@ import {
 import { useAccounts } from "@/hooks/use-v3";
 
 export function RecipientsTable() {
+  const { push } = useNavigation();
   const { data: accounts, isLoading, refetch, isFetching } = useAccounts();
   const { page, setPage, pageSize, setPageSize, totalPages, paged } =
     usePagination(accounts ?? []);
@@ -41,7 +43,7 @@ export function RecipientsTable() {
                 key={a.id}
                 className="cursor-pointer"
                 onClick={() => {
-                  window.location.href = `/recipient/${a.id}`;
+                  push(`/recipient/${a.id}`);
                 }}
               >
                 <TableCell>

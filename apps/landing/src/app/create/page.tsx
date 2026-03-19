@@ -3,7 +3,7 @@
 import { SplitV2Type } from "@0xsplits/splits-sdk/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Check, ChevronLeft, ChevronRight } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useNavigation } from "@/context/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { type Address, isAddress, zeroAddress } from "viem";
@@ -39,7 +39,7 @@ const STEPS = [
 ] as const;
 
 export default function CreatePage() {
-  const router = useRouter();
+  const { push } = useNavigation();
   const { address, isConnected, chainId: walletChainId, chain } = useAccount();
   const { switchChain } = useSwitchChain();
   const { chainId: selectedChainId } = useChain();
@@ -89,10 +89,10 @@ export default function CreatePage() {
 
   useEffect(() => {
     if (isSuccess) {
-      const timeout = setTimeout(() => router.push("/"), 1500);
+      const timeout = setTimeout(() => push("/"), 1500);
       return () => clearTimeout(timeout);
     }
-  }, [isSuccess, router]);
+  }, [isSuccess, push]);
 
   const submitState = {
     isConnected,
