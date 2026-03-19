@@ -1,5 +1,11 @@
 # @0xslots/contracts
 
+## 0.6.0
+
+### Minor Changes
+
+- 64d821b: Fresh testnet deployment
+
 ## 0.5.1
 
 ### Patch Changes

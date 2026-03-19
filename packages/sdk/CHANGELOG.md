@@ -1,5 +1,16 @@
 # @0xslots/sdk
 
+## 0.9.0
+
+### Minor Changes
+
+- 64d821b: Fresh testnet deployment
+
+### Patch Changes
+
+- Updated dependencies [64d821b]
+  - @0xslots/contracts@0.6.0
+
 ## 0.8.3
 
 ### Patch Changes
