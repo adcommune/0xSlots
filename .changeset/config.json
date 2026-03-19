@@ -7,5 +7,12 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["landing", "@0xslots/mcp", "@0xslots/subgraph"]
+  "ignore": [
+    "landing",
+    "@0xslots/mcp",
+    "@0xslots/subgraph",
+    "api",
+    "@adland/data",
+    "@0xslots/config"
+  ]
 }
