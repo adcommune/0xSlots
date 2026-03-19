@@ -91,6 +91,7 @@ export function DepositSlider({
       {/* Input */}
       <Input
         type="text"
+        inputMode="decimal"
         value={inputValue}
         onChange={(e) => {
           editing.current = true;

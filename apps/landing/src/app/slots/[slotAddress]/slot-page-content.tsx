@@ -1,12 +1,12 @@
 "use client";
 
 import { getMetadataModuleAddress } from "@0xslots/contracts";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import {
   Activity,
   AlertTriangle,
   ArrowUpFromLine,
   Banknote,
-  ChevronUp,
   CircleDollarSign,
   Clock,
   Cog,
@@ -28,7 +28,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { type Address, zeroAddress } from "viem";
 import { useAccount, useSwitchChain } from "wagmi";
-import { useSuspenseQuery } from "@tanstack/react-query";
 import { AccountTypeIcon } from "@/components/account-type-icon";
 import { PageHeader } from "@/components/page-header";
 import { SplitRecipientsBar } from "@/components/split-recipients-bar";
@@ -45,24 +44,15 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { useChain } from "@/context/chain";
 import { useFarcaster } from "@/context/farcaster";
 import { NavLink } from "@/context/navigation";
-import { useCurrencyBalance } from "@/hooks/use-currency-balance";
 import {
-  slotQueryOptions,
   slotActivityQueryOptions,
+  slotQueryOptions,
 } from "@/hooks/slot-queries";
+import { useCurrencyBalance } from "@/hooks/use-currency-balance";
 import { useSlotAction } from "@/hooks/use-slot-action";
 import { useSlotOnChain } from "@/hooks/use-slot-onchain";
 import { useModules } from "@/hooks/use-v3";
@@ -83,11 +73,7 @@ import {
 import { MetadataForm } from "./components/metadata-form";
 import { UserCurrencyBalance } from "./components/user-balance";
 
-export function SlotPageContent({
-  slotAddress,
-}: {
-  slotAddress: string;
-}) {
+export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
   const router = useRouter();
   const { explorerUrl, chainId: selectedChainId } = useChain();
   const { isMiniApp } = useFarcaster();
@@ -101,7 +87,7 @@ export function SlotPageContent({
     slotActivityQueryOptions(selectedChainId, slotAddress),
   );
 
-  const { address, isConnected, chainId } = useAccount();
+  const { address, isConnected, chainId, chain } = useAccount();
   const { switchChain } = useSwitchChain();
   const {
     selfAssess,
@@ -121,6 +107,9 @@ export function SlotPageContent({
   const [newModule, setNewModule] = useState("");
   const [activeTab, setActiveTab] = useState<"details" | "activity" | "manage">(
     "details",
+  );
+  const [mobilePanel, setMobilePanel] = useState<"actions" | "metadata" | null>(
+    null,
   );
   const walletBalance = useCurrencyBalance(slot?.currency as Address);
 
@@ -232,7 +221,7 @@ export function SlotPageContent({
               {isOccupied
                 ? `Occupied by ${truncateAddress(slot.occupant!)}`
                 : "Vacant"}{" "}
-              · Base Sepolia
+              · {chain?.name}
             </p>
             {role && (
               <Badge variant="outline" className={role.badge}>
@@ -245,396 +234,454 @@ export function SlotPageContent({
 
       <div className="max-w-6xl mx-auto p-2 md:p-6 pb-32 lg:pb-6">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 items-start">
-          {/* Left: Tabbed content */}
-          <div className="space-y-6">
-            <div className="rounded-lg border">
-              {/* Tab bar in card header */}
-              <div className="bg-muted/50 border-b px-4 flex items-center gap-0">
-                <button
-                  className={`px-3 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors flex items-center gap-1.5 ${activeTab === "details" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
-                  onClick={() => setActiveTab("details")}
-                >
-                  <Info className="size-3.5" /> Info
-                </button>
-                <button
-                  className={`px-3 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors flex items-center gap-1.5 ${activeTab === "activity" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
-                  onClick={() => setActiveTab("activity")}
-                >
-                  <Activity className="size-3.5" /> Activity
-                </button>
-                {isManager && (
+          {/* Left: Tabbed content + mobile slide panel */}
+          <div className="relative overflow-hidden">
+            {/* Main content — slides left when mobile panel is open */}
+            <div
+              className={`space-y-6 transition-all duration-300 ease-in-out lg:!translate-x-0 lg:!opacity-100 ${
+                mobilePanel
+                  ? "-translate-x-full opacity-0 pointer-events-none h-0 lg:h-auto"
+                  : "translate-x-0 opacity-100"
+              }`}
+            >
+              <div className="rounded-lg border">
+                {/* Tab bar in card header */}
+                <div className="bg-muted/50 border-b px-4 flex items-center gap-0">
                   <button
-                    className={`px-3 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors flex items-center gap-1.5 ${activeTab === "manage" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
-                    onClick={() => setActiveTab("manage")}
+                    className={`px-3 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors flex items-center gap-1.5 ${activeTab === "details" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+                    onClick={() => setActiveTab("details")}
                   >
-                    <Cog className="size-3.5" /> Manage
+                    <Info className="size-3.5" /> Info
                   </button>
-                )}
-              </div>
-
-              {/* Details tab */}
-              {activeTab === "details" && (
-                <div>
-                  <div className="p-4 space-y-3 text-sm">
-                    {/* Identity */}
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground flex items-center gap-1.5">
-                        <LandPlot className="size-3" /> Slot contract
-                      </span>
-                      <a
-                        href={`${explorerUrl}/address/${slot.id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary hover:underline text-xs"
-                      >
-                        {truncateAddress(slot.id)}
-                      </a>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground flex items-center gap-1.5">
-                        {subgraphSlot?.recipientAccount?.type ? (
-                          <AccountTypeIcon
-                            type={subgraphSlot.recipientAccount.type}
-                            className="size-3"
-                          />
-                        ) : (
-                          <User className="size-3" />
-                        )}{" "}
-                        Recipient
-                      </span>
-                      <NavLink
-                        href={`/recipient/${slot.recipient}`}
-                        className="text-primary hover:underline text-xs"
-                      >
-                        {truncateAddress(slot.recipient)}
-                      </NavLink>
-                    </div>
-                    {subgraphSlot?.recipientAccount?.type === "SPLIT" && (
-                      <SplitRecipientsBar
-                        chainId={selectedChainId}
-                        splitAddress={slot.recipient}
-                      />
-                    )}
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground flex items-center gap-1.5">
-                        <CircleDollarSign className="size-3" /> Currency
-                      </span>
-                      <span className="text-xs">
-                        {slot.currencyName ?? truncateAddress(slot.currency)} (
-                        {symbol})
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground flex items-center gap-1.5">
-                        <Shield className="size-3" /> Manager
-                      </span>
-                      <span className="text-xs">
-                        {truncateAddress(slot.manager)}
-                      </span>
-                    </div>
-
-                    <div className="border-t" />
-
-                    {/* Economics */}
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground flex items-center gap-1.5">
-                        <HandCoins className="size-3" /> Tax Rate
-                      </span>
-                      <span>{formatBps(slot.taxPercentage.toString())}/mo</span>
-                    </div>
-                    {slot.hasPendingTax && (
-                      <div className="flex justify-between pl-5">
-                        <p className="text-xs text-amber-600">
-                          Pending update{" "}
-                          <span className="text-[10px]">
-                            Applied on next ownership transition
-                          </span>
-                        </p>
-                        <span className="text-[11px] text-amber-600">
-                          {formatBps(slot.pendingTaxPercentage.toString())}/mo
-                        </span>
-                      </div>
-                    )}
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground flex items-center gap-1.5">
-                        <Timer className="size-3" /> Min. Deposit
-                      </span>
-                      <span>
-                        {formatDuration(Number(slot.minDepositSeconds))}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground flex items-center gap-1.5">
-                        <Sparkles className="size-3 text-amber-500" /> Liq.
-                        Bounty
-                      </span>
-                      <span>
-                        {formatBps(slot.liquidationBountyBps.toString())}
-                      </span>
-                    </div>
-
-                    <div className="border-t" />
-
-                    {/* Module */}
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground flex items-center gap-1.5">
-                        <FileBox className="size-3" /> Module
-                      </span>
-                      <span className="text-xs">
-                        {!hasModule
-                          ? "None"
-                          : moduleEntity?.name || truncateAddress(slot.module)}
-                      </span>
-                    </div>
-                    {slot.hasPendingModule && (
-                      <div className="pl-5">
-                        <p className="text-xs text-indigo-600">
-                          Pending module update — applied on next ownership
-                          transition
-                        </p>
-                      </div>
-                    )}
-
-                    <div className="border-t" />
-
-                    {/* Configuration flags */}
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground flex items-center gap-1.5">
-                        <Lock className="size-3" /> Mutable Tax
-                      </span>
-                      <span>{slot.mutableTax ? "Yes" : "No"}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground flex items-center gap-1.5">
-                        <Settings className="size-3" /> Mutable Module
-                      </span>
-                      <span>{slot.mutableModule ? "Yes" : "No"}</span>
-                    </div>
-
-                    {moduleUnverified && (
-                      <>
-                        <div className="border-t" />
-                        <div className="flex items-start gap-1.5 rounded-md border border-destructive/50 bg-destructive/5 px-2.5 py-2 text-[11px] text-destructive">
-                          <AlertTriangle className="size-3 mt-0.5 shrink-0" />
-                          <span>
-                            This slot uses an <strong>unverified module</strong>
-                            . Unverified modules have not been reviewed by the
-                            factory admin and may behave unexpectedly.
-                          </span>
-                        </div>
-                      </>
-                    )}
-
-                    {(slot.mutableTax || slot.mutableModule) && (
-                      <>
-                        <div className="border-t" />
-                        <div className="flex items-start gap-1.5 rounded-md border border-amber-500/50 bg-amber-500/5 px-2.5 py-2 text-[11px] text-amber-700">
-                          <AlertTriangle className="size-3 mt-0.5 shrink-0" />
-                          <span>
-                            The manager can change{" "}
-                            {slot.mutableTax && slot.mutableModule
-                              ? "the tax rate and module"
-                              : slot.mutableTax
-                                ? "the tax rate"
-                                : "the module"}{" "}
-                            on this slot. Changes take effect on the next
-                            ownership transition.
-                          </span>
-                        </div>
-                      </>
-                    )}
-                  </div>
+                  <button
+                    className={`px-3 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors flex items-center gap-1.5 ${activeTab === "activity" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+                    onClick={() => setActiveTab("activity")}
+                  >
+                    <Activity className="size-3.5" /> Activity
+                  </button>
+                  {isManager && (
+                    <button
+                      className={`px-3 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors flex items-center gap-1.5 ${activeTab === "manage" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+                      onClick={() => setActiveTab("manage")}
+                    >
+                      <Cog className="size-3.5" /> Manage
+                    </button>
+                  )}
                 </div>
-              )}
 
-              {/* Activity tab */}
-              {activeTab === "activity" && (
-                <SlotEventHistory
-                  events={normalizeSlotActivity(activityData)}
-                  explorerUrl={explorerUrl}
-                />
-              )}
-
-              {/* Manage tab (manager only) */}
-              {activeTab === "manage" && isManager && (
-                <div className="p-6 space-y-6">
-                  {/* Tax Update */}
-                  {slot.mutableTax && (
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <label className="text-sm text-muted-foreground flex items-center gap-1.5">
-                          <HandCoins className="size-4" /> Propose Tax Rate
-                        </label>
-                        <span className="text-sm font-semibold">
-                          {(newTaxPct ?? 0).toFixed(1)}%/mo
+                {/* Details tab */}
+                {activeTab === "details" && (
+                  <div>
+                    <div className="p-4 space-y-3 text-sm">
+                      {/* Identity */}
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground flex items-center gap-1.5">
+                          <LandPlot className="size-3" /> Slot contract
+                        </span>
+                        <a
+                          href={`${explorerUrl}/address/${slot.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline text-xs"
+                        >
+                          {truncateAddress(slot.id)}
+                        </a>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground flex items-center gap-1.5">
+                          {subgraphSlot?.recipientAccount?.type ? (
+                            <AccountTypeIcon
+                              type={subgraphSlot.recipientAccount.type}
+                              className="size-3"
+                            />
+                          ) : (
+                            <User className="size-3" />
+                          )}{" "}
+                          Recipient
+                        </span>
+                        <NavLink
+                          href={`/recipient/${slot.recipient}`}
+                          className="text-primary hover:underline text-xs"
+                        >
+                          {truncateAddress(slot.recipient)}
+                        </NavLink>
+                      </div>
+                      {subgraphSlot?.recipientAccount?.type === "SPLIT" && (
+                        <SplitRecipientsBar
+                          chainId={selectedChainId}
+                          splitAddress={slot.recipient}
+                        />
+                      )}
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground flex items-center gap-1.5">
+                          <CircleDollarSign className="size-3" /> Currency
+                        </span>
+                        <span className="text-xs">
+                          {slot.currencyName ?? truncateAddress(slot.currency)}{" "}
+                          ({symbol})
                         </span>
                       </div>
-                      <input
-                        type="range"
-                        min="0"
-                        max="100"
-                        step="0.5"
-                        value={newTaxPct ?? 0}
-                        onChange={(e) => setNewTaxPct(Number(e.target.value))}
-                        className="w-full h-2 appearance-none bg-secondary rounded-full cursor-pointer accent-primary [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:rounded-full [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:bg-primary [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0"
-                      />
-                      <div className="flex justify-between text-[10px] text-muted-foreground">
-                        <span>0%</span>
-                        <span>25%</span>
-                        <span>50%</span>
-                        <span>75%</span>
-                        <span>100%</span>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground flex items-center gap-1.5">
+                          <Shield className="size-3" /> Manager
+                        </span>
+                        <span className="text-xs">
+                          {truncateAddress(slot.manager)}
+                        </span>
+                      </div>
+
+                      <div className="border-t" />
+
+                      {/* Economics */}
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground flex items-center gap-1.5">
+                          <HandCoins className="size-3" /> Tax Rate
+                        </span>
+                        <span>
+                          {formatBps(slot.taxPercentage.toString())}/mo
+                        </span>
                       </div>
                       {slot.hasPendingTax && (
-                        <div className="text-sm bg-amber-500/10 text-amber-600 rounded px-3 py-2">
-                          Pending:{" "}
-                          {formatBps(slot.pendingTaxPercentage.toString())}/mo —
-                          applied on next ownership transition
+                        <div className="flex justify-between pl-5">
+                          <p className="text-xs text-amber-600">
+                            Pending update{" "}
+                            <span className="text-[10px]">
+                              Applied on next ownership transition
+                            </span>
+                          </p>
+                          <span className="text-[11px] text-amber-600">
+                            {formatBps(slot.pendingTaxPercentage.toString())}/mo
+                          </span>
                         </div>
                       )}
-                      <Button
-                        className="w-full"
-                        disabled={
-                          busy ||
-                          newTaxPct === null ||
-                          Math.round(newTaxPct * 100) ===
-                            Number(slot.taxPercentage)
-                        }
-                        onClick={() =>
-                          proposeTaxUpdate(
-                            slotAddress as Address,
-                            BigInt(Math.round((newTaxPct ?? 0) * 100)),
-                          )
-                        }
-                      >
-                        {busy && activeAction === "Propose tax" ? (
-                          <Loader2 className="size-4 animate-spin" />
-                        ) : (
-                          `Propose ${(newTaxPct ?? 0).toFixed(1)}%/mo (currently ${formatBps(slot.taxPercentage.toString())}/mo)`
-                        )}
-                      </Button>
-                    </div>
-                  )}
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground flex items-center gap-1.5">
+                          <Timer className="size-3" /> Min. Deposit
+                        </span>
+                        <span>
+                          {formatDuration(Number(slot.minDepositSeconds))}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground flex items-center gap-1.5">
+                          <Sparkles className="size-3 text-amber-500" /> Liq.
+                          Bounty
+                        </span>
+                        <span>
+                          {formatBps(slot.liquidationBountyBps.toString())}
+                        </span>
+                      </div>
 
-                  {/* Module Update */}
-                  {slot.mutableModule && (
-                    <div
-                      className={`space-y-4 ${slot.mutableTax ? "border-t pt-6" : ""}`}
-                    >
-                      <label className="text-sm text-muted-foreground flex items-center gap-1.5">
-                        <Settings className="size-4" /> Propose Module
-                      </label>
+                      <div className="border-t" />
+
+                      {/* Module */}
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground flex items-center gap-1.5">
+                          <FileBox className="size-3" /> Module
+                        </span>
+                        <span className="text-xs">
+                          {!hasModule
+                            ? "None"
+                            : moduleEntity?.name ||
+                              truncateAddress(slot.module)}
+                        </span>
+                      </div>
                       {slot.hasPendingModule && (
-                        <div className="text-sm bg-indigo-500/10 text-indigo-600 rounded px-3 py-2">
-                          Pending module update — applied on next ownership
-                          transition
+                        <div className="pl-5">
+                          <p className="text-xs text-indigo-600">
+                            Pending module update — applied on next ownership
+                            transition
+                          </p>
                         </div>
                       )}
-                      <div className="flex flex-wrap gap-2">
-                        {modules
-                          ?.filter((m) => m.verified)
-                          .map((m) => (
-                            <Button
-                              key={m.id}
-                              variant={
-                                newModule.toLowerCase() === m.id.toLowerCase()
-                                  ? "default"
-                                  : "outline"
-                              }
-                              onClick={() => setNewModule(m.id)}
-                            >
-                              {m.name || truncateAddress(m.id)}
-                            </Button>
-                          ))}
+
+                      <div className="border-t" />
+
+                      {/* Configuration flags */}
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground flex items-center gap-1.5">
+                          <Lock className="size-3" /> Mutable Tax
+                        </span>
+                        <span>{slot.mutableTax ? "Yes" : "No"}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground flex items-center gap-1.5">
+                          <Settings className="size-3" /> Mutable Module
+                        </span>
+                        <span>{slot.mutableModule ? "Yes" : "No"}</span>
+                      </div>
+
+                      {moduleUnverified && (
+                        <>
+                          <div className="border-t" />
+                          <div className="flex items-start gap-1.5 rounded-md border border-destructive/50 bg-destructive/5 px-2.5 py-2 text-[11px] text-destructive">
+                            <AlertTriangle className="size-3 mt-0.5 shrink-0" />
+                            <span>
+                              This slot uses an{" "}
+                              <strong>unverified module</strong>. Unverified
+                              modules have not been reviewed by the factory
+                              admin and may behave unexpectedly.
+                            </span>
+                          </div>
+                        </>
+                      )}
+
+                      {(slot.mutableTax || slot.mutableModule) && (
+                        <>
+                          <div className="border-t" />
+                          <div className="flex items-start gap-1.5 rounded-md border border-amber-500/50 bg-amber-500/5 px-2.5 py-2 text-[11px] text-amber-700">
+                            <AlertTriangle className="size-3 mt-0.5 shrink-0" />
+                            <span>
+                              The manager can change{" "}
+                              {slot.mutableTax && slot.mutableModule
+                                ? "the tax rate and module"
+                                : slot.mutableTax
+                                  ? "the tax rate"
+                                  : "the module"}{" "}
+                              on this slot. Changes take effect on the next
+                              ownership transition.
+                            </span>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Activity tab */}
+                {activeTab === "activity" && (
+                  <SlotEventHistory
+                    events={normalizeSlotActivity(activityData)}
+                    explorerUrl={explorerUrl}
+                  />
+                )}
+
+                {/* Manage tab (manager only) */}
+                {activeTab === "manage" && isManager && (
+                  <div className="p-6 space-y-6">
+                    {/* Tax Update */}
+                    {slot.mutableTax && (
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <label className="text-sm text-muted-foreground flex items-center gap-1.5">
+                            <HandCoins className="size-4" /> Propose Tax Rate
+                          </label>
+                          <span className="text-sm font-semibold">
+                            {(newTaxPct ?? 0).toFixed(1)}%/mo
+                          </span>
+                        </div>
+                        <input
+                          type="range"
+                          min="0"
+                          max="100"
+                          step="0.5"
+                          value={newTaxPct ?? 0}
+                          onChange={(e) => setNewTaxPct(Number(e.target.value))}
+                          className="w-full h-2 appearance-none bg-secondary rounded-full cursor-pointer accent-primary [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:rounded-full [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:bg-primary [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0"
+                        />
+                        <div className="flex justify-between text-[10px] text-muted-foreground">
+                          <span>0%</span>
+                          <span>25%</span>
+                          <span>50%</span>
+                          <span>75%</span>
+                          <span>100%</span>
+                        </div>
+                        {slot.hasPendingTax && (
+                          <div className="text-sm bg-amber-500/10 text-amber-600 rounded px-3 py-2">
+                            Pending:{" "}
+                            {formatBps(slot.pendingTaxPercentage.toString())}/mo
+                            — applied on next ownership transition
+                          </div>
+                        )}
                         <Button
-                          variant={
-                            newModule ===
-                            "0x0000000000000000000000000000000000000000"
-                              ? "default"
-                              : "outline"
+                          className="w-full"
+                          disabled={
+                            busy ||
+                            newTaxPct === null ||
+                            Math.round(newTaxPct * 100) ===
+                              Number(slot.taxPercentage)
                           }
                           onClick={() =>
-                            setNewModule(
-                              "0x0000000000000000000000000000000000000000",
+                            proposeTaxUpdate(
+                              slotAddress as Address,
+                              BigInt(Math.round((newTaxPct ?? 0) * 100)),
                             )
                           }
                         >
-                          None
+                          {busy && activeAction === "Propose tax" ? (
+                            <Loader2 className="size-4 animate-spin" />
+                          ) : (
+                            `Propose ${(newTaxPct ?? 0).toFixed(1)}%/mo (currently ${formatBps(slot.taxPercentage.toString())}/mo)`
+                          )}
                         </Button>
                       </div>
-                      <Input
-                        type="text"
-                        placeholder="Or paste module address..."
-                        value={newModule}
-                        onChange={(e) => setNewModule(e.target.value)}
-                      />
-                      <Button
-                        className="w-full"
-                        disabled={
-                          busy ||
-                          !newModule ||
-                          newModule.toLowerCase() === slot.module.toLowerCase()
-                        }
-                        onClick={() =>
-                          proposeModuleUpdate(
-                            slotAddress as Address,
-                            newModule as Address,
-                          )
-                        }
-                      >
-                        {busy && activeAction === "Propose module" ? (
-                          <Loader2 className="size-4 animate-spin" />
-                        ) : (
-                          `Propose Module ${newModule ? truncateAddress(newModule) : ""}`
-                        )}
-                      </Button>
-                    </div>
-                  )}
+                    )}
 
-                  {/* Cancel Pending Updates */}
-                  {(slot.hasPendingTax || slot.hasPendingModule) && (
-                    <div className="border-t pt-4">
-                      <Button
-                        variant="outline"
-                        className="w-full text-destructive hover:text-destructive"
-                        disabled={busy}
-                        onClick={() =>
-                          cancelPendingUpdates(slotAddress as Address)
-                        }
+                    {/* Module Update */}
+                    {slot.mutableModule && (
+                      <div
+                        className={`space-y-4 ${slot.mutableTax ? "border-t pt-6" : ""}`}
                       >
-                        {busy && activeAction === "Cancel updates" ? (
-                          <Loader2 className="size-4 animate-spin" />
-                        ) : (
-                          "Cancel Pending Updates"
+                        <label className="text-sm text-muted-foreground flex items-center gap-1.5">
+                          <Settings className="size-4" /> Propose Module
+                        </label>
+                        {slot.hasPendingModule && (
+                          <div className="text-sm bg-indigo-500/10 text-indigo-600 rounded px-3 py-2">
+                            Pending module update — applied on next ownership
+                            transition
+                          </div>
                         )}
-                      </Button>
-                    </div>
-                  )}
+                        <div className="flex flex-wrap gap-2">
+                          {modules
+                            ?.filter((m) => m.verified)
+                            .map((m) => (
+                              <Button
+                                key={m.id}
+                                variant={
+                                  newModule.toLowerCase() === m.id.toLowerCase()
+                                    ? "default"
+                                    : "outline"
+                                }
+                                onClick={() => setNewModule(m.id)}
+                              >
+                                {m.name || truncateAddress(m.id)}
+                              </Button>
+                            ))}
+                          <Button
+                            variant={
+                              newModule ===
+                              "0x0000000000000000000000000000000000000000"
+                                ? "default"
+                                : "outline"
+                            }
+                            onClick={() =>
+                              setNewModule(
+                                "0x0000000000000000000000000000000000000000",
+                              )
+                            }
+                          >
+                            None
+                          </Button>
+                        </div>
+                        <Input
+                          type="text"
+                          placeholder="Or paste module address..."
+                          value={newModule}
+                          onChange={(e) => setNewModule(e.target.value)}
+                        />
+                        <Button
+                          className="w-full"
+                          disabled={
+                            busy ||
+                            !newModule ||
+                            newModule.toLowerCase() ===
+                              slot.module.toLowerCase()
+                          }
+                          onClick={() =>
+                            proposeModuleUpdate(
+                              slotAddress as Address,
+                              newModule as Address,
+                            )
+                          }
+                        >
+                          {busy && activeAction === "Propose module" ? (
+                            <Loader2 className="size-4 animate-spin" />
+                          ) : (
+                            `Propose Module ${newModule ? truncateAddress(newModule) : ""}`
+                          )}
+                        </Button>
+                      </div>
+                    )}
 
-                  {!slot.mutableTax && !slot.mutableModule && (
-                    <p className="text-muted-foreground text-center py-6">
-                      This slot has no mutable parameters
-                    </p>
-                  )}
+                    {/* Cancel Pending Updates */}
+                    {(slot.hasPendingTax || slot.hasPendingModule) && (
+                      <div className="border-t pt-4">
+                        <Button
+                          variant="outline"
+                          className="w-full text-destructive hover:text-destructive"
+                          disabled={busy}
+                          onClick={() =>
+                            cancelPendingUpdates(slotAddress as Address)
+                          }
+                        >
+                          {busy && activeAction === "Cancel updates" ? (
+                            <Loader2 className="size-4 animate-spin" />
+                          ) : (
+                            "Cancel Pending Updates"
+                          )}
+                        </Button>
+                      </div>
+                    )}
+
+                    {!slot.mutableTax && !slot.mutableModule && (
+                      <p className="text-muted-foreground text-center py-6">
+                        This slot has no mutable parameters
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Metadata Module card — desktop only */}
+              {isMetadataModule && (
+                <div className="hidden lg:block rounded-lg border">
+                  <div className="bg-muted/50 border-b px-4 py-3 flex items-center gap-1.5">
+                    <FileBox className="size-3.5" />
+                    <h2 className="text-sm font-semibold">Ad Metadata</h2>
+                  </div>
+                  <div className="p-4">
+                    <MetadataForm
+                      slotAddress={slotAddress}
+                      isOccupant={!!isOccupant}
+                    />
+                  </div>
                 </div>
               )}
             </div>
 
-            {/* Metadata Module card — desktop only */}
-            {isMetadataModule && (
-              <div className="hidden lg:block rounded-lg border">
-                <div className="bg-muted/50 border-b px-4 py-3 flex items-center gap-1.5">
-                  <FileBox className="size-3.5" />
-                  <h2 className="text-sm font-semibold">Ad Metadata</h2>
+            {/* Mobile slide-in panel — enters from the right */}
+            <div
+              className={`lg:hidden transition-all duration-300 ease-in-out ${
+                mobilePanel
+                  ? "translate-x-0 opacity-100"
+                  : "translate-x-full opacity-0 pointer-events-none h-0"
+              }`}
+            >
+              {mobilePanel === "actions" && (
+                <div className={`rounded-lg border ${role ? role.accent : ""}`}>
+                  <div className="bg-muted/50 border-b px-3 py-3 flex items-center justify-between">
+                    <h2 className="text-sm font-semibold">
+                      {isOccupied
+                        ? `Price: ${formatBalance(slot.price, decimals)} ${symbol}`
+                        : "Vacant Slot"}
+                    </h2>
+                    {role && (
+                      <span
+                        className={`text-[11px] font-medium rounded-full border px-2 py-0.5 ${role.badge}`}
+                      >
+                        {role.label}
+                      </span>
+                    )}
+                  </div>
+                  {renderActionsContent()}
                 </div>
-                <div className="p-4">
-                  <MetadataForm
-                    slotAddress={slotAddress}
-                    isOccupant={!!isOccupant}
-                  />
+              )}
+
+              {mobilePanel === "metadata" && isMetadataModule && (
+                <div className="rounded-lg border">
+                  <div className="bg-muted/50 border-b px-4 py-3 flex items-center gap-1.5">
+                    <FileBox className="size-3.5" />
+                    <h2 className="text-sm font-semibold">Ad Metadata</h2>
+                  </div>
+                  <div className="p-4">
+                    <MetadataForm
+                      slotAddress={slotAddress}
+                      isOccupant={!!isOccupant}
+                    />
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           {/* Right: Actions — desktop only */}
@@ -644,20 +691,41 @@ export function SlotPageContent({
         </div>
       </div>
 
-      {/* Mobile bottom bar with drawers */}
-      <MobileSlotBar
-        actionLabel={actionLabel}
-        actionsTitle={
-          isOccupied
-            ? `Price: ${formatBalance(slot.price, decimals)} ${symbol}`
-            : "Vacant Slot"
-        }
-        actionsContent={renderActionsContent()}
-        showModule={!!isMetadataModule}
-        moduleContent={
-          <MetadataForm slotAddress={slotAddress} isOccupant={!!isOccupant} />
-        }
-      />
+      {/* Mobile bottom bar — simple buttons, no drawers */}
+      <div
+        className="fixed left-0 right-0 lg:hidden z-40"
+        style={{ bottom: `var(--bottom-bar-h, 0px)` }}
+      >
+        <div className="bg-background border-t p-3">
+          <div className="flex items-center gap-2 max-w-3xl mx-auto">
+            {isMetadataModule && (
+              <Button
+                variant="outline"
+                size="icon"
+                className="shrink-0"
+                onClick={() =>
+                  setMobilePanel((p) => (p === "metadata" ? null : "metadata"))
+                }
+              >
+                <FileBox className="size-4" />
+              </Button>
+            )}
+            <Button
+              variant="default"
+              className="flex-1 gap-2"
+              onClick={() =>
+                setMobilePanel((p) => (p === "actions" ? null : "actions"))
+              }
+            >
+              {mobilePanel === "actions" ? (
+                <>← Back to Info</>
+              ) : (
+                <>{actionLabel}</>
+              )}
+            </Button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 
@@ -780,6 +848,7 @@ export function SlotPageContent({
                     <div className="flex gap-2">
                       <Input
                         type="text"
+                        inputMode="decimal"
                         placeholder="1.00"
                         value={newPrice}
                         onChange={(e) => setNewPrice(e.target.value)}
@@ -914,76 +983,4 @@ export function SlotPageContent({
       </>
     );
   }
-}
-
-function MobileSlotBar({
-  actionLabel,
-  actionsTitle,
-  actionsContent,
-  showModule,
-  moduleContent,
-}: {
-  actionLabel: string;
-  actionsTitle: string;
-  actionsContent: React.ReactNode;
-  showModule: boolean;
-  moduleContent: React.ReactNode;
-}) {
-  return (
-    <div
-      className="fixed left-0 right-0 lg:hidden z-40"
-      style={{ bottom: `var(--bottom-bar-h, 0px)` }}
-    >
-      <div className="bg-background border-t p-3">
-        <div className="flex items-center gap-2 max-w-3xl mx-auto">
-          {showModule && (
-            <Drawer>
-              <DrawerTrigger asChild>
-                <Button variant="outline" size="icon" className="shrink-0">
-                  <FileBox className="size-4" />
-                </Button>
-              </DrawerTrigger>
-              <DrawerContent>
-                <DrawerHeader>
-                  <DrawerTitle>Ad Metadata</DrawerTitle>
-                </DrawerHeader>
-                <div className="pb-2">{moduleContent}</div>
-                <DrawerFooter>
-                  <DrawerClose asChild>
-                    <Button variant="outline" className="w-full">
-                      Close
-                    </Button>
-                  </DrawerClose>
-                </DrawerFooter>
-              </DrawerContent>
-            </Drawer>
-          )}
-
-          <Drawer>
-            <DrawerTrigger asChild>
-              <Button variant="default" className="flex-1 gap-2">
-                <ChevronUp className="size-4" />
-                {actionLabel}
-              </Button>
-            </DrawerTrigger>
-            <DrawerContent>
-              <DrawerHeader>
-                <DrawerTitle>{actionsTitle}</DrawerTitle>
-              </DrawerHeader>
-              <div className="pb-2 max-h-[70vh] overflow-y-auto">
-                {actionsContent}
-              </div>
-              <DrawerFooter>
-                <DrawerClose asChild>
-                  <Button variant="outline" className="w-full">
-                    Close
-                  </Button>
-                </DrawerClose>
-              </DrawerFooter>
-            </DrawerContent>
-          </Drawer>
-        </div>
-      </div>
-    </div>
-  );
 }

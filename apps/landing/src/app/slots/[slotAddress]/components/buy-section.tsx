@@ -78,6 +78,7 @@ export function BuySection({
         </label>
         <Input
           type="text"
+          inputMode="decimal"
           placeholder={defaultPrice || "1.00"}
           value={buyPrice}
           onChange={(e) => setBuyPrice(e.target.value)}
@@ -94,6 +95,7 @@ export function BuySection({
         </label>
         <Input
           type="text"
+          inputMode="decimal"
           placeholder={minDep !== "0" ? `Min: ${minDep}` : "0.00"}
           value={buyDeposit}
           onChange={(e) => setBuyDeposit(e.target.value)}

@@ -94,12 +94,10 @@ export function SummaryCard({
                       : "None"}
               </span>
             </div>
-            {slotCount > 1 && (
-              <div className="flex justify-between border-t pt-2 mt-2">
-                <span className="text-muted-foreground">Total</span>
-                <span className="font-semibold">{slotCount}× identical</span>
-              </div>
-            )}
+            <div className="flex justify-between border-t pt-2 mt-2">
+              <span className="text-muted-foreground">Total</span>
+              <span className="font-semibold">{slotCount}× identical</span>
+            </div>
           </div>
 
           <Separator />

@@ -137,12 +137,10 @@ export function MobileBottomBar({
                         : "None"}
                 </span>
               </div>
-              {slotCount > 1 && (
-                <div className="flex justify-between border-t pt-2 mt-2">
-                  <span className="text-muted-foreground">Total</span>
-                  <span className="font-semibold">{slotCount}x identical</span>
-                </div>
-              )}
+              <div className="flex justify-between border-t pt-2 mt-2">
+                <span className="text-muted-foreground">Total</span>
+                <span className="font-semibold">{slotCount}x identical</span>
+              </div>
             </div>
           </div>
 

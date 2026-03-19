@@ -1,7 +1,7 @@
 "use client";
 
 import { FileBox, LandPlot, List, PlusIcon, User } from "lucide-react";
-import { NavLink } from "@/context/navigation";
+import { useAccount } from "wagmi";
 
 import { EventsTable } from "@/components/explorer/events-table";
 import { ModulesTable } from "@/components/explorer/modules-table";
@@ -11,8 +11,10 @@ import { StatsBar } from "@/components/explorer/stats-bar";
 import { ExplorerTabs } from "@/components/explorer-tabs";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
+import { NavLink } from "@/context/navigation";
 
 export default function Home() {
+  const { chain } = useAccount();
   return (
     <div className="min-h-screen">
       <PageHeader>
@@ -21,7 +23,9 @@ export default function Home() {
             <h1 className="text-xl font-bold tracking-tight leading-tight">
               Explorer
             </h1>
-            <p className="text-muted-foreground text-xs">Base Sepolia · v3</p>
+            <p className="text-muted-foreground text-xs">
+              {chain && `${chain?.name} •`} v3
+            </p>
           </div>
           <div className="hidden md:flex w-px h-6 bg-border" />
           <StatsBar />
