@@ -1,6 +1,5 @@
 "use client";
 
-import { getMetadataModuleAddress } from "@0xslots/contracts";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import {
   Activity,
@@ -161,15 +160,16 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
   const remaining =
     slot.deposit > slot.taxOwed ? slot.deposit - slot.taxOwed : 0n;
 
-  const hasModule = slot.module !== zeroAddress;
-  const moduleEntity = hasModule
-    ? modules?.find((m) => m.id.toLowerCase() === slot.module.toLowerCase())
-    : null;
+  console.log({ slot, subgraphSlot });
+
+  const hasModule =
+    slot.module != null && slot.module.toLowerCase() !== zeroAddress;
+  const moduleEntity = subgraphSlot?.module ?? null;
   const moduleUnverified = hasModule && moduleEntity && !moduleEntity.verified;
   const isMetadataModule =
     hasModule &&
-    slot.module.toLowerCase() ===
-      getMetadataModuleAddress(selectedChainId)?.toLowerCase();
+    moduleEntity?.verified === true &&
+    moduleEntity.name === "MetadataModule";
 
   const role = isConnected
     ? isOccupant && isRecipient
