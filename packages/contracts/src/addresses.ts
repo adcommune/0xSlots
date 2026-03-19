@@ -5,26 +5,26 @@ import { baseSepolia } from "viem/chains";
  * SlotsHub contract addresses by chain ID
  */
 export const slotFactoryAddress = {
-  [baseSepolia.id]: "0x57759A2094cbE24313B826b453d4e7760279f79D",
+  [baseSepolia.id]: "0xc44De86e2A5f0C47f1Ba87C36DaBf54275814DEb",
 } as const;
 
 export const batchCollectorAddress = {
-  [baseSepolia.id]: "0xDE5B9A3ce6Cbca935E33221909fA261F4EfC4c84",
+  [baseSepolia.id]: "0xd3c7090C2F89c5132C3f91DD1da4bCffEAe10e13",
 } as const;
 
 export const metadataModuleAddress = {
-  [baseSepolia.id]: "0x6c5A8A7f061bEd94b1b88CFAd4e1a1a8C5c4e527",
+  [baseSepolia.id]: "0x65392ac6fd773a9bd36c200abf848c8fa3c9f7f8",
 } as const;
 
 export const erc721SlotsAddress = {
-  [baseSepolia.id]: "0x87138d73345c07142475cb1b599628406743ccd8",
+  [baseSepolia.id]: "0x65e88189ac09527c5F7da0296ef33C77E5a6BE27",
 } as const;
 
 export function getMetadataModuleAddress(chainId: number): Address | undefined {
   return metadataModuleAddress[chainId as keyof typeof metadataModuleAddress];
 }
-/**
 
+/**
  * Supported chain IDs for 0xSlots protocol
  */
 export type SupportedChainId = keyof typeof slotFactoryAddress;

@@ -12,7 +12,7 @@ contract DeployERC721Slots is Script {
         address deployer = vm.addr(deployerPK);
 
         // Base Sepolia addresses
-        address factory = 0x57759A2094cbE24313B826b453d4e7760279f79D;
+        address factory = 0xc44De86e2A5f0C47f1Ba87C36DaBf54275814DEb;
         address usdc = 0x036CbD53842c5426634e7929541eC2318f3dCF7e; // Base Sepolia USDC
 
         SlotConfig memory config = SlotConfig({
