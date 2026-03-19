@@ -6,14 +6,13 @@ import { AppShell } from "@/components/app-shell";
 import { Providers } from "@/components/providers";
 
 import "./globals.css";
+import { APP_URL } from "@/constants";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const jetbrains = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
 });
-
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.0xslots.org";
 
 export const metadata: Metadata = {
   title: "0xSlots — Immutable & Modular Collective Ownership Slots",

@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.0xslots.org";
+import { APP_URL } from "@/constants";
 
 /**
  * Farcaster miniapp manifest.
