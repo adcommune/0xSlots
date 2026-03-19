@@ -5,6 +5,7 @@ import {BaseScript, console2} from "./Base.s.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import {Slot} from "../src/Slot.sol";
 import {SlotFactory} from "../src/SlotFactory.sol";
+import {MetadataModule} from "../src/modules/MetadataModule.sol";
 
 /**
  * @title DeployV3
@@ -47,6 +48,22 @@ contract DeployV3 is BaseScript {
         console2.log("Admin:", factory.admin());
 
         _saveDeployment(address(proxy), "SlotFactoryV3");
+
+        // 5. Deploy MetadataModule (UUPS proxy)
+        MetadataModule metaImpl = new MetadataModule();
+        console2.log("MetadataModule implementation:", address(metaImpl));
+
+        ERC1967Proxy metaProxy = new ERC1967Proxy(
+            address(metaImpl),
+            abi.encodeCall(MetadataModule.initialize, (deployer))
+        );
+        console2.log("MetadataModule proxy:", address(metaProxy));
+
+        _saveDeployment(address(metaProxy), "MetadataModule");
+
+        // 6. Verify MetadataModule on the factory
+        factory.setModuleVerified(address(metaProxy), true, "MetadataModule", "1.0.0");
+        console2.log("MetadataModule verified on factory");
 
         console2.log("=== Done ===");
     }
