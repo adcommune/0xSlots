@@ -17,7 +17,7 @@ export default function Home() {
     <div className="min-h-screen">
       <PageHeader>
         <div className="flex items-center gap-6">
-          <div className="hidden md:flex flex-col">
+          <div className="flex flex-col">
             <h1 className="text-xl font-bold tracking-tight leading-tight">
               Explorer
             </h1>

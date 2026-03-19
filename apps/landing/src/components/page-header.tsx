@@ -9,10 +9,8 @@ export function PageHeader({
 }) {
   return (
     <div className="border-b bg-muted/50">
-      <div className={`${maxWidth} mx-auto px-6 py-4`}>
-        <div className="flex items-center justify-end md:justify-between">
-          {children}
-        </div>
+      <div className={`${maxWidth} mx-auto px-2 md:px-6 py-2 md:py-4`}>
+        <div className="flex items-center justify-between">{children}</div>
       </div>
     </div>
   );

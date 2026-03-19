@@ -212,7 +212,7 @@ export default function CreatePage() {
             {/* Left: Form */}
             <div className="flex-1 min-w-0 rounded-lg border">
               {/* Card header */}
-              <div className="bg-muted/50 border-b px-4 py-3">
+              <div className="bg-muted/50 border-b px-2 md:px-4 py-3">
                 <h2 className="text-sm font-semibold">
                   Step {step} of 3 —{" "}
                   {step === 1
@@ -224,7 +224,7 @@ export default function CreatePage() {
               </div>
 
               {/* Step indicator */}
-              <div className="px-6 pt-5 pb-1">
+              <div className="px-3 md:px-6 pt-2 md:pt-5 pb-1">
                 <div className="flex items-center">
                   {STEPS.map(({ n, label }, i) => (
                     <div
@@ -266,7 +266,7 @@ export default function CreatePage() {
               {/* Step content */}
               <div
                 key={step}
-                className="p-6 space-y-6 animate-in fade-in duration-200"
+                className="p-3 md:p-6 space-y-6 animate-in fade-in duration-200"
               >
                 {step === 1 && <StepRecipient />}
                 {step === 2 && <StepParameters />}

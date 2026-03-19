@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  allowedDevOrigins: ["really-intense-guppy.ngrok-free.app"],
 };
 
 export default nextConfig;

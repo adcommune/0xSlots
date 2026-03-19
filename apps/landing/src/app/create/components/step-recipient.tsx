@@ -75,9 +75,12 @@ export function StepRecipient() {
       {recipientMode === "single" && (
         <div className="mt-3">
           {!useCustomRecipient ? (
-            <div className="rounded-lg border bg-muted/30 p-4 flex items-center justify-between">
+            <div className="rounded-lg border bg-muted/30 p-2 md:p-4 flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium">My Account</p>
+                <div className="flex flex-col gap-1">
+                  <p className="text-sm font-medium">My Account</p>
+                  {truncateAddress(address ?? "")}
+                </div>
                 {address && (
                   <p className="text-xs text-muted-foreground font-mono mt-0.5">
                     {truncateAddress(address)}

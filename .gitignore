@@ -10,3 +10,5 @@ dist
 packages/subgraph/buildapps/contracts/.env
 apps/contracts/cache/
 apps/contracts/script/K/
+
+ngrok.yml
