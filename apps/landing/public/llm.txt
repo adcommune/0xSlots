@@ -1,0 +1,972 @@
+# 0xSlots Protocol
+
+> Harberger tax slots on EVM chains. Continuous partial common ownership primitives for onchain ads, land, naming, and more.
+
+## Overview
+
+0xSlots implements Harberger taxation onchain. Each **Slot** is an independently deployed smart contract where:
+
+- An **occupant** self-assesses a price and pays continuous tax on it
+- A **recipient** receives the tax revenue
+- Anyone can force-buy a slot at its self-assessed price
+- Insolvent occupants (deposit depleted) can be liquidated by anyone for a bounty
+
+Packages: `@0xslots/contracts` (ABIs + addresses), `@0xslots/sdk` (reads + writes)
+
+## Deployed Addresses
+
+### Base Sepolia (84532)
+- SlotFactory: `0x57759A2094cbE24313B826b453d4e7760279f79D`
+- BatchCollector: `0xDE5B9A3ce6Cbca935E33221909fA261F4EfC4c84`
+- MetadataModule: `0x6c5A8A7f061bEd94b1b88CFAd4e1a1a8C5c4e527`
+
+### Arbitrum (42161)
+- SlotsHub (proxy): deployed
+- MetadataModule: deployed
+
+---
+
+## Full Contract Source Code
+
+### ISlot.sol — Structs & Events
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
+/// @notice Immutable identity config — determines CREATE2 address
+struct SlotConfig {
+    bool mutableTax;
+    bool mutableModule;
+    address manager; // address(0) if both flags are false
+}
+
+/// @notice Initial values set at creation
+struct SlotInitParams {
+    uint256 taxPercentage;       // basis points (100 = 1%)
+    address module;              // hook contract, address(0) for none
+    uint256 liquidationBountyBps; // basis points, default 0
+    uint256 minDepositSeconds;   // minimum deposit to cover N seconds of tax
+}
+
+/// @notice Complete slot state returned by getSlotInfo()
+struct SlotInfo {
+    // Identity (immutable)
+    address recipient;
+    address currency;
+    address manager;
+    bool mutableTax;
+    bool mutableModule;
+    // State
+    address occupant;
+    uint256 price;
+    uint256 taxPercentage;
+    address module;
+    uint256 liquidationBountyBps;
+    uint256 minDepositSeconds;
+    // Financials (live-computed)
+    uint256 deposit;
+    uint256 collectedTax;
+    uint256 taxOwed;
+    uint256 secondsUntilLiquidation;
+    bool insolvent;
+    // Pending updates
+    bool hasPendingTax;
+    uint256 pendingTaxPercentage;
+    bool hasPendingModule;
+    address pendingModule;
+}
+
+/// @notice Pending update for tax or module (applied on next ownership transition)
+struct PendingUpdate {
+    uint256 newTaxPercentage;
+    address newModule;
+    bool hasTaxUpdate;
+    bool hasModuleUpdate;
+}
+
+interface ISlotEvents {
+    event SlotCreated(address indexed slot, address indexed recipient, address indexed currency, SlotConfig config, SlotInitParams initParams);
+    event Bought(address indexed buyer, address indexed previousOccupant, uint256 price, uint256 deposit, uint256 selfAssessedPrice);
+    event Released(address indexed occupant, uint256 refund);
+    event Liquidated(address indexed liquidator, address indexed occupant, uint256 bounty);
+    event PriceUpdated(uint256 oldPrice, uint256 newPrice);
+    event Deposited(address indexed depositor, uint256 amount);
+    event Withdrawn(address indexed occupant, uint256 amount);
+    event TaxCollected(address indexed recipient, uint256 amount);
+    event Settled(uint256 taxOwed, uint256 taxPaid, uint256 depositRemaining);
+    event TaxUpdateProposed(uint256 newPercentage);
+    event ModuleUpdateProposed(address newModule);
+    event PendingUpdateCancelled();
+    event PendingUpdateApplied(uint256 newTaxPercentage, address newModule);
+    event LiquidationBountyUpdated(uint256 newBps);
+    event ModuleCallFailed(string callbackName);
+}
+```
+
+### ISlotsModule.sol — Module Hook Interface
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+
+interface ISlotsModule is IERC165 {
+  function name() external view returns (string memory);
+  function version() external view returns (string memory);
+  function onTransfer(uint256 slotId, address from, address to) external;
+  function onPriceUpdate(uint256 slotId, uint256 oldPrice, uint256 newPrice) external;
+  function onRelease(uint256 slotId, address from) external;
+}
+```
+
+### Slot.sol — Core Harberger-Taxed Slot
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import {Multicall} from "@openzeppelin/contracts/utils/Multicall.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {ISlotsModule} from "./ISlotsModule.sol";
+import {SlotConfig, SlotInitParams, PendingUpdate, SlotInfo, ISlotEvents} from "./ISlot.sol";
+
+/// @title Slot (v3) — Immutable & modular Harberger-taxed slot
+/// @notice One slot = one contract. Deployed deterministically via SlotFactory.
+contract Slot is ISlotEvents, ReentrancyGuard, Multicall {
+    using SafeERC20 for IERC20;
+
+    uint256 public constant BASIS_POINTS = 10_000;
+    uint256 public constant MONTH = 30 days;
+
+    error NotManager();
+    error NotOccupant();
+    error CannotBuyFromYourself();
+    error InvalidPrice();
+    error InvalidTaxPercentage();
+    error InsufficientDeposit();
+    error NotInsolvent();
+    error NothingToCollect();
+    error TaxNotMutable();
+    error ModuleNotMutable();
+    error NoPendingUpdate();
+    error AlreadyInitialized();
+    error InvalidLiquidationBounty();
+    error InvalidRecipient();
+    error InvalidCurrency();
+
+    // Immutable state
+    address public recipient;
+    IERC20 public currency;
+    bool public mutableTax;
+    bool public mutableModule;
+    address public manager;
+
+    // Mutable state
+    address public occupant;
+    uint256 public price;
+    uint256 public taxPercentage;
+    address public module;
+    uint256 public liquidationBountyBps;
+    uint256 public minDepositSeconds;
+    uint256 public deposit;
+    uint256 public lastSettled;
+    uint256 public collectedTax;
+    PendingUpdate public pendingUpdate;
+    bool private _initialized;
+
+    constructor() { _initialized = true; }
+
+    function initialize(
+        address _recipient, IERC20 _currency,
+        SlotConfig memory _config, SlotInitParams memory _init
+    ) external {
+        if (_initialized) revert AlreadyInitialized();
+        _initialized = true;
+        if (_recipient == address(0)) revert InvalidRecipient();
+        if (address(_currency) == address(0)) revert InvalidCurrency();
+        if (_init.taxPercentage == 0) revert InvalidTaxPercentage();
+        if (_init.liquidationBountyBps > BASIS_POINTS) revert InvalidLiquidationBounty();
+        recipient = _recipient;
+        currency = _currency;
+        mutableTax = _config.mutableTax;
+        mutableModule = _config.mutableModule;
+        manager = _config.manager;
+        taxPercentage = _init.taxPercentage;
+        module = _init.module;
+        liquidationBountyBps = _init.liquidationBountyBps;
+        minDepositSeconds = _init.minDepositSeconds;
+        lastSettled = block.timestamp;
+    }
+
+    modifier onlyManager() { if (msg.sender != manager) revert NotManager(); _; }
+    modifier onlyOccupant() { if (msg.sender != occupant) revert NotOccupant(); _; }
+
+    /// @notice Buy the slot. If vacant, just deposit and self-assess.
+    function buy(uint256 depositAmount, uint256 selfAssessedPrice) external nonReentrant {
+        if (selfAssessedPrice == 0) revert InvalidPrice();
+        if (msg.sender == occupant) revert CannotBuyFromYourself();
+        uint256 currentPrice = price;
+        address prev = occupant;
+        if (prev != address(0)) { _settle(); }
+        _applyPendingUpdates();
+        _enforceMinDeposit(depositAmount, selfAssessedPrice);
+        if (prev == address(0)) {
+            if (depositAmount > 0) { currency.safeTransferFrom(msg.sender, address(this), depositAmount); }
+        } else {
+            uint256 totalFromBuyer = currentPrice + depositAmount;
+            if (totalFromBuyer > 0) { currency.safeTransferFrom(msg.sender, address(this), totalFromBuyer); }
+            uint256 refund = deposit + currentPrice;
+            deposit = 0;
+            if (refund > 0) { currency.safeTransfer(prev, refund); }
+        }
+        occupant = msg.sender;
+        price = selfAssessedPrice;
+        deposit = depositAmount;
+        lastSettled = block.timestamp;
+        _notifyModule("onTransfer", abi.encodeCall(ISlotsModule.onTransfer, (0, prev, msg.sender)));
+        emit Bought(msg.sender, prev, currentPrice, depositAmount, selfAssessedPrice);
+    }
+
+    /// @notice Occupant releases the slot (voluntary exit)
+    function release() external nonReentrant onlyOccupant {
+        _settle();
+        address prev = occupant;
+        uint256 refund = deposit;
+        uint256 pendingTax = collectedTax;
+        if (pendingTax > 0) { collectedTax = 0; currency.safeTransfer(recipient, pendingTax); }
+        occupant = address(0);
+        price = 0;
+        deposit = 0;
+        lastSettled = block.timestamp;
+        _applyPendingUpdates();
+        if (refund > 0) { currency.safeTransfer(prev, refund); }
+        _notifyModule("onRelease", abi.encodeCall(ISlotsModule.onRelease, (0, prev)));
+        emit Released(prev, refund);
+    }
+
+    /// @notice Occupant self-assesses a new price
+    function selfAssess(uint256 newPrice) external nonReentrant onlyOccupant {
+        if (newPrice == 0) revert InvalidPrice();
+        _settle();
+        uint256 oldPrice = price;
+        price = newPrice;
+        _enforceMinDepositExisting(newPrice);
+        _notifyModule("onPriceUpdate", abi.encodeCall(ISlotsModule.onPriceUpdate, (0, oldPrice, newPrice)));
+        emit PriceUpdated(oldPrice, newPrice);
+    }
+
+    /// @notice Occupant tops up their deposit
+    function topUp(uint256 amount) external nonReentrant onlyOccupant {
+        _settle();
+        currency.safeTransferFrom(msg.sender, address(this), amount);
+        deposit += amount;
+        emit Deposited(msg.sender, amount);
+    }
+
+    /// @notice Occupant withdraws excess deposit
+    function withdraw(uint256 amount) external nonReentrant onlyOccupant {
+        _settle();
+        if (amount > deposit) revert InsufficientDeposit();
+        uint256 remaining = deposit - amount;
+        uint256 minDep = _minDepositFor(price);
+        if (remaining < minDep) revert InsufficientDeposit();
+        deposit = remaining;
+        currency.safeTransfer(msg.sender, amount);
+        emit Withdrawn(msg.sender, amount);
+    }
+
+    /// @notice Liquidate an insolvent occupant
+    function liquidate() external nonReentrant {
+        if (occupant == address(0)) revert NotInsolvent();
+        _settle();
+        if (deposit > 0) revert NotInsolvent();
+        address prev = occupant;
+        uint256 bounty = 0;
+        if (liquidationBountyBps > 0 && collectedTax > 0) {
+            bounty = (collectedTax * liquidationBountyBps) / BASIS_POINTS;
+            collectedTax -= bounty;
+        }
+        uint256 remainingTax = collectedTax;
+        if (remainingTax > 0) { collectedTax = 0; currency.safeTransfer(recipient, remainingTax); }
+        occupant = address(0);
+        price = 0;
+        lastSettled = block.timestamp;
+        _applyPendingUpdates();
+        if (bounty > 0) { currency.safeTransfer(msg.sender, bounty); }
+        _notifyModule("onRelease", abi.encodeCall(ISlotsModule.onRelease, (0, prev)));
+        emit Liquidated(msg.sender, prev, bounty);
+    }
+
+    /// @notice Flush accumulated tax to recipient
+    function collect() external nonReentrant {
+        _settle();
+        uint256 amount = collectedTax;
+        if (amount == 0) revert NothingToCollect();
+        collectedTax = 0;
+        currency.safeTransfer(recipient, amount);
+        emit TaxCollected(recipient, amount);
+    }
+
+    // Manager functions
+    function proposeTaxUpdate(uint256 newPct) external onlyManager {
+        if (!mutableTax) revert TaxNotMutable();
+        if (newPct == 0) revert InvalidTaxPercentage();
+        pendingUpdate.newTaxPercentage = newPct;
+        pendingUpdate.hasTaxUpdate = true;
+        emit TaxUpdateProposed(newPct);
+    }
+
+    function proposeModuleUpdate(address newModule) external onlyManager {
+        if (!mutableModule) revert ModuleNotMutable();
+        pendingUpdate.newModule = newModule;
+        pendingUpdate.hasModuleUpdate = true;
+        emit ModuleUpdateProposed(newModule);
+    }
+
+    function cancelPendingUpdates() external onlyManager {
+        if (!pendingUpdate.hasTaxUpdate && !pendingUpdate.hasModuleUpdate) revert NoPendingUpdate();
+        delete pendingUpdate;
+        emit PendingUpdateCancelled();
+    }
+
+    function setLiquidationBounty(uint256 newBps) external onlyManager {
+        if (newBps > BASIS_POINTS) revert InvalidLiquidationBounty();
+        liquidationBountyBps = newBps;
+        emit LiquidationBountyUpdated(newBps);
+    }
+
+    // View functions
+    function taxOwed() public view returns (uint256) {
+        if (occupant == address(0)) return 0;
+        uint256 elapsed = block.timestamp - lastSettled;
+        return (price * taxPercentage * elapsed) / (MONTH * BASIS_POINTS);
+    }
+
+    function secondsUntilLiquidation() public view returns (uint256) {
+        if (occupant == address(0)) return type(uint256).max;
+        uint256 owed = taxOwed();
+        uint256 remaining = deposit > owed ? deposit - owed : 0;
+        uint256 taxNumerator = price * taxPercentage;
+        if (taxNumerator == 0) return type(uint256).max;
+        return (remaining * MONTH * BASIS_POINTS) / taxNumerator;
+    }
+
+    function isInsolvent() public view returns (bool) {
+        if (occupant == address(0)) return false;
+        return taxOwed() >= deposit;
+    }
+
+    function isVacant() public view returns (bool) { return occupant == address(0); }
+
+    function getPendingUpdate() external view returns (PendingUpdate memory) { return pendingUpdate; }
+
+    function getSlotInfo() external view returns (SlotInfo memory info) {
+        info.recipient = recipient;
+        info.currency = address(currency);
+        info.manager = manager;
+        info.mutableTax = mutableTax;
+        info.mutableModule = mutableModule;
+        info.occupant = occupant;
+        info.price = price;
+        info.taxPercentage = taxPercentage;
+        info.module = module;
+        info.liquidationBountyBps = liquidationBountyBps;
+        info.minDepositSeconds = minDepositSeconds;
+        info.deposit = deposit;
+        info.collectedTax = collectedTax;
+        info.taxOwed = taxOwed();
+        info.secondsUntilLiquidation = secondsUntilLiquidation();
+        info.insolvent = isInsolvent();
+        info.hasPendingTax = pendingUpdate.hasTaxUpdate;
+        info.pendingTaxPercentage = pendingUpdate.newTaxPercentage;
+        info.hasPendingModule = pendingUpdate.hasModuleUpdate;
+        info.pendingModule = pendingUpdate.newModule;
+    }
+
+    // Internal
+    function _settle() internal {
+        if (occupant == address(0)) { lastSettled = block.timestamp; return; }
+        uint256 elapsed = block.timestamp - lastSettled;
+        if (elapsed == 0) return;
+        uint256 owed = (price * taxPercentage * elapsed) / (MONTH * BASIS_POINTS);
+        uint256 paid;
+        if (owed >= deposit) { paid = deposit; collectedTax += deposit; deposit = 0; }
+        else { paid = owed; deposit -= owed; collectedTax += owed; }
+        lastSettled = block.timestamp;
+        emit Settled(owed, paid, deposit);
+    }
+
+    function _applyPendingUpdates() internal {
+        if (!pendingUpdate.hasTaxUpdate && !pendingUpdate.hasModuleUpdate) return;
+        uint256 newTax = taxPercentage;
+        address newMod = module;
+        if (pendingUpdate.hasTaxUpdate) { newTax = pendingUpdate.newTaxPercentage; taxPercentage = newTax; }
+        if (pendingUpdate.hasModuleUpdate) { newMod = pendingUpdate.newModule; module = newMod; }
+        delete pendingUpdate;
+        emit PendingUpdateApplied(newTax, newMod);
+    }
+
+    function _minDepositFor(uint256 _price) internal view returns (uint256) {
+        if (minDepositSeconds == 0) return 0;
+        return (_price * taxPercentage * minDepositSeconds) / (MONTH * BASIS_POINTS);
+    }
+
+    function _enforceMinDeposit(uint256 depositAmount, uint256 _price) internal view {
+        uint256 minDep = _minDepositFor(_price);
+        if (depositAmount < minDep) revert InsufficientDeposit();
+    }
+
+    function _enforceMinDepositExisting(uint256 _price) internal view {
+        uint256 minDep = _minDepositFor(_price);
+        if (deposit < minDep) revert InsufficientDeposit();
+    }
+
+    function _notifyModule(string memory name, bytes memory data) internal {
+        if (module == address(0)) return;
+        (bool ok,) = module.call{gas: 500_000}(data);
+        if (!ok) emit ModuleCallFailed(name);
+    }
+}
+```
+
+### SlotFactory.sol — UUPS-Upgradeable Factory
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
+import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
+import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import {Slot} from "./Slot.sol";
+import {SlotConfig, SlotInitParams, ISlotEvents} from "./ISlot.sol";
+
+/// @title SlotFactory — Deploy Harberger-taxed slots via Beacon Proxy
+/// @notice UUPS-upgradeable factory. All slots delegate to a shared beacon.
+///         Upgrading the beacon upgrades all slots. Upgrading the factory upgrades deployment logic.
+contract SlotFactory is UUPSUpgradeable {
+    error InvalidConfig_ManagerRequired();
+    error InvalidConfig_ManagerMustBeZero();
+    error InvalidTaxPercentage();
+    error InvalidCount();
+    error NotAdmin();
+    error AlreadyInitialized();
+
+    event SlotDeployed(address indexed slot, address indexed recipient, address indexed currency, SlotConfig config, SlotInitParams initParams);
+    event ModuleVerified(address indexed module, bool verified, string name, string version);
+    event AdminTransferred(address indexed previousAdmin, address indexed newAdmin);
+
+    UpgradeableBeacon public beacon;
+    mapping(address => bool) public verifiedModules;
+    address public admin;
+    bool private _initialized;
+
+    constructor() { _initialized = true; }
+
+    function initialize(address _admin, address _slotImplementation) external {
+        if (_initialized) revert AlreadyInitialized();
+        _initialized = true;
+        admin = _admin;
+        beacon = new UpgradeableBeacon(_slotImplementation);
+        beacon.transferOwnership(_admin);
+    }
+
+    modifier onlyAdmin() { if (msg.sender != admin) revert NotAdmin(); _; }
+
+    function transferAdmin(address newAdmin) external onlyAdmin {
+        emit AdminTransferred(admin, newAdmin);
+        admin = newAdmin;
+    }
+
+    function createSlot(
+        address recipient, IERC20 currency,
+        SlotConfig memory config, SlotInitParams memory initParams
+    ) external returns (address slot) {
+        _validateConfig(config, initParams);
+        slot = _deploySlot(recipient, currency, config, initParams);
+    }
+
+    function createSlots(
+        address recipient, IERC20 currency,
+        SlotConfig memory config, SlotInitParams memory initParams, uint256 count
+    ) external returns (address[] memory slots) {
+        if (count == 0) revert InvalidCount();
+        _validateConfig(config, initParams);
+        slots = new address[](count);
+        for (uint256 i = 0; i < count; i++) {
+            slots[i] = _deploySlot(recipient, currency, config, initParams);
+        }
+    }
+
+    function implementation() external view returns (address) { return beacon.implementation(); }
+
+    function setModuleVerified(address module, bool verified, string memory name, string memory version) external onlyAdmin {
+        verifiedModules[module] = verified;
+        emit ModuleVerified(module, verified, name, version);
+    }
+
+    function isModuleVerified(address module) external view returns (bool) { return verifiedModules[module]; }
+
+    function _authorizeUpgrade(address) internal override onlyAdmin {}
+
+    function _validateConfig(SlotConfig memory config, SlotInitParams memory initParams) internal pure {
+        if (config.mutableTax || config.mutableModule) {
+            if (config.manager == address(0)) revert InvalidConfig_ManagerRequired();
+        } else {
+            if (config.manager != address(0)) revert InvalidConfig_ManagerMustBeZero();
+        }
+        if (initParams.taxPercentage == 0) revert InvalidTaxPercentage();
+    }
+
+    function _deploySlot(
+        address recipient, IERC20 currency,
+        SlotConfig memory config, SlotInitParams memory initParams
+    ) internal returns (address slot) {
+        bytes memory initData = abi.encodeCall(Slot.initialize, (recipient, currency, config, initParams));
+        BeaconProxy proxy = new BeaconProxy(address(beacon), initData);
+        slot = address(proxy);
+        emit SlotDeployed(slot, recipient, address(currency), config, initParams);
+    }
+}
+```
+
+### BatchCollector.sol
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.24;
+
+interface ISlot { function collect() external; }
+
+/// @title BatchCollector
+/// @notice Collect tax from multiple 0xSlots in a single transaction
+contract BatchCollector {
+    /// @param slots Array of Slot contract addresses to collect from
+    /// @dev Silently skips slots that revert (e.g. nothing to collect)
+    function collectAll(address[] calldata slots) external {
+        for (uint256 i = 0; i < slots.length; i++) {
+            try ISlot(slots[i]).collect() {} catch {}
+        }
+    }
+}
+```
+
+### MetadataModule.sol
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import {ISlotsModule} from "../ISlotsModule.sol";
+import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import {UUPSUpgradeable} from "@openzeppelin-upgradeable/contracts/proxy/utils/UUPSUpgradeable.sol";
+import {OwnableUpgradeable} from "@openzeppelin-upgradeable/contracts/access/OwnableUpgradeable.sol";
+import {Initializable} from "@openzeppelin-upgradeable/contracts/proxy/utils/Initializable.sol";
+
+/// @title MetadataModule
+/// @notice UUPS-upgradeable module that stores a URI per slot. Only the slot's occupant can update.
+contract MetadataModule is Initializable, UUPSUpgradeable, OwnableUpgradeable, ISlotsModule {
+    mapping(address => string) public tokenURI;
+    event MetadataUpdated(address indexed slot, string uri);
+    error NotOccupant();
+
+    constructor() { _disableInitializers(); }
+
+    function initialize() external initializer {
+        __Ownable_init();
+        __UUPSUpgradeable_init();
+    }
+
+    function updateMetadata(address slot, string calldata uri) external {
+        (bool ok, bytes memory data) = slot.staticcall(abi.encodeWithSignature("occupant()"));
+        require(ok, "occupant() call failed");
+        address occupant = abi.decode(data, (address));
+        if (msg.sender != occupant) revert NotOccupant();
+        tokenURI[slot] = uri;
+        emit MetadataUpdated(slot, uri);
+    }
+
+    function onTransfer(uint256, address, address) external override {}
+    function onPriceUpdate(uint256, uint256, uint256) external override {}
+    function onRelease(uint256, address) external override {
+        delete tokenURI[msg.sender];
+        emit MetadataUpdated(msg.sender, "");
+    }
+
+    function name() external pure override returns (string memory) { return "MetadataModule"; }
+    function version() external pure override returns (string memory) { return "1.0.0"; }
+    function supportsInterface(bytes4 interfaceId) external pure override returns (bool) {
+        return interfaceId == type(ISlotsModule).interfaceId || interfaceId == type(IERC165).interfaceId;
+    }
+
+    function _authorizeUpgrade(address) internal override onlyOwner {}
+}
+```
+
+### ERC721Slots.sol — Harberger-Taxed NFTs
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {Slot} from "./Slot.sol";
+import {SlotFactory} from "./SlotFactory.sol";
+import {SlotConfig, SlotInitParams, SlotInfo} from "./ISlot.sol";
+
+/// @title ERC721Slots — Harberger-taxed NFTs powered by 0xSlots
+/// @notice Each token is backed by a Slot. Ownership = occupancy.
+///         No transferFrom — buy the slot to own the NFT.
+///         Tax flows to the collection creator (recipient) forever.
+contract ERC721Slots is ERC721 {
+    error TransferDisabled();
+    error NotCreator();
+    error TokenDoesNotExist();
+    error InvalidTokenURI();
+
+    SlotFactory public immutable factory;
+    address public immutable creator;
+    IERC20 public immutable currency;
+    SlotConfig public slotConfig;
+    SlotInitParams public slotInitParams;
+    mapping(uint256 => address) public tokenSlot;
+    mapping(address => uint256) public slotToken;
+    mapping(uint256 => string) private _tokenURIs;
+    uint256 public nextTokenId;
+    uint256 public totalSupply;
+
+    event TokenMinted(uint256 indexed tokenId, address indexed slot, string uri);
+
+    constructor(
+        string memory name_, string memory symbol_,
+        address factory_, address creator_, address currency_,
+        SlotConfig memory config_, SlotInitParams memory initParams_
+    ) ERC721(name_, symbol_) {
+        factory = SlotFactory(factory_);
+        creator = creator_;
+        currency = IERC20(currency_);
+        slotConfig = config_;
+        slotInitParams = initParams_;
+    }
+
+    function mint(string calldata uri) external returns (uint256 tokenId, address slot) {
+        if (msg.sender != creator) revert NotCreator();
+        if (bytes(uri).length == 0) revert InvalidTokenURI();
+        tokenId = nextTokenId++;
+        totalSupply++;
+        slot = factory.createSlot(creator, currency, slotConfig, slotInitParams);
+        tokenSlot[tokenId] = slot;
+        slotToken[slot] = tokenId;
+        _tokenURIs[tokenId] = uri;
+        _mint(address(this), tokenId);
+        emit TokenMinted(tokenId, slot, uri);
+    }
+
+    function mintBatch(string[] calldata uris) external returns (uint256[] memory tokenIds, address[] memory slots) {
+        if (msg.sender != creator) revert NotCreator();
+        uint256 count = uris.length;
+        tokenIds = new uint256[](count);
+        slots = new address[](count);
+        address[] memory deployedSlots = factory.createSlots(creator, currency, slotConfig, slotInitParams, count);
+        for (uint256 i = 0; i < count; i++) {
+            if (bytes(uris[i]).length == 0) revert InvalidTokenURI();
+            uint256 tokenId = nextTokenId++;
+            totalSupply++;
+            tokenSlot[tokenId] = deployedSlots[i];
+            slotToken[deployedSlots[i]] = tokenId;
+            _tokenURIs[tokenId] = uris[i];
+            _mint(address(this), tokenId);
+            tokenIds[i] = tokenId;
+            slots[i] = deployedSlots[i];
+            emit TokenMinted(tokenId, deployedSlots[i], uris[i]);
+        }
+    }
+
+    function ownerOf(uint256 tokenId) public view override returns (address) {
+        address slot = tokenSlot[tokenId];
+        if (slot == address(0)) revert TokenDoesNotExist();
+        address occupant = Slot(payable(slot)).occupant();
+        return occupant == address(0) ? address(this) : occupant;
+    }
+
+    function balanceOf(address owner) public view override returns (uint256 count) {
+        for (uint256 i = 0; i < nextTokenId; i++) {
+            address slot = tokenSlot[i];
+            if (slot != address(0) && Slot(payable(slot)).occupant() == owner) count++;
+        }
+    }
+
+    function tokenURI(uint256 tokenId) public view override returns (string memory) {
+        address slot = tokenSlot[tokenId];
+        if (slot == address(0)) revert TokenDoesNotExist();
+        return _tokenURIs[tokenId];
+    }
+
+    function _beforeTokenTransfer(address from, address to, uint256 tokenId, uint256 batchSize) internal override {
+        if (from != address(0)) revert TransferDisabled();
+        super._beforeTokenTransfer(from, to, tokenId, batchSize);
+    }
+
+    function approve(address, uint256) public pure override { revert TransferDisabled(); }
+    function setApprovalForAll(address, bool) public pure override { revert TransferDisabled(); }
+
+    function getTokenSlotInfo(uint256 tokenId) external view returns (SlotInfo memory) {
+        address slot = tokenSlot[tokenId];
+        if (slot == address(0)) revert TokenDoesNotExist();
+        return Slot(payable(slot)).getSlotInfo();
+    }
+
+    function isHeld(uint256 tokenId) external view returns (bool) {
+        address slot = tokenSlot[tokenId];
+        if (slot == address(0)) revert TokenDoesNotExist();
+        return !Slot(payable(slot)).isVacant();
+    }
+
+    function priceOf(uint256 tokenId) external view returns (uint256) {
+        address slot = tokenSlot[tokenId];
+        if (slot == address(0)) revert TokenDoesNotExist();
+        return Slot(payable(slot)).price();
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view override returns (bool) {
+        return super.supportsInterface(interfaceId);
+    }
+
+    function onERC721Received(address, address, uint256, bytes calldata) external pure returns (bytes4) {
+        return this.onERC721Received.selector;
+    }
+}
+```
+
+---
+
+## SDK — `@0xslots/sdk`
+
+### Installation
+
+```bash
+npm install @0xslots/sdk
+# peer dependency:
+npm install viem@^2.47.4
+```
+
+For contract ABIs/addresses only:
+
+```bash
+npm install @0xslots/contracts
+```
+
+### Exports
+
+```typescript
+import {
+  SlotsClient,
+  createSlotsClient,
+  SlotsChain,
+  SlotsError,
+  SUBGRAPH_URLS,
+  // All generated subgraph types are also re-exported
+} from "@0xslots/sdk";
+```
+
+### Enums
+
+```typescript
+enum SlotsChain {
+  BASE_SEPOLIA = 84532,
+  ARBITRUM = 42161,
+}
+```
+
+### Types
+
+```typescript
+interface SlotsClientConfig {
+  chainId: SlotsChain;
+  factoryAddress?: Address;
+  publicClient?: PublicClient;
+  walletClient?: WalletClient;
+  subgraphUrl?: string;
+  subgraphApiKey?: string;
+  headers?: Record<string, string>;
+}
+
+interface SlotConfig {
+  mutableTax: boolean;
+  mutableModule: boolean;
+  manager: Address;
+}
+
+interface SlotInitParams {
+  taxPercentage: bigint;
+  module: Address;
+  liquidationBountyBps: bigint;
+  minDepositSeconds: bigint;
+}
+
+interface CreateSlotParams {
+  recipient: Address;
+  currency: Address;
+  config: SlotConfig;
+  initParams: SlotInitParams;
+}
+
+interface CreateSlotsParams extends CreateSlotParams {
+  count: bigint;
+}
+
+interface BuyParams {
+  slot: Address;
+  depositAmount: bigint;
+  selfAssessedPrice: bigint;
+}
+
+interface SubgraphMeta {
+  _meta: {
+    block: { number: number; hash: string; timestamp: number };
+    hasIndexingErrors: boolean;
+  };
+}
+```
+
+### SlotsError
+
+```typescript
+class SlotsError extends Error {
+  readonly operation: string;
+  readonly cause: unknown;
+  constructor(operation: string, cause: unknown);
+}
+```
+
+### createSlotsClient
+
+```typescript
+function createSlotsClient(config: SlotsClientConfig): SlotsClient;
+```
+
+### SlotsClient — Complete Method Reference
+
+**Accessors:**
+- `getChainId(): SlotsChain`
+- `getClient(): GraphQLClient`
+- `getSdk(): ReturnType<typeof getSdk>`
+
+**Module namespaces:**
+- `modules.metadata: MetadataModuleClient`
+
+**Subgraph reads — Slots:**
+- `getSlots(variables?): Promise<GetSlotsQuery>`
+- `getSlot(variables): Promise<GetSlotQuery>`
+- `getSlotsByRecipient(variables): Promise<GetSlotsByRecipientQuery>`
+- `getSlotsByOccupant(variables): Promise<GetSlotsByOccupantQuery>`
+
+**Subgraph reads — Factory:**
+- `getFactory(): Promise<GetFactoryQuery>`
+- `getModules(variables): Promise<GetModulesQuery>`
+
+**Subgraph reads — Events:**
+- `getSlotDeployedEvents(variables?): Promise<GetSlotDeployedEventsQuery>`
+- `getBoughtEvents(variables?): Promise<GetBoughtEventsQuery>`
+- `getSettledEvents(variables?): Promise<GetSettledEventsQuery>`
+- `getTaxCollectedEvents(variables?): Promise<GetTaxCollectedEventsQuery>`
+- `getSlotActivity(variables): Promise<GetSlotActivityQuery>`
+- `getRecentEvents(variables?): Promise<GetRecentEventsQuery>`
+- `getReleasedEvents(variables?): Promise<GetReleasedEventsQuery>`
+- `getLiquidatedEvents(variables?): Promise<GetLiquidatedEventsQuery>`
+- `getDepositedEvents(variables?): Promise<GetDepositedEventsQuery>`
+- `getWithdrawnEvents(variables?): Promise<GetWithdrawnEventsQuery>`
+- `getPriceUpdatedEvents(variables?): Promise<GetPriceUpdatedEventsQuery>`
+
+**Subgraph reads — Accounts:**
+- `getAccount(variables): Promise<GetAccountQuery>`
+- `getAccounts(variables?): Promise<GetAccountsQuery>`
+
+**Subgraph reads — Meta:**
+- `getMeta(): Promise<SubgraphMeta>`
+
+**On-chain reads (RPC, requires publicClient):**
+- `getSlotInfo(slot: Address): Promise<SlotInfo>`
+
+**Factory writes (requires walletClient + publicClient):**
+- `createSlot(params: CreateSlotParams): Promise<Hash>`
+- `createSlots(params: CreateSlotsParams): Promise<Hash>`
+
+**Slot writes:**
+- `buy(params: BuyParams): Promise<Hash>` — auto ERC-20 approval, EIP-5792 atomic batch if supported
+- `selfAssess(slot: Address, newPrice: bigint): Promise<Hash>`
+- `topUp(slot: Address, amount: bigint): Promise<Hash>` — auto ERC-20 approval
+- `withdraw(slot: Address, amount: bigint): Promise<Hash>`
+- `release(slot: Address): Promise<Hash>`
+- `collect(slot: Address): Promise<Hash>`
+- `liquidate(slot: Address): Promise<Hash>`
+
+**Manager writes:**
+- `proposeTaxUpdate(slot: Address, newPct: bigint): Promise<Hash>`
+- `proposeModuleUpdate(slot: Address, newModule: Address): Promise<Hash>`
+- `cancelPendingUpdates(slot: Address): Promise<Hash>`
+- `setLiquidationBounty(slot: Address, newBps: bigint): Promise<Hash>` — validates 0-10000
+
+**Multicall:**
+- `multicall(slot: Address, calls: { functionName: string; args?: any[] }[]): Promise<Hash>`
+
+### MetadataModuleClient — Complete Method Reference
+
+**Subgraph reads:**
+- `getSlots(variables?): Promise<GetMetadataSlotsQuery>`
+- `getSlot(variables): Promise<GetMetadataSlotQuery>`
+- `getSlotsByRecipient(variables): Promise<GetMetadataSlotsByRecipientQuery>`
+- `getUpdateHistory(variables?): Promise<GetMetadataUpdatedEventsQuery>`
+
+**On-chain reads:**
+- `getURI(slot: Address): Promise<string>`
+
+**Writes:**
+- `updateMetadata(slot: Address, uri: string): Promise<Hash>` — occupant only
+
+**Accessor:**
+- `getAddress(): Address`
+
+### React Hook
+
+```typescript
+import { useSlotsClient, SlotsChain } from "@0xslots/sdk";
+
+// Creates memoized SlotsClient wired to wagmi's public/wallet clients
+function useSlotsClient(chainId?: SlotsChain, subgraphApiKey?: string): SlotsClient;
+```
+
+Requires wagmi — uses `usePublicClient` and `useWalletClient` internally.
+
+### EIP-5792 Atomic Batching
+
+The SDK auto-detects wallet EIP-5792 support. When available, `buy()` and `topUp()` send ERC-20 approval + action as a single atomic batch. Falls back to sequential transactions otherwise.
+
+### Contracts Package (`@0xslots/contracts`)
+
+```typescript
+import {
+  slotAbi,              // Slot contract ABI
+  slotFactoryAbi,       // SlotFactory contract ABI
+  batchCollectorAbi,    // BatchCollector ABI
+  metadataModuleAbi,    // MetadataModule ABI
+  getSlotsHubAddress,   // (chainId) => Address
+  isSlotsHubDeployed,   // (chainId) => boolean
+  getSupportedChainIds, // () => number[]
+  getMetadataModuleAddress, // (chainId) => Address
+  CHAINS,               // viem Chain[] with deployments
+  DEFAULT_CHAIN,        // First deployed chain
+} from "@0xslots/contracts";
+
+// Subpath imports
+import { slotAbi } from "@0xslots/contracts/abis";
+import { getSlotsHubAddress } from "@0xslots/contracts/addresses";
+```

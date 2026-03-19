@@ -23,9 +23,8 @@ contract MetadataModule is Initializable, UUPSUpgradeable, OwnableUpgradeable, I
         _disableInitializers();
     }
 
-    function initialize() external initializer {
-        __Ownable_init();
-        __UUPSUpgradeable_init();
+    function initialize(address initialOwner) external initializer {
+        __Ownable_init(initialOwner);
     }
 
     /// @notice Update the URI for a slot. Only callable by the current occupant.

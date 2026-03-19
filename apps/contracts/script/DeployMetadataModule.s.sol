@@ -14,7 +14,7 @@ contract DeployMetadataModule is BaseScript {
         // Deploy UUPS proxy
         ERC1967Proxy proxy = new ERC1967Proxy(
             address(impl),
-            abi.encodeCall(MetadataModule.initialize, ())
+            abi.encodeCall(MetadataModule.initialize, (vm.addr(deployerPrivateKey)))
         );
         console2.log("MetadataModule proxy:", address(proxy));
         console2.log("Owner:", vm.addr(deployerPrivateKey));

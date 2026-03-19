@@ -72,8 +72,7 @@ contract SlotFactory is UUPSUpgradeable {
         _initialized = true;
 
         admin = _admin;
-        beacon = new UpgradeableBeacon(_slotImplementation);
-        beacon.transferOwnership(_admin);
+        beacon = new UpgradeableBeacon(_slotImplementation, _admin);
     }
 
     // ═══════════════════════════════════════════════════════════

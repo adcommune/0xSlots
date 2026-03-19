@@ -51,7 +51,7 @@ contract MetadataModuleTest is Test {
         moduleImpl = new MetadataModule();
         ERC1967Proxy proxy = new ERC1967Proxy(
             address(moduleImpl),
-            abi.encodeCall(MetadataModule.initialize, ())
+            abi.encodeCall(MetadataModule.initialize, (address(this)))
         );
         module = MetadataModule(address(proxy));
 
@@ -108,12 +108,12 @@ contract MetadataModuleTest is Test {
 
     function test_cannotInitializeTwice() public {
         vm.expectRevert();
-        module.initialize();
+        module.initialize(address(this));
     }
 
     function test_implementationCannotBeInitialized() public {
         vm.expectRevert();
-        moduleImpl.initialize();
+        moduleImpl.initialize(address(this));
     }
 
     // ═══════════════════════════════════════════════════════════

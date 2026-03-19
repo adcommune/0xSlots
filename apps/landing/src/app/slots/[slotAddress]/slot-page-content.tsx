@@ -625,9 +625,15 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
               {/* Metadata Module card — desktop only */}
               {isMetadataModule && (
                 <div className="hidden lg:block rounded-lg border">
-                  <div className="bg-muted/50 border-b px-4 py-3 flex items-center gap-1.5">
-                    <FileBox className="size-3.5" />
-                    <h2 className="text-sm font-semibold">Ad Metadata</h2>
+                  <div className="flex flex-col bg-muted/50 border-b gap-2 px-4 py-3">
+                    <div className="flex items-center gap-1.5">
+                      <FileBox className="size-3.5" />
+                      <h2 className="text-sm font-semibold">Ad Metadata</h2>
+                    </div>
+                    <p className="text-gray-400 text-xs ml-[18px]">
+                      This module hosts metadata that can only be udpated by the
+                      occupant
+                    </p>
                   </div>
                   <div className="p-4">
                     <MetadataForm

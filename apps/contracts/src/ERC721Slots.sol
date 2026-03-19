@@ -185,12 +185,13 @@ contract ERC721Slots is ERC721 {
     }
 
     /// @dev Block all standard transfers. Ownership changes via slot buy/release/liquidate.
-    function _beforeTokenTransfer(address from, address to, uint256 tokenId, uint256 batchSize) internal override {
+    function _update(address to, uint256 tokenId, address auth) internal override returns (address) {
         // Allow minting (from == address(0))
+        address from = _ownerOf(tokenId);
         if (from != address(0)) {
             revert TransferDisabled();
         }
-        super._beforeTokenTransfer(from, to, tokenId, batchSize);
+        return super._update(to, tokenId, auth);
     }
 
     /// @dev Approvals are meaningless — ownership is slot-based
