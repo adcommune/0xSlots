@@ -1,8 +1,7 @@
-import type { Address, Hash, WalletClient, PublicClient, Chain } from "viem";
-import type { GraphQLClient } from "graphql-request";
-import { getSdk } from "../generated/graphql";
-import { metadataModuleAbi, getMetadataModuleAddress } from "@0xslots/contracts";
+import { metadataModuleAbi } from "@0xslots/contracts";
+import type { Address, Chain, Hash, PublicClient, WalletClient } from "viem";
 import { SlotsError } from "../errors";
+import { getSdk } from "../generated/graphql";
 
 /**
  * Module namespace for MetadataModule operations.
@@ -30,33 +29,41 @@ export class MetadataModuleClient {
     this.chainId = opts.chainId;
     this._publicClient = opts.publicClient;
     this._walletClient = opts.walletClient;
-    this._moduleAddress = opts.moduleAddress ?? getMetadataModuleAddress(opts.chainId);
+    this._moduleAddress = opts.moduleAddress;
   }
 
   private get moduleAddress(): Address {
-    if (!this._moduleAddress) throw new SlotsError("metadata", `No MetadataModule deployed on chain ${this.chainId}`);
+    if (!this._moduleAddress)
+      throw new SlotsError(
+        "metadata",
+        `No MetadataModule deployed on chain ${this.chainId}`,
+      );
     return this._moduleAddress;
   }
 
   private get wallet(): WalletClient {
-    if (!this._walletClient) throw new SlotsError("metadata", "No walletClient provided");
+    if (!this._walletClient)
+      throw new SlotsError("metadata", "No walletClient provided");
     return this._walletClient;
   }
 
   private get account(): Address {
     const account = this.wallet.account;
-    if (!account) throw new SlotsError("metadata", "WalletClient must have an account");
+    if (!account)
+      throw new SlotsError("metadata", "WalletClient must have an account");
     return account.address;
   }
 
   private get chain(): Chain {
     const chain = this.wallet.chain;
-    if (!chain) throw new SlotsError("metadata", "WalletClient must have a chain");
+    if (!chain)
+      throw new SlotsError("metadata", "WalletClient must have a chain");
     return chain;
   }
 
   private get publicClient(): PublicClient {
-    if (!this._publicClient) throw new SlotsError("metadata", "No publicClient provided");
+    if (!this._publicClient)
+      throw new SlotsError("metadata", "No publicClient provided");
     return this._publicClient;
   }
 
@@ -74,22 +81,36 @@ export class MetadataModuleClient {
 
   /** Get all slots with metadata, ordered by most recently updated. */
   getSlots(...args: Parameters<ReturnType<typeof getSdk>["GetMetadataSlots"]>) {
-    return this.query("metadata.getSlots", () => this.sdk.GetMetadataSlots(...args));
+    return this.query("metadata.getSlots", () =>
+      this.sdk.GetMetadataSlots(...args),
+    );
   }
 
   /** Get a single metadata slot by slot address. */
   getSlot(...args: Parameters<ReturnType<typeof getSdk>["GetMetadataSlot"]>) {
-    return this.query("metadata.getSlot", () => this.sdk.GetMetadataSlot(...args));
+    return this.query("metadata.getSlot", () =>
+      this.sdk.GetMetadataSlot(...args),
+    );
   }
 
   /** Get all metadata slots for a given recipient. */
-  getSlotsByRecipient(...args: Parameters<ReturnType<typeof getSdk>["GetMetadataSlotsByRecipient"]>) {
-    return this.query("metadata.getSlotsByRecipient", () => this.sdk.GetMetadataSlotsByRecipient(...args));
+  getSlotsByRecipient(
+    ...args: Parameters<
+      ReturnType<typeof getSdk>["GetMetadataSlotsByRecipient"]
+    >
+  ) {
+    return this.query("metadata.getSlotsByRecipient", () =>
+      this.sdk.GetMetadataSlotsByRecipient(...args),
+    );
   }
 
   /** Get metadata update history for a slot. */
-  getUpdateHistory(...args: Parameters<ReturnType<typeof getSdk>["GetMetadataUpdatedEvents"]>) {
-    return this.query("metadata.getUpdateHistory", () => this.sdk.GetMetadataUpdatedEvents(...args));
+  getUpdateHistory(
+    ...args: Parameters<ReturnType<typeof getSdk>["GetMetadataUpdatedEvents"]>
+  ) {
+    return this.query("metadata.getUpdateHistory", () =>
+      this.sdk.GetMetadataUpdatedEvents(...args),
+    );
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -98,13 +119,15 @@ export class MetadataModuleClient {
 
   /** Read the current URI for a slot directly from chain (bypasses subgraph). */
   async getURI(slot: Address): Promise<string> {
-    return this.query("metadata.getURI", () =>
-      this.publicClient.readContract({
-        address: this.moduleAddress,
-        abi: metadataModuleAbi,
-        functionName: "tokenURI",
-        args: [slot],
-      }) as Promise<string>,
+    return this.query(
+      "metadata.getURI",
+      () =>
+        this.publicClient.readContract({
+          address: this.moduleAddress,
+          abi: metadataModuleAbi,
+          functionName: "tokenURI",
+          args: [slot],
+        }) as Promise<string>,
     );
   }
 
