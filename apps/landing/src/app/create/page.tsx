@@ -206,6 +206,7 @@ export default function CreatePage() {
       <div className="max-w-6xl mx-auto px-2 md:px-6 py-4 md:py-8 pb-24 lg:pb-8">
         <Form {...form}>
           <form
+            id="create-slot-form"
             onSubmit={form.handleSubmit(onSubmit)}
             className="flex gap-6 items-start"
           >
@@ -310,6 +311,7 @@ export default function CreatePage() {
             />
 
             <MobileBottomBar
+              step={step}
               slotCount={slotCount}
               setSlotCount={setSlotCount}
               submitState={submitState}

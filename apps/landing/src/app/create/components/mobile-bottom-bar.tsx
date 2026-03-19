@@ -21,6 +21,7 @@ import { SlotCounter } from "./slot-counter";
 import { SubmitButton, type SubmitState } from "./submit-button";
 
 interface MobileBottomBarProps {
+  step: number;
   slotCount: number;
   setSlotCount: (count: number) => void;
   submitState: SubmitState;
@@ -29,6 +30,7 @@ interface MobileBottomBarProps {
 }
 
 export function MobileBottomBar({
+  step,
   slotCount,
   setSlotCount,
   submitState,
@@ -53,29 +55,23 @@ export function MobileBottomBar({
       ? "Group"
       : recipientResolved.resolved || recipient || (address ?? "");
 
+  const ready = step === 3;
+
   return (
     <div className="fixed bottom-0 left-0 right-0 lg:hidden z-50">
       <Drawer open={open} onOpenChange={setOpen}>
         {/* Collapsed bar */}
-        <div className="bg-background border-t p-4">
-          <div className="flex items-center gap-3 max-w-3xl mx-auto">
-            <SlotCounter
-              value={slotCount}
-              onChange={setSlotCount}
-              variant="connected"
-            />
+        <div className="bg-background border-t p-3">
+          <div className="max-w-3xl mx-auto">
             <DrawerTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-1 text-xs">
-                <ChevronUp className="size-3.5" />
-                Summary
+              <Button
+                variant={ready ? "default" : "outline"}
+                className={`w-full gap-2 ${ready ? "bg-emerald-600 hover:bg-emerald-700 text-white" : ""}`}
+              >
+                <ChevronUp className="size-4" />
+                Finalize
               </Button>
             </DrawerTrigger>
-            <SubmitButton
-              state={submitState}
-              switchChain={switchChain}
-              chainId={chainId}
-              className="flex-1"
-            />
           </div>
         </div>
 
@@ -141,7 +137,7 @@ export function MobileBottomBar({
               {slotCount > 1 && (
                 <div className="flex justify-between border-t pt-2 mt-2">
                   <span className="text-muted-foreground">Total</span>
-                  <span className="font-semibold">{slotCount}× identical</span>
+                  <span className="font-semibold">{slotCount}x identical</span>
                 </div>
               )}
             </div>
@@ -153,6 +149,7 @@ export function MobileBottomBar({
               switchChain={switchChain}
               chainId={chainId}
               className="w-full"
+              formId="create-slot-form"
             />
             <DrawerClose asChild>
               <Button variant="outline" className="w-full">
