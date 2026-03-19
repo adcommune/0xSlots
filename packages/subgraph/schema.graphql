@@ -79,12 +79,26 @@ type MetadataSlot @entity(immutable: false) {
   id: ID! # slot address (same as Slot.id)
   slot: Slot!
   uri: String!
+  rawJson: String # full JSON content (from IPFS or inline), null if fetch failed
+  adType: String # parsed "type" field from JSON (e.g. "banner", "native", "video")
   updatedBy: Bytes! # last address that set the URI
   updateCount: BigInt! # total number of URI changes
   createdAt: BigInt!
   createdTx: Bytes!
   updatedAt: BigInt!
   updatedTx: Bytes!
+}
+
+type MetadataUpdatedEvent @entity(immutable: true) {
+  id: ID!
+  slot: Slot!
+  author: Account!
+  uri: String!
+  rawJson: String # full JSON content (from IPFS or inline), null if fetch failed
+  adType: String # parsed "type" field from JSON
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  tx: Bytes!
 }
 
 # ──────────────────────────────────────────
@@ -223,16 +237,6 @@ type ModuleUpdateProposedEvent @entity(immutable: true) {
 type PendingUpdateCancelledEvent @entity(immutable: true) {
   id: ID!
   slot: Slot!
-  timestamp: BigInt!
-  blockNumber: BigInt!
-  tx: Bytes!
-}
-
-type MetadataUpdatedEvent @entity(immutable: true) {
-  id: ID!
-  slot: Slot!
-  author: Account!
-  uri: String!
   timestamp: BigInt!
   blockNumber: BigInt!
   tx: Bytes!
