@@ -64,6 +64,7 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
             });
           }
           await sdk.actions.ready();
+          await sdk.back.enableWebNavigation();
         }
       } catch {
         // Not inside a Farcaster client — ignore
