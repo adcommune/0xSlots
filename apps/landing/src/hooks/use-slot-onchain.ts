@@ -5,6 +5,7 @@ import { type Address, erc20Abi } from "viem";
 import { useReadContract, useReadContracts, useBlockNumber } from "wagmi";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
+import { useChain } from "@/context/chain";
 
 export type SlotOnChain = {
   // Identity
@@ -116,6 +117,7 @@ function useInvalidateOnBlock() {
  */
 export function useSlotOnChain(slotAddress: string) {
   useInvalidateOnBlock();
+  const { chainId } = useChain();
   const addr = slotAddress as Address;
 
   const {
@@ -126,6 +128,7 @@ export function useSlotOnChain(slotAddress: string) {
     address: addr,
     abi: slotAbi,
     functionName: "getSlotInfo",
+    chainId,
     query: { gcTime: 0, staleTime: 0, refetchOnMount: "always" },
   });
 
@@ -136,9 +139,9 @@ export function useSlotOnChain(slotAddress: string) {
   const { data: currencyMeta, isLoading: metaLoading } = useReadContracts({
     contracts: currencyAddr
       ? [
-          { address: currencyAddr, abi: erc20Abi, functionName: "name" },
-          { address: currencyAddr, abi: erc20Abi, functionName: "symbol" },
-          { address: currencyAddr, abi: erc20Abi, functionName: "decimals" },
+          { address: currencyAddr, abi: erc20Abi, functionName: "name", chainId },
+          { address: currencyAddr, abi: erc20Abi, functionName: "symbol", chainId },
+          { address: currencyAddr, abi: erc20Abi, functionName: "decimals", chainId },
         ]
       : [],
     query: { enabled: !!currencyAddr, staleTime: Infinity },
@@ -169,10 +172,12 @@ export function useSlotOnChain(slotAddress: string) {
  */
 export function useSlotsOnChain(slotAddresses: string[]) {
   useInvalidateOnBlock();
+  const { chainId } = useChain();
   const contracts = slotAddresses.map((addr) => ({
     address: addr as Address,
     abi: slotAbi,
     functionName: "getSlotInfo" as const,
+    chainId,
   }));
 
   const {
@@ -203,12 +208,13 @@ export function useSlotsOnChain(slotAddresses: string[]) {
 
   const { data: metaResults, isLoading: metaLoading } = useReadContracts({
     contracts: currencyList.flatMap((c) => [
-      { address: c as Address, abi: erc20Abi, functionName: "name" as const },
-      { address: c as Address, abi: erc20Abi, functionName: "symbol" as const },
+      { address: c as Address, abi: erc20Abi, functionName: "name" as const, chainId },
+      { address: c as Address, abi: erc20Abi, functionName: "symbol" as const, chainId },
       {
         address: c as Address,
         abi: erc20Abi,
         functionName: "decimals" as const,
+        chainId,
       },
     ]),
     query: { enabled: currencyList.length > 0 },
