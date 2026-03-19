@@ -21,24 +21,20 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import type { SlotFilters } from "@/hooks/use-v3";
 import { useModules, useSlots } from "@/hooks/use-v3";
+import { loadStorage, saveStorage } from "@/lib/storage";
 import { formatPrice, truncateAddress } from "@/utils";
 
 const STORAGE_KEY = "0xslots:slot-filters";
-
-function loadFilters(): SlotFilters {
-  if (typeof window === "undefined") return {};
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) return JSON.parse(stored);
-  } catch {}
-  return {};
-}
-
-function saveFilters(filters: SlotFilters) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(filters));
-}
 
 export function SlotsTable() {
   const [filters, setFilters] = useState<SlotFilters>({});
@@ -49,7 +45,7 @@ export function SlotsTable() {
   const { data: modules } = useModules();
 
   useEffect(() => {
-    setFilters(loadFilters());
+    setFilters(loadStorage<SlotFilters>(STORAGE_KEY, {}));
   }, []);
 
   const updateFilters = (next: SlotFilters) => {
@@ -60,7 +56,7 @@ export function SlotsTable() {
     if (next.recipient) clean.recipient = next.recipient;
     if (next.occupant) clean.occupant = next.occupant;
     setFilters(clean);
-    saveFilters(clean);
+    saveStorage(STORAGE_KEY, clean);
   };
 
   const hasFilters =
@@ -68,10 +64,7 @@ export function SlotsTable() {
     !!filters.recipient ||
     !!filters.occupant;
 
-  const {
-    data: slots,
-    isLoading,
-  } = useSlots(hasFilters ? filters : undefined);
+  const { data: slots, isLoading } = useSlots(hasFilters ? filters : undefined);
   const { page, setPage, pageSize, setPageSize, totalPages, paged } =
     usePagination(slots ?? []);
 
@@ -256,9 +249,7 @@ export function SlotsTable() {
                   {m.name || truncateAddress(m.id)}
                 </span>
                 {m.verified && (
-                  <span className="ml-auto text-[10px] text-green-600">
-                    ✓
-                  </span>
+                  <span className="ml-auto text-[10px] text-green-600">✓</span>
                 )}
               </DropdownMenuCheckboxItem>
             ))}
@@ -277,109 +268,91 @@ export function SlotsTable() {
         />
       ) : (
         <div className="rounded-lg border">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b bg-muted/50">
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
-                    Recipient
-                  </th>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
-                    Status
-                  </th>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
-                    Occupant
-                  </th>
-                  <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">
-                    Price
-                  </th>
-                  <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">
-                    Tax /week
-                  </th>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
-                    Module
-                  </th>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
-                    Flags
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {paged.map((slot) => {
-                  const isOccupied = slot.occupant != null;
-                  return (
-                    <tr
-                      key={slot.id}
-                      className="text-sm even:bg-muted/30 hover:bg-muted/50 cursor-pointer"
-                      onClick={() => {
-                        window.location.href = `/slots/${slot.id}`;
-                      }}
-                    >
-                      <td className="px-4 py-2.5">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Recipient</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Occupant</TableHead>
+                <TableHead className="text-right">Price</TableHead>
+                <TableHead className="text-right">Tax /week</TableHead>
+                <TableHead>Module</TableHead>
+                <TableHead>Flags</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {paged.map((slot) => {
+                const isOccupied = slot.occupant != null;
+                return (
+                  <TableRow
+                    key={slot.id}
+                    className="cursor-pointer"
+                    onClick={() => {
+                      window.location.href = `/slots/${slot.id}`;
+                    }}
+                  >
+                    <TableCell>
+                      <span className="inline-flex items-center gap-1.5">
+                        <AccountTypeIcon
+                          type={slot.recipientAccount.type}
+                          className="h-3 w-3"
+                        />
+                        <EnsAddress address={slot.recipient} />
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={isOccupied ? "default" : "secondary"}
+                        className="text-[10px]"
+                      >
+                        {isOccupied ? "OCCUPIED" : "VACANT"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-xs">
+                      {isOccupied && slot.occupant && slot.occupantAccount ? (
                         <span className="inline-flex items-center gap-1.5">
                           <AccountTypeIcon
-                            type={slot.recipientAccount.type}
+                            type={slot.occupantAccount.type}
                             className="h-3 w-3"
                           />
-                          <EnsAddress address={slot.recipient} />
+                          {truncateAddress(slot.occupant)}
                         </span>
-                      </td>
-                      <td className="px-4 py-2.5">
-                        <Badge
-                          variant={isOccupied ? "default" : "secondary"}
-                          className="text-[10px]"
-                        >
-                          {isOccupied ? "OCCUPIED" : "VACANT"}
-                        </Badge>
-                      </td>
-                      <td className="px-4 py-2.5 text-muted-foreground text-xs">
-                        {isOccupied &&
-                        slot.occupant &&
-                        slot.occupantAccount ? (
-                          <span className="inline-flex items-center gap-1.5">
-                            <AccountTypeIcon
-                              type={slot.occupantAccount.type}
-                              className="h-3 w-3"
-                            />
-                            {truncateAddress(slot.occupant)}
-                          </span>
-                        ) : (
-                          "—"
+                      ) : (
+                        "—"
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right font-bold text-xs">
+                      {isOccupied
+                        ? `${formatPrice(slot.price, slot.currency.decimals ?? 18)} ${slot.currency.symbol}`
+                        : "0"}
+                    </TableCell>
+                    <TableCell className="text-right text-xs">
+                      {Number(slot.taxPercentage) / 100}%
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {slot.module
+                        ? `${slot.module.name || truncateAddress(slot.module.id)}${slot.module.verified ? " ✓" : ""}`
+                        : "—"}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        {slot.mutableTax && (
+                          <Badge variant="outline" className="text-[9px]">
+                            TAX
+                          </Badge>
                         )}
-                      </td>
-                      <td className="px-4 py-2.5 text-right font-bold text-xs">
-                        {isOccupied
-                          ? `${formatPrice(slot.price, slot.currency.decimals ?? 18)} ${slot.currency.symbol}`
-                          : "0"}
-                      </td>
-                      <td className="px-4 py-2.5 text-right text-xs">
-                        {Number(slot.taxPercentage) / 100}%
-                      </td>
-                      <td className="px-4 py-2.5 text-xs text-muted-foreground">
-                        {slot.module
-                          ? `${slot.module.name || truncateAddress(slot.module.id)}${slot.module.verified ? " ✓" : ""}`
-                          : "—"}
-                      </td>
-                      <td className="px-4 py-2.5">
-                        <div className="flex gap-1">
-                          {slot.mutableTax && (
-                            <Badge variant="outline" className="text-[9px]">
-                              TAX
-                            </Badge>
-                          )}
-                          {slot.mutableModule && (
-                            <Badge variant="outline" className="text-[9px]">
-                              MOD
-                            </Badge>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                        {slot.mutableModule && (
+                          <Badge variant="outline" className="text-[9px]">
+                            MOD
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
           <TablePagination
             page={page}
             totalPages={totalPages}
