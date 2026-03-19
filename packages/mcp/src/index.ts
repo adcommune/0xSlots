@@ -5,22 +5,26 @@ import {
   createPublicClient,
   createWalletClient,
   http,
-  formatEther,
-  parseEther,
+  formatUnits,
+  parseUnits,
   type Address,
+  erc20Abi,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { baseSepolia } from "viem/chains";
-import { SlotsHubABI, SlotsABI, MetadataModuleABI } from "./abi.js";
-
+import {
+  SlotsClient,
+  SlotsChain,
+  type SlotConfig,
+  type SlotInitParams,
+} from "@0xslots/sdk";
+// @0xslots/contracts used internally by SDK
 // ── Config ──────────────────────────────────────────────────────────────────
-
-const SLOTS_HUB = (process.env.SLOTS_HUB_ADDRESS ||
-  "0x268cfab9ddddf6a326458ae79d55592516f382ef") as Address;
-const METADATA_MODULE = (process.env.METADATA_MODULE_ADDRESS ||
-  "0x069cbd62d868a7a10d74260b84d42f64c957237c") as Address;
-const RPC_URL = process.env.RPC_URL || "https://base-sepolia.g.alchemy.com/v2/ErvVvkmRVSzU9XLroiX-K";
+const RPC_URL =
+  process.env.RPC_URL ||
+  "https://base-sepolia.g.alchemy.com/v2/4XrtaFg8OqFaNxv45MreCFT3ekifcxWm";
 const PRIVATE_KEY = process.env.PRIVATE_KEY;
+const CHAIN_ID = Number(process.env.CHAIN_ID || SlotsChain.BASE_SEPOLIA) as SlotsChain;
 
 const chain = baseSepolia;
 const publicClient = createPublicClient({ chain, transport: http(RPC_URL) });
@@ -35,6 +39,15 @@ function getWalletClient() {
   return createWalletClient({ account, chain, transport: http(RPC_URL) });
 }
 
+const walletClient = PRIVATE_KEY ? getWalletClient() : undefined;
+
+const client = new SlotsClient({
+  chainId: CHAIN_ID,
+  publicClient: publicClient as any,
+  walletClient: walletClient as any,
+  subgraphUrl: process.env.SUBGRAPH_URL,
+});
+
 function ok(data: unknown) {
   return {
     content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }],
@@ -45,438 +58,353 @@ function msg(text: string) {
   return { content: [{ type: "text" as const, text }] };
 }
 
+async function getCurrencyDecimals(currency: Address): Promise<number> {
+  try {
+    return (await publicClient.readContract({
+      address: currency,
+      abi: erc20Abi,
+      functionName: "decimals",
+    })) as number;
+  } catch {
+    return 18;
+  }
+}
+
 // ── Server ──────────────────────────────────────────────────────────────────
 
 const server = new McpServer({
   name: "0xSlots MCP",
-  version: "0.2.0",
+  version: "1.0.0",
 });
 
-// ── 1. get_hub_info ─────────────────────────────────────────────────────────
-
-server.tool(
-  "get_hub_info",
-  "Get SlotsHub config (owner, currencies, lands count, default params)",
-  {},
-  async () => {
-    const settings = await publicClient.readContract({
-      address: SLOTS_HUB,
-      abi: SlotsHubABI,
-      functionName: "hubSettings",
-    });
-    return ok({
-      protocolFeeBps: Number(settings[0].protocolFeeBps),
-      protocolFeeRecipient: settings[0].protocolFeeRecipient,
-      slotPrice: formatEther(settings[0].slotPrice),
-      defaultCurrency: settings[0].newLandInitialCurrency,
-      defaultSlotCount: Number(settings[0].newLandInitialAmount),
-      defaultPrice: formatEther(settings[0].newLandInitialPrice),
-      defaultTaxBps: Number(settings[0].newLandInitialTaxPercentage),
-      maxTaxBps: Number(settings[0].newLandInitialMaxTaxPercentage),
-      minTaxUpdatePeriod: `${Number(settings[0].newLandInitialMinTaxUpdatePeriod)}s`,
-      defaultModule: settings[0].newLandInitialModule,
-    });
-  }
-);
-
-// ── 2. get_land ─────────────────────────────────────────────────────────────
-
-server.tool(
-  "get_land",
-  "Get land details by account address (slots count, currency, owner)",
-  { account: z.string().describe("Account address that owns the land") },
-  async ({ account }) => {
-    const land = await publicClient.readContract({
-      address: SLOTS_HUB,
-      abi: SlotsHubABI,
-      functionName: "getLand",
-      args: [account as Address],
-    });
-    if (land === "0x0000000000000000000000000000000000000000") {
-      return msg("No land found for this account");
-    }
-    const [nextId, owner] = await Promise.all([
-      publicClient.readContract({
-        address: land,
-        abi: SlotsABI,
-        functionName: "nextSlotId",
-      }),
-      publicClient.readContract({
-        address: land,
-        abi: SlotsABI,
-        functionName: "owner",
-      }),
-    ]);
-    // Get first slot to find currency/tax
-    const slot = await publicClient.readContract({
-      address: land,
-      abi: SlotsABI,
-      functionName: "getSlot",
-      args: [1n],
-    });
-    return ok({
-      landAddress: land,
-      owner,
-      slotsCount: Number(nextId) - 1,
-      currency: slot[0].currency,
-      taxBps: Number(slot[0].taxPercentage),
-    });
-  }
-);
-
-// ── 3. get_slot ─────────────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════════════════
+// READ TOOLS
+// ════════════════════════════════════════════════════════════════════════════
 
 server.tool(
   "get_slot",
-  "Get slot details (current owner, price, tax rate, metadata)",
-  {
-    land: z.string().describe("Land (Slots contract) address"),
-    slotId: z.number().describe("Slot ID"),
-  },
-  async ({ land, slotId }) => {
-    const slot = await publicClient.readContract({
-      address: land as Address,
-      abi: SlotsABI,
-      functionName: "getSlot",
-      args: [BigInt(slotId)],
-    });
+  "Get full slot info via on-chain RPC (real-time deposit, tax owed, liquidation timer, etc.)",
+  { slot: z.string().describe("Slot contract address") },
+  async ({ slot }) => {
+    const info = await client.getSlotInfo(slot as Address);
+    const decimals = await getCurrencyDecimals(info.currency as Address);
     return ok({
-      occupant: slot[0].occupant,
-      currency: slot[0].currency,
-      basePrice: formatEther(slot[0].basePrice),
-      price: formatEther(slot[0].price),
-      active: slot[0].active,
-      taxBps: Number(slot[0].taxPercentage),
-      maxTaxBps: Number(slot[0].maxTaxPercentage),
-      minTaxUpdatePeriod: `${Number(slot[0].minTaxUpdatePeriod)}s`,
-      module: slot[0].module,
-      pendingTaxUpdate: {
-        newRate: Number(slot[0].pendingTaxUpdate.newRate),
-        status: ["None", "Pending", "Confirmed"][
-          Number(slot[0].pendingTaxUpdate.status)
-        ],
-      },
+      recipient: info.recipient,
+      currency: info.currency,
+      manager: info.manager,
+      mutableTax: info.mutableTax,
+      mutableModule: info.mutableModule,
+      occupant: info.occupant,
+      price: formatUnits(info.price, decimals),
+      taxPercentage: `${Number(info.taxPercentage) / 100}%`,
+      module: info.module,
+      liquidationBountyBps: Number(info.liquidationBountyBps),
+      minDepositSeconds: Number(info.minDepositSeconds),
+      deposit: formatUnits(info.deposit, decimals),
+      collectedTax: formatUnits(info.collectedTax, decimals),
+      taxOwed: formatUnits(info.taxOwed, decimals),
+      secondsUntilLiquidation: Number(info.secondsUntilLiquidation),
+      insolvent: info.insolvent,
+      hasPendingTax: info.hasPendingTax,
+      pendingTaxPercentage: info.hasPendingTax
+        ? `${Number(info.pendingTaxPercentage) / 100}%`
+        : null,
+      hasPendingModule: info.hasPendingModule,
+      pendingModule: info.hasPendingModule ? info.pendingModule : null,
     });
   }
 );
-
-// ── 4. list_lands ───────────────────────────────────────────────────────────
-
-server.tool(
-  "list_lands",
-  "List all lands on the hub (queries LandOpened events)",
-  {},
-  async () => {
-    const logs = await publicClient.getLogs({
-      address: SLOTS_HUB,
-      event: {
-        type: "event",
-        name: "LandOpened",
-        inputs: [
-          { name: "land", type: "address", indexed: true },
-          { name: "account", type: "address", indexed: true },
-        ],
-      },
-      fromBlock: 0n,
-      toBlock: "latest",
-    });
-    const lands = logs.map((log) => ({
-      land: log.args.land,
-      account: log.args.account,
-      blockNumber: Number(log.blockNumber),
-    }));
-    return ok({ count: lands.length, lands });
-  }
-);
-
-// ── 5. list_slots ───────────────────────────────────────────────────────────
 
 server.tool(
   "list_slots",
-  "List all slots for a given land",
-  { land: z.string().describe("Land (Slots contract) address") },
-  async ({ land }) => {
-    const nextId = await publicClient.readContract({
-      address: land as Address,
-      abi: SlotsABI,
-      functionName: "nextSlotId",
-    });
-    const slots = [];
-    for (let i = 1; i < Number(nextId); i++) {
-      const slot = await publicClient.readContract({
-        address: land as Address,
-        abi: SlotsABI,
-        functionName: "getSlot",
-        args: [BigInt(i)],
+  "List slots from subgraph (filter by recipient, occupant, or all)",
+  {
+    recipient: z.string().optional().describe("Filter by recipient address"),
+    occupant: z.string().optional().describe("Filter by occupant address"),
+    first: z.number().optional().describe("Number of results (default 20)"),
+  },
+  async ({ recipient, occupant, first }) => {
+    if (recipient) {
+      const data = await client.getSlotsByRecipient({
+        recipient: recipient.toLowerCase(),
+        first: first || 20,
       });
-      slots.push({
-        id: i,
-        occupant: slot[0].occupant,
-        price: formatEther(slot[0].price),
-        active: slot[0].active,
-        taxBps: Number(slot[0].taxPercentage),
-      });
+      return ok(data);
     }
-    return ok(slots);
+    if (occupant) {
+      const data = await client.getSlotsByOccupant({
+        occupant: occupant.toLowerCase(),
+        first: first || 20,
+      });
+      return ok(data);
+    }
+    const data = await client.getSlots({ first: first || 20 });
+    return ok(data);
   }
 );
 
-// ── 6. get_slot_metadata ────────────────────────────────────────────────────
+server.tool(
+  "list_events",
+  "List recent protocol events across all slots",
+  {
+    first: z.number().optional().describe("Number of results (default 20)"),
+  },
+  async ({ first }) => {
+    const data = await client.getRecentEvents({ first: first || 20 });
+    return ok(data);
+  }
+);
 
 server.tool(
-  "get_slot_metadata",
-  "Get metadata from MetadataModule for a slot",
+  "get_slot_activity",
+  "Get all activity for a specific slot (all event types)",
   {
-    land: z.string().describe("Land address"),
-    slotId: z.number().describe("Slot ID"),
+    slot: z.string().describe("Slot contract address"),
+    first: z.number().optional().describe("Number of results per type (default 10)"),
   },
-  async ({ land, slotId }) => {
-    const result = await publicClient.readContract({
-      address: METADATA_MODULE,
-      abi: MetadataModuleABI,
-      functionName: "getMetadata",
-      args: [land as Address, BigInt(slotId)],
+  async ({ slot, first }) => {
+    const data = await client.getSlotActivity({
+      slotId: slot.toLowerCase(),
+      first: first || 10,
     });
+    return ok(data);
+  }
+);
+
+server.tool(
+  "get_modules",
+  "List verified modules registered on the factory",
+  {},
+  async () => {
+    const data = await client.getModules({});
+    return ok(data);
+  }
+);
+
+server.tool(
+  "get_account",
+  "Get account info (slots as recipient, slots as occupant)",
+  { address: z.string().describe("Account address") },
+  async ({ address }) => {
+    const data = await client.getAccount({ id: address.toLowerCase() });
+    return ok(data);
+  }
+);
+
+server.tool(
+  "get_factory",
+  "Get factory info (slot count, modules)",
+  {},
+  async () => {
+    const data = await client.getFactory();
+    return ok(data);
+  }
+);
+
+server.tool(
+  "get_subgraph_meta",
+  "Get subgraph indexing status (latest block, indexing errors)",
+  {},
+  async () => {
+    const data = await client.getMeta();
+    return ok(data);
+  }
+);
+
+server.tool(
+  "get_metadata",
+  "Get metadata URI for a slot via MetadataModule (subgraph)",
+  { slot: z.string().describe("Slot contract address") },
+  async ({ slot }) => {
+    const data = await client.modules.metadata.getMetadata({
+      slotId: slot.toLowerCase(),
+    });
+    return ok(data);
+  }
+);
+
+// ════════════════════════════════════════════════════════════════════════════
+// WRITE TOOLS
+// ════════════════════════════════════════════════════════════════════════════
+
+server.tool(
+  "buy_slot",
+  "Buy or force-buy a slot. Auto-handles ERC20 approval. Provide self-assessed price and deposit.",
+  {
+    slot: z.string().describe("Slot contract address"),
+    selfAssessedPrice: z.string().describe("Your self-assessed price (in token units, e.g. '100')"),
+    deposit: z.string().describe("Deposit amount (in token units)"),
+    decimals: z.number().optional().describe("Token decimals (default 6 for USDC)"),
+  },
+  async ({ slot, selfAssessedPrice, deposit, decimals: dec }) => {
+    const decimals = dec || 6;
+    const hash = await client.buy({
+      slot: slot as Address,
+      selfAssessedPrice: parseUnits(selfAssessedPrice, decimals),
+      depositAmount: parseUnits(deposit, decimals),
+    });
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    return msg(
+      `Slot bought! Price: ${selfAssessedPrice}, Deposit: ${deposit}\ntx: ${hash}\nStatus: ${receipt.status}`
+    );
+  }
+);
+
+server.tool(
+  "release_slot",
+  "Release a slot you occupy (refunds remaining deposit)",
+  { slot: z.string().describe("Slot contract address") },
+  async ({ slot }) => {
+    const hash = await client.release(slot as Address);
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    return msg(`Slot released! tx: ${hash}\nStatus: ${receipt.status}`);
+  }
+);
+
+server.tool(
+  "deposit_to_slot",
+  "Add deposit to a slot you occupy (extends time before liquidation). Auto-handles ERC20 approval.",
+  {
+    slot: z.string().describe("Slot contract address"),
+    amount: z.string().describe("Amount to deposit (in token units)"),
+    decimals: z.number().optional().describe("Token decimals (default 6)"),
+  },
+  async ({ slot, amount, decimals: dec }) => {
+    const decimals = dec || 6;
+    const hash = await client.topUp(slot as Address, parseUnits(amount, decimals));
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    return msg(`Deposited ${amount}! tx: ${hash}\nStatus: ${receipt.status}`);
+  }
+);
+
+server.tool(
+  "withdraw_from_slot",
+  "Withdraw deposit from a slot you occupy (must keep minimum deposit)",
+  {
+    slot: z.string().describe("Slot contract address"),
+    amount: z.string().describe("Amount to withdraw (in token units)"),
+    decimals: z.number().optional().describe("Token decimals (default 6)"),
+  },
+  async ({ slot, amount, decimals: dec }) => {
+    const decimals = dec || 6;
+    const hash = await client.withdraw(slot as Address, parseUnits(amount, decimals));
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    return msg(`Withdrawn ${amount}! tx: ${hash}\nStatus: ${receipt.status}`);
+  }
+);
+
+server.tool(
+  "self_assess",
+  "Update the self-assessed price of a slot you occupy",
+  {
+    slot: z.string().describe("Slot contract address"),
+    newPrice: z.string().describe("New price (in token units)"),
+    decimals: z.number().optional().describe("Token decimals (default 6)"),
+  },
+  async ({ slot, newPrice, decimals: dec }) => {
+    const decimals = dec || 6;
+    const hash = await client.selfAssess(slot as Address, parseUnits(newPrice, decimals));
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    return msg(`Price updated to ${newPrice}! tx: ${hash}\nStatus: ${receipt.status}`);
+  }
+);
+
+server.tool(
+  "collect_tax",
+  "Collect accumulated tax from a slot (permissionless — anyone can call)",
+  { slot: z.string().describe("Slot contract address") },
+  async ({ slot }) => {
+    const hash = await client.collect(slot as Address);
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    return msg(`Tax collected! tx: ${hash}\nStatus: ${receipt.status}`);
+  }
+);
+
+server.tool(
+  "liquidate_slot",
+  "Liquidate an insolvent slot (permissionless — earn bounty if configured)",
+  { slot: z.string().describe("Slot contract address") },
+  async ({ slot }) => {
+    const hash = await client.liquidate(slot as Address);
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    return msg(`Slot liquidated! tx: ${hash}\nStatus: ${receipt.status}`);
+  }
+);
+
+server.tool(
+  "create_slot",
+  "Deploy a new Harberger-taxed slot via the factory",
+  {
+    recipient: z.string().describe("Address that receives tax revenue"),
+    currency: z.string().describe("ERC20 token address for payments"),
+    mutableTax: z.boolean().describe("Can tax be changed by manager?"),
+    mutableModule: z.boolean().describe("Can module be changed by manager?"),
+    manager: z.string().optional().describe("Manager address (required if mutableTax or mutableModule)"),
+    taxPercentage: z.number().describe("Tax rate in basis points (e.g. 1000 = 10%)"),
+    module: z.string().optional().describe("Module address (default: none)"),
+    liquidationBountyBps: z.number().optional().describe("Liquidation bounty in bps (default 0)"),
+    minDepositSeconds: z.number().optional().describe("Minimum deposit in seconds (default 86400 = 1 day)"),
+  },
+  async ({
+    recipient, currency, mutableTax, mutableModule, manager,
+    taxPercentage, module, liquidationBountyBps, minDepositSeconds,
+  }) => {
+    const wallet = getWalletClient();
+    const mgr = (mutableTax || mutableModule)
+      ? ((manager as Address) || wallet.account!.address)
+      : "0x0000000000000000000000000000000000000000";
+
+    const hash = await client.createSlot({
+      recipient: recipient as Address,
+      currency: currency as Address,
+      config: {
+        mutableTax,
+        mutableModule,
+        manager: mgr as Address,
+      },
+      initParams: {
+        taxPercentage: BigInt(taxPercentage),
+        module: (module || "0x0000000000000000000000000000000000000000") as Address,
+        liquidationBountyBps: BigInt(liquidationBountyBps || 0),
+        minDepositSeconds: BigInt(minDepositSeconds || 86400),
+      },
+    });
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    return msg(`Slot created!\ntx: ${hash}\nStatus: ${receipt.status}`);
+  }
+);
+
+server.tool(
+  "update_metadata",
+  "Update metadata URI on a slot via MetadataModule (must be occupant)",
+  {
+    slot: z.string().describe("Slot contract address"),
+    uri: z.string().describe("New metadata URI"),
+  },
+  async ({ slot, uri }) => {
+    const hash = await client.modules.metadata.updateMetadata(
+      slot as Address,
+      uri
+    );
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    return msg(`Metadata updated! tx: ${hash}\nStatus: ${receipt.status}`);
+  }
+);
+
+server.tool(
+  "wallet_info",
+  "Get the MCP wallet address and ETH balance",
+  {},
+  async () => {
+    const wallet = getWalletClient();
+    const address = wallet.account!.address;
+    const balance = await publicClient.getBalance({ address });
     return ok({
-      metadata: result[0].metadata,
-      owner: result[0].owner,
+      address,
+      ethBalance: formatUnits(balance, 18),
+      chain: chain.name,
+      chainId: chain.id,
     });
-  }
-);
-
-// ── 7. purchase_slot ────────────────────────────────────────────────────────
-
-server.tool(
-  "purchase_slot",
-  "Buy a slot (requires prior token approval + CFA operator permission for Superfluid streaming)",
-  {
-    land: z.string().describe("Land address"),
-    slotId: z.number().describe("Slot ID to purchase"),
-  },
-  async ({ land, slotId }) => {
-    const wallet = getWalletClient();
-    const hash = await wallet.writeContract({
-      address: land as Address,
-      abi: SlotsABI,
-      functionName: "buy",
-      args: [BigInt(slotId)],
-    });
-    const receipt = await publicClient.waitForTransactionReceipt({ hash });
-    return msg(
-      `Slot ${slotId} purchased! tx: ${hash}\nStatus: ${receipt.status}`
-    );
-  }
-);
-
-// ── 8. update_slot_price ────────────────────────────────────────────────────
-
-server.tool(
-  "update_slot_price",
-  "Change your slot's self-assessed price (updates the Superfluid tax stream)",
-  {
-    land: z.string().describe("Land address"),
-    slotId: z.number().describe("Slot ID"),
-    newPrice: z.string().describe("New price in ETH (e.g. '0.01')"),
-  },
-  async ({ land, slotId, newPrice }) => {
-    const wallet = getWalletClient();
-    const hash = await wallet.writeContract({
-      address: land as Address,
-      abi: SlotsABI,
-      functionName: "selfAssess",
-      args: [BigInt(slotId), parseEther(newPrice)],
-    });
-    const receipt = await publicClient.waitForTransactionReceipt({ hash });
-    return msg(
-      `Price updated to ${newPrice} ETH! tx: ${hash}\nStatus: ${receipt.status}`
-    );
-  }
-);
-
-// ── 9. set_slot_metadata ────────────────────────────────────────────────────
-
-server.tool(
-  "set_slot_metadata",
-  "Set metadata on a slot via MetadataModule (must be slot occupant)",
-  {
-    land: z.string().describe("Land address"),
-    slotId: z.number().describe("Slot ID"),
-    metadata: z.string().describe("Metadata string to set"),
-  },
-  async ({ land, slotId, metadata }) => {
-    const wallet = getWalletClient();
-    const hash = await wallet.writeContract({
-      address: METADATA_MODULE,
-      abi: MetadataModuleABI,
-      functionName: "setMetadata",
-      args: [land as Address, BigInt(slotId), metadata],
-    });
-    const receipt = await publicClient.waitForTransactionReceipt({ hash });
-    return msg(`Metadata set! tx: ${hash}\nStatus: ${receipt.status}`);
-  }
-);
-
-// ── 10. create_land ─────────────────────────────────────────────────────────
-
-server.tool(
-  "create_land",
-  "Create a new land (opens a Slots contract for an account via the Hub)",
-  {
-    account: z.string().describe("Account address to create land for"),
-  },
-  async ({ account }) => {
-    const wallet = getWalletClient();
-    const hash = await wallet.writeContract({
-      address: SLOTS_HUB,
-      abi: SlotsHubABI,
-      functionName: "openLand",
-      args: [account as Address],
-    });
-    const receipt = await publicClient.waitForTransactionReceipt({ hash });
-    return msg(`Land created! tx: ${hash}\nStatus: ${receipt.status}`);
-  }
-);
-
-// ── ADMIN TOOLS ─────────────────────────────────────────────────────────────
-
-// ── 11. allow_currency ──────────────────────────────────────────────────────
-
-server.tool(
-  "allow_currency",
-  "[Admin] Allow or disallow a SuperToken currency on the hub",
-  {
-    currency: z.string().describe("SuperToken address"),
-    allowed: z.boolean().describe("true to allow, false to disallow"),
-  },
-  async ({ currency, allowed }) => {
-    const wallet = getWalletClient();
-    const hash = await wallet.writeContract({
-      address: SLOTS_HUB,
-      abi: SlotsHubABI,
-      functionName: "allowCurrency",
-      args: [currency as Address, allowed],
-    });
-    const receipt = await publicClient.waitForTransactionReceipt({ hash });
-    return msg(`Currency ${currency} ${allowed ? "allowed" : "disallowed"}! tx: ${hash}\nStatus: ${receipt.status}`);
-  }
-);
-
-// ── 12. allow_module ────────────────────────────────────────────────────────
-
-server.tool(
-  "allow_module",
-  "[Admin] Allow or disallow a module on the hub",
-  {
-    module: z.string().describe("Module contract address"),
-    allowed: z.boolean().describe("true to allow, false to disallow"),
-  },
-  async ({ module, allowed }) => {
-    const wallet = getWalletClient();
-    const hash = await wallet.writeContract({
-      address: SLOTS_HUB,
-      abi: SlotsHubABI,
-      functionName: "allowModule",
-      args: [module as Address, allowed],
-    });
-    const receipt = await publicClient.waitForTransactionReceipt({ hash });
-    return msg(`Module ${module} ${allowed ? "allowed" : "disallowed"}! tx: ${hash}\nStatus: ${receipt.status}`);
-  }
-);
-
-// ── 13. check_currency ──────────────────────────────────────────────────────
-
-server.tool(
-  "check_currency",
-  "Check if a currency is allowed on the hub",
-  { currency: z.string().describe("SuperToken address to check") },
-  async ({ currency }) => {
-    const allowed = await publicClient.readContract({
-      address: SLOTS_HUB,
-      abi: SlotsHubABI,
-      functionName: "isCurrencyAllowed",
-      args: [currency as Address],
-    });
-    return ok({ currency, allowed });
-  }
-);
-
-// ── 14. check_module ────────────────────────────────────────────────────────
-
-server.tool(
-  "check_module",
-  "Check if a module is allowed on the hub",
-  { module: z.string().describe("Module address to check") },
-  async ({ module }) => {
-    const allowed = await publicClient.readContract({
-      address: SLOTS_HUB,
-      abi: SlotsHubABI,
-      functionName: "isModuleAllowed",
-      args: [module as Address],
-    });
-    return ok({ module, allowed });
-  }
-);
-
-// ── 15. update_hub_settings ─────────────────────────────────────────────────
-
-server.tool(
-  "update_hub_settings",
-  "[Admin] Update hub settings (protocol fee, default slot params, etc.)",
-  {
-    protocolFeeBps: z.number().describe("Protocol fee in basis points (e.g. 200 = 2%)"),
-    protocolFeeRecipient: z.string().describe("Address to receive protocol fees"),
-    slotPrice: z.string().describe("Slot price in ETH (e.g. '0.001')"),
-    defaultCurrency: z.string().describe("Default SuperToken for new lands"),
-    defaultSlotCount: z.number().describe("Number of slots for new lands"),
-    defaultPrice: z.string().describe("Default slot price in ETH"),
-    defaultTaxBps: z.number().describe("Default tax in basis points"),
-    maxTaxBps: z.number().describe("Max tax in basis points"),
-    minTaxUpdatePeriod: z.number().describe("Min tax update period in seconds"),
-    defaultModule: z.string().describe("Default module address for new slots"),
-  },
-  async (params) => {
-    const wallet = getWalletClient();
-    const hash = await wallet.writeContract({
-      address: SLOTS_HUB,
-      abi: SlotsHubABI,
-      functionName: "updateHubSettings",
-      args: [{
-        protocolFeeBps: BigInt(params.protocolFeeBps),
-        protocolFeeRecipient: params.protocolFeeRecipient as Address,
-        slotPrice: parseEther(params.slotPrice),
-        newLandInitialCurrency: params.defaultCurrency as Address,
-        newLandInitialAmount: BigInt(params.defaultSlotCount),
-        newLandInitialPrice: parseEther(params.defaultPrice),
-        newLandInitialTaxPercentage: BigInt(params.defaultTaxBps),
-        newLandInitialMaxTaxPercentage: BigInt(params.maxTaxBps),
-        newLandInitialMinTaxUpdatePeriod: BigInt(params.minTaxUpdatePeriod),
-        newLandInitialModule: params.defaultModule as Address,
-      }],
-    });
-    const receipt = await publicClient.waitForTransactionReceipt({ hash });
-    return msg(`Hub settings updated! tx: ${hash}\nStatus: ${receipt.status}`);
-  }
-);
-
-// ── 16. expand_land ─────────────────────────────────────────────────────────
-
-server.tool(
-  "expand_land",
-  "[Admin] Add more slots to an existing land",
-  {
-    account: z.string().describe("Account address whose land to expand"),
-    amount: z.number().describe("Number of slots to add"),
-  },
-  async ({ account, amount }) => {
-    const wallet = getWalletClient();
-    const hash = await wallet.writeContract({
-      address: SLOTS_HUB,
-      abi: SlotsHubABI,
-      functionName: "expandLand",
-      args: [account as Address, BigInt(amount)],
-    });
-    const receipt = await publicClient.waitForTransactionReceipt({ hash });
-    return msg(`Land expanded by ${amount} slots! tx: ${hash}\nStatus: ${receipt.status}`);
   }
 );
 
