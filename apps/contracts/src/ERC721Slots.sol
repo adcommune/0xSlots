@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import {ERC721Upgradeable} from "@openzeppelin-upgradeable/contracts/token/ERC721/ERC721Upgradeable.sol";
+import {Initializable} from "@openzeppelin-upgradeable/contracts/proxy/utils/Initializable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Slot} from "./Slot.sol";
 import {SlotFactory} from "./SlotFactory.sol";
@@ -11,7 +12,8 @@ import {SlotConfig, SlotInitParams, SlotInfo} from "./ISlot.sol";
 /// @notice Each token is backed by a Slot. Ownership = occupancy.
 ///         No transferFrom — buy the slot to own the NFT.
 ///         Tax flows to the collection creator (recipient) forever.
-contract ERC721Slots is ERC721 {
+///         Deployed as BeaconProxy via ERC721SlotsFactory.
+contract ERC721Slots is Initializable, ERC721Upgradeable {
 
     // ═══════════════════════════════════════════════════════════
     // ERRORS
@@ -27,13 +29,13 @@ contract ERC721Slots is ERC721 {
     // ═══════════════════════════════════════════════════════════
 
     /// @notice The 0xSlots factory used to deploy backing slots
-    SlotFactory public immutable factory;
+    SlotFactory public factory;
 
     /// @notice Collection creator — receives all tax revenue
-    address public immutable creator;
+    address public creator;
 
     /// @notice Currency used for all slots in this collection
-    IERC20 public immutable currency;
+    IERC20 public currency;
 
     /// @notice Shared slot config for all tokens
     SlotConfig public slotConfig;
@@ -63,10 +65,15 @@ contract ERC721Slots is ERC721 {
     event TokenMinted(uint256 indexed tokenId, address indexed slot, string uri);
 
     // ═══════════════════════════════════════════════════════════
-    // CONSTRUCTOR
+    // INITIALIZER
     // ═══════════════════════════════════════════════════════════
 
-    constructor(
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(
         string memory name_,
         string memory symbol_,
         address factory_,
@@ -74,7 +81,8 @@ contract ERC721Slots is ERC721 {
         address currency_,
         SlotConfig memory config_,
         SlotInitParams memory initParams_
-    ) ERC721(name_, symbol_) {
+    ) external initializer {
+        __ERC721_init(name_, symbol_);
         factory = SlotFactory(factory_);
         creator = creator_;
         currency = IERC20(currency_);
