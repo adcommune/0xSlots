@@ -238,6 +238,34 @@ type MetadataUpdatedEvent @entity(immutable: true) {
   tx: Bytes!
 }
 
+# ──────────────────────────────────────────
+# ERC721Slots (Harberger NFT Collections)
+# ──────────────────────────────────────────
+
+type NFTCollection @entity(immutable: false) {
+  id: ID! # collection contract address
+  name: String!
+  symbol: String!
+  creator: Bytes!
+  factory: Bytes!
+  currency: Currency!
+  taxPercentage: BigInt!
+  totalSupply: BigInt!
+  tokens: [NFTToken!]! @derivedFrom(field: "collection")
+  createdAt: BigInt!
+  createdTx: Bytes!
+}
+
+type NFTToken @entity(immutable: false) {
+  id: ID! # collection-tokenId
+  collection: NFTCollection!
+  tokenId: BigInt!
+  slot: Slot!
+  uri: String!
+  mintedAt: BigInt!
+  mintedTx: Bytes!
+}
+
 type Module @entity(immutable: false) {
   id: ID! # module address
   factory: Factory!

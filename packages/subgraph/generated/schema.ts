@@ -2612,6 +2612,291 @@ export class MetadataUpdatedEvent extends Entity {
   }
 }
 
+export class NFTCollection extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id != null, "Cannot save NFTCollection entity without an ID");
+    if (id) {
+      assert(
+        id.kind == ValueKind.STRING,
+        `Entities of type NFTCollection must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`,
+      );
+      store.set("NFTCollection", id.toString(), this);
+    }
+  }
+
+  static loadInBlock(id: string): NFTCollection | null {
+    return changetype<NFTCollection | null>(
+      store.get_in_block("NFTCollection", id),
+    );
+  }
+
+  static load(id: string): NFTCollection | null {
+    return changetype<NFTCollection | null>(store.get("NFTCollection", id));
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get name(): string {
+    let value = this.get("name");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set name(value: string) {
+    this.set("name", Value.fromString(value));
+  }
+
+  get symbol(): string {
+    let value = this.get("symbol");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set symbol(value: string) {
+    this.set("symbol", Value.fromString(value));
+  }
+
+  get creator(): Bytes {
+    let value = this.get("creator");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set creator(value: Bytes) {
+    this.set("creator", Value.fromBytes(value));
+  }
+
+  get factory(): Bytes {
+    let value = this.get("factory");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set factory(value: Bytes) {
+    this.set("factory", Value.fromBytes(value));
+  }
+
+  get currency(): string {
+    let value = this.get("currency");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set currency(value: string) {
+    this.set("currency", Value.fromString(value));
+  }
+
+  get taxPercentage(): BigInt {
+    let value = this.get("taxPercentage");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set taxPercentage(value: BigInt) {
+    this.set("taxPercentage", Value.fromBigInt(value));
+  }
+
+  get totalSupply(): BigInt {
+    let value = this.get("totalSupply");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set totalSupply(value: BigInt) {
+    this.set("totalSupply", Value.fromBigInt(value));
+  }
+
+  get tokens(): NFTTokenLoader {
+    return new NFTTokenLoader(
+      "NFTCollection",
+      this.get("id")!.toString(),
+      "tokens",
+    );
+  }
+
+  get createdAt(): BigInt {
+    let value = this.get("createdAt");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set createdAt(value: BigInt) {
+    this.set("createdAt", Value.fromBigInt(value));
+  }
+
+  get createdTx(): Bytes {
+    let value = this.get("createdTx");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set createdTx(value: Bytes) {
+    this.set("createdTx", Value.fromBytes(value));
+  }
+}
+
+export class NFTToken extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id != null, "Cannot save NFTToken entity without an ID");
+    if (id) {
+      assert(
+        id.kind == ValueKind.STRING,
+        `Entities of type NFTToken must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`,
+      );
+      store.set("NFTToken", id.toString(), this);
+    }
+  }
+
+  static loadInBlock(id: string): NFTToken | null {
+    return changetype<NFTToken | null>(store.get_in_block("NFTToken", id));
+  }
+
+  static load(id: string): NFTToken | null {
+    return changetype<NFTToken | null>(store.get("NFTToken", id));
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get collection(): string {
+    let value = this.get("collection");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set collection(value: string) {
+    this.set("collection", Value.fromString(value));
+  }
+
+  get tokenId(): BigInt {
+    let value = this.get("tokenId");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set tokenId(value: BigInt) {
+    this.set("tokenId", Value.fromBigInt(value));
+  }
+
+  get slot(): string {
+    let value = this.get("slot");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set slot(value: string) {
+    this.set("slot", Value.fromString(value));
+  }
+
+  get uri(): string {
+    let value = this.get("uri");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set uri(value: string) {
+    this.set("uri", Value.fromString(value));
+  }
+
+  get mintedAt(): BigInt {
+    let value = this.get("mintedAt");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set mintedAt(value: BigInt) {
+    this.set("mintedAt", Value.fromBigInt(value));
+  }
+
+  get mintedTx(): Bytes {
+    let value = this.get("mintedTx");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set mintedTx(value: Bytes) {
+    this.set("mintedTx", Value.fromBytes(value));
+  }
+}
+
 export class Module extends Entity {
   constructor(id: string) {
     super();
@@ -2989,5 +3274,23 @@ export class MetadataUpdatedEventLoader extends Entity {
   load(): MetadataUpdatedEvent[] {
     let value = store.loadRelated(this._entity, this._id, this._field);
     return changetype<MetadataUpdatedEvent[]>(value);
+  }
+}
+
+export class NFTTokenLoader extends Entity {
+  _entity: string;
+  _field: string;
+  _id: string;
+
+  constructor(entity: string, id: string, field: string) {
+    super();
+    this._entity = entity;
+    this._id = id;
+    this._field = field;
+  }
+
+  load(): NFTToken[] {
+    let value = store.loadRelated(this._entity, this._id, this._field);
+    return changetype<NFTToken[]>(value);
   }
 }

@@ -16,6 +16,10 @@ export const metadataModuleAddress = {
   [baseSepolia.id]: "0x6c5A8A7f061bEd94b1b88CFAd4e1a1a8C5c4e527",
 } as const;
 
+export const erc721SlotsAddress = {
+  [baseSepolia.id]: "0x87138d73345c07142475cb1b599628406743ccd8",
+} as const;
+
 export function getMetadataModuleAddress(chainId: number): Address | undefined {
   return metadataModuleAddress[chainId as keyof typeof metadataModuleAddress];
 }
