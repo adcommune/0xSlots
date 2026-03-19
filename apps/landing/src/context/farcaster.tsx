@@ -69,7 +69,7 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
             });
             setMiniappContext(context);
           }
-          await sdk.actions.ready();
+          await sdk.actions.ready({ disableNativeGestures: true });
           await sdk.back.enableWebNavigation();
         }
       } catch {

@@ -58,7 +58,10 @@ export function MobileBottomBar({
   const ready = step === 3;
 
   return (
-    <div className="fixed bottom-10 md:bottom-0 left-0 right-0 lg:hidden z-50">
+    <div
+      className="fixed left-0 right-0 lg:hidden z-50"
+      style={{ bottom: `var(--bottom-bar-h, 0px)` }}
+    >
       <Drawer open={open} onOpenChange={setOpen}>
         {/* Collapsed bar */}
         <div className="bg-background border-t p-3">

@@ -94,15 +94,16 @@ export function AppShell({ children }: { children: ReactNode }) {
     </DropdownMenu>
   );
 
+  const safeBottom = isMiniApp
+    ? (miniappContext?.client.safeAreaInsets?.bottom ?? 5)
+    : 5;
+  // 5px top padding + ~28px button (h-7) + bottom padding
+  const bottomBarHeight = 5 + 28 + safeBottom;
+
   const bottomBar = (
     <nav
       className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t flex items-center justify-between px-4 md:hidden"
-      style={{
-        paddingBottom: isMiniApp
-          ? (miniappContext?.client.safeAreaInsets?.bottom ?? 5)
-          : 5,
-        paddingTop: 5,
-      }}
+      style={{ paddingBottom: safeBottom, paddingTop: 5 }}
     >
       {chainSelector}
       <div className="flex items-center gap-2">
@@ -113,9 +114,14 @@ export function AppShell({ children }: { children: ReactNode }) {
   );
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Nav — compact on mobile, full on desktop */}
-      <nav className="flex items-center justify-between p-2 md:px-6 md:py-4 border-b">
+    <div
+      className="min-h-screen flex flex-col"
+      style={
+        { "--bottom-bar-h": `${bottomBarHeight}px` } as React.CSSProperties
+      }
+    >
+      {/* Nav — fixed on all viewports */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-background flex items-center justify-between p-2 md:px-6 md:py-4 border-b">
         <div className="flex flex-row items-center gap-6">
           {logo}
           {/* Desktop: inline indicators */}
@@ -129,8 +135,16 @@ export function AppShell({ children }: { children: ReactNode }) {
         {isMiniApp ? mobileMenu : <UserMenu />}
       </nav>
 
-      {/* Main Content — bottom padding on mobile for fixed bar */}
-      <main className="flex-1 flex flex-col pb-10 md:pb-0">{children}</main>
+      {/* Spacer for fixed nav */}
+      <div className="h-11 md:h-15 shrink-0" />
+
+      {/* Main Content */}
+      <main
+        className="flex-1 flex flex-col md:pb-0"
+        style={{ paddingBottom: `var(--bottom-bar-h, 0px)` }}
+      >
+        {children}
+      </main>
 
       {/* Mobile bottom bar */}
       {bottomBar}

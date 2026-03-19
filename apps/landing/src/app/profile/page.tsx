@@ -1,16 +1,28 @@
 "use client";
 
-import { NavLink, useNavigation } from "@/context/navigation";
 import { formatUnits } from "viem";
 import { useAccount } from "wagmi";
-
 import { AccountTypeIcon } from "@/components/account-type-icon";
 import { ExplorerTabs } from "@/components/explorer-tabs";
 import { PageHeader } from "@/components/page-header";
 import { SlotStatusBadge } from "@/components/slot-status-badge";
 import { StatCard } from "@/components/stat-card";
+import { TableEmpty, TableSkeleton } from "@/components/table-states";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { NavLink, useNavigation } from "@/context/navigation";
 import { useSlotsOnChain } from "@/hooks/use-slot-onchain";
-import { type V3Slot, useSlotsByOccupant, useSlotsByRecipient } from "@/hooks/use-v3";
+import {
+  useSlotsByOccupant,
+  useSlotsByRecipient,
+  type V3Slot,
+} from "@/hooks/use-v3";
 import { formatBalance, truncateAddress } from "@/utils";
 
 function SlotTable({
@@ -32,83 +44,81 @@ function SlotTable({
   // Build lookup map for account types from subgraph data
   const subgraphMap = new Map(subgraphSlots.map((s) => [s.id, s]));
 
-  if (isLoading) {
-    return (
-      <div className="p-8 text-center animate-pulse">
-        <p className="text-sm text-muted-foreground">Loading slots...</p>
-      </div>
-    );
-  }
-
-  if (slots.length === 0) {
-    return (
-      <div className="p-8 text-center">
-        <p className="text-sm text-muted-foreground">{emptyMessage}</p>
-      </div>
-    );
-  }
+  if (isLoading) return <TableSkeleton />;
+  if (slots.length === 0) return <TableEmpty message={emptyMessage} />;
 
   return (
     <div className="rounded-lg border">
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b bg-muted/50 text-left text-xs text-muted-foreground">
-              <th className="px-4 py-2">Slot</th>
-              <th className="px-4 py-2">Status</th>
-              <th className="px-4 py-2">Recipient</th>
-              <th className="px-4 py-2">Occupant</th>
-              <th className="px-4 py-2 text-right">Price</th>
-              <th className="px-4 py-2 text-right">Deposit</th>
-              <th className="px-4 py-2 text-right">Tax Owed</th>
-            </tr>
-          </thead>
-          <tbody>
-            {slots.map((s) => {
-              const sg = subgraphMap.get(s.id);
-              return (
-              <tr
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Slot</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Recipient</TableHead>
+            <TableHead>Occupant</TableHead>
+            <TableHead className="text-right">Price</TableHead>
+            <TableHead className="text-right">Deposit</TableHead>
+            <TableHead className="text-right">Tax Owed</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {slots.map((s) => {
+            const sg = subgraphMap.get(s.id);
+            return (
+              <TableRow
                 key={s.id}
-                className="border-b hover:bg-muted/30 cursor-pointer transition-colors"
+                className="cursor-pointer"
                 onClick={() => push(`/slots/${s.id}`)}
               >
-                <td className="px-4 py-2 text-xs">{truncateAddress(s.id)}</td>
-                <td className="px-4 py-2">
-                  <SlotStatusBadge occupant={s.occupant} insolvent={s.insolvent} />
-                </td>
-                <td className="px-4 py-2 text-xs">
+                <TableCell className="text-xs">
+                  {truncateAddress(s.id)}
+                </TableCell>
+                <TableCell>
+                  <SlotStatusBadge
+                    occupant={s.occupant}
+                    insolvent={s.insolvent}
+                  />
+                </TableCell>
+                <TableCell className="text-xs">
                   <span className="inline-flex items-center gap-1.5">
                     {sg?.recipientAccount?.type && (
-                      <AccountTypeIcon type={sg.recipientAccount.type} className="h-3 w-3" />
+                      <AccountTypeIcon
+                        type={sg.recipientAccount.type}
+                        className="h-3 w-3"
+                      />
                     )}
                     {truncateAddress(s.recipient)}
                   </span>
-                </td>
-                <td className="px-4 py-2 text-xs">
+                </TableCell>
+                <TableCell className="text-xs">
                   {s.occupant ? (
                     <span className="inline-flex items-center gap-1.5">
                       {sg?.occupantAccount?.type && (
-                        <AccountTypeIcon type={sg.occupantAccount.type} className="h-3 w-3" />
+                        <AccountTypeIcon
+                          type={sg.occupantAccount.type}
+                          className="h-3 w-3"
+                        />
                       )}
                       {truncateAddress(s.occupant)}
                     </span>
-                  ) : "—"}
-                </td>
-                <td className="px-4 py-2 text-right">
+                  ) : (
+                    "—"
+                  )}
+                </TableCell>
+                <TableCell className="text-right">
                   {formatUnits(s.price, decimals)} {symbol}
-                </td>
-                <td className="px-4 py-2 text-right">
+                </TableCell>
+                <TableCell className="text-right">
                   {formatUnits(s.deposit, decimals)} {symbol}
-                </td>
-                <td className="px-4 py-2 text-right">
+                </TableCell>
+                <TableCell className="text-right">
                   {formatUnits(s.taxOwed, decimals)} {symbol}
-                </td>
-              </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
     </div>
   );
 }
@@ -146,11 +156,20 @@ function ProfileContent({ address }: { address: string }) {
   return (
     <>
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <StatCard label="Owned Slots" value={recipientSlots.length.toString()} />
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 mb-2 md:mb-6">
+        <StatCard
+          label="Owned Slots"
+          value={recipientSlots.length.toString()}
+        />
         <StatCard label="Occupying" value={occupantSlots.length.toString()} />
-        <StatCard label="Collectable Tax" value={`${formatBalance(totalTaxOwed, decimals)} ${symbol}`} />
-        <StatCard label="Total Deposit" value={`${formatBalance(totalDeposit, decimals)} ${symbol}`} />
+        <StatCard
+          label="Collectable Tax"
+          value={`${formatBalance(totalTaxOwed, decimals)} ${symbol}`}
+        />
+        <StatCard
+          label="Total Deposit"
+          value={`${formatBalance(totalDeposit, decimals)} ${symbol}`}
+        />
       </div>
 
       {/* Tabs */}
@@ -189,7 +208,6 @@ function ProfileContent({ address }: { address: string }) {
 }
 
 export default function ProfilePage() {
-  const { push } = useNavigation();
   const { address, isConnected } = useAccount();
 
   return (
@@ -213,7 +231,7 @@ export default function ProfilePage() {
         </div>
       </PageHeader>
 
-      <div className="max-w-6xl mx-auto px-6 py-6">
+      <div className="max-w-6xl mx-auto p-2 md:p-6">
         {!isConnected || !address ? (
           <div className="rounded-lg border p-12 text-center">
             <p className="text-sm text-muted-foreground">

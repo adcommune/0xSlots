@@ -8,6 +8,11 @@ import {
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useChain } from "@/context/chain";
+import {
+  slotActivityQueryOptions,
+  slotQueryOptions,
+  slotsByRecipientQueryOptions,
+} from "@/hooks/slot-queries";
 
 // Re-export the slot type for convenience
 export type { SlotFieldsFragment as V3Slot } from "@0xslots/sdk";
@@ -61,31 +66,16 @@ export function useSlots(filters?: SlotFilters) {
 
 export function useSlot(id: string) {
   const { chainId } = useChain();
-  const client = useSlotsClient();
   return useQuery({
-    queryKey: ["slot", chainId, id],
-    queryFn: async () => {
-      const { slot } = await client.getSlot({ id: id.toLowerCase() });
-      return slot as SlotFieldsFragment | null;
-    },
-    staleTime: 10_000,
+    ...slotQueryOptions(chainId, id),
     enabled: !!id,
   });
 }
 
 export function useSlotsByRecipient(recipient: string) {
   const { chainId } = useChain();
-  const client = useSlotsClient();
   return useQuery({
-    queryKey: ["slots-recipient", chainId, recipient],
-    queryFn: async () => {
-      const { slots } = await client.getSlotsByRecipient({
-        recipient: recipient.toLowerCase(),
-        first: 100,
-      });
-      return slots as SlotFieldsFragment[];
-    },
-    staleTime: 15_000,
+    ...slotsByRecipientQueryOptions(chainId, recipient),
     enabled: !!recipient,
   });
 }
@@ -192,17 +182,8 @@ export function useSlotTaxCollections(slotId: string) {
 
 export function useSlotActivity(slotId: string) {
   const { chainId } = useChain();
-  const client = useSlotsClient();
   return useQuery({
-    queryKey: ["slot-activity", chainId, slotId],
-    queryFn: async () => {
-      const data = await client.getSlotActivity({
-        slotId: slotId.toLowerCase(),
-        first: 100,
-      });
-      return data;
-    },
-    staleTime: 10_000,
+    ...slotActivityQueryOptions(chainId, slotId),
     enabled: !!slotId,
   });
 }
