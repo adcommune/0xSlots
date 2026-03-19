@@ -953,5 +953,4 @@ export const erc721SlotsAbi =
     "name": "TransferDisabled",
     "inputs": []
   }
-]
- as const;
+] as const;
