@@ -1,6 +1,6 @@
 "use client";
 
-import { sdk } from "@farcaster/miniapp-sdk";
+import { Context, sdk } from "@farcaster/miniapp-sdk";
 import {
   createContext,
   type ReactNode,
@@ -25,6 +25,8 @@ interface FarcasterContext {
   sdk: typeof sdk;
   /** The connected Farcaster user (only available in miniapp mode) */
   user: FarcasterUser | null;
+  /** Miniapp context */
+  miniappContext: Context.MiniAppContext | null;
 }
 
 const FarcasterCtx = createContext<FarcasterContext>({
@@ -32,6 +34,7 @@ const FarcasterCtx = createContext<FarcasterContext>({
   isReady: false,
   sdk,
   user: null,
+  miniappContext: null,
 });
 
 export function useFarcaster() {
@@ -46,6 +49,8 @@ export function useFarcaster() {
  */
 export function FarcasterProvider({ children }: { children: ReactNode }) {
   const [isMiniApp, setIsMiniApp] = useState(false);
+  const [miniappContext, setMiniappContext] =
+    useState<Context.MiniAppContext | null>(null);
   const [isReady, setIsReady] = useState(false);
   const [user, setUser] = useState<FarcasterUser | null>(null);
 
@@ -62,6 +67,7 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
               displayName: context.user.displayName,
               pfpUrl: context.user.pfpUrl,
             });
+            setMiniappContext(context);
           }
           await sdk.actions.ready();
           await sdk.back.enableWebNavigation();
@@ -75,7 +81,9 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <FarcasterCtx.Provider value={{ isMiniApp, isReady, sdk, user }}>
+    <FarcasterCtx.Provider
+      value={{ isMiniApp, isReady, sdk, user, miniappContext }}
+    >
       {children}
     </FarcasterCtx.Provider>
   );

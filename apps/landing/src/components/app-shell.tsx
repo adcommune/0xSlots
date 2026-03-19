@@ -5,7 +5,8 @@ import { Check, ChevronDown } from "lucide-react";
 import Image from "next/image";
 import type { ReactNode } from "react";
 import { useAccount } from "wagmi";
-
+import { ChainCapabilities } from "@/components/chain-capabilities";
+import { SubgraphStatus } from "@/components/subgraph-status";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -13,15 +14,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChainCapabilities } from "@/components/chain-capabilities";
-import { SubgraphStatus } from "@/components/subgraph-status";
 import { UserMenu } from "@/components/user-menu";
 import { useChain } from "@/context/chain";
 import { useFarcaster } from "@/context/farcaster";
 import { truncateAddress } from "@/utils";
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { isMiniApp, user } = useFarcaster();
+  const { isMiniApp, user, miniappContext } = useFarcaster();
   const { address } = useAccount();
   const { chainId, setChain } = useChain();
 
@@ -31,7 +30,12 @@ export function AppShell({ children }: { children: ReactNode }) {
         <main className="flex-1 flex flex-col">{children}</main>
 
         {/* Fixed bottom bar */}
-        <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t flex items-center justify-between px-4 py-2">
+        <nav
+          className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t flex items-center justify-between px-4"
+          style={{
+            paddingBottom: miniappContext?.client.safeAreaInsets?.bottom,
+          }}
+        >
           <a
             href="/"
             className="text-lg flex flex-row gap-1.5 items-center font-black tracking-tighter"
@@ -49,8 +53,13 @@ export function AppShell({ children }: { children: ReactNode }) {
           {/* Chain selector */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="gap-1 text-xs h-7 px-2">
-                {CHAINS.find((c) => c.id === chainId)?.name ?? `Chain ${chainId}`}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-1 text-xs h-7 px-2"
+              >
+                {CHAINS.find((c) => c.id === chainId)?.name ??
+                  `Chain ${chainId}`}
                 <ChevronDown className="size-3" />
               </Button>
             </DropdownMenuTrigger>
