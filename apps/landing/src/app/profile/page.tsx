@@ -18,11 +18,13 @@ function SlotTable({
   subgraphSlots,
   isLoading,
   emptyMessage,
+  push,
 }: {
   slots: ReturnType<typeof useSlotsOnChain>["data"];
   subgraphSlots: V3Slot[];
   isLoading: boolean;
   emptyMessage: string;
+  push: (href: string) => void;
 }) {
   const decimals = slots[0]?.currencyDecimals ?? 6;
   const symbol = slots[0]?.currencySymbol ?? "USDC";
@@ -112,6 +114,7 @@ function SlotTable({
 }
 
 function ProfileContent({ address }: { address: string }) {
+  const { push } = useNavigation();
   const { data: recipientSubgraph, isLoading: recipientSubLoading } =
     useSlotsByRecipient(address);
   const { data: occupantSubgraph, isLoading: occupantSubLoading } =
@@ -158,6 +161,7 @@ function ProfileContent({ address }: { address: string }) {
             label: `Owned (${recipientSlots.length})`,
             content: () => (
               <SlotTable
+                push={push}
                 slots={recipientSlots}
                 subgraphSlots={recipientSubgraph ?? []}
                 isLoading={recipientLoading}
@@ -170,6 +174,7 @@ function ProfileContent({ address }: { address: string }) {
             label: `Occupying (${occupantSlots.length})`,
             content: () => (
               <SlotTable
+                push={push}
                 slots={occupantSlots}
                 subgraphSlots={occupantSubgraph ?? []}
                 isLoading={occupantLoading}
