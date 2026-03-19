@@ -141,7 +141,6 @@ export class SlotsClient {
     this.modules = {
       metadata: new MetadataModuleClient({
         sdk: this.sdk,
-        chainId: config.chainId,
         publicClient: config.publicClient,
         walletClient: config.walletClient,
       }),

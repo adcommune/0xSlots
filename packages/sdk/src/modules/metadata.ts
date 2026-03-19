@@ -3,42 +3,29 @@ import type { Address, Chain, Hash, PublicClient, WalletClient } from "viem";
 import { SlotsError } from "../errors";
 import { getSdk } from "../generated/graphql";
 
+const EXPECTED_MODULE_NAME = "MetadataModule";
+
 /**
  * Module namespace for MetadataModule operations.
  * Accessible via `client.modules.metadata`.
  *
  * Read: subgraph queries for MetadataSlot entities
- * Write: `updateMetadata(slot, uri)` on the MetadataModule contract
- * RPC read: `tokenURI(slot)` on the MetadataModule contract
+ * Write: `updateMetadata(moduleAddress, slot, uri)` on the MetadataModule contract
+ * RPC read: `tokenURI(moduleAddress, slot)` on the MetadataModule contract
  */
 export class MetadataModuleClient {
   private readonly sdk: ReturnType<typeof getSdk>;
-  private readonly chainId: number;
   private readonly _publicClient?: PublicClient;
   private readonly _walletClient?: WalletClient;
-  private readonly _moduleAddress?: Address;
 
   constructor(opts: {
     sdk: ReturnType<typeof getSdk>;
-    chainId: number;
     publicClient?: PublicClient;
     walletClient?: WalletClient;
-    moduleAddress?: Address;
   }) {
     this.sdk = opts.sdk;
-    this.chainId = opts.chainId;
     this._publicClient = opts.publicClient;
     this._walletClient = opts.walletClient;
-    this._moduleAddress = opts.moduleAddress;
-  }
-
-  private get moduleAddress(): Address {
-    if (!this._moduleAddress)
-      throw new SlotsError(
-        "metadata",
-        `No MetadataModule deployed on chain ${this.chainId}`,
-      );
-    return this._moduleAddress;
   }
 
   private get wallet(): WalletClient {
@@ -72,6 +59,25 @@ export class MetadataModuleClient {
       return await fn();
     } catch (error) {
       throw new SlotsError(operation, error);
+    }
+  }
+
+  /**
+   * Verify that a given address is a MetadataModule by calling `name()` on-chain.
+   * @param moduleAddress - The module contract address to verify
+   * @throws SlotsError if the contract doesn't return the expected name
+   */
+  private async verifyModule(moduleAddress: Address): Promise<void> {
+    const name = await this.publicClient.readContract({
+      address: moduleAddress,
+      abi: metadataModuleAbi,
+      functionName: "name",
+    });
+    if (name !== EXPECTED_MODULE_NAME) {
+      throw new SlotsError(
+        "metadata",
+        `Contract at ${moduleAddress} is not a MetadataModule (name: "${name}")`,
+      );
     }
   }
 
@@ -117,13 +123,17 @@ export class MetadataModuleClient {
   // READ — RPC
   // ═══════════════════════════════════════════════════════════════════════════
 
-  /** Read the current URI for a slot directly from chain (bypasses subgraph). */
-  async getURI(slot: Address): Promise<string> {
+  /**
+   * Read the current URI for a slot directly from chain (bypasses subgraph).
+   * @param moduleAddress - The MetadataModule contract address (from the slot's on-chain module field)
+   * @param slot - The slot contract address
+   */
+  async getURI(moduleAddress: Address, slot: Address): Promise<string> {
     return this.query(
       "metadata.getURI",
       () =>
         this.publicClient.readContract({
-          address: this.moduleAddress,
+          address: moduleAddress,
           abi: metadataModuleAbi,
           functionName: "tokenURI",
           args: [slot],
@@ -137,23 +147,25 @@ export class MetadataModuleClient {
 
   /**
    * Update the metadata URI for a slot. Only callable by the current occupant.
+   * Verifies on-chain that the address is a MetadataModule before writing.
+   * @param moduleAddress - The MetadataModule contract address (from the slot's on-chain module field)
    * @param slot - The slot contract address
    * @param uri - The new URI (e.g. ipfs://..., https://...)
    * @returns Transaction hash
    */
-  async updateMetadata(slot: Address, uri: string): Promise<Hash> {
+  async updateMetadata(
+    moduleAddress: Address,
+    slot: Address,
+    uri: string,
+  ): Promise<Hash> {
+    await this.verifyModule(moduleAddress);
     return this.wallet.writeContract({
-      address: this.moduleAddress,
+      address: moduleAddress,
       abi: metadataModuleAbi,
       functionName: "updateMetadata",
       args: [slot, uri],
       account: this.account,
       chain: this.chain,
     });
-  }
-
-  /** Returns the MetadataModule contract address for the configured chain. */
-  getAddress(): Address {
-    return this.moduleAddress;
   }
 }
