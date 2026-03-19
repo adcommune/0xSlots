@@ -1,62 +1,93 @@
 "use client";
 
+import { CHAINS } from "@0xslots/contracts";
+import { Check, ChevronDown } from "lucide-react";
 import Image from "next/image";
 import type { ReactNode } from "react";
-import { useAccount, useConnect } from "wagmi";
+import { useAccount } from "wagmi";
 
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ChainCapabilities } from "@/components/chain-capabilities";
 import { SubgraphStatus } from "@/components/subgraph-status";
 import { UserMenu } from "@/components/user-menu";
+import { useChain } from "@/context/chain";
 import { useFarcaster } from "@/context/farcaster";
 import { truncateAddress } from "@/utils";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { isMiniApp, user } = useFarcaster();
   const { address } = useAccount();
+  const { chainId, setChain } = useChain();
 
   if (isMiniApp) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <nav className="flex items-center justify-between px-4 py-3 border-b">
+      <div className="min-h-screen flex flex-col pb-14">
+        <main className="flex-1 flex flex-col">{children}</main>
+
+        {/* Fixed bottom bar */}
+        <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t flex items-center justify-between px-4 py-2">
           <a
             href="/"
-            className="text-xl flex flex-row gap-2 items-center font-black tracking-tighter"
+            className="text-lg flex flex-row gap-1.5 items-center font-black tracking-tighter"
           >
             <Image
               src="/logo.png"
               width={100}
               height={100}
               alt=""
-              className="w-5 aspect-square h-5"
+              className="w-4 aspect-square h-4"
             />
             0xSlots
           </a>
+
+          {/* Chain selector */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="gap-1 text-xs h-7 px-2">
+                {CHAINS.find((c) => c.id === chainId)?.name ?? `Chain ${chainId}`}
+                <ChevronDown className="size-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="center">
+              {CHAINS.map((c) => (
+                <DropdownMenuItem key={c.id} onClick={() => setChain(c.id)}>
+                  {c.name}
+                  {c.id === chainId && <Check className="ml-auto size-3.5" />}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           <div className="flex items-center gap-2">
             {user?.pfpUrl && (
               <Image
                 src={user.pfpUrl}
                 alt=""
-                width={24}
-                height={24}
-                className="size-6 rounded-full"
+                width={20}
+                height={20}
+                className="size-5 rounded-full"
               />
             )}
             <div className="flex flex-col items-end">
               {user?.username && (
-                <span className="text-sm font-medium leading-tight">
+                <span className="text-xs font-medium leading-tight">
                   {user.displayName ?? user.username}
                 </span>
               )}
               {address && (
-                <span className="text-xs text-muted-foreground font-mono leading-tight">
+                <span className="text-[10px] text-muted-foreground font-mono leading-tight">
                   {truncateAddress(address)}
                 </span>
               )}
             </div>
           </div>
         </nav>
-
-        <main className="flex-1 flex flex-col">{children}</main>
       </div>
     );
   }

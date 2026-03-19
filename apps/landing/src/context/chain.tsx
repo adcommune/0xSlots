@@ -1,16 +1,17 @@
 "use client";
 
-import { CHAINS, DEFAULT_CHAIN } from "@0xslots/contracts";
+import { DEFAULT_CHAIN } from "@0xslots/contracts";
 import type { SlotsChain } from "@0xslots/sdk";
 import {
   createContext,
   type ReactNode,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
 } from "react";
-import { useSwitchChain } from "wagmi";
+import { useAccount, useSwitchChain } from "wagmi";
 import { getExplorerUrl } from "@/lib/config";
 
 interface ChainContextValue {
@@ -26,15 +27,20 @@ export function ChainProvider({ children }: { children: ReactNode }) {
     DEFAULT_CHAIN.id as SlotsChain,
   );
   const { mutate: switchWalletChain } = useSwitchChain();
+  const { chainId: walletChainId } = useAccount();
+
+  // Keep the connected wallet chain in sync with the selected chain at all times.
+  useEffect(() => {
+    if (walletChainId && walletChainId !== chainId) {
+      switchWalletChain({ chainId });
+    }
+  }, [chainId, walletChainId, switchWalletChain]);
 
   const setChain = useCallback(
     (id: number) => {
       setChainId(id as SlotsChain);
-      if (CHAINS.some((c) => c.id === id)) {
-        switchWalletChain({ chainId: id });
-      }
     },
-    [switchWalletChain],
+    [],
   );
 
   const explorerUrl = useMemo(() => getExplorerUrl(chainId), [chainId]);
