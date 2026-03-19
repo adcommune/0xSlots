@@ -24,7 +24,10 @@ async function fetchIpfsContent(uri: string): Promise<AdContent | null> {
 /**
  * Read the current metadata URI from chain (RPC).
  */
-export function useMetadataUri(slotAddress: string) {
+export function useMetadataUri(
+  moduleAddress: string | undefined,
+  slotAddress: string,
+) {
   const client = useSlotsClient();
   const { chainId } = useChain();
 
@@ -32,12 +35,13 @@ export function useMetadataUri(slotAddress: string) {
     queryKey: ["metadata-uri", chainId, slotAddress],
     queryFn: async () => {
       const uri = await client.modules.metadata.getURI(
+        moduleAddress as Address,
         slotAddress as Address,
       );
       return uri || null;
     },
     staleTime: 10_000,
-    enabled: !!slotAddress,
+    enabled: !!slotAddress && !!moduleAddress,
   });
 }
 

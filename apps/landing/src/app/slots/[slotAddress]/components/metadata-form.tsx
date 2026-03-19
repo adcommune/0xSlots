@@ -57,10 +57,15 @@ type Phase = "edit" | "verifying" | "preview" | "publishing" | "done";
 
 interface MetadataFormProps {
   slotAddress: string;
+  moduleAddress: string;
   isOccupant: boolean;
 }
 
-export function MetadataForm({ slotAddress, isOccupant }: MetadataFormProps) {
+export function MetadataForm({
+  slotAddress,
+  moduleAddress,
+  isOccupant,
+}: MetadataFormProps) {
   const [selectedType, setSelectedType] = useState<AdType | "">("");
   const [phase, setPhase] = useState<Phase>("edit");
   const [processedResult, setProcessedResult] = useState<AdContent | null>(
@@ -73,7 +78,7 @@ export function MetadataForm({ slotAddress, isOccupant }: MetadataFormProps) {
 
   const ad = selectedType ? getAd(selectedType as AdType) : null;
 
-  const { data: currentUri } = useMetadataUri(slotAddress);
+  const { data: currentUri } = useMetadataUri(moduleAddress, slotAddress);
   const { data: currentAdData, isLoading: loadingCurrentAd } =
     useIpfsContent(currentUri);
   const { data: updateHistory } = useMetadataHistory(slotAddress);
@@ -124,7 +129,11 @@ export function MetadataForm({ slotAddress, isOccupant }: MetadataFormProps) {
     if (!processedResult) return;
     setPhase("publishing");
     try {
-      await updateMetadataWithUpload(slotAddress as Address, processedResult);
+      await updateMetadataWithUpload(
+        moduleAddress as Address,
+        slotAddress as Address,
+        processedResult,
+      );
       setPhase("done");
       setTimeout(() => invalidateMetadata(), 3000);
     } catch (error) {

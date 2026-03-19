@@ -160,18 +160,18 @@ export function useSlotAction() {
 
   // Metadata module
   const updateMetadata = useCallback(
-    (slot: Address, uri: string) =>
+    (moduleAddress: Address, slot: Address, uri: string) =>
       exec("Update metadata", () =>
-        client.modules.metadata.updateMetadata(slot, uri),
+        client.modules.metadata.updateMetadata(moduleAddress, slot, uri),
       ),
     [exec, client],
   );
 
   const updateMetadataWithUpload = useCallback(
-    (slot: Address, data: object) =>
+    (moduleAddress: Address, slot: Address, data: object) =>
       exec("Update metadata", async () => {
         const { uri } = await upload(data);
-        return client.modules.metadata.updateMetadata(slot, uri);
+        return client.modules.metadata.updateMetadata(moduleAddress, slot, uri);
       }),
     [exec, upload, client],
   );

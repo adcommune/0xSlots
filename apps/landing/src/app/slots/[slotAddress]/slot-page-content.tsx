@@ -636,6 +636,7 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
                   <div className="p-4">
                     <MetadataForm
                       slotAddress={slotAddress}
+                      moduleAddress={slot.module}
                       isOccupant={!!isOccupant}
                     />
                   </div>
@@ -680,6 +681,7 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
                   <div className="p-4">
                     <MetadataForm
                       slotAddress={slotAddress}
+                      moduleAddress={slot.module}
                       isOccupant={!!isOccupant}
                     />
                   </div>
