@@ -29,7 +29,7 @@ export function RecipientsTable() {
   return (
     <div>
       <RefreshButton onRefresh={() => refetch()} isFetching={isFetching} />
-      <div className="rounded-lg border">
+      <div>
         <Table>
           <TableHeader>
             <TableRow>

@@ -3,8 +3,6 @@
 import { Check, Filter, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { isAddress } from "viem";
-import { useNavigation } from "@/context/navigation";
-
 import { AccountTypeIcon } from "@/components/account-type-icon";
 import { EnsAddress } from "@/components/ens-address";
 import { TablePagination, usePagination } from "@/components/table-pagination";
@@ -30,6 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useNavigation } from "@/context/navigation";
 import type { SlotFilters } from "@/hooks/use-v3";
 import { useModules, useSlots } from "@/hooks/use-v3";
 import { loadStorage, saveStorage } from "@/lib/storage";
@@ -269,7 +268,7 @@ export function SlotsTable() {
           message={hasFilters ? "No slots match filters" : "No slots found"}
         />
       ) : (
-        <div className="rounded-lg border">
+        <div>
           <Table>
             <TableHeader>
               <TableRow>

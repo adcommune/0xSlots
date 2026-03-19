@@ -138,7 +138,7 @@ export function RecipientPageContent({ address }: { address: string }) {
         ) : slots.length === 0 ? (
           <TableEmpty message="No slots found for this recipient" />
         ) : (
-          <div className="rounded-b-lg border">
+          <div>
             <Table>
               <TableHeader>
                 <TableRow>

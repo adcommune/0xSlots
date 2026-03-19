@@ -30,7 +30,7 @@ export function EventsTable() {
   if (events.length === 0) return <TableEmpty message="No events yet" />;
 
   return (
-    <div className="rounded-lg border">
+    <>
       <Table>
         <TableHeader>
           <TableRow>
@@ -98,6 +98,6 @@ export function EventsTable() {
         onPageChange={setPage}
         onPageSizeChange={setPageSize}
       />
-    </div>
+    </>
   );
 }

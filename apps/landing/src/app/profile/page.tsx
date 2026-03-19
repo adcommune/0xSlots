@@ -48,7 +48,7 @@ function SlotTable({
   if (slots.length === 0) return <TableEmpty message={emptyMessage} />;
 
   return (
-    <div className="rounded-lg border">
+    <div>
       <Table>
         <TableHeader>
           <TableRow>
