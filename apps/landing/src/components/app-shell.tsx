@@ -34,6 +34,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t flex items-center justify-between px-4"
           style={{
             paddingBottom: miniappContext?.client.safeAreaInsets?.bottom ?? 5,
+            paddingTop: 5,
           }}
         >
           <a
