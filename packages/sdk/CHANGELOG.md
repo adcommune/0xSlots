@@ -1,5 +1,11 @@
 # @0xslots/sdk
 
+## 0.9.2
+
+### Patch Changes
+
+- 894c0ee: include metadata module address in module methods
+
 ## 0.9.1
 
 ### Patch Changes
