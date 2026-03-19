@@ -125,17 +125,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </div>
 
-        {/* Desktop: full user menu, Mobile: compact dropdown */}
-        {isMiniApp ? (
-          <div className="md:hidden">{mobileMenu}</div>
-        ) : (
-          <>
-            <div className="hidden md:block">
-              <UserMenu />
-            </div>
-            <div className="md:hidden">{mobileMenu}</div>
-          </>
-        )}
+        {/* Miniapp: compact dropdown, Web: full user menu (connect + dropdown) */}
+        {isMiniApp ? mobileMenu : <UserMenu />}
       </nav>
 
       {/* Main Content — bottom padding on mobile for fixed bar */}

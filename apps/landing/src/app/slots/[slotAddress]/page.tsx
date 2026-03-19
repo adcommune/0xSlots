@@ -635,7 +635,6 @@ export default function SlotPage({
 
       {/* Mobile bottom bar with drawers */}
       <MobileSlotBar
-        isMiniApp={isMiniApp}
         actionLabel={actionLabel}
         actionsTitle={
           isOccupied
@@ -919,18 +918,16 @@ function MobileSlotBar({
   actionsContent,
   showModule,
   moduleContent,
-  isMiniApp,
 }: {
   actionLabel: string;
   actionsTitle: string;
   actionsContent: React.ReactNode;
   showModule: boolean;
   moduleContent: React.ReactNode;
-  isMiniApp: boolean;
 }) {
   return (
     <div
-      className={`fixed left-0 right-0 lg:hidden z-40 ${isMiniApp ? "bottom-14" : "bottom-0"}`}
+      className="fixed left-0 right-0 lg:hidden z-40 bottom-10 md:bottom-0"
     >
       <div className="bg-background border-t p-3">
         <div className="flex items-center gap-2 max-w-3xl mx-auto">

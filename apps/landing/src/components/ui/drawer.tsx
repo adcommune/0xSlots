@@ -12,6 +12,7 @@ function Drawer({
     <DrawerPrimitive.Root
       data-slot="drawer"
       preventScrollRestoration
+      handleOnly
       {...props}
     />
   )
