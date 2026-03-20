@@ -1,0 +1,155 @@
+# Getting Started
+
+## Installation
+
+:::code-group
+
+```bash [pnpm]
+pnpm add @0xslots/sdk @0xslots/contracts
+```
+
+```bash [npm]
+npm install @0xslots/sdk @0xslots/contracts
+```
+
+:::
+
+## Create a Client
+
+The `SlotsClient` is the main entry point for reading and writing slot data.
+
+```ts
+import { SlotsClient, SlotsChain } from "@0xslots/sdk";
+import { createPublicClient, createWalletClient, http } from "viem";
+import { base } from "viem/chains";
+
+const publicClient = createPublicClient({
+  chain: base,
+  transport: http(),
+});
+
+const client = new SlotsClient({
+  chainId: SlotsChain.BASE,
+  publicClient,
+});
+```
+
+For write operations, pass a `walletClient` as well:
+
+```ts
+import { privateKeyToAccount } from "viem/accounts";
+
+const walletClient = createWalletClient({
+  account: privateKeyToAccount("0x..."),
+  chain: base,
+  transport: http(),
+});
+
+const client = new SlotsClient({
+  chainId: SlotsChain.BASE,
+  publicClient,
+  walletClient,
+});
+```
+
+## Read Slots
+
+Fetch slots from the subgraph:
+
+```ts
+// List all slots
+const { slots } = await client.getSlots({ first: 10 });
+
+// Get a specific slot
+const { slot } = await client.getSlot({ id: "0x..." });
+
+// Get slots by recipient
+const { slots } = await client.getSlotsByRecipient({
+  recipient: "0x...",
+});
+```
+
+Read real-time state directly from chain (RPC):
+
+```ts
+const info = await client.getSlotInfo("0x...");
+// Returns: recipient, currency, occupant, price, deposit, taxPercentage, etc.
+```
+
+## Buy a Slot
+
+```ts
+import { parseEther } from "viem";
+
+const hash = await client.buy({
+  slot: "0x...",
+  depositAmount: parseEther("1"),      // ERC-20 deposit for tax escrow
+  selfAssessedPrice: parseEther("10"), // Your self-assessed price
+});
+```
+
+The SDK handles ERC-20 approval automatically. If the wallet supports [EIP-5792](https://eips.ethereum.org/EIPS/eip-5792) atomic batching, the approval and buy happen in a single transaction.
+
+## More Actions
+
+```ts
+// Self-assess a new price
+await client.selfAssess("0xSlotAddr", parseEther("20"));
+
+// Top up your tax deposit
+await client.topUp("0xSlotAddr", parseEther("0.5"));
+
+// Withdraw from deposit
+await client.withdraw("0xSlotAddr", parseEther("0.1"));
+
+// Release the slot (return to vacant)
+await client.release("0xSlotAddr");
+
+// Collect accumulated tax (permissionless)
+await client.collect("0xSlotAddr");
+
+// Liquidate an insolvent slot (earn bounty)
+await client.liquidate("0xSlotAddr");
+```
+
+## React Integration
+
+If you're building with React + wagmi, use the hooks from `@0xslots/sdk/react`:
+
+```tsx
+import { useSlotsClient, useSlotAction, useSlotOnChain } from "@0xslots/sdk/react";
+
+function SlotView({ address }: { address: string }) {
+  const client = useSlotsClient();
+  const { data: slot, isLoading } = useSlotOnChain(address, 8453);
+  const { buy, busy } = useSlotAction({
+    onSuccess: (label, hash) => console.log(`${label} confirmed: ${hash}`),
+  });
+
+  if (isLoading) return <div>Loading...</div>;
+  if (!slot) return <div>Slot not found</div>;
+
+  return (
+    <div>
+      <p>Price: {slot.price.toString()}</p>
+      <p>Occupant: {slot.occupant ?? "Vacant"}</p>
+      <button
+        disabled={busy}
+        onClick={() => buy({
+          slot: address as `0x${string}`,
+          depositAmount: 1000000n,
+          selfAssessedPrice: 5000000n,
+        })}
+      >
+        Buy Slot
+      </button>
+    </div>
+  );
+}
+```
+
+## Next Steps
+
+- [Protocol Architecture](/protocol/overview) — Learn how Factory and Slot contracts work together
+- [Tax System](/protocol/tax-system) — Understand Harberger taxation mechanics
+- [Full SDK Reference](/sdk/client) — All `SlotsClient` methods

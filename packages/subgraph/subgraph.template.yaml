@@ -1,4 +1,6 @@
 specVersion: 1.0.0
+features:
+  - ipfsOnEthereumContracts
 indexerHints:
   prune: auto
 schema:

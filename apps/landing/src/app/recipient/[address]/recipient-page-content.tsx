@@ -39,7 +39,7 @@ export function RecipientPageContent({ address }: { address: string }) {
 
   // Live on-chain data for all slots via multicall
   const { data: slots, isLoading: onchainLoading } =
-    useSlotsOnChain(slotAddresses);
+    useSlotsOnChain(slotAddresses, selectedChainId);
 
   const { data: ensName } = useEnsName({
     address: address as Address,

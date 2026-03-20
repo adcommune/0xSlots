@@ -38,6 +38,7 @@ export interface SubgraphMeta {
 // ─── Chain Config ─────────────────────────────────────────────────────────────
 
 export enum SlotsChain {
+  BASE = 8453,
   BASE_SEPOLIA = 84532,
   ARBITRUM = 42161,
 }
@@ -45,6 +46,8 @@ export enum SlotsChain {
 export const SUBGRAPH_URLS: Record<SlotsChain, string> = {
   [SlotsChain.BASE_SEPOLIA]:
     "https://gateway.thegraph.com/api/subgraphs/id/Z361DLoMdPh9WAopH7shJP8WoXYAB9XeKrLUCTYjdZR",
+  [SlotsChain.BASE]:
+    "https://gateway.thegraph.com/api/subgraphs/id/4sZrdv1SFzN4KzE9jiWDRuUyM4CnCrmvQ54Rv1s65qUq",
   [SlotsChain.ARBITRUM]:
     "https://api.studio.thegraph.com/query/958/0-x-slots-arb/version/latest",
 };

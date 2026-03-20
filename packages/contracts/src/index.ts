@@ -1,7 +1,7 @@
 // Main entry point for @0xslots/contracts
 
 import type { Chain } from "viem";
-import { arbitrum, baseSepolia } from "viem/chains";
+import { arbitrum, base, baseSepolia } from "viem/chains";
 import { slotFactoryAddress } from "./addresses";
 
 // Re-export ABIs
@@ -27,6 +27,7 @@ export {
 /** Viem chain objects for known 0xSlots networks — add here when deploying to new chains */
 const CHAIN_MAP: Record<number, Chain> = {
   [baseSepolia.id]: baseSepolia,
+  [base.id]: base,
   [arbitrum.id]: arbitrum,
 };
 

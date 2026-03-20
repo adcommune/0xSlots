@@ -16,6 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useChain } from "@/context/chain";
 import { NavLink, useNavigation } from "@/context/navigation";
 import { useSlotsOnChain } from "@/hooks/use-slot-onchain";
 import {
@@ -125,6 +126,7 @@ function SlotTable({
 
 function ProfileContent({ address }: { address: string }) {
   const { push } = useNavigation();
+  const { chainId } = useChain();
   const { data: recipientSubgraph, isLoading: recipientSubLoading } =
     useSlotsByRecipient(address);
   const { data: occupantSubgraph, isLoading: occupantSubLoading } =
@@ -134,9 +136,9 @@ function ProfileContent({ address }: { address: string }) {
   const occupantAddresses = occupantSubgraph?.map((s) => s.id) ?? [];
 
   const { data: recipientSlots, isLoading: recipientOnchainLoading } =
-    useSlotsOnChain(recipientAddresses);
+    useSlotsOnChain(recipientAddresses, chainId);
   const { data: occupantSlots, isLoading: occupantOnchainLoading } =
-    useSlotsOnChain(occupantAddresses);
+    useSlotsOnChain(occupantAddresses, chainId);
 
   const recipientLoading = recipientSubLoading || recipientOnchainLoading;
   const occupantLoading = occupantSubLoading || occupantOnchainLoading;

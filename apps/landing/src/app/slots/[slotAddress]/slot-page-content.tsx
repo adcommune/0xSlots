@@ -76,7 +76,7 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
   const router = useRouter();
   const { explorerUrl, chainId: selectedChainId } = useChain();
   const { isMiniApp } = useFarcaster();
-  const { data: slot, isLoading } = useSlotOnChain(slotAddress);
+  const { data: slot, isLoading } = useSlotOnChain(slotAddress, selectedChainId);
 
   // Subgraph data — prefetched on the server, reads from cache instantly
   const { data: subgraphSlot } = useSuspenseQuery(

@@ -1,0 +1,90 @@
+# Architecture
+
+## One Slot = One Contract
+
+Every slot in 0xSlots is a standalone smart contract. There is no shared state between slots — each one manages its own occupant, price, deposit, and tax settlement independently.
+
+Slots are deployed through a **Factory** (also called Hub) using **CREATE2**, giving each slot a deterministic address based on its identity parameters.
+
+## Factory / Hub
+
+The Factory contract is responsible for:
+
+- **Deploying slots** via CREATE2 (ERC-1167 clone proxies)
+- **Maintaining a registry** of all deployed slots (event log)
+- **Protocol fee settings** (optional)
+
+The Factory does **not**:
+
+- Own or admin slots
+- Store slot state
+- Gate who can deploy
+
+### Slot Creation
+
+```solidity
+createSlot(
+  address recipient,
+  IERC20 currency,
+  SlotConfig config,
+  SlotInitParams initParams
+)
+```
+
+The `SlotConfig` struct:
+
+```solidity
+struct SlotConfig {
+  bool mutableTax;
+  bool mutableModule;
+  address manager; // address(0) if both flags are false
+}
+```
+
+Initial parameters (`SlotInitParams`):
+
+| Parameter | Description |
+|---|---|
+| `taxPercentage` | Tax rate in basis points (100 = 1% per month) |
+| `module` | Hook contract address (or zero address) |
+| `liquidationBountyBps` | Bounty for liquidators in basis points |
+| `minDepositSeconds` | Minimum deposit required (in seconds of tax coverage) |
+
+## Deterministic Addresses (CREATE2)
+
+The slot address is derived from: `keccak256(abi.encode(recipient, currency, config))`.
+
+Only **identity parameters** affect the address. Two slots with the same recipient, currency, and config but different starting tax rates would have the same address — you can't deploy both.
+
+This enables:
+
+- **Pre-computed addresses** — Know a slot's address before it's deployed
+- **Cross-chain consistency** — Same params on Base and Arbitrum = same address
+- **Idempotent deployment** — Calling `createSlot()` with existing params reverts safely
+- **Composability** — Other contracts can predict and interact with future slot addresses
+
+## Deployment Model
+
+Slots use **ERC-1167 minimal proxy clones** pointing to a shared Slot implementation. This keeps deployment gas low (~45k vs ~500k for full contracts) while maintaining deterministic addresses.
+
+```
+Factory
+  ├─ createSlot(recipient, currency, config, initParams)
+  │     └─ CREATE2 → Slot Proxy (clone of Slot implementation)
+  │           ├─ immutable: recipient, currency, mutableTax, mutableModule, manager
+  │           └─ mutable: occupant, price, deposit, taxPercentage, module
+  ├─ createSlot(...)
+  │     └─ CREATE2 → Slot Proxy
+  └─ ...
+```
+
+## What Changed from v2
+
+| Removed | Why |
+|---|---|
+| Land contracts | Unnecessary grouping. One slot = one contract. |
+| basePrice / initialPrice | Vacant slots have price 0. First buyer claims and self-assesses. |
+| Owner role | Replaced by `recipient` (revenue) + `manager` (updates). No god-mode admin. |
+| activate/deactivate | Deploy or don't. |
+| Beacon proxy | Each slot is standalone. |
+| Batch slot operations | One contract = one slot. |

@@ -1,5 +1,26 @@
 # @0xslots/contracts
 
+## 0.7.0
+
+### Minor Changes
+
+- Add Base mainnet support and export React hooks from SDK
+
+  **@0xslots/contracts:**
+
+  - Add Base mainnet factory address (`0xbf2F890E8F5CCCB3A1D7c5030dBC1843B9E36B0e`)
+  - Add Base chain to CHAINS array
+
+  **@0xslots/sdk:**
+
+  - Add `SlotsChain.BASE` (8453) with subgraph URL
+  - New `@0xslots/sdk/react` entrypoint with wagmi-wired hooks:
+    - `useSlotAction(callbacks?)` — unified write executor with pending/confirming/success state tracking
+    - `useSlotOnChain(address, chainId)` — real-time RPC slot reads with auto block invalidation
+    - `useSlotsOnChain(addresses[], chainId)` — batch multicall variant
+    - `useSlotsClient(chainId?)` — memoized SlotsClient from wagmi providers
+  - Export `SlotOnChain` and `SlotActionCallbacks` types
+
 ## 0.6.1
 
 ### Patch Changes

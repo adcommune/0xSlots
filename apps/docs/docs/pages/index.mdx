@@ -1,0 +1,31 @@
+# 0xSlots
+
+**Collectively Owned Slots Protocol**
+
+0xSlots is a protocol for creating **Harberger-taxed slots** on Ethereum. Each slot is a standalone smart contract where the current occupant self-assesses a price, pays continuous tax to the slot's recipient, and can be force-bought by anyone willing to pay that price.
+
+## What is Partial Common Ownership?
+
+Partial Common Ownership (also known as Harberger taxation) is a property rights mechanism where:
+
+1. **Self-assessed pricing** — The occupant sets their own price for the slot
+2. **Continuous taxation** — The occupant pays a percentage-based tax on their self-assessed price, streamed to the slot's recipient
+3. **Force-buy at stated price** — Anyone can buy the slot at the current occupant's self-assessed price
+
+This creates an efficient balance: set the price too high and you pay excessive tax, set it too low and someone buys it out from under you.
+
+## Why 0xSlots?
+
+- **One slot = one contract** — Each slot is a standalone, minimal contract deployed via a factory using CREATE2
+- **Immutable core** — Recipient, currency, and config are set at deployment and never change
+- **Modular extensions** — Opt-in modules (like MetadataModule) add functionality without bloating the core
+- **Composable** — Slots work with any ERC-20 currency, any recipient (EOA, multisig, Splits, DAO), and any module
+- **Chain support** — Deployed on Base and Base Sepolia
+
+## Quick Links
+
+- [Getting Started](/getting-started) — Install the SDK and interact with your first slot
+- [Architecture](/protocol/overview) — Understand the Factory → Slot model
+- [SDK Reference](/sdk/client) — Full `SlotsClient` API
+- [React Hooks](/sdk/react) — wagmi-wired hooks for React apps
+- [Contract Addresses](/contracts/addresses) — Deployed addresses on all networks

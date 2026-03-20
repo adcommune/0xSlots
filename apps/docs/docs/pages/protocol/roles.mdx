@@ -1,0 +1,92 @@
+# Roles
+
+0xSlots has a clear separation of concerns between three roles. No single address has "god-mode" admin powers.
+
+## Recipient
+
+The address that receives tax revenue from the slot.
+
+- **Set at deployment** — immutable, never changes
+- **No admin powers** — cannot modify slot settings or force actions
+- **Can be anything** — EOA, multisig, Splits contract, DAO treasury, protocol address
+- **Receives**: accumulated tax via `collect()`, purchase price when a vacant slot is bought
+
+The recipient is a pure revenue address. Think of it as the "beneficiary" of the slot's economic activity.
+
+## Manager
+
+The address that can propose configuration changes.
+
+- **Set at deployment** — immutable
+- **Only exists** if `mutableTax` or `mutableModule` is `true`
+- **Must be `address(0)`** if both flags are `false`
+- **Can**: propose tax updates, propose module updates, cancel pending updates, set liquidation bounty
+- **Cannot**: collect revenue, force-buy, release, or interfere with the occupant
+
+### Manager Actions
+
+```ts
+// Propose a new tax rate (applies on next ownership transition)
+await client.proposeTaxUpdate(slotAddress, 500n); // 5% monthly
+
+// Propose a new module
+await client.proposeModuleUpdate(slotAddress, newModuleAddress);
+
+// Cancel pending updates
+await client.cancelPendingUpdates(slotAddress);
+
+// Set liquidation bounty
+await client.setLiquidationBounty(slotAddress, 200n); // 2%
+```
+
+:::tip
+Use a smart contract (multisig, DAO, governance) as the manager if you need governance flexibility. Since the manager address is immutable, plan ahead.
+:::
+
+## Occupant
+
+The current holder of the slot.
+
+- **Dynamic** — changes on every `buy()` / `release()` / `liquidate()`
+- **Self-assesses price** — the price at which anyone can force-buy the slot
+- **Pays tax** — continuous tax based on self-assessed price, deducted from deposit
+- **Can**: `selfAssess`, `topUp`, `withdraw`, `release`, interact with modules (e.g., `updateMetadata`)
+- **Cannot**: modify slot configuration
+
+### Occupant Actions
+
+```ts
+// Set a new price
+await client.selfAssess(slotAddress, parseEther("20"));
+
+// Add to deposit
+await client.topUp(slotAddress, parseEther("1"));
+
+// Withdraw from deposit
+await client.withdraw(slotAddress, parseEther("0.5"));
+
+// Leave the slot
+await client.release(slotAddress);
+
+// Update metadata (if MetadataModule is active)
+await client.modules.metadata.updateMetadata(
+  moduleAddress,
+  slotAddress,
+  "ipfs://..."
+);
+```
+
+## Separation of Concerns
+
+| Role | Revenue | Config | Slot State |
+|---|---|---|---|
+| Recipient | Receives tax + sale proceeds | No control | No control |
+| Manager | No revenue | Proposes tax/module changes | No control |
+| Occupant | Pays tax | No control | Sets price, manages deposit |
+
+The recipient and manager **can** be the same address, but they don't have to be. Common patterns:
+
+- **DAO treasury** as recipient, **governance contract** as manager
+- **Splits contract** as recipient (auto-distribute revenue), **multisig** as manager
+- **EOA** as both recipient and manager (simple case)
+- **No manager** (`address(0)`) — fully immutable slot, no config changes possible

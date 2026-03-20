@@ -1,10 +1,11 @@
 import { Address } from "viem";
-import { baseSepolia } from "viem/chains";
+import { base, baseSepolia } from "viem/chains";
 
 /**
  * SlotsHub contract addresses by chain ID
  */
 export const slotFactoryAddress = {
+  [base.id]: "0xbf2F890E8F5CCCB3A1D7c5030dBC1843B9E36B0e",
   [baseSepolia.id]: "0xc44De86e2A5f0C47f1Ba87C36DaBf54275814DEb",
 } as const;
 

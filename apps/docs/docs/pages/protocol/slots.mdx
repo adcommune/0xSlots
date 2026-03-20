@@ -1,0 +1,84 @@
+# Slot Lifecycle
+
+Each slot contract has **immutable parameters** set at creation and **mutable state** that changes during its lifecycle.
+
+## Immutable Parameters
+
+Set at deployment, never change:
+
+| Parameter | Type | Description |
+|---|---|---|
+| `recipient` | `address` | Receives tax revenue. Can be EOA, Splits, DAO, anything. |
+| `currency` | `IERC20` | Token used for pricing, deposits, and tax. |
+| `mutableTax` | `bool` | Whether `taxPercentage` can be changed by the manager. |
+| `mutableModule` | `bool` | Whether `module` can be changed by the manager. |
+| `manager` | `address` | Can propose tax/module updates. `address(0)` if both flags are false. |
+
+## Mutable State
+
+Changes during the slot's lifecycle:
+
+| Field | Description |
+|---|---|
+| `occupant` | Current holder. Zero address when vacant. |
+| `price` | Self-assessed price set by the occupant. 0 when vacant. |
+| `deposit` | Escrowed ERC-20 balance for tax payments. |
+| `taxPercentage` | Current tax rate (basis points, 100 = 1%/month). Mutable only if `mutableTax` is true. |
+| `module` | Current hook contract. Mutable only if `mutableModule` is true. |
+| `collectedTax` | Accumulated uncollected tax (claimable by anyone via `collect()`). |
+| `lastSettled` | Timestamp of last tax settlement. |
+
+## Core Functions
+
+### `buy(depositAmount, selfAssessedPrice)`
+
+1. Settle outstanding tax on current occupant
+2. Refund previous occupant (remaining deposit + purchase price)
+3. Apply any pending updates (tax, module)
+4. Transfer price from buyer to previous occupant (or `recipient` if vacant)
+5. Store buyer's deposit
+6. Set buyer's self-assessed price
+7. Notify module
+
+If vacant (price = 0): buyer provides deposit and sets their price. No payment to anyone.
+
+### `release()`
+
+Occupant voluntarily exits:
+
+1. Settle outstanding tax
+2. Refund occupant's remaining deposit
+3. Slot becomes vacant (price = 0)
+4. Apply pending updates
+5. Notify module
+
+### `selfAssess(newPrice)`
+
+Occupant updates their self-assessed price. No pending updates applied (same occupant, same terms).
+
+### `topUp(amount)` / `withdraw(amount)`
+
+Occupant manages their tax deposit escrow. Cannot withdraw below `minDepositSeconds` worth of tax coverage.
+
+### `liquidate()`
+
+Anyone can call when the occupant is insolvent (deposit depleted by accrued tax):
+
+1. Verify occupant is insolvent
+2. Return slot to recipient (vacant)
+3. Apply pending updates
+4. Pay liquidation bounty to caller
+5. Notify module
+
+### `collect()`
+
+Permissionless — anyone can trigger. Sends accumulated tax to the `recipient`. Protocol fee (if any) goes to the factory fee recipient.
+
+## Vacant Slot Behavior
+
+When a slot is vacant (`occupant == address(0)`):
+
+- **Price is 0** — first buyer calls `buy()` with a deposit and self-assesses
+- **No tax accrues** — nothing to settle
+- **Pending updates apply immediately** — no occupant to protect
+- **Always available** — no admin action needed to "list" a slot

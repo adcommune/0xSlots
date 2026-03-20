@@ -1,0 +1,72 @@
+# Tax System
+
+0xSlots uses **Harberger taxation** (Partial Common Ownership) as its core economic mechanism.
+
+## How It Works
+
+1. **Self-assessed price** — The occupant declares the value of their slot
+2. **Continuous tax** — A percentage of that price accrues continuously to the slot's `recipient`
+3. **Deposit escrow** — The occupant pre-funds a deposit that gets drawn down as tax accrues
+4. **Force-buy** — Anyone can purchase the slot at the occupant's stated price
+
+### Tax Rate
+
+The `taxPercentage` is expressed in **basis points per month**:
+
+| Basis Points | Monthly Rate | Annual Rate |
+|---|---|---|
+| 100 | 1% | ~12% |
+| 500 | 5% | ~60% |
+| 1000 | 10% | ~120% |
+
+### Tax Calculation
+
+Tax accrues linearly based on the self-assessed price:
+
+```
+taxOwed = price × taxPercentage × elapsedSeconds / (30 days × 10000)
+```
+
+Tax is settled (deducted from deposit) on every state-changing operation: `buy`, `release`, `selfAssess`, `topUp`, `withdraw`, `liquidate`.
+
+## Deposit Escrow
+
+The occupant maintains a deposit that covers future tax:
+
+- **Top up** — `topUp(amount)` adds to the deposit
+- **Withdraw** — `withdraw(amount)` removes from deposit (subject to `minDepositSeconds`)
+- **Auto-deduction** — Tax is deducted from deposit during settlement
+
+The `minDepositSeconds` parameter (set at deployment) ensures occupants maintain enough deposit to cover a minimum period of tax.
+
+## Liquidation
+
+When the deposit is fully depleted by accrued tax, the slot becomes **insolvent**. Anyone can call `liquidate()`:
+
+1. Remaining deposit goes to cover owed tax
+2. Slot returns to vacant state (occupant = zero address, price = 0)
+3. Liquidator receives a bounty (`liquidationBountyBps` of the owed tax)
+4. Pending updates (tax, module) are applied
+
+:::tip
+Liquidation is a permissionless economic incentive. Bots and keepers can monitor slots and earn bounties by liquidating insolvent occupants.
+:::
+
+## Tax Collection
+
+Accumulated tax sits in `collectedTax` until someone calls `collect()`:
+
+- **Permissionless** — anyone can trigger collection
+- Tax is sent to the slot's `recipient` address
+- Protocol fee (if enabled) is sent to the factory fee recipient
+
+## Mutable Tax
+
+If `mutableTax` is `true` at deployment, the `manager` can propose tax rate changes:
+
+1. Manager calls `proposeTaxUpdate(newRate)`
+2. Update is stored as pending — does **not** take effect immediately
+3. Update applies on the next **ownership transition** (`buy`, `release`, `liquidate`)
+4. Manager can cancel with `cancelPendingUpdates()` before it applies
+
+This ensures the current occupant's terms are **never changed under them**. The new rate is visible before any transition, so prospective buyers can see the pending change.
