@@ -842,6 +842,162 @@ export class MetadataSlot extends Entity {
   }
 }
 
+export class MetadataUpdatedEvent extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id != null, "Cannot save MetadataUpdatedEvent entity without an ID");
+    if (id) {
+      assert(
+        id.kind == ValueKind.STRING,
+        `Entities of type MetadataUpdatedEvent must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`,
+      );
+      store.set("MetadataUpdatedEvent", id.toString(), this);
+    }
+  }
+
+  static loadInBlock(id: string): MetadataUpdatedEvent | null {
+    return changetype<MetadataUpdatedEvent | null>(
+      store.get_in_block("MetadataUpdatedEvent", id),
+    );
+  }
+
+  static load(id: string): MetadataUpdatedEvent | null {
+    return changetype<MetadataUpdatedEvent | null>(
+      store.get("MetadataUpdatedEvent", id),
+    );
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get slot(): string {
+    let value = this.get("slot");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set slot(value: string) {
+    this.set("slot", Value.fromString(value));
+  }
+
+  get author(): string {
+    let value = this.get("author");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set author(value: string) {
+    this.set("author", Value.fromString(value));
+  }
+
+  get uri(): string {
+    let value = this.get("uri");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set uri(value: string) {
+    this.set("uri", Value.fromString(value));
+  }
+
+  get rawJson(): string | null {
+    let value = this.get("rawJson");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set rawJson(value: string | null) {
+    if (!value) {
+      this.unset("rawJson");
+    } else {
+      this.set("rawJson", Value.fromString(<string>value));
+    }
+  }
+
+  get adType(): string | null {
+    let value = this.get("adType");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set adType(value: string | null) {
+    if (!value) {
+      this.unset("adType");
+    } else {
+      this.set("adType", Value.fromString(<string>value));
+    }
+  }
+
+  get timestamp(): BigInt {
+    let value = this.get("timestamp");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set timestamp(value: BigInt) {
+    this.set("timestamp", Value.fromBigInt(value));
+  }
+
+  get blockNumber(): BigInt {
+    let value = this.get("blockNumber");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set blockNumber(value: BigInt) {
+    this.set("blockNumber", Value.fromBigInt(value));
+  }
+
+  get tx(): Bytes {
+    let value = this.get("tx");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set tx(value: Bytes) {
+    this.set("tx", Value.fromBytes(value));
+  }
+}
+
 export class SlotDeployedEvent extends Entity {
   constructor(id: string) {
     super();
@@ -2482,162 +2638,6 @@ export class PendingUpdateCancelledEvent extends Entity {
 
   set slot(value: string) {
     this.set("slot", Value.fromString(value));
-  }
-
-  get timestamp(): BigInt {
-    let value = this.get("timestamp");
-    if (!value || value.kind == ValueKind.NULL) {
-      throw new Error("Cannot return null for a required field.");
-    } else {
-      return value.toBigInt();
-    }
-  }
-
-  set timestamp(value: BigInt) {
-    this.set("timestamp", Value.fromBigInt(value));
-  }
-
-  get blockNumber(): BigInt {
-    let value = this.get("blockNumber");
-    if (!value || value.kind == ValueKind.NULL) {
-      throw new Error("Cannot return null for a required field.");
-    } else {
-      return value.toBigInt();
-    }
-  }
-
-  set blockNumber(value: BigInt) {
-    this.set("blockNumber", Value.fromBigInt(value));
-  }
-
-  get tx(): Bytes {
-    let value = this.get("tx");
-    if (!value || value.kind == ValueKind.NULL) {
-      throw new Error("Cannot return null for a required field.");
-    } else {
-      return value.toBytes();
-    }
-  }
-
-  set tx(value: Bytes) {
-    this.set("tx", Value.fromBytes(value));
-  }
-}
-
-export class MetadataUpdatedEvent extends Entity {
-  constructor(id: string) {
-    super();
-    this.set("id", Value.fromString(id));
-  }
-
-  save(): void {
-    let id = this.get("id");
-    assert(id != null, "Cannot save MetadataUpdatedEvent entity without an ID");
-    if (id) {
-      assert(
-        id.kind == ValueKind.STRING,
-        `Entities of type MetadataUpdatedEvent must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`,
-      );
-      store.set("MetadataUpdatedEvent", id.toString(), this);
-    }
-  }
-
-  static loadInBlock(id: string): MetadataUpdatedEvent | null {
-    return changetype<MetadataUpdatedEvent | null>(
-      store.get_in_block("MetadataUpdatedEvent", id),
-    );
-  }
-
-  static load(id: string): MetadataUpdatedEvent | null {
-    return changetype<MetadataUpdatedEvent | null>(
-      store.get("MetadataUpdatedEvent", id),
-    );
-  }
-
-  get id(): string {
-    let value = this.get("id");
-    if (!value || value.kind == ValueKind.NULL) {
-      throw new Error("Cannot return null for a required field.");
-    } else {
-      return value.toString();
-    }
-  }
-
-  set id(value: string) {
-    this.set("id", Value.fromString(value));
-  }
-
-  get slot(): string {
-    let value = this.get("slot");
-    if (!value || value.kind == ValueKind.NULL) {
-      throw new Error("Cannot return null for a required field.");
-    } else {
-      return value.toString();
-    }
-  }
-
-  set slot(value: string) {
-    this.set("slot", Value.fromString(value));
-  }
-
-  get author(): string {
-    let value = this.get("author");
-    if (!value || value.kind == ValueKind.NULL) {
-      throw new Error("Cannot return null for a required field.");
-    } else {
-      return value.toString();
-    }
-  }
-
-  set author(value: string) {
-    this.set("author", Value.fromString(value));
-  }
-
-  get uri(): string {
-    let value = this.get("uri");
-    if (!value || value.kind == ValueKind.NULL) {
-      throw new Error("Cannot return null for a required field.");
-    } else {
-      return value.toString();
-    }
-  }
-
-  set uri(value: string) {
-    this.set("uri", Value.fromString(value));
-  }
-
-  get rawJson(): string | null {
-    let value = this.get("rawJson");
-    if (!value || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toString();
-    }
-  }
-
-  set rawJson(value: string | null) {
-    if (!value) {
-      this.unset("rawJson");
-    } else {
-      this.set("rawJson", Value.fromString(<string>value));
-    }
-  }
-
-  get adType(): string | null {
-    let value = this.get("adType");
-    if (!value || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toString();
-    }
-  }
-
-  set adType(value: string | null) {
-    if (!value) {
-      this.unset("adType");
-    } else {
-      this.set("adType", Value.fromString(<string>value));
-    }
   }
 
   get timestamp(): BigInt {

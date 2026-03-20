@@ -4,7 +4,7 @@ import {
   ModuleVerified,
   AdminTransferred,
 } from "../generated/SlotFactory/SlotFactory";
-import { Slot as SlotTemplate } from "../generated/templates";
+import { Slot as SlotTemplate, MetadataModule as MetadataModuleTemplate } from "../generated/templates";
 import { Factory, Slot, Module, SlotDeployedEvent } from "../generated/schema";
 import { getOrCreateAccount, getOrCreateCurrency, getOrCreateModule } from "./helpers";
 
@@ -92,6 +92,7 @@ export function handleSlotDeployed(event: SlotDeployed): void {
 export function handleModuleVerified(event: ModuleVerified): void {
   let id = event.params.module.toHexString();
   let module = Module.load(id);
+  let wasVerified = module ? module.verified : false;
   if (!module) {
     module = new Module(id);
     module.factory = event.address.toHexString();
@@ -100,6 +101,11 @@ export function handleModuleVerified(event: ModuleVerified): void {
   module.name = event.params.name;
   module.version = event.params.version;
   module.save();
+
+  // Start indexing MetadataUpdated events from newly verified MetadataModules
+  if (event.params.verified && !wasVerified && event.params.name == "MetadataModule") {
+    MetadataModuleTemplate.create(event.params.module);
+  }
 }
 
 export function handleAdminTransferred(event: AdminTransferred): void {

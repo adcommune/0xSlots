@@ -6,6 +6,20 @@ import {
   DataSourceContext,
 } from "@graphprotocol/graph-ts";
 
+export class MetadataModule extends DataSourceTemplate {
+  static create(address: Address): void {
+    DataSourceTemplate.create("MetadataModule", [address.toHex()]);
+  }
+
+  static createWithContext(address: Address, context: DataSourceContext): void {
+    DataSourceTemplate.createWithContext(
+      "MetadataModule",
+      [address.toHex()],
+      context,
+    );
+  }
+}
+
 export class ERC721Slots extends DataSourceTemplate {
   static create(address: Address): void {
     DataSourceTemplate.create("ERC721Slots", [address.toHex()]);

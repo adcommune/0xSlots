@@ -83,3 +83,22 @@ templates:
         - event: LiquidationBountyUpdated(uint256)
           handler: handleLiquidationBountyUpdated
       file: ./src/slot.ts
+  - kind: ethereum
+    name: MetadataModule
+    network: {{network}}
+    source:
+      abi: MetadataModule
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - MetadataSlot
+        - MetadataUpdatedEvent
+      abis:
+        - name: MetadataModule
+          file: ./abis/MetadataModule.json
+      eventHandlers:
+        - event: MetadataUpdated(indexed address,string)
+          handler: handleMetadataUpdated
+      file: ./src/metadata.ts
