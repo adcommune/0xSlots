@@ -1,6 +1,5 @@
 "use client";
 
-import type { AccountType } from "@0xslots/sdk";
 import { type AdType, adTypes, getAd } from "@adland/data";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
@@ -38,7 +37,6 @@ import {
 import { useChain } from "@/context/chain";
 import { useSlotAction } from "@/hooks/use-slot-action";
 import {
-  useHistoryAdTypes,
   useIpfsContent,
   useMetadataHistory,
   useMetadataUri,
@@ -82,9 +80,6 @@ export function MetadataForm({
   const { data: currentAdData, isLoading: loadingCurrentAd } =
     useIpfsContent(currentUri);
   const { data: updateHistory } = useMetadataHistory(slotAddress);
-  const { data: historyAdTypes } = useHistoryAdTypes(updateHistory);
-
-  console.log(updateHistory);
 
   const invalidateMetadata = () => {
     queryClient.invalidateQueries({
@@ -288,12 +283,12 @@ export function MetadataForm({
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 text-xs shrink-0">
                       <AccountTypeIcon
-                        type={event.author.type as AccountType}
+                        type={event.author.type}
                         className="size-3"
                       />
                       <EnsAddress address={event.author.id} />
                     </div>
-                    <HistoryTypeBadge adType={historyAdTypes?.[event.uri]} />
+                    <HistoryTypeBadge adType={event.adType} />
                     <span className="text-muted-foreground text-xs whitespace-nowrap ml-auto">
                       {formatDistanceToNow(
                         new Date(Number(event.timestamp) * 1000),
@@ -303,7 +298,10 @@ export function MetadataForm({
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
-                  <HistoryItemContent uri={event.uri} />
+                  <HistoryItemContent
+                    uri={event.uri}
+                    rawJson={event.rawJson}
+                  />
                 </AccordionContent>
               </AccordionItem>
             ))}
@@ -314,7 +312,7 @@ export function MetadataForm({
   );
 }
 
-function HistoryTypeBadge({ adType }: { adType?: string }) {
+function HistoryTypeBadge({ adType }: { adType?: string | null }) {
   if (!adType) {
     return (
       <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium bg-violet-500/10 text-violet-600">
@@ -337,10 +335,21 @@ function HistoryTypeBadge({ adType }: { adType?: string }) {
   );
 }
 
-function HistoryItemContent({ uri }: { uri: string }) {
-  const { data: adContent, isLoading } = useIpfsContent(uri);
+function HistoryItemContent({
+  uri,
+  rawJson,
+}: {
+  uri: string;
+  rawJson?: string | null;
+}) {
+  // Use rawJson from subgraph if available, otherwise fall back to IPFS fetch
+  const parsed = rawJson ? (JSON.parse(rawJson) as AdContent) : null;
+  const { data: fetchedContent, isLoading } = useIpfsContent(
+    parsed ? undefined : uri,
+  );
+  const adContent = parsed ?? fetchedContent;
 
-  if (isLoading) {
+  if (!parsed && isLoading) {
     return (
       <div className="flex items-center gap-1.5 text-xs text-muted-foreground py-2">
         <Loader2 className="size-3 animate-spin" />

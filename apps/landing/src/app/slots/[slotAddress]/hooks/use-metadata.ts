@@ -58,13 +58,6 @@ export function useIpfsContent(uri: string | null | undefined) {
   });
 }
 
-type HistoryEntry = {
-  uri: string;
-  timestamp: string;
-  tx: string;
-  author: { id: string; type: string };
-};
-
 /**
  * Fetch metadata update history from the subgraph.
  */
@@ -74,43 +67,15 @@ export function useMetadataHistory(slotAddress: string) {
 
   return useQuery({
     queryKey: ["metadata-history", chainId, slotAddress],
-    queryFn: async (): Promise<HistoryEntry[]> => {
+    queryFn: async () => {
       const { metadataUpdatedEvents } =
         await subgraphClient.modules.metadata.getUpdateHistory({
           slot: slotAddress.toLowerCase(),
           first: 10,
         });
-      return metadataUpdatedEvents.map((e) => ({
-        uri: e.uri,
-        timestamp: e.timestamp,
-        tx: e.tx,
-        author: { id: e.author.id, type: e.author.type },
-      }));
+      return metadataUpdatedEvents;
     },
     staleTime: 10_000,
     enabled: !!slotAddress,
-  });
-}
-
-/**
- * Resolve ad types for a list of history entries.
- * Each URI is fetched via the cached IPFS route.
- */
-export function useHistoryAdTypes(history: HistoryEntry[] | undefined) {
-  const uris = history?.map((e) => e.uri) ?? [];
-
-  return useQuery({
-    queryKey: ["metadata-history-types", ...uris],
-    queryFn: async (): Promise<Record<string, string | undefined>> => {
-      const results = await Promise.all(
-        uris.map(async (uri) => {
-          const content = await fetchIpfsContent(uri);
-          return [uri, content?.type] as const;
-        }),
-      );
-      return Object.fromEntries(results);
-    },
-    staleTime: Infinity, // IPFS content is immutable
-    enabled: uris.length > 0,
   });
 }
