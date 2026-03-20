@@ -1,6 +1,8 @@
 fragment MetadataSlotFields on MetadataSlot {
   id
   uri
+  rawJson
+  adType
   updatedBy
   updateCount
   createdAt
@@ -50,6 +52,8 @@ query GetMetadataUpdatedEvents($slot: String, $first: Int = 50, $orderBy: Metada
       type
     }
     uri
+    rawJson
+    adType
     timestamp
     blockNumber
     tx
