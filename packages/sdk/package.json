@@ -29,7 +29,7 @@
     "clean": "rm -rf dist generated",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
-    "prepublishOnly": "pnpm run clean && pnpm run build"
+    "prepublishOnly": "pnpm run build"
   },
   "dependencies": {
     "@0xslots/contracts": "workspace:*",
