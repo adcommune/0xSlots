@@ -4,6 +4,7 @@ import type {
   BuyParams,
   CreateSlotParams,
   CreateSlotsParams,
+  SlotsChain,
 } from "../client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Address, Hash } from "viem";
@@ -29,12 +30,13 @@ function extractErrorMessage(error: unknown): string {
 }
 
 export interface SlotActionCallbacks {
+  chainId?: SlotsChain;
   onSuccess?: (label: string, hash: Hash) => void;
   onError?: (label: string, error: string) => void;
 }
 
 export function useSlotAction(opts?: SlotActionCallbacks) {
-  const client = useSlotsClient();
+  const client = useSlotsClient(opts?.chainId);
 
   // --- state ---
   const [hash, setHash] = useState<Hash | undefined>();
