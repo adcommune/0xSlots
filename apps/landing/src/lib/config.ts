@@ -6,9 +6,9 @@ export const CHAIN_CONFIG = {
     name: "Base Sepolia",
     explorer: "https://sepolia.basescan.org",
   },
-  [SlotsChain.ARBITRUM]: {
-    name: "Arbitrum",
-    explorer: "https://arbiscan.io",
+  [SlotsChain.BASE]: {
+    name: "Base",
+    explorer: "https://basescan.org",
   },
 } as const;
 
@@ -23,5 +23,5 @@ export function getExplorerUrl(chainId: number): string {
 
 export function parseChain(chain?: string): SlotsChain {
   if (chain === "base-sepolia") return SlotsChain.BASE_SEPOLIA;
-  return SlotsChain.ARBITRUM;
+  return SlotsChain.BASE_SEPOLIA;
 }
