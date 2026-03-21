@@ -15,7 +15,7 @@ import { type SlotsChain, SlotsClient } from "../client";
  * @example
  * ```tsx
  * function MyComponent() {
- *   const client = useSlotsClient(SlotsChain.ARBITRUM);
+ *   const client = useSlotsClient(SlotsChain.BASE);
  *   // use client.getSlots(), client.buy(), etc.
  * }
  * ```

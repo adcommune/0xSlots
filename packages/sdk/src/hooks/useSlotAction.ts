@@ -11,10 +11,21 @@ import { useWaitForTransactionReceipt } from "wagmi";
 import { useSlotsClient } from "./useSlotsClient";
 
 function extractErrorMessage(error: unknown): string {
-  const message = error instanceof Error ? error.message : "";
-  return message.includes("User rejected") || message.includes("User denied")
-    ? "Transaction rejected"
-    : message.split("\n")[0] || "Transaction failed";
+  const message = error instanceof Error ? error.message : String(error);
+  if (message.includes("User rejected") || message.includes("User denied"))
+    return "Transaction rejected";
+
+  // viem ContractFunctionExecutionError: extract the shortMessage or reason
+  const err = error as Record<string, unknown> | undefined;
+  if (err && typeof err === "object") {
+    if (typeof err.shortMessage === "string") return err.shortMessage;
+    const cause = err.cause as Record<string, unknown> | undefined;
+    if (cause && typeof cause.shortMessage === "string")
+      return cause.shortMessage;
+    if (cause && typeof cause.reason === "string") return cause.reason;
+  }
+
+  return message.split("\n")[0] || "Transaction failed";
 }
 
 export interface SlotActionCallbacks {
@@ -78,6 +89,7 @@ export function useSlotAction(opts?: SlotActionCallbacks) {
         const txHash = await fn();
         setHash(txHash);
       } catch (error) {
+        console.error(`[useSlotAction] ${label} failed:`, error);
         setActiveAction(null);
         labelRef.current = "";
         opts?.onError?.(label, extractErrorMessage(error));
