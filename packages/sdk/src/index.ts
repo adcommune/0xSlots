@@ -16,6 +16,14 @@ export {
 // Modules
 export { MetadataModuleClient } from "./modules/metadata";
 
+// Tokens
+export {
+  type TokenInfo,
+  CHAIN_TOKENS,
+  getChainTokens,
+  getDefaultToken,
+} from "./tokens";
+
 // Errors
 export { SlotsError } from "./errors";
 

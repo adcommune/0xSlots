@@ -35,7 +35,8 @@ export const createSlotSchema = z
     }),
     splitRecipients: z.array(splitRecipientSchema),
     distributorFeePercent: z.number().min(0).max(10),
-    currencyMode: z.enum(["usdc", "custom"]),
+    currencyMode: z.enum(["preset", "custom"]),
+    presetCurrency: z.string(),
     customCurrency: z.string().refine(isValidAddressOrEns, {
       message: "Enter a valid address (0x…) or ENS name",
     }),
@@ -83,10 +84,11 @@ export const createSlotSchema = z
   )
   .refine(
     (d) => {
+      if (d.currencyMode === "preset") return d.presetCurrency.length > 0;
       if (d.currencyMode === "custom") return d.customCurrency.length > 0;
       return true;
     },
-    { message: "Currency address is required", path: ["customCurrency"] },
+    { message: "Currency is required", path: ["presetCurrency"] },
   )
   .refine(
     (d) => {
@@ -150,7 +152,8 @@ export const defaultValues: CreateSlotFormValues = {
   recipient: "",
   splitRecipients: [{ address: "", percentAllocation: 0 }],
   distributorFeePercent: 0,
-  currencyMode: "usdc",
+  currencyMode: "preset",
+  presetCurrency: "",
   customCurrency: "",
   moduleMode: "none",
   taxPercentage: "1",

@@ -1,6 +1,6 @@
 import { HandCoins } from "lucide-react";
 import { useFormContext } from "react-hook-form";
-import { Button } from "@/components/ui/button";
+import { getChainTokens } from "@0xslots/sdk";
 import {
   FormField,
   FormItem,
@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { useChain } from "@/context/chain";
 import { AddressInput } from "../address-input";
 import { type CreateSlotFormValues, timeDenominations } from "../schema";
 
@@ -29,8 +30,11 @@ const VERIFIED_MODULES = [
 
 export function StepParameters() {
   const form = useFormContext<CreateSlotFormValues>();
+  const { chainId } = useChain();
   const currencyMode = form.watch("currencyMode");
+  const presetCurrency = form.watch("presetCurrency");
   const moduleMode = form.watch("moduleMode");
+  const chainTokens = getChainTokens(chainId);
 
   return (
     <>
@@ -38,29 +42,44 @@ export function StepParameters() {
       <FormField
         control={form.control}
         name="currencyMode"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Currency</FormLabel>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                size="sm"
-                variant={field.value === "usdc" ? "default" : "outline"}
-                onClick={() => field.onChange("usdc")}
+        render={({ field }) => {
+          const selectValue =
+            field.value === "custom"
+              ? "custom"
+              : presetCurrency ?? chainTokens[0]?.address ?? "";
+
+          return (
+            <FormItem>
+              <FormLabel>Currency</FormLabel>
+              <Select
+                value={selectValue}
+                onValueChange={(v) => {
+                  if (v === "custom") {
+                    field.onChange("custom");
+                  } else {
+                    field.onChange("preset");
+                    form.setValue("presetCurrency", v as `0x${string}`);
+                  }
+                }}
               >
-                USDC
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant={field.value === "custom" ? "default" : "outline"}
-                onClick={() => field.onChange("custom")}
-              >
-                Custom
-              </Button>
-            </div>
-          </FormItem>
-        )}
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a currency" />
+                </SelectTrigger>
+                <SelectContent>
+                  {chainTokens.map((token) => (
+                    <SelectItem key={token.address} value={token.address}>
+                      <span>{token.name} ({token.symbol})</span>
+                      <span className="block text-xs text-muted-foreground">
+                        {token.address.slice(0, 6)}...{token.address.slice(-3)}
+                      </span>
+                    </SelectItem>
+                  ))}
+                  <SelectItem value="custom">Custom address</SelectItem>
+                </SelectContent>
+              </Select>
+            </FormItem>
+          );
+        }}
       />
 
       {currencyMode === "custom" && (

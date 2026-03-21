@@ -1,16 +1,20 @@
+import {
+  getSlotsHubAddress,
+  slotAbi,
+  slotFactoryAbi,
+} from "@0xslots/contracts";
 import { GraphQLClient, gql } from "graphql-request";
-import { getSdk } from "./generated/graphql";
 import {
   type Address,
-  type Hash,
-  type WalletClient,
-  type PublicClient,
   type Chain,
   encodeFunctionData,
   erc20Abi,
+  type Hash,
+  type PublicClient,
+  type WalletClient,
 } from "viem";
-import { slotAbi, slotFactoryAbi, getSlotsHubAddress } from "@0xslots/contracts";
 import { SlotsError } from "./errors";
+import { getSdk } from "./generated/graphql";
 import { MetadataModuleClient } from "./modules/metadata";
 
 // ─── GraphQL Meta ─────────────────────────────────────────────────────────────
@@ -40,7 +44,6 @@ export interface SubgraphMeta {
 export enum SlotsChain {
   BASE = 8453,
   BASE_SEPOLIA = 84532,
-  ARBITRUM = 42161,
 }
 
 export const SUBGRAPH_URLS: Record<SlotsChain, string> = {
@@ -48,8 +51,6 @@ export const SUBGRAPH_URLS: Record<SlotsChain, string> = {
     "https://gateway.thegraph.com/api/subgraphs/id/Z361DLoMdPh9WAopH7shJP8WoXYAB9XeKrLUCTYjdZR",
   [SlotsChain.BASE]:
     "https://gateway.thegraph.com/api/subgraphs/id/4sZrdv1SFzN4KzE9jiWDRuUyM4CnCrmvQ54Rv1s65qUq",
-  [SlotsChain.ARBITRUM]:
-    "https://api.studio.thegraph.com/query/958/0-x-slots-arb/version/latest",
 };
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -105,7 +106,7 @@ export interface SlotsClientConfig {
  * @example
  * ```ts
  * const client = new SlotsClient({
- *   chainId: SlotsChain.ARBITRUM,
+ *   chainId: SlotsChain.BASE,
  *   publicClient,
  *   walletClient,
  * });
@@ -224,13 +225,17 @@ export class SlotsClient {
   getSlotsByRecipient(
     ...args: Parameters<ReturnType<typeof getSdk>["GetSlotsByRecipient"]>
   ) {
-    return this.query("getSlotsByRecipient", () => this.sdk.GetSlotsByRecipient(...args));
+    return this.query("getSlotsByRecipient", () =>
+      this.sdk.GetSlotsByRecipient(...args),
+    );
   }
   /** Fetch all slots currently occupied by a given address. */
   getSlotsByOccupant(
     ...args: Parameters<ReturnType<typeof getSdk>["GetSlotsByOccupant"]>
   ) {
-    return this.query("getSlotsByOccupant", () => this.sdk.GetSlotsByOccupant(...args));
+    return this.query("getSlotsByOccupant", () =>
+      this.sdk.GetSlotsByOccupant(...args),
+    );
   }
 
   // Factory queries
@@ -250,37 +255,49 @@ export class SlotsClient {
   getSlotDeployedEvents(
     ...args: Parameters<ReturnType<typeof getSdk>["GetSlotDeployedEvents"]>
   ) {
-    return this.query("getSlotDeployedEvents", () => this.sdk.GetSlotDeployedEvents(...args));
+    return this.query("getSlotDeployedEvents", () =>
+      this.sdk.GetSlotDeployedEvents(...args),
+    );
   }
   /** Fetch bought events with optional filters. */
   getBoughtEvents(
     ...args: Parameters<ReturnType<typeof getSdk>["GetBoughtEvents"]>
   ) {
-    return this.query("getBoughtEvents", () => this.sdk.GetBoughtEvents(...args));
+    return this.query("getBoughtEvents", () =>
+      this.sdk.GetBoughtEvents(...args),
+    );
   }
   /** Fetch settled events with optional filters. */
   getSettledEvents(
     ...args: Parameters<ReturnType<typeof getSdk>["GetSettledEvents"]>
   ) {
-    return this.query("getSettledEvents", () => this.sdk.GetSettledEvents(...args));
+    return this.query("getSettledEvents", () =>
+      this.sdk.GetSettledEvents(...args),
+    );
   }
   /** Fetch tax-collected events with optional filters. */
   getTaxCollectedEvents(
     ...args: Parameters<ReturnType<typeof getSdk>["GetTaxCollectedEvents"]>
   ) {
-    return this.query("getTaxCollectedEvents", () => this.sdk.GetTaxCollectedEvents(...args));
+    return this.query("getTaxCollectedEvents", () =>
+      this.sdk.GetTaxCollectedEvents(...args),
+    );
   }
   /** Fetch all activity for a specific slot (all event types). */
   getSlotActivity(
     ...args: Parameters<ReturnType<typeof getSdk>["GetSlotActivity"]>
   ) {
-    return this.query("getSlotActivity", () => this.sdk.GetSlotActivity(...args));
+    return this.query("getSlotActivity", () =>
+      this.sdk.GetSlotActivity(...args),
+    );
   }
   /** Fetch the most recent events across all slots. */
   getRecentEvents(
     ...args: Parameters<ReturnType<typeof getSdk>["GetRecentEvents"]>
   ) {
-    return this.query("getRecentEvents", () => this.sdk.GetRecentEvents(...args));
+    return this.query("getRecentEvents", () =>
+      this.sdk.GetRecentEvents(...args),
+    );
   }
 
   // Account queries
@@ -300,38 +317,50 @@ export class SlotsClient {
   getReleasedEvents(
     ...args: Parameters<ReturnType<typeof getSdk>["GetReleasedEvents"]>
   ) {
-    return this.query("getReleasedEvents", () => this.sdk.GetReleasedEvents(...args));
+    return this.query("getReleasedEvents", () =>
+      this.sdk.GetReleasedEvents(...args),
+    );
   }
   /** Fetch liquidated events with optional filters. */
   getLiquidatedEvents(
     ...args: Parameters<ReturnType<typeof getSdk>["GetLiquidatedEvents"]>
   ) {
-    return this.query("getLiquidatedEvents", () => this.sdk.GetLiquidatedEvents(...args));
+    return this.query("getLiquidatedEvents", () =>
+      this.sdk.GetLiquidatedEvents(...args),
+    );
   }
   /** Fetch deposited events with optional filters. */
   getDepositedEvents(
     ...args: Parameters<ReturnType<typeof getSdk>["GetDepositedEvents"]>
   ) {
-    return this.query("getDepositedEvents", () => this.sdk.GetDepositedEvents(...args));
+    return this.query("getDepositedEvents", () =>
+      this.sdk.GetDepositedEvents(...args),
+    );
   }
   /** Fetch withdrawn events with optional filters. */
   getWithdrawnEvents(
     ...args: Parameters<ReturnType<typeof getSdk>["GetWithdrawnEvents"]>
   ) {
-    return this.query("getWithdrawnEvents", () => this.sdk.GetWithdrawnEvents(...args));
+    return this.query("getWithdrawnEvents", () =>
+      this.sdk.GetWithdrawnEvents(...args),
+    );
   }
   /** Fetch price-updated events with optional filters. */
   getPriceUpdatedEvents(
     ...args: Parameters<ReturnType<typeof getSdk>["GetPriceUpdatedEvents"]>
   ) {
-    return this.query("getPriceUpdatedEvents", () => this.sdk.GetPriceUpdatedEvents(...args));
+    return this.query("getPriceUpdatedEvents", () =>
+      this.sdk.GetPriceUpdatedEvents(...args),
+    );
   }
 
   // Meta
 
   /** Fetch subgraph indexing metadata (latest block, indexing errors). */
   getMeta(): Promise<SubgraphMeta> {
-    return this.query("getMeta", () => this.gqlClient.request<SubgraphMeta>(META_QUERY));
+    return this.query("getMeta", () =>
+      this.gqlClient.request<SubgraphMeta>(META_QUERY),
+    );
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -384,7 +413,13 @@ export class SlotsClient {
       address: this.factory,
       abi: slotFactoryAbi,
       functionName: "createSlots",
-      args: [params.recipient, params.currency, params.config, params.initParams, params.count],
+      args: [
+        params.recipient,
+        params.currency,
+        params.config,
+        params.initParams,
+        params.count,
+      ],
       account: this.account,
       chain: this.chain,
     });
@@ -570,7 +605,8 @@ export class SlotsClient {
    * @throws {SlotsError} If newBps is outside 0-10000, or the transaction fails.
    */
   async setLiquidationBounty(slot: Address, newBps: bigint): Promise<Hash> {
-    if (newBps < 0n || newBps > 10000n) throw new SlotsError("setLiquidationBounty", "newBps must be 0-10000");
+    if (newBps < 0n || newBps > 10000n)
+      throw new SlotsError("setLiquidationBounty", "newBps must be 0-10000");
     return this.wallet.writeContract({
       address: slot,
       abi: slotAbi,
@@ -592,14 +628,18 @@ export class SlotsClient {
    * @returns Transaction hash.
    * @throws {SlotsError} If calls array is empty, or the transaction fails.
    */
-  async multicall(slot: Address, calls: { functionName: string; args?: any[] }[]): Promise<Hash> {
-    if (calls.length === 0) throw new SlotsError("multicall", "calls array must not be empty");
+  async multicall(
+    slot: Address,
+    calls: { functionName: string; args?: any[] }[],
+  ): Promise<Hash> {
+    if (calls.length === 0)
+      throw new SlotsError("multicall", "calls array must not be empty");
     const data = calls.map((call) =>
       encodeFunctionData({
         abi: slotAbi,
         functionName: call.functionName as any,
         args: call.args as any,
-      })
+      }),
     );
     return this.wallet.writeContract({
       address: slot,
@@ -623,11 +663,13 @@ export class SlotsClient {
         return false;
       }
       const chainId = this.chain.id;
-      const chainCaps = capabilities[chainId] || capabilities[`0x${chainId.toString(16)}`];
+      const chainCaps =
+        capabilities[chainId] || capabilities[`0x${chainId.toString(16)}`];
       const atomic = chainCaps?.atomicBatch ?? chainCaps?.atomic;
-      const status = atomic && typeof atomic === "object" && "status" in atomic
-        ? (atomic as { status: string }).status
-        : undefined;
+      const status =
+        atomic && typeof atomic === "object" && "status" in atomic
+          ? (atomic as { status: string }).status
+          : undefined;
       this._atomicSupport = status === "supported" || status === "ready";
     } catch {
       this._atomicSupport = false;
@@ -679,7 +721,7 @@ export class SlotsClient {
     const needsApproval = allowance < amount;
 
     // Atomic batch path
-    if (needsApproval && await this.supportsAtomicBatch()) {
+    if (needsApproval && (await this.supportsAtomicBatch())) {
       const approveData = encodeFunctionData({
         abi: erc20Abi,
         functionName: "approve",

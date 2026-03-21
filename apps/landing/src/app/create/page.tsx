@@ -10,6 +10,7 @@ import { type Address, isAddress, zeroAddress } from "viem";
 import { normalize } from "viem/ens";
 import { useAccount, usePublicClient, useSwitchChain } from "wagmi";
 import { mainnet } from "wagmi/chains";
+import { getChainTokens } from "@0xslots/sdk";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
@@ -29,8 +30,6 @@ import {
   percentToBps,
   toSeconds,
 } from "./schema";
-
-const USDC_ADDRESS = "0x036CbD53842c5426634e7929541eC2318f3dCF7e";
 
 const STEPS = [
   { n: 1, label: "Recipient" },
@@ -87,6 +86,14 @@ export default function CreatePage() {
     moduleResolved.isResolving ||
     managerResolved.isResolving;
 
+  // Set default preset currency when chain changes
+  useEffect(() => {
+    const tokens = getChainTokens(selectedChainId);
+    if (tokens.length > 0) {
+      form.setValue("presetCurrency", tokens[0].address);
+    }
+  }, [selectedChainId, form]);
+
   useEffect(() => {
     if (isSuccess) {
       const timeout = setTimeout(() => push("/"), 1500);
@@ -110,8 +117,8 @@ export default function CreatePage() {
 
   async function onSubmit(data: CreateSlotFormValues) {
     const currency =
-      data.currencyMode === "usdc"
-        ? USDC_ADDRESS
+      data.currencyMode === "preset"
+        ? data.presetCurrency
         : currencyResolved.resolved || data.customCurrency;
     const module = moduleResolved.resolved || "";
     const manager = needsManager ? managerResolved.resolved : zeroAddress;
