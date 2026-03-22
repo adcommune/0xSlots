@@ -1,5 +1,15 @@
 # @adland/data
 
+## 0.14.0
+
+### Minor Changes
+
+- c051bc3: repo migration
+
+### Patch Changes
+
+- 0d3484f: centralized packages
+
 ## 0.13.0
 
 ### Minor Changes
