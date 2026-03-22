@@ -1,15 +1,13 @@
-name: Release
+name: Adland Publish
 
 on:
   push:
     branches:
       - main
     paths:
-      - 'packages/contracts/**'
-      - 'packages/sdk/**'
+      - 'packages/adland-react/**'
+      - 'packages/adland-data/**'
       - '.changeset/**'
-      - 'package.json'
-      - 'pnpm-lock.yaml'
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
@@ -40,10 +38,9 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build packages
-        run: pnpm build --filter=@0xslots/contracts --filter=@0xslots/sdk
+        run: pnpm --filter @adland/react --filter @adland/data build
 
       - name: Create Release Pull Request or Publish to npm
-        id: changesets
         uses: changesets/action@v1
         with:
           publish: pnpm release
