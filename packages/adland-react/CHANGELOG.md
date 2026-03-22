@@ -1,5 +1,11 @@
 # @adland/react
 
+## 0.13.1
+
+### Patch Changes
+
+- 71a90f5: Export AdContent component for rendering ad data without on-chain fetching
+
 ## 0.13.0
 
 ### Minor Changes
