@@ -1,6 +1,6 @@
 "use client";
 
-import { type AdType, adTypes, getAd } from "@adland/data";
+import { type AdData, type AdType, adTypes, getAd } from "@adland/data";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import {
@@ -46,8 +46,7 @@ import {
   adTypeIcons,
   adTypeLabels,
 } from "../lib/ad-helpers";
-import { Ad } from "@adland/react";
-import { CurrentAdBanner } from "./current-ad-banner";
+import { Ad, AdContent as AdContentView } from "@adland/react";
 import { MetadataPreview } from "./metadata-preview";
 import { ZodFormBuilder } from "./zod-form-builder";
 
@@ -351,7 +350,7 @@ function HistoryItemContent({
     );
   }
 
-  return <CurrentAdBanner ad={adContent} uri={uri} />;
+  return <AdContentView data={adContent as AdData} />;
 }
 
 function createAdResolver(ad: ReturnType<typeof getAd>): Resolver {
