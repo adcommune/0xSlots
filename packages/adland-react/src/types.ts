@@ -1,4 +1,5 @@
-import { AdData } from "@adland/data";
+import type { SlotsChain } from "@0xslots/sdk";
+import type { AdData } from "@adland/data";
 
 export type Network = "testnet" | "mainnet";
 
@@ -8,9 +9,9 @@ export interface AdProps extends React.HTMLAttributes<HTMLDivElement> {
    */
   slot: string;
   /**
-   * MetadataModule contract address (to fetch ad content URI)
+   * Chain ID for on-chain reads. Defaults to BASE (8453).
    */
-  metadataModule?: string;
+  chainId?: SlotsChain;
   /**
    * Network to use for tracking requests (currently only "testnet" is supported)
    */
@@ -20,7 +21,7 @@ export interface AdProps extends React.HTMLAttributes<HTMLDivElement> {
    */
   baseUrl?: string;
   /**
-   * RPC URL for reading MetadataModule on-chain
+   * Optional RPC URL override. If not provided, uses public RPC for the chain.
    */
   rpcUrl?: string;
 }

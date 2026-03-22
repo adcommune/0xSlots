@@ -15,6 +15,7 @@
     "@0xsplits/splits-sdk": "^6.4.1",
     "@0xsplits/splits-sdk-react": "^4.3.1",
     "@adland/data": "workspace:*",
+    "@adland/react": "workspace:*",
     "@farcaster/miniapp-sdk": "^0.2.3",
     "@farcaster/miniapp-wagmi-connector": "^1.1.1",
     "@hookform/resolvers": "^5.2.2",

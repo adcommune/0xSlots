@@ -1,41 +1,46 @@
-import { useEffect, useRef, useCallback } from "react";
-import { sendTrackRequest } from "../utils/sdk";
+import { SlotsChain } from "@0xslots/sdk";
+import type { AdData } from "@adland/data";
 import sdk from "@farcaster/miniapp-sdk";
 import { FileWarningIcon, Loader, SquareDashed } from "lucide-react";
-import { type AdData } from "@adland/data";
+import { useCallback, useEffect, useMemo, useRef } from "react";
+
+import { createReadClient, fetchAdFromURI, fetchMetadataURI } from "../fetch";
 import { useFetch } from "../hooks/useFetch";
+import { AdDataQueryError, type AdProps } from "../types";
+import { getBaseUrl } from "../utils";
+import { sendTrackRequest } from "../utils/sdk";
 import BasicAdBody from "./BasicAdBody";
+import CastAdContent from "./content/CastAdContent";
+import FarcasterProfileAdContent from "./content/FarcasterProfileAdContent";
 import LinkAdContent from "./content/LinkAdContent";
 import MiniappAdContent from "./content/MiniappAdContent";
-import CastAdContent from "./content/CastAdContent";
 import TokenAdContent from "./content/TokenAdContent";
-import FarcasterProfileAdContent from "./content/FarcasterProfileAdContent";
-import { AdDataQueryError, AdProps } from "../types";
-import { getBaseUrl } from "../utils";
-import { fetchAdFromURI, fetchMetadataURI } from "../fetch";
-
-const DEFAULT_RPC = "https://sepolia.base.org";
-const DEFAULT_METADATA_MODULE = "0x6c5A8A7f061bEd94b1b88CFAd4e1a1a8C5c4e527";
 
 /**
  * Ad component powered by 0xSlots v3 MetadataModule.
- * Fetches ad content URI from on-chain, then fetches content from IPFS/HTTP.
+ * Fetches ad content URI from on-chain via the SDK, then fetches content from IPFS/HTTP.
  *
  * @example
  * ```tsx
  * <Ad slot="0xabc...123" />
+ * <Ad slot="0xabc...123" chainId={SlotsChain.BASE_SEPOLIA} />
  * ```
  */
 export function Ad({
   slot,
-  metadataModule = DEFAULT_METADATA_MODULE,
+  chainId = SlotsChain.BASE,
   network = "testnet",
   baseUrl,
-  rpcUrl = DEFAULT_RPC,
+  rpcUrl,
   ...props
 }: AdProps) {
   const ref = useRef<HTMLDivElement>(null);
   const networkBaseUrl = baseUrl ?? getBaseUrl(network);
+
+  const client = useMemo(
+    () => createReadClient(chainId, rpcUrl),
+    [chainId, rpcUrl],
+  );
 
   const {
     data: adData,
@@ -44,7 +49,7 @@ export function Ad({
   } = useFetch<AdData>(
     `ad-data-${slot}`,
     async () => {
-      const uri = await fetchMetadataURI(rpcUrl, metadataModule, slot);
+      const uri = await fetchMetadataURI(client, slot);
       if (!uri) throw new Error(AdDataQueryError.NO_AD);
       return fetchAdFromURI(uri);
     },

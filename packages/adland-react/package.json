@@ -35,12 +35,14 @@
   },
   "dependencies": {
     "@adland/data": "workspace:*",
+    "@0xslots/sdk": "workspace:*",
     "@farcaster/miniapp-sdk": "0.2.1",
     "@types/node": "^20",
     "@types/react": "^19.1.16",
     "@types/react-dom": "^18.3.1",
     "lucide-react": "0.561.0",
-    "tsup": "^8.0.1"
+    "tsup": "^8.0.1",
+    "viem": "^2.0.0"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^7.13.1",

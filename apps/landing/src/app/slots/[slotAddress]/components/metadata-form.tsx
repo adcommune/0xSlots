@@ -39,7 +39,6 @@ import { useSlotAction } from "@/hooks/use-slot-action";
 import {
   useIpfsContent,
   useMetadataHistory,
-  useMetadataUri,
 } from "../hooks/use-metadata";
 import {
   type AdContent,
@@ -47,6 +46,7 @@ import {
   adTypeIcons,
   adTypeLabels,
 } from "../lib/ad-helpers";
+import { Ad } from "@adland/react";
 import { CurrentAdBanner } from "./current-ad-banner";
 import { MetadataPreview } from "./metadata-preview";
 import { ZodFormBuilder } from "./zod-form-builder";
@@ -76,9 +76,6 @@ export function MetadataForm({
 
   const ad = selectedType ? getAd(selectedType as AdType) : null;
 
-  const { data: currentUri } = useMetadataUri(moduleAddress, slotAddress);
-  const { data: currentAdData, isLoading: loadingCurrentAd } =
-    useIpfsContent(currentUri);
   const { data: updateHistory } = useMetadataHistory(slotAddress);
 
   const invalidateMetadata = () => {
@@ -144,23 +141,13 @@ export function MetadataForm({
 
   return (
     <div className="space-y-4">
-      {/* Current Ad */}
-      {loadingCurrentAd && (
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground py-2">
-          <Loader2 className="size-3 animate-spin" />
-          Loading current ad...
-        </div>
-      )}
+      {/* Current Ad — rendered via @adland/react */}
+      <Ad
+        slot={slotAddress}
+        chainId={chainId}
+      />
 
-      {currentAdData && !loadingCurrentAd && (
-        <CurrentAdBanner ad={currentAdData} uri={currentUri ?? null} />
-      )}
-
-      {!currentUri && !loadingCurrentAd && (
-        <p className="text-sm text-muted-foreground">No ad content yet.</p>
-      )}
-
-      {!isOccupant && !loadingCurrentAd && (
+      {!isOccupant && (
         <p className="text-xs text-muted-foreground">
           Occupy this slot to publish ad content.
         </p>
