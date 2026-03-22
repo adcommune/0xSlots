@@ -27,35 +27,22 @@ export default defineConfig({
     },
     {
       text: "Protocol",
-      items: [
-        { text: "Architecture", link: "/protocol/overview" },
-        { text: "Slots", link: "/protocol/slots" },
-        { text: "Tax System", link: "/protocol/tax-system" },
-        { text: "Modules", link: "/protocol/modules" },
-        { text: "Roles", link: "/protocol/roles" },
-      ],
+      link: "/protocol",
     },
     {
-      text: "SDK Reference",
+      text: "SDK",
       items: [
         { text: "SlotsClient", link: "/sdk/client" },
         { text: "React Hooks", link: "/sdk/react" },
-        { text: "Types", link: "/sdk/types" },
       ],
     },
     {
       text: "Contracts",
-      items: [
-        { text: "Addresses", link: "/contracts/addresses" },
-        { text: "ABIs", link: "/contracts/abis" },
-      ],
+      link: "/contracts",
     },
     {
       text: "Subgraph",
-      items: [
-        { text: "Overview", link: "/subgraph/overview" },
-        { text: "Queries", link: "/subgraph/queries" },
-      ],
+      link: "/subgraph",
     },
   ],
 });

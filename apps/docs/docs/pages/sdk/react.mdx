@@ -1,238 +1,64 @@
 # React Hooks
 
-The `@0xslots/sdk/react` entrypoint provides wagmi-wired hooks for building React applications on top of 0xSlots.
-
-[Source](https://github.com/nezz0746/0xSlots/blob/main/packages/sdk/src/react.ts)
-
-## Installation
-
-The React hooks require `wagmi`, `viem`, and `@tanstack/react-query` as peer dependencies — you likely already have these if you're building a wagmi app.
-
-:::code-group
-
-```bash [pnpm]
-pnpm add @0xslots/sdk @0xslots/contracts wagmi viem @tanstack/react-query
-```
-
-```bash [npm]
-npm install @0xslots/sdk @0xslots/contracts wagmi viem @tanstack/react-query
-```
-
-:::
+Wagmi-wired hooks from `@0xslots/sdk/react`. Requires `wagmi`, `viem`, and `@tanstack/react-query` as peer dependencies.
 
 ## `useSlotsClient`
 
-Creates a memoized `SlotsClient` from wagmi's public and wallet clients. Automatically resolves the factory address from the chain ID.
+Creates a memoized `SlotsClient` from wagmi's public and wallet clients.
 
 ```tsx
 import { useSlotsClient } from "@0xslots/sdk/react";
-import { SlotsChain } from "@0xslots/sdk";
 
-function MyComponent() {
-  // Uses connected chain by default
-  const client = useSlotsClient();
-
-  // Or override the chain
-  const baseClient = useSlotsClient(SlotsChain.BASE);
-
-  // With subgraph API key
-  const authedClient = useSlotsClient(SlotsChain.BASE, "your-api-key");
-}
+const client = useSlotsClient();                          // connected chain
+const client = useSlotsClient(SlotsChain.BASE);           // override chain
+const client = useSlotsClient(SlotsChain.BASE, "api-key"); // with subgraph key
 ```
-
-### Parameters
-
-| Parameter | Type | Required | Description |
-|---|---|---|---|
-| `chainId` | `SlotsChain` | No | Override chain ID (defaults to connected chain) |
-| `subgraphApiKey` | `string` | No | Subgraph API key for authenticated requests |
-
-### Returns
-
-A `SlotsClient` instance. Memoized — only recreated when `chainId`, `publicClient`, or `walletClient` changes.
 
 ---
 
 ## `useSlotAction`
 
-Unified write executor with transaction lifecycle tracking. Wraps every `SlotsClient` write method with shared pending/confirming/success/error state.
+Unified write executor with transaction lifecycle tracking.
 
 ```tsx
 import { useSlotAction } from "@0xslots/sdk/react";
 
-function SlotActions({ slotAddress }: { slotAddress: `0x${string}` }) {
-  const {
-    buy,
-    selfAssess,
-    topUp,
-    withdraw,
-    release,
-    collect,
-    liquidate,
-    createSlot,
-    proposeTaxUpdate,
-    proposeModuleUpdate,
-    cancelPendingUpdates,
-    setLiquidationBounty,
-    updateMetadata,
-    exec,          // generic executor
-    busy,          // isPending || isConfirming
-    isPending,     // wallet interaction in progress
-    isConfirming,  // waiting for on-chain confirmation
-    isSuccess,     // transaction confirmed
-    activeAction,  // label of current action (e.g. "Buy slot")
-  } = useSlotAction({
-    onSuccess: (label, hash) => {
-      console.log(`${label} confirmed: ${hash}`);
-    },
-    onError: (label, error) => {
-      console.error(`${label} failed: ${error}`);
-    },
-  });
-
-  return (
-    <div>
-      <button
-        disabled={busy}
-        onClick={() => buy({
-          slot: slotAddress,
-          depositAmount: 1000000n,
-          selfAssessedPrice: 5000000n,
-        })}
-      >
-        {activeAction === "Buy slot" ? "Confirming..." : "Buy"}
-      </button>
-
-      <button
-        disabled={busy}
-        onClick={() => release(slotAddress)}
-      >
-        Release
-      </button>
-    </div>
-  );
-}
+const {
+  buy, selfAssess, topUp, withdraw, release, collect, liquidate,
+  createSlot, proposeTaxUpdate, proposeModuleUpdate, updateMetadata,
+  exec,          // generic executor
+  busy,          // isPending || isConfirming
+  isPending,     // wallet interaction in progress
+  isConfirming,  // waiting for on-chain confirmation
+  isSuccess,
+  activeAction,  // label of current action
+} = useSlotAction({
+  onSuccess: (label, hash) => console.log(`${label}: ${hash}`),
+  onError: (label, error) => console.error(`${label}: ${error}`),
+});
 ```
-
-### Callbacks
-
-```ts
-interface SlotActionCallbacks {
-  onSuccess?: (label: string, hash: Hash) => void;
-  onError?: (label: string, error: string) => void;
-}
-```
-
-### Available Actions
-
-| Action | Signature | Description |
-|---|---|---|
-| `createSlot` | `(params: CreateSlotParams) => void` | Deploy a new slot |
-| `createSlots` | `(params: CreateSlotsParams) => void` | Deploy multiple slots |
-| `buy` | `(params: BuyParams) => void` | Buy a slot |
-| `selfAssess` | `(slot, newPrice) => void` | Update self-assessed price |
-| `topUp` | `(slot, amount) => void` | Add to deposit |
-| `withdraw` | `(slot, amount) => void` | Withdraw from deposit |
-| `release` | `(slot) => void` | Release the slot |
-| `collect` | `(slot) => void` | Collect accumulated tax |
-| `payTax` | `(slot) => void` | Alias for `collect` |
-| `liquidate` | `(slot) => void` | Liquidate an insolvent slot |
-| `proposeTaxUpdate` | `(slot, newPct) => void` | Propose tax rate change |
-| `proposeModuleUpdate` | `(slot, newModule) => void` | Propose module change |
-| `cancelPendingUpdates` | `(slot) => void` | Cancel pending updates |
-| `setLiquidationBounty` | `(slot, newBps) => void` | Set liquidation bounty |
-| `updateMetadata` | `(moduleAddr, slot, uri) => void` | Update slot metadata |
-| `exec` | `(label, fn) => void` | Execute any async function with tracking |
-
-### Return State
-
-| Property | Type | Description |
-|---|---|---|
-| `busy` | `boolean` | `true` while pending or confirming |
-| `isPending` | `boolean` | `true` during wallet interaction |
-| `isConfirming` | `boolean` | `true` while waiting for on-chain confirmation |
-| `isSuccess` | `boolean` | `true` when transaction is confirmed |
-| `activeAction` | `string \| null` | Label of the current action |
 
 ---
 
 ## `useSlotOnChain`
 
-Fetches a single slot's complete state from on-chain via `getSlotInfo()`, including ERC-20 currency metadata. Auto-invalidates on every new block.
+Fetches a single slot's state from on-chain via RPC. Auto-invalidates on new blocks.
 
 ```tsx
 import { useSlotOnChain } from "@0xslots/sdk/react";
 
-function SlotDisplay({ address }: { address: string }) {
-  const { data: slot, isLoading, refetch } = useSlotOnChain(address, 8453);
-
-  if (isLoading) return <div>Loading...</div>;
-  if (!slot) return <div>Slot not found</div>;
-
-  return (
-    <div>
-      <p>Occupant: {slot.occupant ?? "Vacant"}</p>
-      <p>Price: {slot.price.toString()} {slot.currencySymbol}</p>
-      <p>Deposit: {slot.deposit.toString()}</p>
-      <p>Tax: {slot.taxPercentage.toString()} bps/month</p>
-      {slot.insolvent && <p>⚠️ Insolvent — can be liquidated</p>}
-    </div>
-  );
-}
+const { data: slot, isLoading, refetch } = useSlotOnChain(address, 8453);
+// slot: { occupant, price, deposit, taxPercentage, insolvent, currencySymbol, ... }
 ```
-
-### Parameters
-
-| Parameter | Type | Description |
-|---|---|---|
-| `slotAddress` | `string` | Slot contract address |
-| `chainId` | `number` | Chain ID to read from |
-
-### Returns
-
-| Property | Type | Description |
-|---|---|---|
-| `data` | `SlotOnChain \| null` | Parsed slot state or null if loading/not found |
-| `isLoading` | `boolean` | Loading state |
-| `refetch` | `() => void` | Manual refetch trigger |
 
 ---
 
 ## `useSlotsOnChain`
 
-Fetches multiple slots via multicall. Deduplicates currency metadata requests for efficiency.
+Fetches multiple slots via multicall. Deduplicates currency metadata requests.
 
 ```tsx
 import { useSlotsOnChain } from "@0xslots/sdk/react";
 
-function SlotList({ addresses }: { addresses: string[] }) {
-  const { data: slots, isLoading } = useSlotsOnChain(addresses, 8453);
-
-  if (isLoading) return <div>Loading {addresses.length} slots...</div>;
-
-  return (
-    <ul>
-      {slots.map((slot) => (
-        <li key={slot.id}>
-          {slot.id} — {slot.occupant ?? "Vacant"} — {slot.price.toString()}
-        </li>
-      ))}
-    </ul>
-  );
-}
+const { data: slots, isLoading } = useSlotsOnChain(addresses, 8453);
 ```
-
-### Parameters
-
-| Parameter | Type | Description |
-|---|---|---|
-| `slotAddresses` | `string[]` | Array of slot contract addresses |
-| `chainId` | `number` | Chain ID to read from |
-
-### Returns
-
-| Property | Type | Description |
-|---|---|---|
-| `data` | `SlotOnChain[]` | Array of parsed slot states |
-| `isLoading` | `boolean` | Loading state |
-| `refetch` | `() => void` | Manual refetch trigger |

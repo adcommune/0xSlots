@@ -1,8 +1,6 @@
 # SlotsClient
 
-The `SlotsClient` is the main entry point for interacting with the 0xSlots protocol. It provides methods for reading data from the subgraph, reading on-chain state via RPC, and executing write transactions.
-
-[Source](https://github.com/nezz0746/0xSlots/blob/main/packages/sdk/src/client.ts)
+The main entry point for interacting with 0xSlots. [Source](https://github.com/nezz0746/0xSlots/blob/main/packages/sdk/src/client.ts)
 
 ## Constructor
 
@@ -10,251 +8,69 @@ The `SlotsClient` is the main entry point for interacting with the 0xSlots proto
 import { SlotsClient, SlotsChain } from "@0xslots/sdk";
 
 const client = new SlotsClient({
-  chainId: SlotsChain.BASE,
-  publicClient,           // viem PublicClient (required for RPC reads + writes)
-  walletClient,           // viem WalletClient (required for writes)
-  factoryAddress,         // optional — auto-resolved from chainId
-  subgraphUrl,            // optional — override default subgraph URL
-  subgraphApiKey,         // optional — Bearer token for subgraph auth
-  headers,                // optional — custom headers for subgraph requests
+  chainId: SlotsChain.BASE,       // BASE (8453) or BASE_SEPOLIA (84532)
+  publicClient,                    // viem PublicClient
+  walletClient,                    // viem WalletClient (for writes)
+  subgraphApiKey,                  // optional — Bearer token
 });
 ```
 
-### `SlotsClientConfig`
-
-| Property | Type | Required | Description |
-|---|---|---|---|
-| `chainId` | `SlotsChain` | Yes | Target chain (`BASE`, `BASE_SEPOLIA`, `ARBITRUM`) |
-| `publicClient` | `PublicClient` | No | viem public client for RPC reads |
-| `walletClient` | `WalletClient` | No | viem wallet client for transactions |
-| `factoryAddress` | `Address` | No | Override factory address (auto-resolved) |
-| `subgraphUrl` | `string` | No | Override subgraph endpoint |
-| `subgraphApiKey` | `string` | No | Subgraph API key |
-| `headers` | `Record<string, string>` | No | Custom GraphQL request headers |
-
-### `SlotsChain`
+## Subgraph Queries
 
 ```ts
-enum SlotsChain {
-  BASE = 8453,
-  BASE_SEPOLIA = 84532,
-}
-```
-
-## Read Methods (Subgraph)
-
-All subgraph queries accept the same filter/pagination arguments as the generated GraphQL SDK.
-
-### Slot Queries
-
-```ts
-// Paginated list of slots
 const { slots } = await client.getSlots({ first: 10, skip: 0 });
-
-// Single slot by address
 const { slot } = await client.getSlot({ id: "0x..." });
-
-// Slots by recipient
 const { slots } = await client.getSlotsByRecipient({ recipient: "0x..." });
-
-// Slots by occupant
 const { slots } = await client.getSlotsByOccupant({ occupant: "0x..." });
-```
-
-### Factory Queries
-
-```ts
-// Factory info (slot count)
 const { factory } = await client.getFactory();
-
-// Registered modules
 const { modules } = await client.getModules({ first: 10 });
+const activity = await client.getSlotActivity({ slot: "0x..." });
+const events = await client.getRecentEvents({ first: 20 });
 ```
 
-### Account Queries
-
-```ts
-// Single account
-const { account } = await client.getAccount({ id: "0x..." });
-
-// Paginated accounts
-const { accounts } = await client.getAccounts({ first: 20 });
-```
-
-### Event Queries
-
-```ts
-// All activity for a specific slot
-const data = await client.getSlotActivity({ slot: "0x..." });
-
-// Recent events across all slots
-const data = await client.getRecentEvents({ first: 20 });
-
-// Specific event types
-await client.getSlotDeployedEvents({ first: 10 });
-await client.getBoughtEvents({ first: 10 });
-await client.getSettledEvents({ first: 10 });
-await client.getTaxCollectedEvents({ first: 10 });
-await client.getReleasedEvents({ first: 10 });
-await client.getLiquidatedEvents({ first: 10 });
-await client.getDepositedEvents({ first: 10 });
-await client.getWithdrawnEvents({ first: 10 });
-await client.getPriceUpdatedEvents({ first: 10 });
-```
-
-### Subgraph Meta
-
-```ts
-const meta = await client.getMeta();
-// { _meta: { block: { number, hash, timestamp }, hasIndexingErrors } }
-```
-
-## Read Methods (RPC)
-
-### `getSlotInfo(slot)`
-
-Read full slot state directly from chain. Bypasses the subgraph — always returns the latest on-chain data.
+## RPC Reads
 
 ```ts
 const info = await client.getSlotInfo("0x...");
-// Returns tuple: recipient, currency, manager, mutableTax, mutableModule,
-//   occupant, price, taxPercentage, module, deposit, collectedTax,
+// Returns: recipient, currency, occupant, price, deposit, taxPercentage,
 //   taxOwed, secondsUntilLiquidation, insolvent, pendingTax, pendingModule, ...
 ```
 
 ## Write Methods
 
-All write methods return a `Promise<Hash>` (transaction hash). They require a `walletClient` with an account.
-
-### Factory
+All return `Promise<Hash>`. ERC-20 approval is handled automatically (atomic via EIP-5792 when supported).
 
 ```ts
-// Deploy a single slot
-const hash = await client.createSlot({
-  recipient: "0x...",
-  currency: "0x...",       // ERC-20 token address
-  config: {
-    mutableTax: false,
-    mutableModule: false,
-    manager: "0x0000000000000000000000000000000000000000",
-  },
-  initParams: {
-    taxPercentage: 500n,           // 5% monthly
-    module: "0x0000...0000",       // no module
-    liquidationBountyBps: 100n,    // 1% bounty
-    minDepositSeconds: 86400n,     // 1 day minimum deposit
-  },
-});
+// Factory
+await client.createSlot({ recipient, currency, config, initParams });
+await client.createSlots({ ...params, count: 5n });
 
-// Deploy multiple identical slots
-const hash = await client.createSlots({
-  ...sameParams,
-  count: 5n,
-});
-```
+// Slot interactions
+await client.buy({ slot, depositAmount, selfAssessedPrice });
+await client.selfAssess(slot, newPrice);
+await client.topUp(slot, amount);
+await client.withdraw(slot, amount);
+await client.release(slot);
+await client.collect(slot);
+await client.liquidate(slot);
 
-### Slot Interactions
+// Manager
+await client.proposeTaxUpdate(slot, newPct);
+await client.proposeModuleUpdate(slot, newModule);
+await client.cancelPendingUpdates(slot);
+await client.setLiquidationBounty(slot, newBps);
 
-```ts
-// Buy (handles ERC-20 approval automatically)
-await client.buy({
-  slot: "0x...",
-  depositAmount: 1000000n,
-  selfAssessedPrice: 5000000n,
-});
-
-// Self-assess new price
-await client.selfAssess("0x...", newPrice);
-
-// Top up deposit (handles ERC-20 approval)
-await client.topUp("0x...", amount);
-
-// Withdraw from deposit
-await client.withdraw("0x...", amount);
-
-// Release slot
-await client.release("0x...");
-
-// Collect tax (permissionless)
-await client.collect("0x...");
-
-// Liquidate insolvent slot (permissionless)
-await client.liquidate("0x...");
-```
-
-### Manager Functions
-
-```ts
-// Propose new tax rate
-await client.proposeTaxUpdate("0x...", 1000n);
-
-// Propose new module
-await client.proposeModuleUpdate("0x...", "0xNewModule");
-
-// Cancel pending updates
-await client.cancelPendingUpdates("0x...");
-
-// Set liquidation bounty
-await client.setLiquidationBounty("0x...", 200n);
-```
-
-### Multicall
-
-Batch multiple calls to the same slot in one transaction:
-
-```ts
-const hash = await client.multicall("0xSlotAddr", [
+// Multicall
+await client.multicall(slot, [
   { functionName: "selfAssess", args: [newPrice] },
   { functionName: "topUp", args: [amount] },
 ]);
 ```
 
-## ERC-20 Approval Handling
-
-Methods that move tokens (`buy`, `topUp`) automatically handle ERC-20 approval:
-
-1. Check current allowance
-2. If allowance is insufficient:
-   - **Atomic batch** (EIP-5792): approval + action sent as a single atomic transaction
-   - **Sequential fallback**: approval tx first, then action tx
-3. Execute the action
-
-## Modules Namespace
-
-Access module-specific clients via `client.modules`:
+## Modules
 
 ```ts
-// MetadataModule operations
-const metadata = client.modules.metadata;
-
-await metadata.getSlots({ first: 10 });
-await metadata.getSlot({ id: "0x..." });
-await metadata.getURI(moduleAddress, slotAddress);
-await metadata.updateMetadata(moduleAddress, slotAddress, "ipfs://...");
-await metadata.getUpdateHistory({ slot: "0x..." });
-```
-
-See [Modules](/protocol/modules) for more on the MetadataModule.
-
-## Advanced
-
-### Direct SDK Access
-
-For queries not wrapped by the client:
-
-```ts
-const sdk = client.getSdk();
-const gqlClient = client.getClient();
-```
-
-### Helper Function
-
-```ts
-import { createSlotsClient } from "@0xslots/sdk";
-
-const client = createSlotsClient({
-  chainId: SlotsChain.BASE,
-  publicClient,
-  walletClient,
-});
+await client.modules.metadata.getSlots({ first: 10 });
+await client.modules.metadata.getURI(moduleAddress, slotAddress);
+await client.modules.metadata.updateMetadata(moduleAddress, slotAddress, "ipfs://...");
 ```

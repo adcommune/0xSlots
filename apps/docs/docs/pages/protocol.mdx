@@ -1,0 +1,98 @@
+# Protocol
+
+## Architecture
+
+Every slot is a **standalone smart contract** — no shared state. Slots are deployed through a Factory using CREATE2 (ERC-1167 minimal proxy clones), giving deterministic addresses based on `keccak256(recipient, currency, config)`.
+
+```
+Factory
+  └─ createSlot(recipient, currency, config, initParams)
+       └─ CREATE2 → Slot Proxy (clone)
+            ├─ immutable: recipient, currency, mutableTax, mutableModule, manager
+            └─ mutable: occupant, price, deposit, taxPercentage, module
+```
+
+### Immutable Parameters (set at deployment)
+
+| Parameter | Description |
+|---|---|
+| `recipient` | Receives tax revenue. Can be EOA, multisig, Splits, DAO. |
+| `currency` | ERC-20 token for pricing, deposits, and tax. |
+| `mutableTax` | Whether tax rate can be changed by the manager. |
+| `mutableModule` | Whether module can be changed by the manager. |
+| `manager` | Can propose config updates. `address(0)` if both flags are false. |
+
+### Mutable State
+
+| Field | Description |
+|---|---|
+| `occupant` | Current holder (zero address = vacant). |
+| `price` | Self-assessed price (0 when vacant). |
+| `deposit` | Escrowed ERC-20 for tax payments. |
+| `taxPercentage` | Tax rate in basis points per month (100 = 1%). |
+| `module` | Hook contract address. |
+| `collectedTax` | Accumulated uncollected tax. |
+
+---
+
+## Slot Lifecycle
+
+### `buy(depositAmount, selfAssessedPrice)`
+Settles tax on current occupant → refunds them → transfers price from buyer → stores deposit → sets new price. If vacant: buyer just deposits and self-assesses.
+
+### `release()`
+Occupant exits. Settles tax → refunds deposit → slot becomes vacant.
+
+### `selfAssess(newPrice)` / `topUp(amount)` / `withdraw(amount)`
+Occupant manages price and deposit. Cannot withdraw below `minDepositSeconds`.
+
+### `liquidate()`
+Anyone can call when deposit is depleted. Slot returns to vacant, liquidator earns a bounty.
+
+### `collect()`
+Permissionless. Sends accumulated tax to the `recipient`.
+
+---
+
+## Tax System
+
+Tax accrues linearly: `taxOwed = price × taxPercentage × elapsed / (30 days × 10000)`
+
+Tax is settled on every state change (`buy`, `release`, `selfAssess`, `topUp`, `withdraw`, `liquidate`).
+
+The occupant maintains a deposit that covers future tax. When it's depleted, anyone can `liquidate()` and earn a bounty (`liquidationBountyBps`).
+
+If `mutableTax` is true, the manager can propose rate changes via `proposeTaxUpdate()`. Changes only apply on the next ownership transition — the current occupant's terms are never changed under them.
+
+---
+
+## Roles
+
+| Role | Revenue | Config | Slot State |
+|---|---|---|---|
+| **Recipient** | Receives tax + sale proceeds | No control | No control |
+| **Manager** | No revenue | Proposes tax/module changes | No control |
+| **Occupant** | Pays tax | No control | Sets price, manages deposit |
+
+No single address has "god-mode" admin powers. Recipient and manager can be the same address but don't have to be.
+
+---
+
+## Modules
+
+Modules are optional hook contracts called on ownership transitions (`buy`, `release`, `liquidate`).
+
+### MetadataModule
+
+The primary module. Lets the occupant attach a URI (metadata) to the slot.
+
+```ts
+await client.modules.metadata.updateMetadata(moduleAddress, slotAddress, "ipfs://...");
+const uri = await client.modules.metadata.getURI(moduleAddress, slotAddress);
+```
+
+If `mutableModule` is true, the manager can propose module changes via `proposeModuleUpdate()`. Same pending-update model as tax changes.
+
+:::warning
+Modules execute arbitrary code during slot transitions. Only use verified modules or modules you've audited.
+:::

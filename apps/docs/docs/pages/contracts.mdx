@@ -1,0 +1,58 @@
+# Contracts
+
+## Addresses
+
+### Base Mainnet (8453)
+
+| Contract | Address |
+|---|---|
+| SlotFactory (Hub) | `0xbf2F890E8F5CCCB3A1D7c5030dBC1843B9E36B0e` |
+| MetadataModule | `0x0896A90c75d2cF195427fb4128f3f4b28f5b2Ef7` |
+
+### Base Sepolia (84532)
+
+| Contract | Address |
+|---|---|
+| SlotFactory (Hub) | `0xc44De86e2A5f0C47f1Ba87C36DaBf54275814DEb` |
+| MetadataModule | `0x65392ac6fd773a9bd36c200abf848c8fa3c9f7f8` |
+| BatchCollector | `0xd3c7090C2F89c5132C3f91DD1da4bCffEAe10e13` |
+| ERC721Slots | `0x65e88189ac09527c5F7da0296ef33C77E5a6BE27` |
+
+### Programmatic Access
+
+```ts
+import { slotFactoryAddress, getSlotsHubAddress, getSupportedChainIds } from "@0xslots/contracts";
+
+slotFactoryAddress[8453];             // "0xbf2F890E..."
+getSlotsHubAddress(8453);             // Address | undefined
+getSupportedChainIds();               // [8453, 84532]
+```
+
+---
+
+## ABIs
+
+```ts
+import {
+  slotAbi,            // Individual slot contract
+  slotFactoryAbi,     // Factory / Hub contract
+  batchCollectorAbi,  // BatchCollector utility
+  erc721SlotsAbi,     // ERC721Slots (Harberger NFT collections)
+  metadataModuleAbi,  // MetadataModule contract
+} from "@0xslots/contracts";
+```
+
+### Key Functions
+
+| ABI | Function | Type | Description |
+|---|---|---|---|
+| `slotAbi` | `getSlotInfo` | Read | Full slot state |
+| `slotAbi` | `buy` | Write | Buy or force-buy |
+| `slotAbi` | `selfAssess` | Write | Update price |
+| `slotAbi` | `topUp` / `withdraw` | Write | Manage deposit |
+| `slotAbi` | `release` | Write | Release slot |
+| `slotAbi` | `collect` | Write | Collect tax |
+| `slotAbi` | `liquidate` | Write | Liquidate insolvent slot |
+| `slotAbi` | `multicall` | Write | Batch calls |
+| `slotFactoryAbi` | `createSlot` / `createSlots` | Write | Deploy slots |
+| `metadataModuleAbi` | `updateMetadata` / `tokenURI` | Write / Read | Manage metadata |
