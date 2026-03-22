@@ -1,6 +1,17 @@
 "use client";
 
 import { type AdData, type AdType, adTypes, getAd } from "@adland/data";
+import {
+  Ad,
+  AdBadge,
+  AdDescription,
+  AdEmpty,
+  AdImage,
+  AdLabel,
+  AdLoaded,
+  AdLoading,
+  AdTitle,
+} from "@adland/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import {
@@ -16,10 +27,8 @@ import type { Resolver } from "react-hook-form";
 import { FormProvider, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import type { Address } from "viem";
-
 import { AccountTypeIcon } from "@/components/account-type-icon";
 import { EnsAddress } from "@/components/ens-address";
-
 import {
   Accordion,
   AccordionContent,
@@ -36,17 +45,13 @@ import {
 } from "@/components/ui/select";
 import { useChain } from "@/context/chain";
 import { useSlotAction } from "@/hooks/use-slot-action";
-import {
-  useIpfsContent,
-  useMetadataHistory,
-} from "../hooks/use-metadata";
+import { useIpfsContent, useMetadataHistory } from "../hooks/use-metadata";
 import {
   type AdContent,
   adTypeColors,
   adTypeIcons,
   adTypeLabels,
 } from "../lib/ad-helpers";
-import { Ad, AdContent as AdContentView } from "@adland/react";
 import { MetadataPreview } from "./metadata-preview";
 import { ZodFormBuilder } from "./zod-form-builder";
 
@@ -141,10 +146,28 @@ export function MetadataForm({
   return (
     <div className="space-y-4">
       {/* Current Ad — rendered via @adland/react */}
-      <Ad
-        slot={slotAddress}
-        chainId={chainId}
-      />
+      <Ad slot={slotAddress} chainId={chainId}>
+        <AdLoading className="flex items-center gap-1.5 text-xs text-muted-foreground py-2">
+          <Loader2 className="size-3 animate-spin" />
+          Loading current ad...
+        </AdLoading>
+        <AdEmpty className="text-sm text-muted-foreground">
+          No ad content yet.
+        </AdEmpty>
+        <AdLoaded className="rounded-md border bg-muted/20 p-3">
+          <div className="flex items-start gap-3">
+            <AdImage className="size-10 rounded-md object-cover shrink-0" />
+            <div className="flex-1 min-w-0 space-y-0.5">
+              <AdTitle className="text-sm font-medium truncate" />
+              <AdDescription className="text-xs text-muted-foreground line-clamp-2" />
+            </div>
+            <div className="shrink-0 flex items-center gap-1.5">
+              <AdBadge className="inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[10px] font-medium" />
+              <AdLabel className="inline-flex items-center rounded-md bg-primary text-primary-foreground px-1.5 py-0.5 text-[10px] font-semibold" />
+            </div>
+          </div>
+        </AdLoaded>
+      </Ad>
 
       {!isOccupant && (
         <p className="text-xs text-muted-foreground">
@@ -284,10 +307,7 @@ export function MetadataForm({
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
-                  <HistoryItemContent
-                    uri={event.uri}
-                    rawJson={event.rawJson}
-                  />
+                  <HistoryItemContent uri={event.uri} rawJson={event.rawJson} />
                 </AccordionContent>
               </AccordionItem>
             ))}
@@ -333,7 +353,7 @@ function HistoryItemContent({
   const { data: fetchedContent, isLoading } = useIpfsContent(
     parsed ? undefined : uri,
   );
-  const adContent = parsed ?? fetchedContent;
+  const adContent = (parsed ?? fetchedContent) as AdData | null;
 
   if (!parsed && isLoading) {
     return (
@@ -350,7 +370,18 @@ function HistoryItemContent({
     );
   }
 
-  return <AdContentView data={adContent as AdData} />;
+  return (
+    <Ad data={adContent} className="rounded-md border bg-muted/20 p-3">
+      <div className="flex items-start gap-3">
+        <AdImage className="size-10 rounded-md object-cover shrink-0" />
+        <div className="flex-1 min-w-0 space-y-0.5">
+          <AdTitle className="text-sm font-medium truncate" />
+          <AdDescription className="text-xs text-muted-foreground line-clamp-2" />
+        </div>
+        <AdBadge className="shrink-0 inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[10px] font-medium" />
+      </div>
+    </Ad>
+  );
 }
 
 function createAdResolver(ad: ReturnType<typeof getAd>): Resolver {
