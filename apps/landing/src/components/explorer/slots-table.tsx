@@ -316,14 +316,14 @@ export function SlotsTable() {
                         </Badge>
                       )}
                     </TableCell>
-                    <TableCell className="text-right text-xs">
+                    <TableCell className="text-right text-xs whitespace-nowrap">
                       <span className="font-bold">
                         {isOccupied
                           ? `${formatPrice(slot.price, slot.currency.decimals ?? 18)} ${slot.currency.symbol}`
                           : "0"}
                       </span>
-                      <span className="text-muted-foreground block text-[10px]">
-                        {Number(slot.taxPercentage) / 100}% /week
+                      <span className="text-muted-foreground text-[10px] ml-1">
+                        ({Number(slot.taxPercentage) / 100}%/w)
                       </span>
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">
