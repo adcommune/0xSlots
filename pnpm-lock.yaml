@@ -156,6 +156,9 @@ importers:
       '@walletconnect/ethereum-provider':
         specifier: ^2.23.6
         version: 2.23.8(@types/react@19.2.14)(bufferutil@4.1.0)(encoding@0.1.13)(react@19.2.4)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.4))(utf-8-validate@6.0.6)(zod@3.25.76)
+      blockies-ts:
+        specifier: ^1.0.0
+        version: 1.0.0
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -5112,6 +5115,9 @@ packages:
 
   blob-to-it@2.0.10:
     resolution: {integrity: sha512-I39vO57y+LBEIcAV7fif0sn96fYOYVqrPiOD+53MxQGv4DBgt1/HHZh0BHheWx2hVe24q5LTSXxqeV1Y3Nzkgg==}
+
+  blockies-ts@1.0.0:
+    resolution: {integrity: sha512-mL9NO/FjYbFjaSDA5tw/qkUwEXrBG1bHSoPhAFG9CAzDaHTwQHzvYByAYUBmnqYciFsJvdxWKGtyOLgaSKoUkA==}
 
   bn.js@5.2.3:
     resolution: {integrity: sha512-EAcmnPkxpntVL+DS7bO1zhcZNvCkxqtkd0ZY53h06GNQ3DEkkGZ/gKgmDv6DdZQGj9BgfSPKtJJ7Dp1GPP8f7w==}
@@ -18217,6 +18223,8 @@ snapshots:
   blob-to-it@2.0.10:
     dependencies:
       browser-readablestream-to-it: 2.0.10
+
+  blockies-ts@1.0.0: {}
 
   bn.js@5.2.3: {}
 

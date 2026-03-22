@@ -11,11 +11,11 @@ import {
   User,
 } from "lucide-react";
 import Image from "next/image";
-import { useNavigation } from "@/context/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
-import { useDisconnect } from "wagmi";
+import { useAccount, useDisconnect } from "wagmi";
 
+import { Blockie } from "@/components/blockie";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -30,11 +30,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useChain } from "@/context/chain";
+import { useNavigation } from "@/context/navigation";
 import { truncateAddress } from "@/utils";
 
 export function UserMenu() {
   const { push } = useNavigation();
   const { chainId, setChain } = useChain();
+  const { connector } = useAccount();
   const { disconnect } = useDisconnect();
   const [copied, setCopied] = useState(false);
 
@@ -83,12 +85,17 @@ export function UserMenu() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="gap-2">
-                {account.ensAvatar && (
+                {account.ensAvatar ? (
                   <Image
                     src={account.ensAvatar}
                     alt=""
                     width={20}
                     height={20}
+                    className="size-5 rounded-full"
+                  />
+                ) : (
+                  <Blockie
+                    address={account.address}
                     className="size-5 rounded-full"
                   />
                 )}
@@ -113,9 +120,10 @@ export function UserMenu() {
                       className="size-8 rounded-full shrink-0"
                     />
                   ) : (
-                    <div className="size-8 rounded-full bg-muted flex items-center justify-center shrink-0">
-                      <User className="size-4 text-muted-foreground" />
-                    </div>
+                    <Blockie
+                      address={account.address}
+                      className="size-8 rounded-full shrink-0"
+                    />
                   )}
                   <div className="flex-1 min-w-0">
                     {account.ensName && (
@@ -126,6 +134,21 @@ export function UserMenu() {
                     <p className="text-xs text-muted-foreground font-mono">
                       {truncateAddress(account.address)}
                     </p>
+                    {connector && (
+                      <div className="flex items-center gap-1 mt-0.5">
+                        {connector.icon && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={connector.icon}
+                            alt=""
+                            className="size-3 rounded-sm"
+                          />
+                        )}
+                        <span className="text-[10px] text-muted-foreground">
+                          {connector.name}
+                        </span>
+                      </div>
+                    )}
                   </div>
                   {copied ? (
                     <Check className="size-3.5 text-green-500 shrink-0" />

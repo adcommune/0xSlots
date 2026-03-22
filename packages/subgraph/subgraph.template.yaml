@@ -28,6 +28,8 @@ dataSources:
           file: ./abis/Slot.json
         - name: ERC20
           file: ./abis/ERC20.json
+        - name: SplitV2
+          file: ./abis/SplitV2.json
       eventHandlers:
         - event: SlotDeployed(indexed address,indexed address,indexed address,(bool,bool,address),(uint256,address,uint256,uint256))
           handler: handleSlotDeployed
@@ -59,6 +61,8 @@ templates:
       abis:
         - name: Slot
           file: ./abis/Slot.json
+        - name: SplitV2
+          file: ./abis/SplitV2.json
       eventHandlers:
         - event: Bought(indexed address,indexed address,uint256,uint256,uint256)
           handler: handleBought

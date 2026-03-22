@@ -1,3 +1,4 @@
+import { CHAINS } from "@0xslots/contracts";
 import { ConnectButton } from "@/components/connect-button";
 import { Button } from "@/components/ui/button";
 import { useFarcaster } from "@/context/farcaster";
@@ -62,7 +63,7 @@ export function SubmitButton({
         className={className}
         onClick={() => switchChain({ chainId })}
       >
-        Switch to Base Sepolia
+        Switch to {CHAINS.find((c) => c.id === chainId)?.name ?? `chain ${chainId}`}
       </Button>
     );
   }

@@ -7,6 +7,7 @@ import { useEnsAvatar, useEnsName } from "wagmi";
 import { mainnet } from "wagmi/chains";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { AccountTypeIcon } from "@/components/account-type-icon";
+import { Blockie } from "@/components/blockie";
 import { PageHeader } from "@/components/page-header";
 import { SlotStatusBadge } from "@/components/slot-status-badge";
 import { SplitRecipientsBar } from "@/components/split-recipients-bar";
@@ -67,10 +68,15 @@ export function RecipientPageContent({ address }: { address: string }) {
     <div className="min-h-screen">
       <PageHeader>
         <div className="flex items-center gap-4">
-          {ensAvatar && (
+          {ensAvatar ? (
             <img
               src={ensAvatar}
               alt={ensName ?? address}
+              className="w-12 h-12 rounded-full border"
+            />
+          ) : (
+            <Blockie
+              address={address}
               className="w-12 h-12 rounded-full border"
             />
           )}

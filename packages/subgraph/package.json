@@ -7,12 +7,13 @@
     "codegen": "graph codegen",
     "build": "graph codegen && graph build",
     "build:base-sepolia": "pnpm prepare:base-sepolia && pnpm build",
-    "deploy:base-sepolia": "pnpm build:base-sepolia && graph deploy --studio $(node -p \"require('./config/base-sepolia.json').studioName\")",
+    "deploy:base-sepolia": "pnpm build:base-sepolia && graph deploy $(node -p \"require('./config/base-sepolia.json').studioName\")",
     "prepare:base": "mustache config/base.json subgraph.template.yaml > subgraph.yaml",
     "build:base": "pnpm prepare:base && pnpm build",
-    "deploy:base": "pnpm build:base && graph deploy --studio $(node -p \"require('./config/base.json').studioName\")",
+    "deploy:base": "pnpm build:base && graph deploy $(node -p \"require('./config/base.json').studioName\")",
     "create:local": "graph create --node http://localhost:8020/ 0xslots",
-    "deploy:local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 0xslots"
+    "deploy:local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 0xslots",
+    "deploy:all": "bash deploy-all.sh"
   },
   "dependencies": {
     "@graphprotocol/graph-cli": "^0.98.1",
