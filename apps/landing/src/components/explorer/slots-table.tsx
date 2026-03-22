@@ -1,5 +1,6 @@
 "use client";
 
+import { formatDistanceToNow } from "date-fns";
 import { Check, Filter, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { isAddress } from "viem";
@@ -273,12 +274,11 @@ export function SlotsTable() {
             <TableHeader>
               <TableRow>
                 <TableHead>Recipient</TableHead>
-                <TableHead>Status</TableHead>
                 <TableHead>Occupant</TableHead>
-                <TableHead className="text-right">Price</TableHead>
-                <TableHead className="text-right">Tax /week</TableHead>
+                <TableHead className="text-right">Price / Tax</TableHead>
                 <TableHead>Module</TableHead>
                 <TableHead>Flags</TableHead>
+                <TableHead className="text-right">Created</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -301,15 +301,7 @@ export function SlotsTable() {
                         <EnsAddress address={slot.recipient} />
                       </span>
                     </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={isOccupied ? "default" : "secondary"}
-                        className="text-[10px]"
-                      >
-                        {isOccupied ? "OCCUPIED" : "VACANT"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-xs">
+                    <TableCell className="text-xs">
                       {isOccupied && slot.occupant && slot.occupantAccount ? (
                         <span className="inline-flex items-center gap-1.5">
                           <AccountTypeIcon
@@ -319,16 +311,20 @@ export function SlotsTable() {
                           {truncateAddress(slot.occupant)}
                         </span>
                       ) : (
-                        "—"
+                        <Badge variant="secondary" className="text-[10px]">
+                          VACANT
+                        </Badge>
                       )}
                     </TableCell>
-                    <TableCell className="text-right font-bold text-xs">
-                      {isOccupied
-                        ? `${formatPrice(slot.price, slot.currency.decimals ?? 18)} ${slot.currency.symbol}`
-                        : "0"}
-                    </TableCell>
                     <TableCell className="text-right text-xs">
-                      {Number(slot.taxPercentage) / 100}%
+                      <span className="font-bold">
+                        {isOccupied
+                          ? `${formatPrice(slot.price, slot.currency.decimals ?? 18)} ${slot.currency.symbol}`
+                          : "0"}
+                      </span>
+                      <span className="text-muted-foreground block text-[10px]">
+                        {Number(slot.taxPercentage) / 100}% /week
+                      </span>
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">
                       {slot.module
@@ -348,6 +344,12 @@ export function SlotsTable() {
                           </Badge>
                         )}
                       </div>
+                    </TableCell>
+                    <TableCell className="text-right text-xs text-muted-foreground whitespace-nowrap">
+                      {formatDistanceToNow(
+                        new Date(Number(slot.createdAt) * 1000),
+                        { addSuffix: true },
+                      )}
                     </TableCell>
                   </TableRow>
                 );

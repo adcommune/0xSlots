@@ -56,6 +56,8 @@ export function useSlots(filters?: SlotFilters) {
       const { slots } = await client.getSlots({
         first: 100,
         where: where as any,
+        orderBy: "createdAt" as any,
+        orderDirection: "desc" as any,
       });
       return slots as SlotFieldsFragment[];
     },
