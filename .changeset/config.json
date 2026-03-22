@@ -8,11 +8,10 @@
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
   "ignore": [
-    "landing",
     "@0xslots/mcp",
+    "@0xslots/config",
     "@0xslots/subgraph",
-    "api",
-    "@adland/data",
-    "@0xslots/config"
+    "landing",
+    "api"
   ]
 }
