@@ -319,8 +319,11 @@ export function SlotsTable() {
                     <TableCell className="text-right text-xs whitespace-nowrap">
                       <span className="font-bold">
                         {isOccupied
-                          ? `${formatPrice(slot.price, slot.currency.decimals ?? 18)} ${slot.currency.symbol}`
+                          ? formatPrice(slot.price, slot.currency.decimals ?? 18)
                           : "0"}
+                      </span>
+                      <span className="text-muted-foreground text-[10px] ml-1">
+                        {slot.currency.symbol}
                       </span>
                       <span className="text-muted-foreground text-[10px] ml-1">
                         ({Number(slot.taxPercentage) / 100}%/w)
