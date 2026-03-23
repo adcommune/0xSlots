@@ -1,5 +1,11 @@
 # @adland/data
 
+## 0.14.1
+
+### Patch Changes
+
+- 8877133: refactor
+
 ## 0.14.0
 
 ### Minor Changes
