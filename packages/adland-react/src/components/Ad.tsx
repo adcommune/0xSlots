@@ -1,102 +1,14 @@
 import { SlotsChain } from "@0xslots/sdk";
-import type { AdData, AdType } from "@adland/data";
-import sdk from "@farcaster/miniapp-sdk";
-import { createContext, useCallback, useContext, useMemo, useRef } from "react";
+import type { AdData } from "@adland/data";
+import { useCallback, useMemo, useRef } from "react";
 
 import { createReadClient, fetchAdFromURI, fetchMetadataURI } from "../fetch";
+import { AdContext, useAd } from "../hooks/useAdContext";
 import { useFetch } from "../hooks/useFetch";
 import { AdDataQueryError, type AdProps } from "../types";
+import { performAdAction } from "../utils/ad-actions";
+import { getAdDescription, getAdImage, getAdTitle, getAdType } from "../utils/ad-fields";
 import { adCardIcon, adCardLabel } from "../utils/constants";
-
-// ─── Context ─────────────────────────────────────────────────────────────────
-
-export interface AdContextValue {
-  data: AdData | null;
-  isLoading: boolean;
-  error: unknown;
-  isEmpty: boolean;
-  slot?: string;
-}
-
-const AdContext = createContext<AdContextValue | null>(null);
-
-export function useAd(): AdContextValue {
-  const ctx = useContext(AdContext);
-  if (!ctx) throw new Error("useAd must be used within an <Ad> component");
-  return ctx;
-}
-
-// ─── Field extraction helpers ────────────────────────────────────────────────
-
-const IMAGE_KEYS = ["image", "icon", "pfpUrl", "logoURI", "imageUrl"] as const;
-const TITLE_KEYS = ["title", "displayName", "username", "name", "symbol"] as const;
-const DESC_KEYS = ["description", "bio", "text", "name"] as const;
-
-function flatFields(data: AdData): Record<string, unknown> {
-  return { ...data.data, ...(data.metadata ?? {}) };
-}
-
-export function getAdImage(data: AdData | null): string | null {
-  if (!data) return null;
-  const fields = flatFields(data);
-  for (const key of IMAGE_KEYS) {
-    const v = fields[key];
-    if (typeof v === "string" && v) return v;
-  }
-  return null;
-}
-
-export function getAdTitle(data: AdData | null): string | null {
-  if (!data) return null;
-  const fields = flatFields(data);
-  for (const key of TITLE_KEYS) {
-    const v = fields[key];
-    if (typeof v === "string" && v) return v;
-  }
-  return null;
-}
-
-export function getAdDescription(data: AdData | null): string | null {
-  if (!data) return null;
-  const fields = flatFields(data);
-  const title = getAdTitle(data);
-  for (const key of DESC_KEYS) {
-    const v = fields[key];
-    if (typeof v === "string" && v && v !== title) return v;
-  }
-  return null;
-}
-
-export function getAdType(data: AdData | null): AdType | null {
-  if (!data) return null;
-  return data.type as AdType;
-}
-
-// ─── Farcaster SDK actions ───────────────────────────────────────────────────
-
-function performAdAction(adData: AdData) {
-  try {
-    switch (adData.type) {
-      case "link":
-        sdk.actions.openUrl(adData.data.url);
-        break;
-      case "cast":
-        sdk.actions.viewCast({ hash: adData.data.hash });
-        break;
-      case "miniapp":
-        sdk.actions.openMiniApp({ url: adData.data.url });
-        break;
-      case "token":
-        sdk.actions.viewToken({ token: adData.data.address });
-        break;
-      case "farcasterProfile":
-        sdk.actions.viewProfile({ fid: Number.parseInt(adData.data.fid, 10) });
-        break;
-    }
-  } catch (err) {
-    console.error("[@adland/react] Failed to perform ad action:", err);
-  }
-}
 
 // ─── Root component ──────────────────────────────────────────────────────────
 
@@ -167,16 +79,16 @@ export function Ad({
     [adData],
   );
 
-  const ctx: AdContextValue = {
-    data: adData ?? null,
-    isLoading: !!slot && !staticData && isLoading,
-    error,
-    isEmpty,
-    slot,
-  };
-
   return (
-    <AdContext.Provider value={ctx}>
+    <AdContext.Provider
+      value={{
+        data: adData ?? null,
+        isLoading: !!slot && !staticData && isLoading,
+        error,
+        isEmpty,
+        slot,
+      }}
+    >
       <div ref={ref} onClick={onClick} {...props}>
         {children}
       </div>
@@ -241,7 +153,6 @@ export function AdBadge({ children, ...props }: AdBadgeProps) {
 
 export interface AdLabelProps extends React.HTMLAttributes<HTMLSpanElement> {}
 
-/** Renders the "AD" disclosure label. */
 export function AdLabel({ children, ...props }: AdLabelProps) {
   return <span {...props}>{children ?? "AD"}</span>;
 }

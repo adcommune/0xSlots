@@ -1,3 +1,4 @@
+// Compound Ad components
 export {
   Ad,
   AdBadge,
@@ -9,16 +10,10 @@ export {
   AdLoaded,
   AdLoading,
   AdTitle,
-  getAdDescription,
-  getAdImage,
-  getAdTitle,
-  getAdType,
-  useAd,
 } from "./components/Ad";
 
 export type {
   AdBadgeProps,
-  AdContextValue,
   AdDescriptionProps,
   AdImageProps,
   AdLabelProps,
@@ -26,6 +21,15 @@ export type {
   AdTitleProps,
 } from "./components/Ad";
 
+// Context hook
+export { useAd } from "./hooks/useAdContext";
+export type { AdContextValue } from "./hooks/useAdContext";
+
+// Field helpers
+export { getAdDescription, getAdImage, getAdTitle, getAdType } from "./utils/ad-fields";
+
+// Types
 export type { AdProps, AdDataQueryError } from "./types";
 
-export * from "./utils/constants";
+// Constants
+export { adCardIcon, adCardLabel } from "./utils/constants";
