@@ -1,13 +1,12 @@
 import { SlotsChain } from "@0xslots/sdk";
 import type { AdData, AdType } from "@adland/data";
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef } from "react";
+import sdk from "@farcaster/miniapp-sdk";
+import { createContext, useCallback, useContext, useMemo, useRef } from "react";
 
 import { createReadClient, fetchAdFromURI, fetchMetadataURI } from "../fetch";
 import { useFetch } from "../hooks/useFetch";
 import { AdDataQueryError, type AdProps } from "../types";
-import { getBaseUrl } from "../utils";
 import { adCardIcon, adCardLabel } from "../utils/constants";
-import { sendTrackRequest } from "../utils/sdk";
 
 // ─── Context ─────────────────────────────────────────────────────────────────
 
@@ -73,6 +72,32 @@ export function getAdType(data: AdData | null): AdType | null {
   return data.type as AdType;
 }
 
+// ─── Farcaster SDK actions ───────────────────────────────────────────────────
+
+function performAdAction(adData: AdData) {
+  try {
+    switch (adData.type) {
+      case "link":
+        sdk.actions.openUrl(adData.data.url);
+        break;
+      case "cast":
+        sdk.actions.viewCast({ hash: adData.data.hash });
+        break;
+      case "miniapp":
+        sdk.actions.openMiniApp({ url: adData.data.url });
+        break;
+      case "token":
+        sdk.actions.viewToken({ token: adData.data.address });
+        break;
+      case "farcasterProfile":
+        sdk.actions.viewProfile({ fid: Number.parseInt(adData.data.fid, 10) });
+        break;
+    }
+  } catch (err) {
+    console.error("[@adland/react] Failed to perform ad action:", err);
+  }
+}
+
 // ─── Root component ──────────────────────────────────────────────────────────
 
 /**
@@ -92,14 +117,11 @@ export function Ad({
   slot,
   data: staticData,
   chainId = SlotsChain.BASE,
-  network = "testnet",
-  baseUrl,
   rpcUrl,
   children,
   ...props
 }: AdProps) {
   const ref = useRef<HTMLDivElement>(null);
-  const networkBaseUrl = baseUrl ?? getBaseUrl(network);
 
   const client = useMemo(
     () => (slot ? createReadClient(chainId, rpcUrl) : null),
@@ -130,43 +152,6 @@ export function Ad({
       ? error.message === AdDataQueryError.NO_AD
       : !error);
 
-  const send = useCallback(
-    (type: "view" | "click") => {
-      if (!slot) return;
-      const trackEndpoint = `${networkBaseUrl}/api/analytics/track`;
-      sendTrackRequest(trackEndpoint, { type, slot }).catch(
-        (error: unknown) => {
-          console.error(`[@adland/react] Failed to track ${type}:`, error);
-        },
-      );
-    },
-    [slot, networkBaseUrl],
-  );
-
-  useEffect(() => {
-    if (!slot) return;
-    const el = ref.current;
-    if (!el) return;
-    const key = `ad_view_${slot}`;
-    const obs = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-        if (!entry?.isIntersecting) return;
-        const already = sessionStorage.getItem(key);
-        if (already) {
-          obs.unobserve(el);
-          return;
-        }
-        sessionStorage.setItem(key, "1");
-        send("view");
-        obs.unobserve(el);
-      },
-      { threshold: 0.15 },
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, [slot, send]);
-
   const onClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
       const target = e.target as HTMLElement;
@@ -175,9 +160,11 @@ export function Ad({
         target.tagName === "BUTTON" ||
         target.closest("a") !== null ||
         target.closest("button") !== null;
-      if (!isInteractive) send("click");
+      if (!isInteractive && adData) {
+        performAdAction(adData);
+      }
     },
-    [send],
+    [adData],
   );
 
   const ctx: AdContextValue = {
@@ -254,7 +241,7 @@ export function AdBadge({ children, ...props }: AdBadgeProps) {
 
 export interface AdLabelProps extends React.HTMLAttributes<HTMLSpanElement> {}
 
-/** Renders the "AD" disclosure label. Always visible when inside an <Ad>. */
+/** Renders the "AD" disclosure label. */
 export function AdLabel({ children, ...props }: AdLabelProps) {
   return <span {...props}>{children ?? "AD"}</span>;
 }

@@ -1,8 +1,6 @@
 import type { SlotsChain } from "@0xslots/sdk";
 import type { AdData } from "@adland/data";
 
-export type Network = "testnet" | "mainnet";
-
 export interface AdProps extends React.HTMLAttributes<HTMLDivElement> {
   /**
    * The slot contract address (0xSlots v3).
@@ -18,14 +16,6 @@ export interface AdProps extends React.HTMLAttributes<HTMLDivElement> {
    */
   chainId?: SlotsChain;
   /**
-   * Network to use for tracking requests (currently only "testnet" is supported)
-   */
-  network?: Network;
-  /**
-   * Optional base URL override. If not provided, uses relative URL in browser or production URL in SSR
-   */
-  baseUrl?: string;
-  /**
    * Optional RPC URL override. If not provided, uses public RPC for the chain.
    */
   rpcUrl?: string;
@@ -38,9 +28,4 @@ export interface AdProps extends React.HTMLAttributes<HTMLDivElement> {
 export enum AdDataQueryError {
   NO_AD = "NO_AD",
   ERROR = "ERROR",
-}
-
-export interface AdDataQueryResponse {
-  error?: AdDataQueryError;
-  data?: AdData;
 }

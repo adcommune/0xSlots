@@ -1,4 +1,3 @@
-// Compound Ad components
 export {
   Ad,
   AdBadge,
@@ -27,15 +26,6 @@ export type {
   AdTitleProps,
 } from "./components/Ad";
 
-// Types
-export type { AdProps, AdDataQueryResponse, AdDataQueryError } from "./types";
+export type { AdProps, AdDataQueryError } from "./types";
 
-// Utility exports
-export {
-  isSdkReady,
-  sendTrackRequest,
-  checkSdkActionsReady,
-} from "./utils/sdk";
-
-// Constants exports
 export * from "./utils/constants";
