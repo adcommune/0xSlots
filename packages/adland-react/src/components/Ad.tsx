@@ -6,7 +6,7 @@ import { createReadClient, fetchAdFromURI, fetchMetadataURI } from "../fetch";
 import { AdContext, useAd } from "../hooks/useAdContext";
 import { useFetch } from "../hooks/useFetch";
 import { AdDataQueryError, type AdProps } from "../types";
-import { performAdAction } from "../utils/ad-actions";
+import { performAdAction, performEmptyAdAction } from "../utils/ad-actions";
 import { getAdDescription, getAdImage, getAdTitle, getAdType } from "../utils/ad-fields";
 import { adCardIcon, adCardLabel } from "../utils/constants";
 
@@ -30,6 +30,7 @@ export function Ad({
   data: staticData,
   chainId = SlotsChain.BASE,
   rpcUrl,
+  baseLinkUrl = "https://app.0xslots.org",
   children,
   ...props
 }: AdProps) {
@@ -72,11 +73,15 @@ export function Ad({
         target.tagName === "BUTTON" ||
         target.closest("a") !== null ||
         target.closest("button") !== null;
-      if (!isInteractive && adData) {
+      if (isInteractive) return;
+
+      if (adData) {
         performAdAction(adData);
+      } else if (isEmpty && slot) {
+        performEmptyAdAction(slot, chainId, baseLinkUrl);
       }
     },
-    [adData],
+    [adData, isEmpty, slot, chainId, baseLinkUrl],
   );
 
   return (
@@ -87,6 +92,8 @@ export function Ad({
         error,
         isEmpty,
         slot,
+        baseLinkUrl,
+        chainId,
       }}
     >
       <div ref={ref} onClick={onClick} {...props}>
@@ -172,7 +179,7 @@ export function AdLoading({ children, ...props }: AdStatusProps) {
 export function AdEmpty({ children, ...props }: AdStatusProps) {
   const { isEmpty } = useAd();
   if (!isEmpty) return null;
-  return <div {...props}>{children ?? "No ad"}</div>;
+  return <div {...props}>{children ?? "Your ad here"}</div>;
 }
 
 export function AdError({ children, ...props }: AdStatusProps) {
