@@ -3,6 +3,7 @@
 import { FileBox, LandPlot, List, PlusIcon, User } from "lucide-react";
 import { useAccount } from "wagmi";
 
+import { AdBar } from "@/components/ad-bar";
 import { EventsTable } from "@/components/explorer/events-table";
 import { ModulesTable } from "@/components/explorer/modules-table";
 import { RecipientsTable } from "@/components/explorer/recipients-table";
@@ -41,6 +42,7 @@ export default function Home() {
       </PageHeader>
 
       <div className="max-w-6xl mx-auto px-2 md:px-6 py-1 md:py-4">
+        <AdBar />
         <ExplorerTabs
           tabs={[
             {
