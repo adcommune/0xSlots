@@ -1,6 +1,7 @@
 "use client";
 
-import { Banknote, HandCoins, LandPlot } from "lucide-react";
+import { Banknote, Check, Copy, HandCoins, LandPlot } from "lucide-react";
+import { useState } from "react";
 import { type Address, formatUnits } from "viem";
 import { normalize } from "viem/ens";
 import { useEnsAvatar, useEnsName } from "wagmi";
@@ -29,6 +30,7 @@ import { useSlotsOnChain } from "@/hooks/use-slot-onchain";
 import { formatBalance, truncateAddress } from "@/utils";
 
 export function RecipientPageContent({ address }: { address: string }) {
+  const [copied, setCopied] = useState(false);
   const { explorerUrl, chainId: selectedChainId } = useChain();
   const { push } = useNavigation();
 
@@ -92,17 +94,34 @@ export function RecipientPageContent({ address }: { address: string }) {
             <h1 className="text-xl font-bold tracking-tight leading-tight">
               {ensName ?? "Recipient"}
             </h1>
-            <a
-              href={`${explorerUrl}/address/${address}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-primary hover:underline inline-flex items-center gap-1.5"
-            >
-              {recipientType && (
-                <AccountTypeIcon type={recipientType} className="h-3 w-3" />
-              )}
-              {truncateAddress(address)}
-            </a>
+            <div className="inline-flex items-center gap-1.5">
+              <a
+                href={`${explorerUrl}/address/${address}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-primary hover:underline inline-flex items-center gap-1.5"
+              >
+                {recipientType && (
+                  <AccountTypeIcon type={recipientType} className="h-3 w-3" />
+                )}
+                {truncateAddress(address)}
+              </a>
+              <button
+                type="button"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+                onClick={() => {
+                  navigator.clipboard.writeText(address);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 1500);
+                }}
+              >
+                {copied ? (
+                  <Check className="size-3" />
+                ) : (
+                  <Copy className="size-3" />
+                )}
+              </button>
+            </div>
             {recipientType === "SPLIT" && (
               <div className="mt-2">
                 <SplitRecipientsBar
