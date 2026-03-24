@@ -1,6 +1,7 @@
 "use client";
 
 import { CHAINS } from "@0xslots/contracts";
+import sdk from "@farcaster/miniapp-sdk";
 import { BookOpen, Check, ChevronDown, Menu, User } from "lucide-react";
 import Image from "next/image";
 import { NavLink } from "@/context/navigation";
@@ -86,7 +87,15 @@ export function AppShell({ children }: { children: ReactNode }) {
           <User className="size-4" />
           My Slots
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => push("/docs")}>
+        <DropdownMenuItem
+          onClick={() => {
+            if (isMiniApp) {
+              sdk.actions.openUrl("https://docs.0xslots.org");
+            } else {
+              window.open("https://docs.0xslots.org", "_blank");
+            }
+          }}
+        >
           <BookOpen className="size-4" />
           Docs
         </DropdownMenuItem>

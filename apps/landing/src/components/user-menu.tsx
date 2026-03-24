@@ -1,6 +1,7 @@
 "use client";
 
 import { CHAINS } from "@0xslots/contracts";
+import sdk from "@farcaster/miniapp-sdk";
 import { ConnectButton as RainbowConnectButton } from "@rainbow-me/rainbowkit";
 import {
   BookOpen,
@@ -30,11 +31,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useChain } from "@/context/chain";
+import { useFarcaster } from "@/context/farcaster";
 import { useNavigation } from "@/context/navigation";
 import { truncateAddress } from "@/utils";
 
 export function UserMenu() {
   const { push } = useNavigation();
+  const { isMiniApp } = useFarcaster();
   const { chainId, setChain } = useChain();
   const { connector } = useAccount();
   const { disconnect } = useDisconnect();
@@ -165,7 +168,15 @@ export function UserMenu() {
                   <User className="size-4" />
                   My Slots
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => push("/docs")}>
+                <DropdownMenuItem
+                  onClick={() => {
+                    if (isMiniApp) {
+                      sdk.actions.openUrl("https://docs.0xslots.org");
+                    } else {
+                      window.open("https://docs.0xslots.org", "_blank");
+                    }
+                  }}
+                >
                   <BookOpen className="size-4" />
                   Docs
                 </DropdownMenuItem>
