@@ -2,9 +2,7 @@
 
 import { slotAbi } from "@0xslots/contracts";
 import { type Address, erc20Abi } from "viem";
-import { useReadContract, useReadContracts, useBlockNumber } from "wagmi";
-import { useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useReadContract, useReadContracts } from "wagmi";
 
 export type SlotOnChain = {
   // Identity
@@ -97,19 +95,7 @@ function parseSlotInfo(
   };
 }
 
-/**
- * Invalidate all contract reads on every new block — ensures fresh data after txs
- */
-function useInvalidateOnBlock(chainId: number) {
-  const queryClient = useQueryClient();
-  const { data: blockNumber } = useBlockNumber({ watch: true, chainId });
-  useEffect(() => {
-    if (blockNumber) {
-      queryClient.invalidateQueries({ queryKey: ["readContract"] });
-      queryClient.invalidateQueries({ queryKey: ["readContracts"] });
-    }
-  }, [blockNumber, queryClient]);
-}
+// Block-watching removed — use refetch() for manual refresh to save RPC calls
 
 /**
  * Fetch a single slot's complete state from on-chain via getSlotInfo() + currency metadata.
@@ -122,7 +108,7 @@ export function useSlotOnChain(slotAddress: string, chainId: number): {
   isLoading: boolean;
   refetch: () => void;
 } {
-  useInvalidateOnBlock(chainId);
+  // Manual refetch only — no block watching
   const addr = slotAddress as Address;
 
   const {
@@ -182,7 +168,7 @@ export function useSlotsOnChain(slotAddresses: string[], chainId: number): {
   isLoading: boolean;
   refetch: () => void;
 } {
-  useInvalidateOnBlock(chainId);
+  // Manual refetch only — no block watching
   const contracts = slotAddresses.map((addr) => ({
     address: addr as Address,
     abi: slotAbi,

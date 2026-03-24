@@ -16,6 +16,7 @@ import {
   LandPlot,
   Loader2,
   Lock,
+  RefreshCw,
   Settings,
   Shield,
   Sparkles,
@@ -76,7 +77,11 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
   const router = useRouter();
   const { explorerUrl, chainId: selectedChainId } = useChain();
   const { isMiniApp } = useFarcaster();
-  const { data: slot, isLoading } = useSlotOnChain(slotAddress, selectedChainId);
+  const {
+    data: slot,
+    isLoading,
+    refetch: refetchSlot,
+  } = useSlotOnChain(slotAddress, selectedChainId);
 
   // Subgraph data — prefetched on the server, reads from cache instantly
   const { data: subgraphSlot } = useSuspenseQuery(
@@ -211,9 +216,19 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
           >
             ← Back
           </button>
-          <h1 className="text-xl font-bold tracking-tight leading-tight">
-            Slot {truncateAddress(slot.id)}
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-bold tracking-tight leading-tight">
+              Slot {truncateAddress(slot.id)}
+            </h1>
+            <button
+              type="button"
+              onClick={() => refetchSlot()}
+              className="text-muted-foreground hover:text-foreground transition-colors"
+              title="Refresh slot data"
+            >
+              <RefreshCw className="size-3.5" />
+            </button>
+          </div>
           <div className="flex items-center gap-2">
             <p className="text-xs text-muted-foreground">
               {isOccupied
@@ -962,6 +977,24 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
                     <>
                       <HandCoins className="size-4 mr-1" /> Pay Tax (
                       {formatBalance(slot.taxOwed, decimals)} {symbol})
+                    </>
+                  )}
+                </Button>
+              )}
+
+              {!isRecipient && !isOccupant && slot.collectedTax > 0n && (
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  disabled={busy}
+                  onClick={() => collect(slotAddress as Address)}
+                >
+                  {busy && activeAction === "Collect tax" ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <>
+                      <HandCoins className="size-4 mr-1" /> Distribute Tax (
+                      {formatBalance(slot.collectedTax, decimals)} {symbol})
                     </>
                   )}
                 </Button>
