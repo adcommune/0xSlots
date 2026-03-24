@@ -6,8 +6,16 @@ export const truncateAddress = (address: string) => {
 };
 
 /**
- * Format a raw token amount (string or bigint) using viem's formatUnits.
- * Trims trailing zeros for clean display.
+ * Format a raw token amount (string or bigint) for display.
+ *
+ * - >= 1B       → "1.23B"
+ * - >= 1M       → "4.56M"
+ * - >= 1K       → "12.3K"
+ * - >= 1        → "123.45"
+ * - < 1 & > 0   → show enough decimals to see the first significant digits
+ *                  (e.g. 0.00042 → "0.00042"), but if more than 5 leading zeros
+ *                  use scientific notation (e.g. 1.2e-7)
+ * - 0           → "0"
  */
 export function formatAmount(raw: string | bigint, decimals: number = 18): string {
   const val = typeof raw === "bigint" ? raw : BigInt(raw || "0");
@@ -15,8 +23,33 @@ export function formatAmount(raw: string | bigint, decimals: number = 18): strin
   const formatted = formatUnits(val, decimals);
   const num = parseFloat(formatted);
   if (num === 0) return "0";
-  if (num < 0.0001) return "<0.0001";
-  return parseFloat(num.toFixed(Math.min(decimals, 6))).toString();
+
+  const abs = Math.abs(num);
+
+  // Billions
+  if (abs >= 1_000_000_000) {
+    return `${(num / 1_000_000_000).toFixed(2)}B`;
+  }
+  // Millions
+  if (abs >= 1_000_000) {
+    return `${(num / 1_000_000).toFixed(2)}M`;
+  }
+  // Thousands
+  if (abs >= 1_000) {
+    return `${(num / 1_000).toFixed(2)}K`;
+  }
+  // >= 1
+  if (abs >= 1) {
+    return parseFloat(num.toFixed(2)).toString();
+  }
+  // < 1: count leading zeros after "0."
+  const leadingZeros = -Math.floor(Math.log10(abs)) - 1;
+  if (leadingZeros >= 5) {
+    return num.toExponential(1);
+  }
+  // Show enough decimals: leading zeros + 2 significant digits
+  const precision = leadingZeros + 2;
+  return parseFloat(num.toFixed(precision)).toString();
 }
 
 export const formatPrice = formatAmount;
