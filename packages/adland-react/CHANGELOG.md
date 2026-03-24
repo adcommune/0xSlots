@@ -1,5 +1,11 @@
 # @adland/react
 
+## 0.14.0
+
+### Minor Changes
+
+- bd79045: update empty state & props
+
 ## 0.13.1
 
 ### Patch Changes
