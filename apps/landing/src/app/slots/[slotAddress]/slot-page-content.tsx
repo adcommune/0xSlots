@@ -707,13 +707,13 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
             {isMetadataModule && (
               <Button
                 variant="outline"
-                size="icon"
-                className="shrink-0"
+                className="flex-1 gap-2"
                 onClick={() =>
                   setMobilePanel((p) => (p === "metadata" ? null : "metadata"))
                 }
               >
                 <FileBox className="size-4" />
+                {mobilePanel === "metadata" ? "Back" : "Metadata"}
               </Button>
             )}
             <Button
