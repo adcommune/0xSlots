@@ -326,7 +326,7 @@ export function SlotsTable() {
                         {slot.currency.symbol}
                       </span>
                       <span className="text-muted-foreground text-[10px] ml-1">
-                        ({Number(slot.taxPercentage) / 100}%/w)
+                        ({Number(slot.taxPercentage) / 100}%/mo)
                       </span>
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">
