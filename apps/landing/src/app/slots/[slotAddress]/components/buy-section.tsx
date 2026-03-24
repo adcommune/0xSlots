@@ -2,7 +2,7 @@
 
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
-import { type Address } from "viem";
+import { type Address, formatUnits } from "viem";
 import { MONTH_SECONDS } from "@/constants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,27 +25,27 @@ export function BuySection({
   const [buyPrice, setBuyPrice] = useState("");
   const [buyDeposit, setBuyDeposit] = useState("");
 
+  // Use formatUnits for values that feed back into toRawUnits (no K/M/B suffixes).
+  // Use formatBalance only for pure display.
+  const currentPriceRaw = isOccupied ? formatUnits(slot.price, decimals) : "0";
+  const currentPriceDisplay = isOccupied ? formatBalance(slot.price, decimals) : "0";
+
   function computeMinDeposit(price: bigint): string {
     if (slot.minDepositSeconds === 0n) return "0";
     const min =
       (price * slot.taxPercentage * slot.minDepositSeconds) / (MONTH_SECONDS * 10000n);
-    return formatBalance(min, decimals);
+    return formatUnits(min, decimals);
   }
 
-  const currentPrice = isOccupied ? formatBalance(slot.price, decimals) : "0";
-  const defaultPrice = isOccupied ? formatBalance(slot.price, decimals) : "";
-
-  const effectivePrice = buyPrice || defaultPrice;
+  const effectivePrice = buyPrice || currentPriceRaw;
   const priceForMin = effectivePrice ? toRawUnits(effectivePrice, decimals) : 0n;
   const minDep = computeMinDeposit(priceForMin);
   const effectiveDeposit = buyDeposit || (minDep !== "0" ? minDep : "");
 
-  const costPrice = isOccupied ? currentPrice : "0";
-
   function totalApprovalDisplay(): string {
     try {
       const dep = Number.parseFloat(effectiveDeposit || "0");
-      const cost = Number.parseFloat(costPrice);
+      const cost = Number.parseFloat(currentPriceRaw);
       return (dep + cost).toFixed(2);
     } catch {
       return "0";
@@ -67,7 +67,7 @@ export function BuySection({
         <div className="flex justify-between text-xs text-muted-foreground">
           <span>Purchase cost</span>
           <span className="font-bold text-foreground">
-            {currentPrice} {symbol}
+            {currentPriceDisplay} {symbol}
           </span>
         </div>
       )}
@@ -79,7 +79,7 @@ export function BuySection({
         <Input
           type="text"
           inputMode="decimal"
-          placeholder={defaultPrice || "1.00"}
+          placeholder={currentPriceDisplay || "1.00"}
           value={buyPrice}
           onChange={(e) => setBuyPrice(e.target.value)}
           className="text-xs"
@@ -96,14 +96,14 @@ export function BuySection({
         <Input
           type="text"
           inputMode="decimal"
-          placeholder={minDep !== "0" ? `Min: ${minDep}` : "0.00"}
+          placeholder={minDep !== "0" ? `Min: ${formatBalance(toRawUnits(minDep, decimals), decimals)}` : "0.00"}
           value={buyDeposit}
           onChange={(e) => setBuyDeposit(e.target.value)}
           className="text-xs"
         />
         {minDep !== "0" && (
           <p className="text-[10px] text-muted-foreground mt-0.5">
-            Minimum deposit: {minDep} {symbol}
+            Minimum deposit: {formatBalance(toRawUnits(minDep, decimals), decimals)} {symbol}
           </p>
         )}
       </div>
@@ -114,14 +114,14 @@ export function BuySection({
           <div className="flex justify-between text-xs">
             <span className="text-muted-foreground">Purchase</span>
             <span>
-              {costPrice} {symbol}
+              {currentPriceDisplay} {symbol}
             </span>
           </div>
         )}
         <div className="flex justify-between text-xs">
           <span className="text-muted-foreground">Deposit</span>
           <span>
-            {effectiveDeposit || "0"} {symbol}
+            {effectiveDeposit ? formatBalance(toRawUnits(effectiveDeposit, decimals), decimals) : "0"} {symbol}
           </span>
         </div>
         <div className="flex justify-between text-sm font-bold border-t pt-1 mt-1">
@@ -138,7 +138,7 @@ export function BuySection({
             <Loader2 className="size-4 animate-spin mr-2" /> Processing...
           </>
         ) : isOccupied ? (
-          `Buy @ ${currentPrice} ${symbol}`
+          `Buy @ ${currentPriceDisplay} ${symbol}`
         ) : (
           "Buy Slot"
         )}

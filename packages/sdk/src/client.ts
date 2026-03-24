@@ -438,6 +438,13 @@ export class SlotsClient {
   async buy(params: BuyParams): Promise<Hash> {
     this.assertPositive(params.depositAmount, "depositAmount");
     this.assertPositive(params.selfAssessedPrice, "selfAssessedPrice");
+    console.log("[SlotsClient.buy]", {
+      slot: params.slot,
+      depositAmount: params.depositAmount.toString(),
+      selfAssessedPrice: params.selfAssessedPrice.toString(),
+      account: this.account,
+      chain: this.chain.id,
+    });
     return this.withAllowance(params.slot, params.depositAmount, {
       to: params.slot,
       abi: slotAbi,
@@ -720,6 +727,19 @@ export class SlotsClient {
 
     const needsApproval = allowance < amount;
 
+    console.log("[withAllowance]", {
+      spender,
+      currency,
+      allowance: allowance.toString(),
+      amount: amount.toString(),
+      needsApproval,
+      call: {
+        to: call.to,
+        functionName: call.functionName,
+        args: call.args.map((a: unknown) => (typeof a === "bigint" ? a.toString() : a)),
+      },
+    });
+
     // Atomic batch path
     if (needsApproval && (await this.supportsAtomicBatch())) {
       const approveData = encodeFunctionData({
@@ -749,6 +769,7 @@ export class SlotsClient {
 
     // Sequential path
     if (needsApproval) {
+      console.log("[withAllowance] Sending approve tx...");
       const hash = await this.wallet.writeContract({
         address: currency,
         abi: erc20Abi,
@@ -757,8 +778,24 @@ export class SlotsClient {
         account: this.account,
         chain: this.chain,
       });
+      console.log("[withAllowance] Approve tx hash:", hash);
       await this.publicClient.waitForTransactionReceipt({ hash });
+      console.log("[withAllowance] Approve confirmed");
     }
+
+    const calldata = encodeFunctionData({
+      abi: call.abi,
+      functionName: call.functionName as any,
+      args: call.args,
+    });
+    console.log("[withAllowance] Sending action tx:", {
+      to: call.to,
+      functionName: call.functionName,
+      calldata,
+      calldataLength: calldata.length,
+      account: this.account,
+      chain: this.chain.id,
+    });
 
     return this.wallet.writeContract({
       address: call.to,
