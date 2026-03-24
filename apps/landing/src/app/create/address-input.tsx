@@ -1,7 +1,7 @@
 "use client";
 
 import { forwardRef } from "react";
-import { isAddress } from "viem";
+import { getAddress, isAddress } from "viem";
 import { normalize } from "viem/ens";
 import { useEnsAddress } from "wagmi";
 import { mainnet } from "wagmi/chains";
@@ -22,8 +22,16 @@ export function useResolveAddress(input: string) {
     chainId: mainnet.id,
     query: { enabled: !!ensName },
   });
+  let resolved = isEns && ensAddress ? ensAddress : input;
+  try {
+    if (isAddress(resolved, { strict: false })) {
+      resolved = getAddress(resolved);
+    }
+  } catch {
+    // not a valid address, leave as-is
+  }
   return {
-    resolved: isEns && ensAddress ? ensAddress : input,
+    resolved,
     isEns,
     isResolving: isEns && isLoading,
     ensName: isEns && ensAddress ? input : null,
@@ -53,7 +61,7 @@ export const AddressInput = forwardRef<HTMLInputElement, AddressInputProps>(
           type="text"
           placeholder={placeholder ?? "0x… or vitalik.eth"}
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => onChange(e.target.value.replace(/[^\x20-\x7E]/g, ""))}
           onBlur={onBlur}
           className={cn(
             "text-xs",

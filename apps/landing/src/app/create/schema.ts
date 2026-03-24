@@ -2,9 +2,10 @@ import { isAddress } from "viem";
 import { z } from "zod";
 
 function isValidAddressOrEns(val: string) {
-  if (!val) return true;
-  if (isAddress(val)) return true;
-  if (/^[a-zA-Z0-9-]+\.(eth|xyz|id)$/.test(val)) return true;
+  const v = val.trim();
+  if (!v) return true;
+  if (isAddress(v, { strict: false })) return true;
+  if (/^[a-zA-Z0-9-]+\.(eth|xyz|id)$/.test(v)) return true;
   return false;
 }
 
@@ -104,7 +105,7 @@ export const createSlotSchema = z
     (d) => {
       if (d.recipientMode === "group") {
         return d.splitRecipients.every(
-          (r) => r.address.length > 0 && isValidAddressOrEns(r.address),
+          (r) => r.address.trim().length > 0 && isValidAddressOrEns(r.address),
         );
       }
       return true;
@@ -150,7 +151,10 @@ export type CreateSlotFormValues = z.input<typeof createSlotSchema>;
 export const defaultValues: CreateSlotFormValues = {
   recipientMode: "single" as const,
   recipient: "",
-  splitRecipients: [{ address: "", percentAllocation: 0 }],
+  splitRecipients: [
+    { address: "", percentAllocation: 50 },
+    { address: "", percentAllocation: 50 },
+  ],
   distributorFeePercent: 0,
   currencyMode: "preset",
   presetCurrency: "",
