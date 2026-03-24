@@ -11,9 +11,11 @@ import {
   AdTitle,
 } from "@adland/react";
 import Autoplay from "embla-carousel-autoplay";
+import { useCallback, useEffect, useState } from "react";
 import { EnsAddress } from "@/components/ens-address";
 import {
   Carousel,
+  type CarouselApi,
   CarouselContent,
   CarouselItem,
 } from "@/components/ui/carousel";
@@ -76,6 +78,72 @@ function AdCard({
   );
 }
 
+function AdCarousel({
+  slots,
+  chainId,
+  rpcUrl,
+  isMiniApp,
+}: {
+  slots: string[];
+  chainId: number;
+  rpcUrl?: string;
+  isMiniApp: boolean;
+}) {
+  const [api, setApi] = useState<CarouselApi>();
+  const [current, setCurrent] = useState(0);
+
+  const onSelect = useCallback(() => {
+    if (!api) return;
+    setCurrent(api.selectedScrollSnap());
+  }, [api]);
+
+  useEffect(() => {
+    if (!api) return;
+    onSelect();
+    api.on("select", onSelect);
+    return () => {
+      api.off("select", onSelect);
+    };
+  }, [api, onSelect]);
+
+  return (
+    <div className="space-y-1.5">
+      <Carousel
+        opts={{ loop: true }}
+        plugins={[Autoplay({ delay: 6000, stopOnInteraction: false })]}
+        setApi={setApi}
+      >
+        <CarouselContent>
+          {slots.map((slot) => (
+            <CarouselItem key={slot}>
+              <AdCard
+                slot={slot}
+                chainId={chainId}
+                rpcUrl={rpcUrl}
+                isMiniApp={isMiniApp}
+              />
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+      </Carousel>
+      <div className="flex justify-center gap-1">
+        {slots.map((slot, i) => (
+          <button
+            key={slot}
+            type="button"
+            className={`h-0.5 rounded-full transition-colors ${
+              i === current
+                ? "w-4 bg-foreground"
+                : "w-2.5 bg-muted-foreground/30"
+            }`}
+            onClick={() => api?.scrollTo(i)}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function AdBar() {
   const { chainId } = useChain();
   const { isMiniApp } = useFarcaster();
@@ -85,26 +153,15 @@ export function AdBar() {
   if (!slots?.length) return null;
 
   return (
-    <div className="mb-4">
+    <div className="">
       {/* Mobile: carousel */}
       <div className="md:hidden">
-        <Carousel
-          opts={{ loop: true }}
-          plugins={[Autoplay({ delay: 4000, stopOnInteraction: true })]}
-        >
-          <CarouselContent>
-            {slots.map((slot) => (
-              <CarouselItem key={slot}>
-                <AdCard
-                  slot={slot}
-                  chainId={chainId}
-                  rpcUrl={rpcUrl}
-                  isMiniApp={isMiniApp}
-                />
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-        </Carousel>
+        <AdCarousel
+          slots={slots}
+          chainId={chainId}
+          rpcUrl={rpcUrl}
+          isMiniApp={isMiniApp}
+        />
       </div>
 
       {/* Desktop: flex row */}
