@@ -1,5 +1,6 @@
 "use client";
 
+import { CHAINS } from "@0xslots/contracts";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import {
   Activity,
@@ -897,7 +898,7 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
               className="w-full"
               onClick={() => switchChain({ chainId: selectedChainId })}
             >
-              Switch to Base Sepolia
+              Switch to {CHAINS.find((c) => c.id === selectedChainId)?.name ?? "correct network"}
             </Button>
           ) : (
             <>

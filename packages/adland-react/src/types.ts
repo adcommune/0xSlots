@@ -26,6 +26,11 @@ export interface AdProps extends React.HTMLAttributes<HTMLDivElement> {
    */
   baseLinkUrl?: string;
   /**
+   * Whether the app is running inside a Farcaster miniapp.
+   * When true, empty-state clicks use sdk.actions.openMiniApp instead of window.open.
+   */
+  isMiniApp?: boolean;
+  /**
    * Compound children (AdImage, AdTitle, etc.)
    */
   children?: React.ReactNode;

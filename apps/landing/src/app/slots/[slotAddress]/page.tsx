@@ -5,13 +5,37 @@ import {
   HydrationBoundary,
   QueryClient,
 } from "@tanstack/react-query";
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import {
   slotQueryOptions,
   slotActivityQueryOptions,
 } from "@/hooks/slot-queries";
-
+import { getFrameMetadata } from "@/lib/frame-metadata";
+import { truncateAddress } from "@/utils";
 import { SlotPageContent } from "./slot-page-content";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slotAddress: string }>;
+}): Promise<Metadata> {
+  const { slotAddress } = await params;
+  const truncated = truncateAddress(slotAddress);
+
+  const { frame, metadata } = getFrameMetadata({
+    title: `Slot ${truncated}`,
+    path: `/slots/${slotAddress}`,
+    previewPath: `/api/og/slot/${slotAddress}`,
+  });
+
+  return {
+    ...metadata,
+    other: {
+      "fc:miniapp": JSON.stringify(frame),
+    },
+  };
+}
 
 export default async function SlotPage({
   params,
@@ -35,9 +59,7 @@ export default async function SlotPage({
           <div className="min-h-screen">
             <div className="max-w-6xl mx-auto px-6 py-12">
               <div className="rounded-lg border p-12 text-center animate-pulse">
-                <p className="text-sm text-muted-foreground">
-                  Loading slot...
-                </p>
+                <p className="text-sm text-muted-foreground">Loading slot...</p>
               </div>
             </div>
           </div>

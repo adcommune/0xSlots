@@ -2,18 +2,6 @@ import type { SlotsChain } from "@0xslots/sdk";
 import type { AdData } from "@adland/data";
 import sdk from "@farcaster/miniapp-sdk";
 
-async function isMiniApp(): Promise<boolean> {
-  try {
-    const context = await Promise.race([
-      sdk.context,
-      new Promise((r) => setTimeout(r, 500)),
-    ]);
-    return !!context;
-  } catch {
-    return false;
-  }
-}
-
 export function performAdAction(adData: AdData) {
   try {
     switch (adData.type) {
@@ -45,13 +33,14 @@ export function performAdAction(adData: AdData) {
   }
 }
 
-export async function performEmptyAdAction(
+export function performEmptyAdAction(
   slot: string,
   chainId: SlotsChain,
   baseLinkUrl: string,
+  isMiniApp: boolean,
 ) {
   const url = `${baseLinkUrl}/slots/${slot}?chain=${chainId}`;
-  if (await isMiniApp()) {
+  if (isMiniApp) {
     sdk.actions.openMiniApp({ url });
   } else {
     window.open(url, "_blank");
