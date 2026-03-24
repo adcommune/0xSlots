@@ -1,4 +1,4 @@
-import { HandCoins } from "lucide-react";
+import { AlertCircle, Check, HandCoins, Loader2 } from "lucide-react";
 import { useFormContext } from "react-hook-form";
 import { getChainTokens } from "@0xslots/sdk";
 import {
@@ -8,6 +8,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useErc20Check } from "../hooks/use-erc20-check";
 import {
   Select,
   SelectContent,
@@ -33,8 +34,10 @@ export function StepParameters() {
   const { chainId } = useChain();
   const currencyMode = form.watch("currencyMode");
   const presetCurrency = form.watch("presetCurrency");
+  const customCurrency = form.watch("customCurrency");
   const moduleMode = form.watch("moduleMode");
   const chainTokens = getChainTokens(chainId);
+  const erc20 = useErc20Check(currencyMode === "custom" ? customCurrency : "");
 
   return (
     <>
@@ -95,6 +98,24 @@ export function StepParameters() {
                 placeholder="0x… ERC-20 address or ENS"
                 error={fieldState.error?.message}
               />
+              {erc20.isLoading && (
+                <p className="flex items-center gap-1.5 text-[10px] text-blue-500">
+                  <Loader2 className="size-3 animate-spin" />
+                  Checking ERC-20 token...
+                </p>
+              )}
+              {erc20.data && (
+                <p className="flex items-center gap-1.5 text-[10px] text-green-600">
+                  <Check className="size-3" />
+                  {erc20.data.name} ({erc20.data.symbol}) · {erc20.data.decimals} decimals
+                </p>
+              )}
+              {erc20.isError && erc20.isValidAddress && (
+                <p className="flex items-center gap-1.5 text-[10px] text-destructive">
+                  <AlertCircle className="size-3" />
+                  Not a valid ERC-20 token on this chain
+                </p>
+              )}
             </FormItem>
           )}
         />
