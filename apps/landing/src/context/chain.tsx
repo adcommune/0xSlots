@@ -1,6 +1,6 @@
 "use client";
 
-import { DEFAULT_CHAIN } from "@0xslots/contracts";
+import { CHAINS, DEFAULT_CHAIN } from "@0xslots/contracts";
 import type { SlotsChain } from "@0xslots/sdk";
 import {
   createContext,
@@ -28,6 +28,18 @@ export function ChainProvider({ children }: { children: ReactNode }) {
   );
   const { mutate: switchWalletChain } = useSwitchChain();
   const { chainId: walletChainId } = useAccount();
+
+  // Read ?chain= search param on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const chainParam = params.get("chain");
+    if (chainParam) {
+      const parsed = Number(chainParam);
+      if (CHAINS.some((c) => c.id === parsed)) {
+        setChainId(parsed as SlotsChain);
+      }
+    }
+  }, []);
 
   // Keep the connected wallet chain in sync with the selected chain at all times.
   useEffect(() => {
