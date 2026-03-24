@@ -8,14 +8,16 @@ import {
   CarouselContent,
   CarouselItem,
 } from "@/components/ui/carousel";
+import { alchemyRpcUrl } from "@0xslots/config/transports";
 import { useChain } from "@/context/chain";
-import { AD_SLOTS, APP_URL } from "@/constants";
+import { AD_SLOTS, alchemyKey, APP_URL } from "@/constants";
 
-function AdCard({ slot, chainId }: { slot: string; chainId: number }) {
+function AdCard({ slot, chainId, rpcUrl }: { slot: string; chainId: number; rpcUrl?: string }) {
   return (
     <Ad
       slot={slot}
       chainId={chainId}
+      rpcUrl={rpcUrl}
       baseLinkUrl={APP_URL}
       className="flex items-center gap-3 rounded-lg border bg-card p-3 cursor-pointer hover:bg-accent/50 transition-colors h-18"
     >
@@ -43,6 +45,7 @@ function AdCard({ slot, chainId }: { slot: string; chainId: number }) {
 export function AdBar() {
   const { chainId } = useChain();
   const slots = AD_SLOTS[chainId];
+  const rpcUrl = alchemyKey ? alchemyRpcUrl(chainId, alchemyKey) : undefined;
 
   if (!slots?.length) return null;
 
@@ -57,7 +60,7 @@ export function AdBar() {
           <CarouselContent>
             {slots.map((slot) => (
               <CarouselItem key={slot}>
-                <AdCard slot={slot} chainId={chainId} />
+                <AdCard slot={slot} chainId={chainId} rpcUrl={rpcUrl} />
               </CarouselItem>
             ))}
           </CarouselContent>

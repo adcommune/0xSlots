@@ -13,9 +13,9 @@ export const APP_URL = useTunnel
 
 export const AD_SLOTS: Partial<Record<SlotsChain, string[]>> = {
   // Slot addresses will be provided — using placeholders
-  // [8453 as SlotsChain]: [
-  //   "0x...",
-  //   "0x...",
-  //   "0x...",
-  // ],
+  [8453 as SlotsChain]: [
+    "0xb6a6d14bb374b6aa6d52b2b982547031fddfeed5",
+    "0xa6eb42f770f0c4c95a9de8b70b1c178a8ea90575",
+    "0x21834896daa664f2081442a777c354335654afd6",
+  ],
 };

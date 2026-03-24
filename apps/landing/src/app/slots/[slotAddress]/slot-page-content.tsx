@@ -6,9 +6,11 @@ import {
   AlertTriangle,
   ArrowUpFromLine,
   Banknote,
+  Check,
   CircleDollarSign,
   Clock,
   Cog,
+  Copy,
   FileBox,
   Flame,
   HandCoins,
@@ -115,6 +117,13 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
   const [mobilePanel, setMobilePanel] = useState<"actions" | "metadata" | null>(
     null,
   );
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+
+  const copyAddress = (field: string, value: string) => {
+    navigator.clipboard.writeText(value);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(null), 1500);
+  };
   const walletBalance = useCurrencyBalance(slot?.currency as Address);
 
   // Initialize tax slider from current on-chain value
@@ -222,6 +231,18 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
             </h1>
             <button
               type="button"
+              onClick={() => copyAddress("header", slot.id)}
+              className="text-muted-foreground hover:text-foreground transition-colors"
+              title="Copy slot address"
+            >
+              {copiedField === "header" ? (
+                <Check className="size-3.5" />
+              ) : (
+                <Copy className="size-3.5" />
+              )}
+            </button>
+            <button
+              type="button"
               onClick={() => refetchSlot()}
               className="text-muted-foreground hover:text-foreground transition-colors"
               title="Refresh slot data"
@@ -291,14 +312,27 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
                         <span className="text-muted-foreground flex items-center gap-1.5">
                           <LandPlot className="size-3" /> Slot contract
                         </span>
-                        <a
-                          href={`${explorerUrl}/address/${slot.id}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-primary hover:underline text-xs"
-                        >
-                          {truncateAddress(slot.id)}
-                        </a>
+                        <span className="flex items-center gap-1.5">
+                          <a
+                            href={`${explorerUrl}/address/${slot.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline text-xs"
+                          >
+                            {truncateAddress(slot.id)}
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => copyAddress("slot", slot.id)}
+                            className="text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            {copiedField === "slot" ? (
+                              <Check className="size-3" />
+                            ) : (
+                              <Copy className="size-3" />
+                            )}
+                          </button>
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground flex items-center gap-1.5">
@@ -312,12 +346,25 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
                           )}{" "}
                           Recipient
                         </span>
-                        <NavLink
-                          href={`/recipient/${slot.recipient}`}
-                          className="text-primary hover:underline text-xs"
-                        >
-                          {truncateAddress(slot.recipient)}
-                        </NavLink>
+                        <span className="flex items-center gap-1.5">
+                          <NavLink
+                            href={`/recipient/${slot.recipient}`}
+                            className="text-primary hover:underline text-xs"
+                          >
+                            {truncateAddress(slot.recipient)}
+                          </NavLink>
+                          <button
+                            type="button"
+                            onClick={() => copyAddress("recipient", slot.recipient)}
+                            className="text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            {copiedField === "recipient" ? (
+                              <Check className="size-3" />
+                            ) : (
+                              <Copy className="size-3" />
+                            )}
+                          </button>
+                        </span>
                       </div>
                       {subgraphSlot?.recipientAccount?.type === "SPLIT" && (
                         <SplitRecipientsBar
@@ -334,14 +381,16 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
                           ({symbol})
                         </span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground flex items-center gap-1.5">
-                          <Shield className="size-3" /> Manager
-                        </span>
-                        <span className="text-xs">
-                          {truncateAddress(slot.manager)}
-                        </span>
-                      </div>
+                      {slot.manager.toLowerCase() !== zeroAddress && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground flex items-center gap-1.5">
+                            <Shield className="size-3" /> Manager
+                          </span>
+                          <span className="text-xs">
+                            {truncateAddress(slot.manager)}
+                          </span>
+                        </div>
+                      )}
 
                       <div className="border-t" />
 
