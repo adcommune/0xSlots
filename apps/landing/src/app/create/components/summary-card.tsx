@@ -1,4 +1,4 @@
-import { Clock, Coins, HandCoins, Sparkles } from "lucide-react";
+import { Clock, Coins, HandCoins, Puzzle, Sparkles } from "lucide-react";
 import { useFormContext } from "react-hook-form";
 import { isAddress } from "viem";
 import { getChainTokens } from "@0xslots/sdk";
@@ -37,6 +37,8 @@ export function SummaryCard({
   const minDepositValue = form.watch("minDepositValue");
   const minDepositUnit = form.watch("minDepositUnit");
   const splitRecipients = form.watch("splitRecipients");
+  const moduleMode = form.watch("moduleMode");
+  const module = form.watch("module");
   const mutableTax = form.watch("mutableTax");
   const mutableModule = form.watch("mutableModule");
 
@@ -131,6 +133,18 @@ export function SummaryCard({
                 )}
               </span>
             </div>
+
+            {/* Module */}
+            {moduleMode !== "none" && module && (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground flex items-center gap-1">
+                  <Puzzle className="size-3" /> Module
+                </span>
+                <span className="font-semibold text-xs truncate max-w-32">
+                  {moduleMode === "verified" ? "Metadata" : truncateAddress(module)}
+                </span>
+              </div>
+            )}
 
             {/* Tax Rate */}
             <div className="flex justify-between">
