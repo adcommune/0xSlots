@@ -2,13 +2,12 @@
 
 import { Layers } from "lucide-react";
 import { useAccount, useCapabilities } from "wagmi";
-import { useChain } from "@/context/chain";
-
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useChain } from "@/context/chain";
 
 /**
  * Check if a capability value is supported.
@@ -68,9 +67,7 @@ export function ChainCapabilities() {
           return (
             <p key={key} className="text-muted-foreground">
               {key}:{" "}
-              <span
-                className={ok ? "text-green-400" : "text-muted-foreground"}
-              >
+              <span className={ok ? "text-green-400" : "text-muted-foreground"}>
                 {ok ? "supported" : "unsupported"}
               </span>
             </p>
