@@ -30,8 +30,6 @@ export function StepRecipient() {
     name: "splitRecipients",
   });
 
-  console.log({ form, splitFields, formState: form.formState });
-
   return (
     <div>
       <FormField

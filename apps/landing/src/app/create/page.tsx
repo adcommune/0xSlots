@@ -6,7 +6,7 @@ import { Check, ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigation } from "@/context/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { type Address, isAddress, zeroAddress } from "viem";
+import { type Address, getAddress, isAddress, zeroAddress } from "viem";
 import { normalize } from "viem/ens";
 import { useAccount, usePublicClient, useSwitchChain } from "wagmi";
 import { mainnet } from "wagmi/chains";
@@ -116,6 +116,8 @@ export default function CreatePage() {
   };
 
   async function onSubmit(data: CreateSlotFormValues) {
+    if (!isConnected || wrongChain) return;
+
     const currency =
       data.currencyMode === "preset"
         ? data.presetCurrency
@@ -132,8 +134,10 @@ export default function CreatePage() {
       try {
         const resolvedRecipients = await Promise.all(
           data.splitRecipients.map(async (r) => {
-            let addr = r.address;
-            if (!isAddress(addr) && mainnetClient) {
+            let addr = r.address.trim();
+            if (isAddress(addr, { strict: false })) {
+              addr = getAddress(addr);
+            } else if (mainnetClient) {
               const resolved = await mainnetClient.getEnsAddress({
                 name: normalize(addr),
               });
@@ -146,12 +150,26 @@ export default function CreatePage() {
             };
           }),
         );
-        const { splitAddress } = await splitClient.createSplit({
+        const ZERO_SALT =
+          "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`;
+
+        const splitParams = {
           recipients: resolvedRecipients,
           splitType: SplitV2Type.Pull,
           distributorFeePercent: data.distributorFeePercent,
-        });
-        recipient = splitAddress;
+          salt: ZERO_SALT,
+        };
+        // Check if this exact split already exists
+        const { splitAddress: predictedAddress, deployed } =
+          await splitClient.isDeployed(splitParams);
+
+        if (deployed) {
+          recipient = predictedAddress;
+        } else {
+          const { splitAddress } =
+            await splitClient.createSplit(splitParams);
+          recipient = splitAddress;
+        }
       } catch (err) {
         console.error("Failed to create split:", err);
         setCreatingSplit(false);

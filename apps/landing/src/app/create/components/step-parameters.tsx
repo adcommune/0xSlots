@@ -18,16 +18,10 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { useChain } from "@/context/chain";
+import { truncateAddress } from "@/utils";
+import { useModules } from "@/hooks/use-v3";
 import { AddressInput } from "../address-input";
 import { type CreateSlotFormValues, timeDenominations } from "../schema";
-
-const VERIFIED_MODULES = [
-  {
-    name: "Metadata",
-    address: "0x6c5A8A7f061bEd94b1b88CFAd4e1a1a8C5c4e527",
-    description: "Store IPFS URIs per slot. Occupant controls the data.",
-  },
-] as const;
 
 export function StepParameters() {
   const form = useFormContext<CreateSlotFormValues>();
@@ -37,6 +31,7 @@ export function StepParameters() {
   const customCurrency = form.watch("customCurrency");
   const moduleMode = form.watch("moduleMode");
   const chainTokens = getChainTokens(chainId);
+  const { data: verifiedModules } = useModules();
   const erc20 = useErc20Check(currencyMode === "custom" ? customCurrency : "");
 
   return (
@@ -234,16 +229,21 @@ export function StepParameters() {
                   }
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select a module" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">None</SelectItem>
-                  {VERIFIED_MODULES.map((m) => (
-                    <SelectItem key={m.address} value={m.address}>
-                      {m.name} — {m.description}
-                    </SelectItem>
-                  ))}
+                  {verifiedModules
+                    ?.filter((m) => m.verified)
+                    .map((m) => (
+                      <SelectItem key={m.id} value={m.id}>
+                        {m.name || m.id.slice(0, 10)}{" "}
+                        <span className="text-muted-foreground">
+                          {truncateAddress(m.id)}
+                        </span>
+                      </SelectItem>
+                    ))}
                   <SelectItem value="custom">Custom address</SelectItem>
                 </SelectContent>
               </Select>
