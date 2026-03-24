@@ -1,3 +1,4 @@
+import type { SlotsChain } from "@0xslots/sdk";
 import type { AdData } from "@adland/data";
 import { createContext, useContext } from "react";
 
@@ -7,6 +8,8 @@ export interface AdContextValue {
   error: unknown;
   isEmpty: boolean;
   slot?: string;
+  baseLinkUrl: string;
+  chainId: SlotsChain;
 }
 
 export const AdContext = createContext<AdContextValue | null>(null);

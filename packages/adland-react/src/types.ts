@@ -20,6 +20,12 @@ export interface AdProps extends React.HTMLAttributes<HTMLDivElement> {
    */
   rpcUrl?: string;
   /**
+   * Base URL for the "Your ad here" CTA link.
+   * Empty-state click navigates to `${baseLinkUrl}/slots/${slot}?chain=${chainId}`.
+   * Defaults to "https://app.0xslots.org".
+   */
+  baseLinkUrl?: string;
+  /**
    * Compound children (AdImage, AdTitle, etc.)
    */
   children?: React.ReactNode;
