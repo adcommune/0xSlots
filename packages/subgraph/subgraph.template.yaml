@@ -38,6 +38,60 @@ dataSources:
         - event: AdminTransferred(indexed address,indexed address)
           handler: handleAdminTransferred
       file: ./src/factory.ts
+  - kind: ethereum
+    name: SlotFactory2
+    network: {{network}}
+    source:
+      address: "{{factory2Address}}"
+      abi: SlotFactory
+      startBlock: {{factory2StartBlock}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - Factory
+        - Slot
+        - Module
+      abis:
+        - name: SlotFactory
+          file: ./abis/SlotFactory.json
+        - name: Slot
+          file: ./abis/Slot.json
+        - name: ERC20
+          file: ./abis/ERC20.json
+        - name: SplitV2
+          file: ./abis/SplitV2.json
+      eventHandlers:
+        - event: SlotDeployed(indexed address,indexed address,indexed address,(bool,bool,address),(uint256,address,uint256,uint256))
+          handler: handleSlotDeployed
+        - event: ModuleVerified(indexed address,bool,string,string)
+          handler: handleModuleVerified
+        - event: AdminTransferred(indexed address,indexed address)
+          handler: handleAdminTransferred
+      file: ./src/factory.ts
+  - kind: ethereum
+    name: ERC721SlotsFactory
+    network: {{network}}
+    source:
+      address: "{{erc721FactoryAddress}}"
+      abi: ERC721SlotsFactory
+      startBlock: {{erc721StartBlock}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - NFTCollection
+      abis:
+        - name: ERC721SlotsFactory
+          file: ./abis/ERC721SlotsFactory.json
+        - name: ERC721Slots
+          file: ./abis/ERC721Slots.json
+      eventHandlers:
+        - event: CollectionDeployed(indexed address,indexed address,indexed address,string,string,address)
+          handler: handleCollectionDeployed
+      file: ./src/erc721slots-factory.ts
 templates:
   - kind: ethereum
     name: Slot
@@ -108,3 +162,22 @@ templates:
         - event: MetadataUpdated(indexed address,string)
           handler: handleMetadataUpdated
       file: ./src/metadata.ts
+  - kind: ethereum
+    name: ERC721Slots
+    network: {{network}}
+    source:
+      abi: ERC721Slots
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - NFTToken
+        - NFTCollection
+      abis:
+        - name: ERC721Slots
+          file: ./abis/ERC721Slots.json
+      eventHandlers:
+        - event: TokenMinted(indexed uint256,indexed address,string)
+          handler: handleTokenMinted
+      file: ./src/erc721slots.ts

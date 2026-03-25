@@ -2,5 +2,9 @@
   "network": "base",
   "factoryAddress": "0xbf2F890E8F5CCCB3A1D7c5030dBC1843B9E36B0e",
   "startBlock": 43581441,
+  "factory2Address": "0x0000000000000000000000000000000000000000",
+  "factory2StartBlock": 99999999,
+  "erc721FactoryAddress": "0x0000000000000000000000000000000000000000",
+  "erc721StartBlock": 99999999,
   "studioName": "0-xslots-base"
 }

@@ -29,3 +29,17 @@ export class MetadataModule extends DataSourceTemplate {
     );
   }
 }
+
+export class ERC721Slots extends DataSourceTemplate {
+  static create(address: Address): void {
+    DataSourceTemplate.create("ERC721Slots", [address.toHex()]);
+  }
+
+  static createWithContext(address: Address, context: DataSourceContext): void {
+    DataSourceTemplate.createWithContext(
+      "ERC721Slots",
+      [address.toHex()],
+      context,
+    );
+  }
+}
