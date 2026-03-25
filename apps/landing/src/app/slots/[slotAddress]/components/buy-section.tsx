@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useSlotAction } from "@/hooks/use-slot-action";
 import type { SlotOnChain } from "@/hooks/use-slot-onchain";
-import { formatBalance, toRawUnits } from "@/utils";
+import { formatBalance, normalizeDecimal, toRawUnits } from "@/utils";
 
 export function BuySection({
   slot,
@@ -44,8 +44,8 @@ export function BuySection({
 
   function totalApprovalDisplay(): string {
     try {
-      const dep = Number.parseFloat(effectiveDeposit || "0");
-      const cost = Number.parseFloat(currentPriceRaw);
+      const dep = Number.parseFloat(normalizeDecimal(effectiveDeposit || "0"));
+      const cost = Number.parseFloat(normalizeDecimal(currentPriceRaw));
       return (dep + cost).toFixed(2);
     } catch {
       return "0";

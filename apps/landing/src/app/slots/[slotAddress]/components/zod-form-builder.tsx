@@ -119,12 +119,13 @@ export function ZodFormBuilder<T extends FieldValues>({
                 <FormControl>
                   {isNumber ? (
                     <Input
-                      type="number"
+                      type="text"
+                      inputMode="decimal"
                       placeholder={humanizeKey(key)}
                       className="text-xs"
                       value={field.value ?? ""}
                       onChange={(e) => {
-                        const val = e.target.value;
+                        const val = e.target.value.replace(",", ".");
                         field.onChange(val === "" ? undefined : Number(val));
                       }}
                     />

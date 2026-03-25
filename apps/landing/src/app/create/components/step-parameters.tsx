@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { useChain } from "@/context/chain";
-import { truncateAddress } from "@/utils";
+import { normalizeDecimal, truncateAddress } from "@/utils";
 import { useModules } from "@/hooks/use-v3";
 import { AddressInput } from "../address-input";
 import { type CreateSlotFormValues, timeDenominations } from "../schema";
@@ -129,7 +129,7 @@ export function StepParameters() {
                 <HandCoins className="size-3.5" /> Tax Rate
               </FormLabel>
               <span className="text-sm font-semibold">
-                {parseFloat(field.value).toFixed(1) || "0"}%/mo
+                {parseFloat(normalizeDecimal(field.value)).toFixed(1) || "0"}%/mo
               </span>
             </div>
             <input

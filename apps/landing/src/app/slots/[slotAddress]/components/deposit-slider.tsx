@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { useSlotAction } from "@/hooks/use-slot-action";
 import type { SlotOnChain } from "@/hooks/use-slot-onchain";
 import { cn } from "@/lib/utils";
-import { formatBalance, formatDuration } from "@/utils";
+import { formatBalance, formatDuration, normalizeDecimal } from "@/utils";
 
 interface DepositSliderProps {
   slot: SlotOnChain;
@@ -50,7 +50,7 @@ export function DepositSlider({
     }
   }, [currentNum]);
 
-  const targetDeposit = parseFloat(inputValue) || 0;
+  const targetDeposit = parseFloat(normalizeDecimal(inputValue)) || 0;
   const delta = targetDeposit - currentNum;
   const isTopUp = delta > 0.005;
   const isWithdraw = delta < -0.005;
@@ -67,13 +67,13 @@ export function DepositSlider({
   const coverageSeconds =
     taxPerSecond > 0n
       ? Number(
-          parseUnits(Math.max(targetDeposit, 0).toFixed(decimals), decimals) /
+          parseUnits(normalizeDecimal(Math.max(targetDeposit, 0).toFixed(decimals)), decimals) /
             taxPerSecond,
         )
       : Infinity;
 
   async function handleAction() {
-    const deltaUnits = parseUnits(absDelta.toFixed(decimals), decimals);
+    const deltaUnits = parseUnits(normalizeDecimal(absDelta.toFixed(decimals)), decimals);
 
     if (isTopUp) {
       await topUp(slotAddress as Address, deltaUnits);

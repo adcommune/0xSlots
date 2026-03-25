@@ -55,12 +55,18 @@ export function formatAmount(raw: string | bigint, decimals: number = 18): strin
 export const formatPrice = formatAmount;
 export const formatBalance = formatAmount;
 
+/** Normalize decimal separators (comma → dot) for locales like French. */
+export function normalizeDecimal(value: string): string {
+  return value.replace(",", ".");
+}
+
 /**
  * Parse a human-readable amount to raw units using viem's parseUnits.
+ * Handles comma as decimal separator (e.g. French locale).
  */
 export function toRawUnits(value: string, decimals: number): bigint {
   try {
-    return parseUnits(value || "0", decimals);
+    return parseUnits(normalizeDecimal(value) || "0", decimals);
   } catch {
     return 0n;
   }

@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { truncateAddress } from "@/utils";
+import { normalizeDecimal, truncateAddress } from "@/utils";
 import { AddressInput } from "../address-input";
 import type { CreateSlotFormValues } from "../schema";
 
@@ -173,7 +173,7 @@ export function StepRecipient() {
                         inputMode="decimal"
                         value={pctField.value}
                         onChange={(e) => {
-                          const v = parseFloat(e.target.value);
+                          const v = parseFloat(normalizeDecimal(e.target.value));
                           pctField.onChange(Number.isNaN(v) ? 0 : v);
                         }}
                         className="pr-6 text-xs"
@@ -229,7 +229,7 @@ export function StepRecipient() {
                     inputMode="decimal"
                     value={feeField.value}
                     onChange={(e) => {
-                      const v = parseFloat(e.target.value);
+                      const v = parseFloat(normalizeDecimal(e.target.value));
                       feeField.onChange(Number.isNaN(v) ? 0 : v);
                     }}
                     className="pr-6"
