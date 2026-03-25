@@ -6,11 +6,11 @@ export interface AdProps extends React.HTMLAttributes<HTMLDivElement> {
    * The slot contract address (0xSlots v3).
    * Required when fetching from chain. Omit when passing static `data`.
    */
-  slot: string;
+  slot?: string;
   /**
    * Chain ID for on-chain reads. Defaults to BASE (8453).
    */
-  chainId: SlotsChain;
+  chainId?: SlotsChain;
   /**
    * Static ad data. When provided, skips on-chain fetching.
    */
