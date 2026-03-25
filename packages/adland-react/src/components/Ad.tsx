@@ -31,7 +31,6 @@ export function Ad({
   chainId = SlotsChain.BASE,
   rpcUrl,
   baseLinkUrl = "https://app.0xslots.org",
-  isMiniApp: isMiniAppProp = false,
   children,
   ...props
 }: AdProps) {
@@ -79,10 +78,10 @@ export function Ad({
       if (adData) {
         performAdAction(adData);
       } else if (isEmpty && slot) {
-        performEmptyAdAction(slot, chainId, baseLinkUrl, isMiniAppProp);
+        performEmptyAdAction(slot, chainId, baseLinkUrl);
       }
     },
-    [adData, isEmpty, slot, chainId, baseLinkUrl, isMiniAppProp],
+    [adData, isEmpty, slot, chainId, baseLinkUrl],
   );
 
   return (

@@ -6,15 +6,15 @@ export interface AdProps extends React.HTMLAttributes<HTMLDivElement> {
    * The slot contract address (0xSlots v3).
    * Required when fetching from chain. Omit when passing static `data`.
    */
-  slot?: string;
+  slot: string;
+  /**
+   * Chain ID for on-chain reads. Defaults to BASE (8453).
+   */
+  chainId: SlotsChain;
   /**
    * Static ad data. When provided, skips on-chain fetching.
    */
   data?: AdData;
-  /**
-   * Chain ID for on-chain reads. Defaults to BASE (8453).
-   */
-  chainId?: SlotsChain;
   /**
    * Optional RPC URL override. If not provided, uses public RPC for the chain.
    */
@@ -25,11 +25,6 @@ export interface AdProps extends React.HTMLAttributes<HTMLDivElement> {
    * Defaults to "https://app.0xslots.org".
    */
   baseLinkUrl?: string;
-  /**
-   * Whether the app is running inside a Farcaster miniapp.
-   * When true, empty-state clicks use sdk.actions.openMiniApp instead of window.open.
-   */
-  isMiniApp?: boolean;
   /**
    * Compound children (AdImage, AdTitle, etc.)
    */

@@ -4,7 +4,7 @@ import { base, baseSepolia } from "viem/chains";
 
 import { AdDataQueryError } from "./types";
 
-const IPFS_GATEWAY = "https://gateway.pinata.cloud/ipfs/";
+const IPFS_GATEWAY = "https://amethyst-representative-mandrill-369.mypinata.cloud/ipfs/";
 
 const viemChains: Record<number, typeof base> = {
   8453: base,

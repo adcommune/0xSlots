@@ -16,7 +16,7 @@ export function ExplorerTabs({ tabs }: { tabs: Tab[] }) {
 
   return (
     <div>
-      <div className="flex border-b mb-2 md:mb-6">
+      <div className="flex border-b mb-2">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           return (

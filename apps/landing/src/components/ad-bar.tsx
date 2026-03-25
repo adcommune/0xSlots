@@ -21,7 +21,6 @@ import {
 } from "@/components/ui/carousel";
 import { AD_SLOTS, APP_URL, alchemyKey } from "@/constants";
 import { useChain } from "@/context/chain";
-import { useFarcaster } from "@/context/farcaster";
 import { useSlotOnChain } from "@/hooks/use-slot-onchain";
 import { truncateAddress } from "@/utils";
 
@@ -29,12 +28,10 @@ function AdCard({
   slot,
   chainId,
   rpcUrl,
-  isMiniApp,
 }: {
   slot: string;
   chainId: number;
   rpcUrl?: string;
-  isMiniApp: boolean;
 }) {
   const { data: slotData } = useSlotOnChain(slot, chainId);
 
@@ -44,7 +41,6 @@ function AdCard({
       chainId={chainId}
       rpcUrl={rpcUrl}
       baseLinkUrl={APP_URL}
-      isMiniApp={isMiniApp}
       className="flex items-center gap-3 rounded-lg border bg-card p-2 cursor-pointer hover:bg-accent/50 transition-colors h-16 md:h-18"
     >
       <AdLoaded className="flex items-center gap-3 w-full">
@@ -82,12 +78,10 @@ function AdCarousel({
   slots,
   chainId,
   rpcUrl,
-  isMiniApp,
 }: {
   slots: string[];
   chainId: number;
   rpcUrl?: string;
-  isMiniApp: boolean;
 }) {
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
@@ -120,7 +114,6 @@ function AdCarousel({
                 slot={slot}
                 chainId={chainId}
                 rpcUrl={rpcUrl}
-                isMiniApp={isMiniApp}
               />
             </CarouselItem>
           ))}
@@ -146,7 +139,6 @@ function AdCarousel({
 
 export function AdBar() {
   const { chainId } = useChain();
-  const { isMiniApp } = useFarcaster();
   const slots = AD_SLOTS[chainId];
   const rpcUrl = alchemyKey ? alchemyRpcUrl(chainId, alchemyKey) : undefined;
 
@@ -160,7 +152,6 @@ export function AdBar() {
           slots={slots}
           chainId={chainId}
           rpcUrl={rpcUrl}
-          isMiniApp={isMiniApp}
         />
       </div>
 
@@ -172,7 +163,6 @@ export function AdBar() {
             slot={slot}
             chainId={chainId}
             rpcUrl={rpcUrl}
-            isMiniApp={isMiniApp}
           />
         ))}
       </div>
