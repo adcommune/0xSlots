@@ -8,6 +8,7 @@ import { neynar } from "./services/neynar";
 import { pinata } from "./services/pinata";
 import { slotsClient } from "./services/subgraph";
 import { getChainClient } from "@0xslots/config";
+import { startEventListener } from "./services/events";
 
 const alchemyKey = process.env.ALCHEMY_KEY as string
 
@@ -505,5 +506,6 @@ serve(
   },
   (info) => {
     console.log(`Server is running on http://localhost:${info.port}`);
+    startEventListener(alchemyKey);
   },
 );
