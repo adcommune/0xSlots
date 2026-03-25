@@ -1,5 +1,11 @@
 # @adland/react
 
+## 0.15.2
+
+### Patch Changes
+
+- bf9116f: fix required props for ad component
+
 ## 0.15.1
 
 ### Patch Changes
