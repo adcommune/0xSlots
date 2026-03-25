@@ -1,5 +1,15 @@
 # @adland/react
 
+## 0.15.0
+
+### Minor Changes
+
+- 30f426b: remove logs
+
+### Patch Changes
+
+- 6ce98fe: update package.json files
+
 ## 0.14.0
 
 ### Minor Changes
