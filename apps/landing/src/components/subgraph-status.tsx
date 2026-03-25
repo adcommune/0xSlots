@@ -26,7 +26,8 @@ function useSubgraphMeta() {
 
 export function SubgraphStatus() {
   const { data: meta, isError } = useSubgraphMeta();
-  const { data: chainBlock } = useBlockNumber();
+  const { chainId } = useChain();
+  const { data: chainBlock } = useBlockNumber({ chainId });
 
   if (isError || meta?.hasIndexingErrors) {
     return (
