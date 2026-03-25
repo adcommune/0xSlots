@@ -1,0 +1,129 @@
+# Adland (`@adland/react`)
+
+React components for displaying on-chain ads from 0xSlots. Fetches ad data directly from the blockchain (RPC + IPFS) — no centralized backend.
+
+## Install
+
+```bash
+npm install @adland/react
+```
+
+## Quick Start
+
+```tsx
+import { Ad, AdImage, AdTitle, AdLoaded, AdEmpty, AdLoading } from "@adland/react";
+
+<Ad slot="0xabc...123" chainId={8453}>
+  <AdLoaded>
+    <AdImage className="size-12 rounded-md" />
+    <AdTitle className="text-sm font-medium" />
+  </AdLoaded>
+  <AdEmpty>Your ad here</AdEmpty>
+  <AdLoading>Loading...</AdLoading>
+</Ad>
+```
+
+## How It Works
+
+```
+Ad mount
+  → RPC: getSlotInfo(slot) → module address
+  → RPC: getURI(module, slot) → IPFS URI
+  → IPFS: fetch(uri) → ad data (type, metadata, image)
+  → Render via compound children
+```
+
+All reads are on-chain. Ad content is stored on IPFS. No API keys required.
+
+## `<Ad>` Props
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `slot` | `string` | Slot contract address |
+| `chainId` | `SlotsChain` | Chain ID (default: Base 8453) |
+| `data` | `AdData` | Static data — skips on-chain fetch |
+| `rpcUrl` | `string` | Custom RPC URL (default: public RPC) |
+| `baseLinkUrl` | `string` | Base URL for empty-state CTA (default: `https://app.0xslots.org`) |
+
+The `<Ad>` wrapper handles fetching and provides context to its children. It also renders as a clickable `<div>` — clicking a loaded ad performs the ad action, clicking an empty ad links to the slot page.
+
+## Compound Children
+
+### Content (render when ad has data)
+
+| Component | Description |
+|-----------|-------------|
+| `<AdImage>` | Ad image. Props: `fallback` |
+| `<AdTitle>` | Ad title. Props: `fallback` |
+| `<AdDescription>` | Ad description. Props: `fallback` |
+| `<AdBadge>` | Type badge with icon + label |
+| `<AdLabel>` | Static label (default: "AD") |
+
+### State (conditional rendering)
+
+| Component | Renders when... |
+|-----------|----------------|
+| `<AdLoaded>` | Ad data is available |
+| `<AdEmpty>` | Slot has no ad (default text: "Your ad here") |
+| `<AdLoading>` | Fetching in progress |
+| `<AdError>` | Fetch failed |
+
+## `useAd()` Hook
+
+Access ad context from within an `<Ad>` wrapper:
+
+```tsx
+import { useAd } from "@adland/react";
+
+function CustomAdContent() {
+  const { data, isLoading, isEmpty, slot } = useAd();
+  // ...
+}
+```
+
+## Ad Types
+
+Ads are typed by their action:
+
+| Type | Action | Data |
+|------|--------|------|
+| `link` | Opens URL | `{ url }` |
+| `cast` | Opens Farcaster cast | `{ hash }` |
+| `miniapp` | Opens Farcaster miniapp | `{ url }` |
+| `token` | Views token | `{ address, chainId }` |
+| `farcasterProfile` | Views profile | `{ fid }` |
+
+## Click Behavior
+
+| State | Action |
+|-------|--------|
+| **Loaded** | Performs ad action (open link, view cast, etc.) |
+| **Empty** | Opens `${baseLinkUrl}/slots/${slot}?chain=${chainId}` |
+| **Loading** | No-op |
+
+In a Farcaster miniapp, actions use the native SDK (`openUrl`, `openMiniApp`, etc.). On web, falls back to `window.open`.
+
+## Full Example
+
+```tsx
+<Ad
+  slot="0xb6a6d14bb374b6aa6d52b2b982547031fddfeed5"
+  chainId={8453}
+  rpcUrl="https://base-mainnet.g.alchemy.com/v2/YOUR_KEY"
+  className="flex items-center gap-3 p-3 border rounded-lg"
+>
+  <AdLoaded className="flex items-center gap-3 w-full">
+    <AdImage className="size-12 rounded-md object-cover" />
+    <div>
+      <AdTitle className="text-sm font-medium" />
+      <AdBadge className="text-xs text-muted-foreground" />
+    </div>
+  </AdLoaded>
+  <AdEmpty className="text-center text-muted-foreground">
+    Your ad here
+  </AdEmpty>
+  <AdLoading className="animate-pulse">
+    <div className="size-12 rounded-md bg-muted" />
+  </AdLoading>
+</Ad>
+```

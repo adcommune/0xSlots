@@ -37,6 +37,12 @@ export default defineConfig({
       ],
     },
     {
+      text: "Modules",
+      items: [
+        { text: "Adland", link: "/modules/adland" },
+      ],
+    },
+    {
       text: "Contracts",
       link: "/contracts",
     },
