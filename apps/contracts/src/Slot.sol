@@ -1,16 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {Multicall} from "@openzeppelin/contracts/utils/Multicall.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ISlotsModule} from "./ISlotsModule.sol";
-import {SlotConfig, SlotInitParams, PendingUpdate, SlotInfo, ISlotEvents} from "./ISlot.sol";
+import {SlotConfig, SlotInitParams, PendingUpdate, SlotInfo, ISlotEvents, EVT_BOUGHT, EVT_RELEASED, EVT_LIQUIDATED, EVT_PRICE_UPDATED, EVT_DEPOSITED, EVT_WITHDRAWN, EVT_TAX_COLLECTED, EVT_SETTLED} from "./ISlot.sol";
+import {SlotFactory} from "./SlotFactory.sol";
 
 /// @title Slot (v3) — Immutable & modular Harberger-taxed slot
 /// @notice One slot = one contract. Deployed deterministically via SlotFactory.
-contract Slot is ISlotEvents, ReentrancyGuard, Multicall {
+contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     using SafeERC20 for IERC20;
 
     uint256 public constant BASIS_POINTS = 10_000;
@@ -32,59 +34,63 @@ contract Slot is ISlotEvents, ReentrancyGuard, Multicall {
     error TaxNotMutable();
     error ModuleNotMutable();
     error NoPendingUpdate();
-    error AlreadyInitialized();
     error InvalidLiquidationBounty();
     error InvalidRecipient();
     error InvalidCurrency();
 
     // ═══════════════════════════════════════════════════════════
-    // IMMUTABLE STATE
+    // STORAGE — KEEP ORDER, APPEND ONLY
     // ═══════════════════════════════════════════════════════════
 
-    address public recipient;
-    IERC20 public currency;
-    bool public mutableTax;
-    bool public mutableModule;
-    address public manager;
+    // --- Slot 0-2: identity (set in initialize, never changed) ---
+    address public recipient;           // slot 0
+    IERC20 public currency;             // slot 1, offset 0
+    bool public mutableTax;             // slot 1, offset 20
+    bool public mutableModule;          // slot 1, offset 21
+    address public manager;             // slot 2
 
-    // ═══════════════════════════════════════════════════════════
-    // MUTABLE STATE
-    // ═══════════════════════════════════════════════════════════
+    // --- Slot 3+: mutable state ---
+    address public occupant;            // slot 3
+    uint256 public price;               // slot 4
+    uint256 public taxPercentage;       // slot 5
+    address public module;              // slot 6
+    uint256 public liquidationBountyBps; // slot 7
+    uint256 public minDepositSeconds;   // slot 8
 
-    address public occupant;        // address(0) = vacant
-    uint256 public price;           // self-assessed price (0 when vacant)
-    uint256 public taxPercentage;   // basis points
-    address public module;          // hook contract
-    uint256 public liquidationBountyBps;
-    uint256 public minDepositSeconds;
+    uint256 public deposit;             // slot 9
+    uint256 public lastSettled;         // slot 10
+    uint256 public collectedTax;        // slot 11
 
-    uint256 public deposit;
-    uint256 public lastSettled;
-    uint256 public collectedTax;
+    PendingUpdate public pendingUpdate; // slots 12-13
 
-    PendingUpdate public pendingUpdate;
+    /// @dev Legacy manual init flag — DO NOT REMOVE (preserves storage layout)
+    bool private _legacyInitialized;    // slot 14
 
-    bool private _initialized;
+    // --- v2 storage (appended after beacon upgrade) ---
+    address public factory;             // slot 15
 
     // ═══════════════════════════════════════════════════════════
     // INITIALIZATION
     // ═══════════════════════════════════════════════════════════
 
-    /// @dev Disables initialization on the implementation contract
+    /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
-        _initialized = true;
+        _disableInitializers();
     }
 
-    /// @notice Called by SlotFactory after clone deployment
+    /// @notice v1 init — called by SlotFactory after beacon proxy deployment
+    /// @dev For new slots deployed after the v2 upgrade, initialize + initializeV2
+    ///      are both called atomically via multicall in the factory.
+    /// @dev Uses both legacy flag (for pre-upgrade slots) and OZ initializer (for new slots)
     function initialize(
         address _recipient,
         IERC20 _currency,
         SlotConfig memory _config,
         SlotInitParams memory _init
-    ) external {
-        if (_initialized) revert AlreadyInitialized();
-        _initialized = true;
-
+    ) external initializer {
+        // Guard against re-initialization on pre-upgrade slots where OZ version is 0
+        require(!_legacyInitialized, "already initialized");
+        _legacyInitialized = true;
         if (_recipient == address(0)) revert InvalidRecipient();
         if (address(_currency) == address(0)) revert InvalidCurrency();
         if (_init.taxPercentage == 0) revert InvalidTaxPercentage();
@@ -102,6 +108,11 @@ contract Slot is ISlotEvents, ReentrancyGuard, Multicall {
         minDepositSeconds = _init.minDepositSeconds;
 
         lastSettled = block.timestamp;
+    }
+
+    /// @notice v2 upgrade — sets factory for protocol event emission
+    function initializeV2(address _factory) external reinitializer(2) {
+        factory = _factory;
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -170,6 +181,7 @@ contract Slot is ISlotEvents, ReentrancyGuard, Multicall {
         _notifyModule("onTransfer", abi.encodeCall(ISlotsModule.onTransfer, (0, prev, msg.sender)));
 
         emit Bought(msg.sender, prev, currentPrice, depositAmount, selfAssessedPrice);
+        _emitProtocolEvent(EVT_BOUGHT, abi.encode(msg.sender, prev, currentPrice, depositAmount, selfAssessedPrice));
     }
 
     /// @notice Occupant releases the slot (voluntary exit)
@@ -202,6 +214,7 @@ contract Slot is ISlotEvents, ReentrancyGuard, Multicall {
         _notifyModule("onRelease", abi.encodeCall(ISlotsModule.onRelease, (0, prev)));
 
         emit Released(prev, refund);
+        _emitProtocolEvent(EVT_RELEASED, abi.encode(prev, refund));
     }
 
     /// @notice Occupant self-assesses a new price
@@ -219,6 +232,7 @@ contract Slot is ISlotEvents, ReentrancyGuard, Multicall {
         _notifyModule("onPriceUpdate", abi.encodeCall(ISlotsModule.onPriceUpdate, (0, oldPrice, newPrice)));
 
         emit PriceUpdated(oldPrice, newPrice);
+        _emitProtocolEvent(EVT_PRICE_UPDATED, abi.encode(oldPrice, newPrice));
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -231,6 +245,7 @@ contract Slot is ISlotEvents, ReentrancyGuard, Multicall {
         currency.safeTransferFrom(msg.sender, address(this), amount);
         deposit += amount;
         emit Deposited(msg.sender, amount);
+        _emitProtocolEvent(EVT_DEPOSITED, abi.encode(msg.sender, amount));
     }
 
     /// @notice Occupant withdraws excess deposit
@@ -245,6 +260,7 @@ contract Slot is ISlotEvents, ReentrancyGuard, Multicall {
         deposit = remaining;
         currency.safeTransfer(msg.sender, amount);
         emit Withdrawn(msg.sender, amount);
+        _emitProtocolEvent(EVT_WITHDRAWN, abi.encode(msg.sender, amount));
     }
 
     /// @notice Liquidate an insolvent occupant
@@ -285,6 +301,7 @@ contract Slot is ISlotEvents, ReentrancyGuard, Multicall {
         _notifyModule("onRelease", abi.encodeCall(ISlotsModule.onRelease, (0, prev)));
 
         emit Liquidated(msg.sender, prev, bounty);
+        _emitProtocolEvent(EVT_LIQUIDATED, abi.encode(msg.sender, prev, bounty));
     }
 
     /// @notice Flush accumulated tax to recipient
@@ -295,6 +312,7 @@ contract Slot is ISlotEvents, ReentrancyGuard, Multicall {
         collectedTax = 0;
         currency.safeTransfer(recipient, amount);
         emit TaxCollected(recipient, amount);
+        _emitProtocolEvent(EVT_TAX_COLLECTED, abi.encode(recipient, amount));
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -463,5 +481,10 @@ contract Slot is ISlotEvents, ReentrancyGuard, Multicall {
         if (module == address(0)) return;
         (bool ok,) = module.call{gas: 500_000}(data);
         if (!ok) emit ModuleCallFailed(name);
+    }
+
+    function _emitProtocolEvent(uint8 eventType, bytes memory data) internal {
+        if (factory == address(0)) return;
+        try SlotFactory(factory).emitEvent(eventType, data) {} catch {}
     }
 }

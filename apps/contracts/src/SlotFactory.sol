@@ -39,6 +39,7 @@ contract SlotFactory is UUPSUpgradeable {
 
     event ModuleVerified(address indexed module, bool verified, string name, string version);
     event AdminTransferred(address indexed previousAdmin, address indexed newAdmin);
+    event SlotEvent(address indexed slot, uint8 indexed eventType, bytes data);
 
     // ═══════════════════════════════════════════════════════════
     // STATE
@@ -54,6 +55,9 @@ contract SlotFactory is UUPSUpgradeable {
     address public admin;
 
     bool private _initialized;
+
+    /// @notice Tracks deployed slots for emitEvent authorization
+    mapping(address => bool) public isSlot;
 
     // ═══════════════════════════════════════════════════════════
     // INITIALIZATION
@@ -156,6 +160,31 @@ contract SlotFactory is UUPSUpgradeable {
     }
 
     // ═══════════════════════════════════════════════════════════
+    // PROTOCOL EVENT HUB
+    // ═══════════════════════════════════════════════════════════
+
+    /// @notice Emit a protocol-wide event (called by slots)
+    function emitEvent(uint8 eventType, bytes calldata data) external {
+        require(isSlot[msg.sender], "not a slot");
+        emit SlotEvent(msg.sender, eventType, data);
+    }
+
+    /// @notice Register pre-existing slots deployed before this upgrade (admin only)
+    function registerSlots(address[] calldata slots) external onlyAdmin {
+        for (uint256 i = 0; i < slots.length; i++) {
+            isSlot[slots[i]] = true;
+        }
+    }
+
+    /// @notice Migrate pre-existing slots: register + initializeV2 in one call (admin only)
+    function migrateSlots(address[] calldata slots) external onlyAdmin {
+        for (uint256 i = 0; i < slots.length; i++) {
+            isSlot[slots[i]] = true;
+            Slot(slots[i]).initializeV2(address(this));
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════
     // UUPS
     // ═══════════════════════════════════════════════════════════
 
@@ -187,6 +216,8 @@ contract SlotFactory is UUPSUpgradeable {
         );
         BeaconProxy proxy = new BeaconProxy(address(beacon), initData);
         slot = address(proxy);
+        isSlot[slot] = true;
+        Slot(slot).initializeV2(address(this));
         emit SlotDeployed(slot, recipient, address(currency), config, initParams);
     }
 }

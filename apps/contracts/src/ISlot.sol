@@ -4,6 +4,19 @@ pragma solidity ^0.8.20;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 // ═══════════════════════════════════════════════════════════
+// PROTOCOL EVENT TYPES (used by SlotFactory.emitEvent)
+// ═══════════════════════════════════════════════════════════
+
+uint8 constant EVT_BOUGHT = 1;
+uint8 constant EVT_RELEASED = 2;
+uint8 constant EVT_LIQUIDATED = 3;
+uint8 constant EVT_PRICE_UPDATED = 4;
+uint8 constant EVT_DEPOSITED = 5;
+uint8 constant EVT_WITHDRAWN = 6;
+uint8 constant EVT_TAX_COLLECTED = 7;
+uint8 constant EVT_SETTLED = 8;
+
+// ═══════════════════════════════════════════════════════════
 // STRUCTS
 // ═══════════════════════════════════════════════════════════
 
