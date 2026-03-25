@@ -397,7 +397,12 @@ export class SlotsClient {
       address: this.factory,
       abi: slotFactoryAbi,
       functionName: "createSlot",
-      args: [params.recipient, params.currency, params.config, params.initParams],
+      args: [
+        params.recipient,
+        params.currency,
+        params.config,
+        params.initParams,
+      ],
       account: this.account,
       chain: this.chain,
     });

@@ -10,28 +10,6 @@ import {
   BigInt,
 } from "@graphprotocol/graph-ts";
 
-export class AdminChanged extends ethereum.Event {
-  get params(): AdminChanged__Params {
-    return new AdminChanged__Params(this);
-  }
-}
-
-export class AdminChanged__Params {
-  _event: AdminChanged;
-
-  constructor(event: AdminChanged) {
-    this._event = event;
-  }
-
-  get previousAdmin(): Address {
-    return this._event.parameters[0].value.toAddress();
-  }
-
-  get newAdmin(): Address {
-    return this._event.parameters[1].value.toAddress();
-  }
-}
-
 export class AdminTransferred extends ethereum.Event {
   get params(): AdminTransferred__Params {
     return new AdminTransferred__Params(this);
@@ -51,24 +29,6 @@ export class AdminTransferred__Params {
 
   get newAdmin(): Address {
     return this._event.parameters[1].value.toAddress();
-  }
-}
-
-export class BeaconUpgraded extends ethereum.Event {
-  get params(): BeaconUpgraded__Params {
-    return new BeaconUpgraded__Params(this);
-  }
-}
-
-export class BeaconUpgraded__Params {
-  _event: BeaconUpgraded;
-
-  constructor(event: BeaconUpgraded) {
-    this._event = event;
-  }
-
-  get beacon(): Address {
-    return this._event.parameters[0].value.toAddress();
   }
 }
 
@@ -172,6 +132,32 @@ export class SlotDeployedInitParamsStruct extends ethereum.Tuple {
   }
 }
 
+export class SlotEvent extends ethereum.Event {
+  get params(): SlotEvent__Params {
+    return new SlotEvent__Params(this);
+  }
+}
+
+export class SlotEvent__Params {
+  _event: SlotEvent;
+
+  constructor(event: SlotEvent) {
+    this._event = event;
+  }
+
+  get slot(): Address {
+    return this._event.parameters[0].value.toAddress();
+  }
+
+  get eventType(): i32 {
+    return this._event.parameters[1].value.toI32();
+  }
+
+  get data(): Bytes {
+    return this._event.parameters[2].value.toBytes();
+  }
+}
+
 export class Upgraded extends ethereum.Event {
   get params(): Upgraded__Params {
     return new Upgraded__Params(this);
@@ -190,8 +176,746 @@ export class Upgraded__Params {
   }
 }
 
+export class SlotFactory__createSlotInputConfigStruct extends ethereum.Tuple {
+  get mutableTax(): boolean {
+    return this[0].toBoolean();
+  }
+
+  get mutableModule(): boolean {
+    return this[1].toBoolean();
+  }
+
+  get manager(): Address {
+    return this[2].toAddress();
+  }
+}
+
+export class SlotFactory__createSlotInputInitParamsStruct extends ethereum.Tuple {
+  get taxPercentage(): BigInt {
+    return this[0].toBigInt();
+  }
+
+  get module(): Address {
+    return this[1].toAddress();
+  }
+
+  get liquidationBountyBps(): BigInt {
+    return this[2].toBigInt();
+  }
+
+  get minDepositSeconds(): BigInt {
+    return this[3].toBigInt();
+  }
+}
+
+export class SlotFactory__createSlotsInputConfigStruct extends ethereum.Tuple {
+  get mutableTax(): boolean {
+    return this[0].toBoolean();
+  }
+
+  get mutableModule(): boolean {
+    return this[1].toBoolean();
+  }
+
+  get manager(): Address {
+    return this[2].toAddress();
+  }
+}
+
+export class SlotFactory__createSlotsInputInitParamsStruct extends ethereum.Tuple {
+  get taxPercentage(): BigInt {
+    return this[0].toBigInt();
+  }
+
+  get module(): Address {
+    return this[1].toAddress();
+  }
+
+  get liquidationBountyBps(): BigInt {
+    return this[2].toBigInt();
+  }
+
+  get minDepositSeconds(): BigInt {
+    return this[3].toBigInt();
+  }
+}
+
 export class SlotFactory extends ethereum.SmartContract {
   static bind(address: Address): SlotFactory {
     return new SlotFactory("SlotFactory", address);
+  }
+
+  UPGRADE_INTERFACE_VERSION(): string {
+    let result = super.call(
+      "UPGRADE_INTERFACE_VERSION",
+      "UPGRADE_INTERFACE_VERSION():(string)",
+      [],
+    );
+
+    return result[0].toString();
+  }
+
+  try_UPGRADE_INTERFACE_VERSION(): ethereum.CallResult<string> {
+    let result = super.tryCall(
+      "UPGRADE_INTERFACE_VERSION",
+      "UPGRADE_INTERFACE_VERSION():(string)",
+      [],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toString());
+  }
+
+  admin(): Address {
+    let result = super.call("admin", "admin():(address)", []);
+
+    return result[0].toAddress();
+  }
+
+  try_admin(): ethereum.CallResult<Address> {
+    let result = super.tryCall("admin", "admin():(address)", []);
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toAddress());
+  }
+
+  beacon(): Address {
+    let result = super.call("beacon", "beacon():(address)", []);
+
+    return result[0].toAddress();
+  }
+
+  try_beacon(): ethereum.CallResult<Address> {
+    let result = super.tryCall("beacon", "beacon():(address)", []);
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toAddress());
+  }
+
+  createSlot(
+    recipient: Address,
+    currency: Address,
+    config: SlotFactory__createSlotInputConfigStruct,
+    initParams: SlotFactory__createSlotInputInitParamsStruct,
+  ): Address {
+    let result = super.call(
+      "createSlot",
+      "createSlot(address,address,(bool,bool,address),(uint256,address,uint256,uint256)):(address)",
+      [
+        ethereum.Value.fromAddress(recipient),
+        ethereum.Value.fromAddress(currency),
+        ethereum.Value.fromTuple(config),
+        ethereum.Value.fromTuple(initParams),
+      ],
+    );
+
+    return result[0].toAddress();
+  }
+
+  try_createSlot(
+    recipient: Address,
+    currency: Address,
+    config: SlotFactory__createSlotInputConfigStruct,
+    initParams: SlotFactory__createSlotInputInitParamsStruct,
+  ): ethereum.CallResult<Address> {
+    let result = super.tryCall(
+      "createSlot",
+      "createSlot(address,address,(bool,bool,address),(uint256,address,uint256,uint256)):(address)",
+      [
+        ethereum.Value.fromAddress(recipient),
+        ethereum.Value.fromAddress(currency),
+        ethereum.Value.fromTuple(config),
+        ethereum.Value.fromTuple(initParams),
+      ],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toAddress());
+  }
+
+  createSlots(
+    recipient: Address,
+    currency: Address,
+    config: SlotFactory__createSlotsInputConfigStruct,
+    initParams: SlotFactory__createSlotsInputInitParamsStruct,
+    count: BigInt,
+  ): Array<Address> {
+    let result = super.call(
+      "createSlots",
+      "createSlots(address,address,(bool,bool,address),(uint256,address,uint256,uint256),uint256):(address[])",
+      [
+        ethereum.Value.fromAddress(recipient),
+        ethereum.Value.fromAddress(currency),
+        ethereum.Value.fromTuple(config),
+        ethereum.Value.fromTuple(initParams),
+        ethereum.Value.fromUnsignedBigInt(count),
+      ],
+    );
+
+    return result[0].toAddressArray();
+  }
+
+  try_createSlots(
+    recipient: Address,
+    currency: Address,
+    config: SlotFactory__createSlotsInputConfigStruct,
+    initParams: SlotFactory__createSlotsInputInitParamsStruct,
+    count: BigInt,
+  ): ethereum.CallResult<Array<Address>> {
+    let result = super.tryCall(
+      "createSlots",
+      "createSlots(address,address,(bool,bool,address),(uint256,address,uint256,uint256),uint256):(address[])",
+      [
+        ethereum.Value.fromAddress(recipient),
+        ethereum.Value.fromAddress(currency),
+        ethereum.Value.fromTuple(config),
+        ethereum.Value.fromTuple(initParams),
+        ethereum.Value.fromUnsignedBigInt(count),
+      ],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toAddressArray());
+  }
+
+  implementation(): Address {
+    let result = super.call("implementation", "implementation():(address)", []);
+
+    return result[0].toAddress();
+  }
+
+  try_implementation(): ethereum.CallResult<Address> {
+    let result = super.tryCall(
+      "implementation",
+      "implementation():(address)",
+      [],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toAddress());
+  }
+
+  isModuleVerified(module: Address): boolean {
+    let result = super.call(
+      "isModuleVerified",
+      "isModuleVerified(address):(bool)",
+      [ethereum.Value.fromAddress(module)],
+    );
+
+    return result[0].toBoolean();
+  }
+
+  try_isModuleVerified(module: Address): ethereum.CallResult<boolean> {
+    let result = super.tryCall(
+      "isModuleVerified",
+      "isModuleVerified(address):(bool)",
+      [ethereum.Value.fromAddress(module)],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBoolean());
+  }
+
+  isSlot(param0: Address): boolean {
+    let result = super.call("isSlot", "isSlot(address):(bool)", [
+      ethereum.Value.fromAddress(param0),
+    ]);
+
+    return result[0].toBoolean();
+  }
+
+  try_isSlot(param0: Address): ethereum.CallResult<boolean> {
+    let result = super.tryCall("isSlot", "isSlot(address):(bool)", [
+      ethereum.Value.fromAddress(param0),
+    ]);
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBoolean());
+  }
+
+  proxiableUUID(): Bytes {
+    let result = super.call("proxiableUUID", "proxiableUUID():(bytes32)", []);
+
+    return result[0].toBytes();
+  }
+
+  try_proxiableUUID(): ethereum.CallResult<Bytes> {
+    let result = super.tryCall(
+      "proxiableUUID",
+      "proxiableUUID():(bytes32)",
+      [],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBytes());
+  }
+
+  verifiedModules(param0: Address): boolean {
+    let result = super.call(
+      "verifiedModules",
+      "verifiedModules(address):(bool)",
+      [ethereum.Value.fromAddress(param0)],
+    );
+
+    return result[0].toBoolean();
+  }
+
+  try_verifiedModules(param0: Address): ethereum.CallResult<boolean> {
+    let result = super.tryCall(
+      "verifiedModules",
+      "verifiedModules(address):(bool)",
+      [ethereum.Value.fromAddress(param0)],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBoolean());
+  }
+}
+
+export class ConstructorCall extends ethereum.Call {
+  get inputs(): ConstructorCall__Inputs {
+    return new ConstructorCall__Inputs(this);
+  }
+
+  get outputs(): ConstructorCall__Outputs {
+    return new ConstructorCall__Outputs(this);
+  }
+}
+
+export class ConstructorCall__Inputs {
+  _call: ConstructorCall;
+
+  constructor(call: ConstructorCall) {
+    this._call = call;
+  }
+}
+
+export class ConstructorCall__Outputs {
+  _call: ConstructorCall;
+
+  constructor(call: ConstructorCall) {
+    this._call = call;
+  }
+}
+
+export class CreateSlotCall extends ethereum.Call {
+  get inputs(): CreateSlotCall__Inputs {
+    return new CreateSlotCall__Inputs(this);
+  }
+
+  get outputs(): CreateSlotCall__Outputs {
+    return new CreateSlotCall__Outputs(this);
+  }
+}
+
+export class CreateSlotCall__Inputs {
+  _call: CreateSlotCall;
+
+  constructor(call: CreateSlotCall) {
+    this._call = call;
+  }
+
+  get recipient(): Address {
+    return this._call.inputValues[0].value.toAddress();
+  }
+
+  get currency(): Address {
+    return this._call.inputValues[1].value.toAddress();
+  }
+
+  get config(): CreateSlotCallConfigStruct {
+    return changetype<CreateSlotCallConfigStruct>(
+      this._call.inputValues[2].value.toTuple(),
+    );
+  }
+
+  get initParams(): CreateSlotCallInitParamsStruct {
+    return changetype<CreateSlotCallInitParamsStruct>(
+      this._call.inputValues[3].value.toTuple(),
+    );
+  }
+}
+
+export class CreateSlotCall__Outputs {
+  _call: CreateSlotCall;
+
+  constructor(call: CreateSlotCall) {
+    this._call = call;
+  }
+
+  get slot(): Address {
+    return this._call.outputValues[0].value.toAddress();
+  }
+}
+
+export class CreateSlotCallConfigStruct extends ethereum.Tuple {
+  get mutableTax(): boolean {
+    return this[0].toBoolean();
+  }
+
+  get mutableModule(): boolean {
+    return this[1].toBoolean();
+  }
+
+  get manager(): Address {
+    return this[2].toAddress();
+  }
+}
+
+export class CreateSlotCallInitParamsStruct extends ethereum.Tuple {
+  get taxPercentage(): BigInt {
+    return this[0].toBigInt();
+  }
+
+  get module(): Address {
+    return this[1].toAddress();
+  }
+
+  get liquidationBountyBps(): BigInt {
+    return this[2].toBigInt();
+  }
+
+  get minDepositSeconds(): BigInt {
+    return this[3].toBigInt();
+  }
+}
+
+export class CreateSlotsCall extends ethereum.Call {
+  get inputs(): CreateSlotsCall__Inputs {
+    return new CreateSlotsCall__Inputs(this);
+  }
+
+  get outputs(): CreateSlotsCall__Outputs {
+    return new CreateSlotsCall__Outputs(this);
+  }
+}
+
+export class CreateSlotsCall__Inputs {
+  _call: CreateSlotsCall;
+
+  constructor(call: CreateSlotsCall) {
+    this._call = call;
+  }
+
+  get recipient(): Address {
+    return this._call.inputValues[0].value.toAddress();
+  }
+
+  get currency(): Address {
+    return this._call.inputValues[1].value.toAddress();
+  }
+
+  get config(): CreateSlotsCallConfigStruct {
+    return changetype<CreateSlotsCallConfigStruct>(
+      this._call.inputValues[2].value.toTuple(),
+    );
+  }
+
+  get initParams(): CreateSlotsCallInitParamsStruct {
+    return changetype<CreateSlotsCallInitParamsStruct>(
+      this._call.inputValues[3].value.toTuple(),
+    );
+  }
+
+  get count(): BigInt {
+    return this._call.inputValues[4].value.toBigInt();
+  }
+}
+
+export class CreateSlotsCall__Outputs {
+  _call: CreateSlotsCall;
+
+  constructor(call: CreateSlotsCall) {
+    this._call = call;
+  }
+
+  get slots(): Array<Address> {
+    return this._call.outputValues[0].value.toAddressArray();
+  }
+}
+
+export class CreateSlotsCallConfigStruct extends ethereum.Tuple {
+  get mutableTax(): boolean {
+    return this[0].toBoolean();
+  }
+
+  get mutableModule(): boolean {
+    return this[1].toBoolean();
+  }
+
+  get manager(): Address {
+    return this[2].toAddress();
+  }
+}
+
+export class CreateSlotsCallInitParamsStruct extends ethereum.Tuple {
+  get taxPercentage(): BigInt {
+    return this[0].toBigInt();
+  }
+
+  get module(): Address {
+    return this[1].toAddress();
+  }
+
+  get liquidationBountyBps(): BigInt {
+    return this[2].toBigInt();
+  }
+
+  get minDepositSeconds(): BigInt {
+    return this[3].toBigInt();
+  }
+}
+
+export class EmitEventCall extends ethereum.Call {
+  get inputs(): EmitEventCall__Inputs {
+    return new EmitEventCall__Inputs(this);
+  }
+
+  get outputs(): EmitEventCall__Outputs {
+    return new EmitEventCall__Outputs(this);
+  }
+}
+
+export class EmitEventCall__Inputs {
+  _call: EmitEventCall;
+
+  constructor(call: EmitEventCall) {
+    this._call = call;
+  }
+
+  get eventType(): i32 {
+    return this._call.inputValues[0].value.toI32();
+  }
+
+  get data(): Bytes {
+    return this._call.inputValues[1].value.toBytes();
+  }
+}
+
+export class EmitEventCall__Outputs {
+  _call: EmitEventCall;
+
+  constructor(call: EmitEventCall) {
+    this._call = call;
+  }
+}
+
+export class InitializeCall extends ethereum.Call {
+  get inputs(): InitializeCall__Inputs {
+    return new InitializeCall__Inputs(this);
+  }
+
+  get outputs(): InitializeCall__Outputs {
+    return new InitializeCall__Outputs(this);
+  }
+}
+
+export class InitializeCall__Inputs {
+  _call: InitializeCall;
+
+  constructor(call: InitializeCall) {
+    this._call = call;
+  }
+
+  get _admin(): Address {
+    return this._call.inputValues[0].value.toAddress();
+  }
+
+  get _slotImplementation(): Address {
+    return this._call.inputValues[1].value.toAddress();
+  }
+}
+
+export class InitializeCall__Outputs {
+  _call: InitializeCall;
+
+  constructor(call: InitializeCall) {
+    this._call = call;
+  }
+}
+
+export class MigrateSlotsCall extends ethereum.Call {
+  get inputs(): MigrateSlotsCall__Inputs {
+    return new MigrateSlotsCall__Inputs(this);
+  }
+
+  get outputs(): MigrateSlotsCall__Outputs {
+    return new MigrateSlotsCall__Outputs(this);
+  }
+}
+
+export class MigrateSlotsCall__Inputs {
+  _call: MigrateSlotsCall;
+
+  constructor(call: MigrateSlotsCall) {
+    this._call = call;
+  }
+
+  get slots(): Array<Address> {
+    return this._call.inputValues[0].value.toAddressArray();
+  }
+}
+
+export class MigrateSlotsCall__Outputs {
+  _call: MigrateSlotsCall;
+
+  constructor(call: MigrateSlotsCall) {
+    this._call = call;
+  }
+}
+
+export class RegisterSlotsCall extends ethereum.Call {
+  get inputs(): RegisterSlotsCall__Inputs {
+    return new RegisterSlotsCall__Inputs(this);
+  }
+
+  get outputs(): RegisterSlotsCall__Outputs {
+    return new RegisterSlotsCall__Outputs(this);
+  }
+}
+
+export class RegisterSlotsCall__Inputs {
+  _call: RegisterSlotsCall;
+
+  constructor(call: RegisterSlotsCall) {
+    this._call = call;
+  }
+
+  get slots(): Array<Address> {
+    return this._call.inputValues[0].value.toAddressArray();
+  }
+}
+
+export class RegisterSlotsCall__Outputs {
+  _call: RegisterSlotsCall;
+
+  constructor(call: RegisterSlotsCall) {
+    this._call = call;
+  }
+}
+
+export class SetModuleVerifiedCall extends ethereum.Call {
+  get inputs(): SetModuleVerifiedCall__Inputs {
+    return new SetModuleVerifiedCall__Inputs(this);
+  }
+
+  get outputs(): SetModuleVerifiedCall__Outputs {
+    return new SetModuleVerifiedCall__Outputs(this);
+  }
+}
+
+export class SetModuleVerifiedCall__Inputs {
+  _call: SetModuleVerifiedCall;
+
+  constructor(call: SetModuleVerifiedCall) {
+    this._call = call;
+  }
+
+  get module(): Address {
+    return this._call.inputValues[0].value.toAddress();
+  }
+
+  get verified(): boolean {
+    return this._call.inputValues[1].value.toBoolean();
+  }
+
+  get name(): string {
+    return this._call.inputValues[2].value.toString();
+  }
+
+  get version(): string {
+    return this._call.inputValues[3].value.toString();
+  }
+}
+
+export class SetModuleVerifiedCall__Outputs {
+  _call: SetModuleVerifiedCall;
+
+  constructor(call: SetModuleVerifiedCall) {
+    this._call = call;
+  }
+}
+
+export class TransferAdminCall extends ethereum.Call {
+  get inputs(): TransferAdminCall__Inputs {
+    return new TransferAdminCall__Inputs(this);
+  }
+
+  get outputs(): TransferAdminCall__Outputs {
+    return new TransferAdminCall__Outputs(this);
+  }
+}
+
+export class TransferAdminCall__Inputs {
+  _call: TransferAdminCall;
+
+  constructor(call: TransferAdminCall) {
+    this._call = call;
+  }
+
+  get newAdmin(): Address {
+    return this._call.inputValues[0].value.toAddress();
+  }
+}
+
+export class TransferAdminCall__Outputs {
+  _call: TransferAdminCall;
+
+  constructor(call: TransferAdminCall) {
+    this._call = call;
+  }
+}
+
+export class UpgradeToAndCallCall extends ethereum.Call {
+  get inputs(): UpgradeToAndCallCall__Inputs {
+    return new UpgradeToAndCallCall__Inputs(this);
+  }
+
+  get outputs(): UpgradeToAndCallCall__Outputs {
+    return new UpgradeToAndCallCall__Outputs(this);
+  }
+}
+
+export class UpgradeToAndCallCall__Inputs {
+  _call: UpgradeToAndCallCall;
+
+  constructor(call: UpgradeToAndCallCall) {
+    this._call = call;
+  }
+
+  get newImplementation(): Address {
+    return this._call.inputValues[0].value.toAddress();
+  }
+
+  get data(): Bytes {
+    return this._call.inputValues[1].value.toBytes();
+  }
+}
+
+export class UpgradeToAndCallCall__Outputs {
+  _call: UpgradeToAndCallCall;
+
+  constructor(call: UpgradeToAndCallCall) {
+    this._call = call;
   }
 }
