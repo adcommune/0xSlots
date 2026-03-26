@@ -9,6 +9,13 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 /**
  * Get the type name of a Zod schema field.
@@ -103,6 +110,8 @@ export function ZodFormBuilder<T extends FieldValues>({
         const typeName = getTypeName(base);
         const isNumber = isNumberType(typeName);
 
+        const choices = (fieldSchema as { choices?: { label: string; value: unknown }[] }).choices;
+
         return (
           <FormField
             key={key}
@@ -117,7 +126,25 @@ export function ZodFormBuilder<T extends FieldValues>({
                   )}
                 </FormLabel>
                 <FormControl>
-                  {isNumber ? (
+                  {choices ? (
+                    <Select
+                      onValueChange={(v) =>
+                        field.onChange(isNumber ? Number(v) : v)
+                      }
+                      value={field.value != null ? String(field.value) : undefined}
+                    >
+                      <SelectTrigger className="text-xs w-full">
+                        <SelectValue placeholder={humanizeKey(key)} />
+                      </SelectTrigger>
+                      <SelectContent className="w-full">
+                        {choices.map((c) => (
+                          <SelectItem key={String(c.value)} value={String(c.value)} className="text-xs">
+                            {c.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : isNumber ? (
                     <Input
                       type="text"
                       inputMode="decimal"
