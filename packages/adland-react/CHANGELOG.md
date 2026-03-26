@@ -1,5 +1,11 @@
 # @adland/react
 
+## 0.16.1
+
+### Patch Changes
+
+- bfe809c: add simple analytics
+
 ## 0.16.0
 
 ### Minor Changes
