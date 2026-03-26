@@ -1,6 +1,6 @@
 import { SlotsChain } from "@0xslots/sdk";
 import type { AdData } from "@adland/data";
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 
 import { createReadClient, fetchAdFromURI, fetchMetadataURI } from "../fetch";
 import { AdContext, useAd } from "../hooks/useAdContext";
@@ -9,6 +9,7 @@ import { AdDataQueryError, type AdProps } from "../types";
 import { performAdAction, performEmptyAdAction } from "../utils/ad-actions";
 import { getAdDescription, getAdImage, getAdTitle, getAdType } from "../utils/ad-fields";
 import { adCardIcon, adCardLabel } from "../utils/constants";
+import { trackImpression, trackClick } from "../utils/tracking";
 
 // ─── Root component ──────────────────────────────────────────────────────────
 
@@ -68,6 +69,12 @@ export function Ad({
       ? error.message === AdDataQueryError.NO_AD
       : !error);
 
+  // Track impression when ad is visible in viewport (once per slot per page load)
+  useEffect(() => {
+    if (!adData || !slot) return;
+    return trackImpression(ref.current, { slot, chainId });
+  }, [adData, slot, chainId]);
+
   const onClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
       const target = e.target as HTMLElement;
@@ -79,8 +86,10 @@ export function Ad({
       if (isInteractive) return;
 
       if (adData) {
+        if (slot) trackClick("click", { slot, chainId });
         performAdAction(adData);
       } else if (isEmpty && slot) {
+        trackClick("click-empty", { slot, chainId });
         performEmptyAdAction(slot, chainId, baseLinkUrl);
       }
     },
