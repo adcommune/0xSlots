@@ -1,5 +1,17 @@
 # @0xslots/sdk
 
+## 0.11.0
+
+### Minor Changes
+
+- 2e92125: update buy function args
+- dea4abc: update metadata module constant & metadata failing silently
+
+### Patch Changes
+
+- Updated dependencies [2e92125]
+  - @0xslots/contracts@0.8.0
+
 ## 0.10.2
 
 ### Patch Changes

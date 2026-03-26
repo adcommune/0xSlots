@@ -1,5 +1,11 @@
 # @0xslots/contracts
 
+## 0.8.0
+
+### Minor Changes
+
+- 2e92125: update buy function args
+
 ## 0.7.1
 
 ### Patch Changes
