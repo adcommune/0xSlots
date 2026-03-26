@@ -1,5 +1,17 @@
 # @adland/react
 
+## 0.16.0
+
+### Minor Changes
+
+- dea4abc: update metadata module constant & metadata failing silently
+
+### Patch Changes
+
+- Updated dependencies [2e92125]
+- Updated dependencies [dea4abc]
+  - @0xslots/sdk@0.11.0
+
 ## 0.15.4
 
 ### Patch Changes
