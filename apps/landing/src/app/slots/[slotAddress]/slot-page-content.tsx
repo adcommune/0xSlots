@@ -811,7 +811,7 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
                 }
               >
                 <FileBox className="size-4" />
-                {mobilePanel === "metadata" ? "Back" : "Metadata"}
+                {mobilePanel === "metadata" ? "Back" : "Ad"}
               </Button>
             )}
             <Button
