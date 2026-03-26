@@ -120,7 +120,6 @@ export class SlotsClient {
   private readonly _publicClient?: PublicClient;
   private readonly walletClient?: WalletClient;
   private readonly _factory?: Address;
-  private _atomicSupport: boolean | undefined;
 
   /** Module namespaces for protocol extensions. */
   public readonly modules: {
@@ -443,7 +442,16 @@ export class SlotsClient {
   async buy(params: BuyParams): Promise<Hash> {
     this.assertPositive(params.depositAmount, "depositAmount");
     this.assertPositive(params.selfAssessedPrice, "selfAssessedPrice");
-    return this.withAllowance(params.slot, params.depositAmount, {
+
+    // If the slot is occupied, the contract pulls currentPrice + depositAmount.
+    const currentPrice = await this.publicClient.readContract({
+      address: params.slot,
+      abi: slotAbi,
+      functionName: "price",
+    });
+    const approvalAmount = currentPrice + params.depositAmount;
+
+    return this.withAllowance(params.slot, approvalAmount, {
       to: params.slot,
       abi: slotAbi,
       functionName: "buy",
@@ -658,57 +666,19 @@ export class SlotsClient {
 
   // ─── Internals ──────────────────────────────────────────────────────────────
 
-  /** Check if wallet supports atomic batch calls (EIP-5792). */
-  private async supportsAtomicBatch(): Promise<boolean> {
-    if (this._atomicSupport !== undefined) return this._atomicSupport;
-    try {
-      const capabilities = await (this.wallet as any).getCapabilities?.();
-      if (!capabilities) {
-        this._atomicSupport = false;
-        return false;
-      }
-      const chainId = this.chain.id;
-      const chainCaps =
-        capabilities[chainId] || capabilities[`0x${chainId.toString(16)}`];
-      const atomic = chainCaps?.atomicBatch ?? chainCaps?.atomic;
-      const status =
-        atomic && typeof atomic === "object" && "status" in atomic
-          ? (atomic as { status: string }).status
-          : undefined;
-      this._atomicSupport = status === "supported" || status === "ready";
-    } catch {
-      this._atomicSupport = false;
-    }
-    return this._atomicSupport;
-  }
-
-  /** Poll EIP-5792 getCallsStatus until the batch settles, then return a tx hash. */
-  private async pollBatchReceipt(id: string): Promise<Hash> {
-    const MAX_ATTEMPTS = 60;
-    const INTERVAL = 1500;
-    for (let i = 0; i < MAX_ATTEMPTS; i++) {
-      const result = await (this.wallet as any).getCallsStatus({ id });
-      if (result.status === "success") {
-        const receipts: { transactionHash: Hash }[] = result.receipts ?? [];
-        return receipts[receipts.length - 1]?.transactionHash ?? (id as Hash);
-      }
-      if (result.status === "failure") {
-        throw new Error("Batch transaction reverted");
-      }
-      await new Promise((r) => setTimeout(r, INTERVAL));
-    }
-    throw new Error("Batch transaction timed out");
-  }
-
   /**
-   * Execute a contract call that needs ERC-20 allowance.
-   * If wallet supports atomic batch (EIP-5792): sends approve + action as one atomic call.
-   * Otherwise: chains approve tx (if needed) then action tx.
+   * Approve → confirm on-chain → execute call sequentially.
+   * Skips approval if the existing allowance already covers the amount.
    */
   private async withAllowance(
     spender: Address,
     amount: bigint,
-    call: { to: Address; abi: any; functionName: string; args: any[] },
+    call: {
+      to: Address;
+      abi: typeof slotAbi;
+      functionName: "topUp" | "buy";
+      args: readonly bigint[];
+    },
   ): Promise<Hash> {
     const currency = await this.publicClient.readContract({
       address: spender,
@@ -723,38 +693,8 @@ export class SlotsClient {
       args: [this.account, spender],
     });
 
-    const needsApproval = allowance < amount;
-
-    // Atomic batch path
-    if (needsApproval && (await this.supportsAtomicBatch())) {
-      const approveData = encodeFunctionData({
-        abi: erc20Abi,
-        functionName: "approve",
-        args: [spender, amount],
-      });
-      const actionData = encodeFunctionData({
-        abi: call.abi,
-        functionName: call.functionName as any,
-        args: call.args,
-      });
-
-      const id = await (this.wallet as any).sendCalls({
-        account: this.account,
-        chain: this.chain,
-        calls: [
-          { to: currency, data: approveData },
-          { to: call.to, data: actionData },
-        ],
-      });
-
-      // Poll getCallsStatus until the batch settles, then return the tx hash
-      const txHash = await this.pollBatchReceipt(id);
-      return txHash;
-    }
-
-    // Sequential path
-    if (needsApproval) {
-      const hash = await this.wallet.writeContract({
+    if (allowance < amount) {
+      const approveTx = await this.wallet.writeContract({
         address: currency,
         abi: erc20Abi,
         functionName: "approve",
@@ -762,17 +702,49 @@ export class SlotsClient {
         account: this.account,
         chain: this.chain,
       });
-      await this.publicClient.waitForTransactionReceipt({ hash });
+      await this.publicClient.waitForTransactionReceipt({ hash: approveTx });
+
+      // Poll until the allowance is visible on this RPC node (handles node lag).
+      const confirmed = await this.pollUntil(
+        () =>
+          this.publicClient.readContract({
+            address: currency,
+            abi: erc20Abi,
+            functionName: "allowance",
+            args: [this.account, spender],
+          }),
+        (value) => value >= amount,
+      );
+      if (confirmed < amount) {
+        throw new SlotsError(
+          "withAllowance",
+          "Approval confirmed but on-chain allowance is still insufficient after retries",
+        );
+      }
     }
 
     return this.wallet.writeContract({
       address: call.to,
       abi: call.abi,
-      functionName: call.functionName as any,
-      args: call.args,
+      functionName: call.functionName,
+      args: call.args as [bigint, bigint],
       account: this.account,
       chain: this.chain,
     });
+  }
+
+  /** Poll `check` every `delayMs` until it returns a truthy value or `maxAttempts` is exhausted. */
+  private async pollUntil<T>(
+    check: () => Promise<T>,
+    predicate: (value: T) => boolean,
+    { maxAttempts = 10, delayMs = 500 } = {},
+  ): Promise<T> {
+    let value: T = await check();
+    for (let i = 1; i < maxAttempts && !predicate(value); i++) {
+      await new Promise((res) => setTimeout(res, delayMs));
+      value = await check();
+    }
+    return value;
   }
 }
 

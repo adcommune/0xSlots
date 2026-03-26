@@ -356,7 +356,9 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
                           </NavLink>
                           <button
                             type="button"
-                            onClick={() => copyAddress("recipient", slot.recipient)}
+                            onClick={() =>
+                              copyAddress("recipient", slot.recipient)
+                            }
                             className="text-muted-foreground hover:text-foreground transition-colors"
                           >
                             {copiedField === "recipient" ? (
@@ -688,7 +690,7 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
               {/* Metadata Module card — desktop only */}
               {isMetadataModule && (
                 <div className="hidden lg:block rounded-lg border">
-                  <div className="flex flex-col bg-muted/50 border-b gap-2 px-4 py-3">
+                  <div className="flex flex-col bg-muted/50 border-b gap-2 px-2 md:px-4 py-3">
                     <div className="flex items-center gap-1.5">
                       <FileBox className="size-3.5" />
                       <h2 className="text-sm font-semibold">Ad Metadata</h2>
@@ -698,7 +700,7 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
                       occupant
                     </p>
                   </div>
-                  <div className="p-4">
+                  <div className="p-2 md:p-4">
                     <MetadataForm
                       slotAddress={slotAddress}
                       moduleAddress={slot.module}
@@ -739,11 +741,11 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
 
               {mobilePanel === "metadata" && isMetadataModule && (
                 <div className="rounded-lg border">
-                  <div className="bg-muted/50 border-b px-4 py-3 flex items-center gap-1.5">
+                  <div className="bg-muted/50 border-b px-2 md:px-4 py-2 md:py-3 flex items-center gap-1.5">
                     <FileBox className="size-3.5" />
                     <h2 className="text-sm font-semibold">Ad Metadata</h2>
                   </div>
-                  <div className="p-4">
+                  <div className="p-2 md:p-4">
                     <MetadataForm
                       slotAddress={slotAddress}
                       moduleAddress={slot.module}
@@ -898,7 +900,9 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
               className="w-full"
               onClick={() => switchChain({ chainId: selectedChainId })}
             >
-              Switch to {CHAINS.find((c) => c.id === selectedChainId)?.name ?? "correct network"}
+              Switch to{" "}
+              {CHAINS.find((c) => c.id === selectedChainId)?.name ??
+                "correct network"}
             </Button>
           ) : (
             <>
