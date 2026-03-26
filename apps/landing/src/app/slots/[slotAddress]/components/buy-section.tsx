@@ -3,9 +3,10 @@
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { type Address, formatUnits } from "viem";
-import { MONTH_SECONDS } from "@/constants";
+import { useAccount } from "wagmi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MONTH_SECONDS } from "@/constants";
 import { useSlotAction } from "@/hooks/use-slot-action";
 import type { SlotOnChain } from "@/hooks/use-slot-onchain";
 import { formatBalance, normalizeDecimal, toRawUnits } from "@/utils";
@@ -24,21 +25,27 @@ export function BuySection({
   const { buy, busy } = useSlotAction();
   const [buyPrice, setBuyPrice] = useState("");
   const [buyDeposit, setBuyDeposit] = useState("");
+  const { address } = useAccount();
 
   // Use formatUnits for values that feed back into toRawUnits (no K/M/B suffixes).
   // Use formatBalance only for pure display.
   const currentPriceRaw = isOccupied ? formatUnits(slot.price, decimals) : "0";
-  const currentPriceDisplay = isOccupied ? formatBalance(slot.price, decimals) : "0";
+  const currentPriceDisplay = isOccupied
+    ? formatBalance(slot.price, decimals)
+    : "0";
 
   function computeMinDeposit(price: bigint): string {
     if (slot.minDepositSeconds === 0n) return "0";
     const min =
-      (price * slot.taxPercentage * slot.minDepositSeconds) / (MONTH_SECONDS * 10000n);
+      (price * slot.taxPercentage * slot.minDepositSeconds) /
+      (MONTH_SECONDS * 10000n);
     return formatUnits(min, decimals);
   }
 
   const effectivePrice = buyPrice || currentPriceRaw;
-  const priceForMin = effectivePrice ? toRawUnits(effectivePrice, decimals) : 0n;
+  const priceForMin = effectivePrice
+    ? toRawUnits(effectivePrice, decimals)
+    : 0n;
   const minDep = computeMinDeposit(priceForMin);
   const effectiveDeposit = buyDeposit || (minDep !== "0" ? minDep : "");
 
@@ -53,8 +60,10 @@ export function BuySection({
   }
 
   function handleBuy() {
+    if (!address) return;
     const dep = toRawUnits(effectiveDeposit || "0", decimals);
     buy({
+      account: address,
       slot: slotAddress as Address,
       depositAmount: dep,
       selfAssessedPrice: toRawUnits(effectivePrice || "0", decimals),
@@ -96,14 +105,19 @@ export function BuySection({
         <Input
           type="text"
           inputMode="decimal"
-          placeholder={minDep !== "0" ? `Min: ${formatBalance(toRawUnits(minDep, decimals), decimals)}` : "0.00"}
+          placeholder={
+            minDep !== "0"
+              ? `Min: ${formatBalance(toRawUnits(minDep, decimals), decimals)}`
+              : "0.00"
+          }
           value={buyDeposit}
           onChange={(e) => setBuyDeposit(e.target.value)}
           className="text-xs"
         />
         {minDep !== "0" && (
           <p className="text-[10px] text-muted-foreground mt-0.5">
-            Minimum deposit: {formatBalance(toRawUnits(minDep, decimals), decimals)} {symbol}
+            Minimum deposit:{" "}
+            {formatBalance(toRawUnits(minDep, decimals), decimals)} {symbol}
           </p>
         )}
       </div>
@@ -121,7 +135,10 @@ export function BuySection({
         <div className="flex justify-between text-xs">
           <span className="text-muted-foreground">Deposit</span>
           <span>
-            {effectiveDeposit ? formatBalance(toRawUnits(effectiveDeposit, decimals), decimals) : "0"} {symbol}
+            {effectiveDeposit
+              ? formatBalance(toRawUnits(effectiveDeposit, decimals), decimals)
+              : "0"}{" "}
+            {symbol}
           </span>
         </div>
         <div className="flex justify-between text-sm font-bold border-t pt-1 mt-1">
