@@ -1,5 +1,13 @@
 # @adland/react
 
+## 0.15.4
+
+### Patch Changes
+
+- 270e121: update token ad action
+- Updated dependencies [270e121]
+  - @adland/data@0.14.2
+
 ## 0.15.3
 
 ### Patch Changes
