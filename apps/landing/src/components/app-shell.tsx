@@ -6,7 +6,6 @@ import { BookOpen, Check, ChevronDown, Menu, User } from "lucide-react";
 import Image from "next/image";
 import { NavLink } from "@/context/navigation";
 import type { ReactNode } from "react";
-import { ChainCapabilities } from "@/components/chain-capabilities";
 import { SubgraphStatus } from "@/components/subgraph-status";
 import { Button } from "@/components/ui/button";
 import {
@@ -117,7 +116,6 @@ export function AppShell({ children }: { children: ReactNode }) {
       {chainSelector}
       <div className="flex items-center gap-2">
         <SubgraphStatus />
-        <ChainCapabilities />
       </div>
     </nav>
   );
@@ -136,7 +134,6 @@ export function AppShell({ children }: { children: ReactNode }) {
           {/* Desktop: inline indicators */}
           <div className="hidden md:flex flex-row items-center gap-2">
             <SubgraphStatus />
-            <ChainCapabilities />
           </div>
         </div>
 
