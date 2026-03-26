@@ -1,16 +1,19 @@
 import { z } from "zod";
-import { defineAd } from "../core/ad-definition";
+import { defineAd, withChoices } from "../core/ad-definition";
 import { adlandAPI } from "../services/adland.api";
 
 export const tokenAd = defineAd({
   type: "token",
   data: z.object({
     address: z.string().nonempty("Address is required"),
-    chainId: z
-      .number()
-      .int()
-      .positive("Chain ID is required")
-      .refine((chainId) => [8453].includes(chainId), "Invalid chain ID"),
+    chainId: withChoices(
+      z
+        .number()
+        .int()
+        .positive("Chain ID is required")
+        .refine((chainId) => [8453].includes(chainId), "Invalid chain ID"),
+      [{ label: "Base (8453)", value: 8453 }],
+    ),
   }),
   metadata: z.object({
     name: z.string().optional(),

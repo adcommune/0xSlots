@@ -1,5 +1,19 @@
-import { z } from "zod";
+import type { z } from "zod";
 import { debug } from "../constants";
+
+export type FieldChoice<T> = { label: string; value: T };
+
+/**
+ * Attach a list of allowed choices to any Zod schema as metadata.
+ * The underlying schema and its validation are unchanged — this only
+ * annotates the field so that form builders can render a <select>.
+ */
+export function withChoices<T extends z.ZodTypeAny>(
+  schema: T,
+  choices: ReadonlyArray<FieldChoice<z.infer<T>>>,
+): T & { choices: ReadonlyArray<FieldChoice<z.infer<T>>> } {
+  return Object.assign(schema, { choices });
+}
 
 /**
  * Ad Definition type

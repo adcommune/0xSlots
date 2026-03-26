@@ -1,16 +1,20 @@
 import type { SlotsChain } from "@0xslots/sdk";
 import type { AdData } from "@adland/data";
 import sdk from "@farcaster/miniapp-sdk";
+import { getAddress } from "viem";
 
 // Cache the miniapp check at module level — resolved once, sync thereafter
 let _isMiniApp: boolean | null = null;
-const _miniAppPromise = sdk.isInMiniApp().then((v) => {
-  _isMiniApp = v;
-  return v;
-}).catch(() => {
-  _isMiniApp = false;
-  return false;
-});
+const _miniAppPromise = sdk
+  .isInMiniApp()
+  .then((v) => {
+    _isMiniApp = v;
+    return v;
+  })
+  .catch(() => {
+    _isMiniApp = false;
+    return false;
+  });
 
 async function isMiniApp(): Promise<boolean> {
   if (_isMiniApp !== null) return _isMiniApp;
@@ -29,9 +33,13 @@ export function performAdAction(adData: AdData) {
       case "miniapp":
         sdk.actions.openMiniApp({ url: adData.data.url });
         break;
-      case "token":
-        sdk.actions.viewToken({ token: adData.data.address });
+      case "token": {
+        const address = adData.data.address;
+        const chainId = adData.data.chainId;
+        const buyToken = `eip155:${chainId}/erc20:${getAddress(address)}`;
+        sdk.actions.swapToken({ buyToken });
         break;
+      }
       case "farcasterProfile":
         sdk.actions.viewProfile({
           fid: Number.parseInt(adData.data.fid, 10),
