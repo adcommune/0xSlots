@@ -1,5 +1,11 @@
 # @adland/data
 
+## 0.14.2
+
+### Patch Changes
+
+- 270e121: update token ad action
+
 ## 0.14.1
 
 ### Patch Changes
