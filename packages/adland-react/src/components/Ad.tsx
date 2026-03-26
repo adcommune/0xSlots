@@ -7,9 +7,14 @@ import { AdContext, useAd } from "../hooks/useAdContext";
 import { useFetch } from "../hooks/useFetch";
 import { AdDataQueryError, type AdProps } from "../types";
 import { performAdAction, performEmptyAdAction } from "../utils/ad-actions";
-import { getAdDescription, getAdImage, getAdTitle, getAdType } from "../utils/ad-fields";
+import {
+  getAdDescription,
+  getAdImage,
+  getAdTitle,
+  getAdType,
+} from "../utils/ad-fields";
 import { adCardIcon, adCardLabel } from "../utils/constants";
-import { trackImpression, trackClick } from "../utils/tracking";
+import { trackClick, trackImpression } from "../utils/tracking";
 
 // ─── Root component ──────────────────────────────────────────────────────────
 
@@ -32,6 +37,8 @@ export function Ad({
   chainId = SlotsChain.BASE,
   rpcUrl,
   baseLinkUrl = "https://app.0xslots.org",
+  auth = "none",
+  context,
   children,
   ...props
 }: AdProps) {
@@ -72,8 +79,8 @@ export function Ad({
   // Track impression when ad is visible in viewport (once per slot per page load)
   useEffect(() => {
     if (!adData || !slot) return;
-    return trackImpression(ref.current, { slot, chainId });
-  }, [adData, slot, chainId]);
+    return trackImpression(ref.current, { slot, chainId, auth, context });
+  }, [adData, slot, chainId, auth, context]);
 
   const onClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
@@ -86,10 +93,10 @@ export function Ad({
       if (isInteractive) return;
 
       if (adData) {
-        if (slot) trackClick("click", { slot, chainId });
+        if (slot) trackClick("click", { slot, chainId, auth, context });
         performAdAction(adData);
       } else if (isEmpty && slot) {
-        trackClick("click-empty", { slot, chainId });
+        trackClick("click-empty", { slot, chainId, auth, context });
         performEmptyAdAction(slot, chainId, baseLinkUrl);
       }
     },
@@ -117,7 +124,8 @@ export function Ad({
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
-export interface AdImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
+export interface AdImageProps
+  extends React.ImgHTMLAttributes<HTMLImageElement> {
   fallback?: React.ReactNode;
 }
 
@@ -128,7 +136,8 @@ export function AdImage({ fallback, ...props }: AdImageProps) {
   return <img src={src} alt="" {...props} />;
 }
 
-export interface AdTitleProps extends React.HTMLAttributes<HTMLParagraphElement> {
+export interface AdTitleProps
+  extends React.HTMLAttributes<HTMLParagraphElement> {
   fallback?: React.ReactNode;
 }
 
@@ -139,11 +148,16 @@ export function AdTitle({ fallback, children, ...props }: AdTitleProps) {
   return <p {...props}>{children ?? title}</p>;
 }
 
-export interface AdDescriptionProps extends React.HTMLAttributes<HTMLParagraphElement> {
+export interface AdDescriptionProps
+  extends React.HTMLAttributes<HTMLParagraphElement> {
   fallback?: React.ReactNode;
 }
 
-export function AdDescription({ fallback, children, ...props }: AdDescriptionProps) {
+export function AdDescription({
+  fallback,
+  children,
+  ...props
+}: AdDescriptionProps) {
   const { data } = useAd();
   const description = getAdDescription(data);
   if (!description) return fallback ? <>{fallback}</> : null;

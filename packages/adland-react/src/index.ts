@@ -26,10 +26,16 @@ export { useAd } from "./hooks/useAdContext";
 export type { AdContextValue } from "./hooks/useAdContext";
 
 // Field helpers
-export { getAdDescription, getAdImage, getAdTitle, getAdType } from "./utils/ad-fields";
+export {
+  getAdDescription,
+  getAdImage,
+  getAdTitle,
+  getAdType,
+} from "./utils/ad-fields";
 
 // Types
-export type { AdProps, AdDataQueryError } from "./types";
+export type { AdProps, AdAuth } from "./types";
+export { AdDataQueryError } from "./types";
 
 // Constants
 export { adCardIcon, adCardLabel } from "./utils/constants";

@@ -1,40 +1,77 @@
-const UMAMI_URL = "https://umami.api.0xslots.org";
-const WEBSITE_ID = "b02a0a73-70c1-44cd-b4ae-cd70fa3d632f";
+import type { AdAuth } from "../types";
+
+const API_URL = "https://api.0xslots.org";
 
 interface TrackingPayload {
   slot: string;
   chainId: number;
-  [key: string]: string | number | boolean | undefined;
+  auth?: AdAuth;
+  context?: string;
 }
 
 /** Track which slot+url combos have already been counted this session */
 const tracked = new Set<string>();
 
+/** Cache the auth token per session */
+let cachedAuthToken: string | null = null;
+let authAttempted = false;
+
 /**
- * Send an event to Umami's collect endpoint.
- * Fires and forgets — never blocks rendering.
+ * Get a Farcaster Quick Auth token via miniapp SDK.
  */
-function sendEvent(eventName: string, data: TrackingPayload): void {
+async function getFarcasterToken(): Promise<string | null> {
+  if (cachedAuthToken) return cachedAuthToken;
+  if (authAttempted) return null;
+
+  authAttempted = true;
+  try {
+    const sdk = await import("@farcaster/miniapp-sdk").then((m) => m.default);
+    const isInMiniApp = await sdk.isInMiniApp();
+    if (!isInMiniApp) return null;
+
+    const result = await sdk.quickAuth.getToken();
+    cachedAuthToken = result.token;
+    return cachedAuthToken;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Send a tracking event through the API proxy.
+ */
+async function sendEvent(
+  eventName: string,
+  data: TrackingPayload,
+): Promise<void> {
   if (typeof window === "undefined") return;
 
-  const url = window.location.href;
-  const referrer = document.referrer || undefined;
-  const hostname = window.location.hostname;
+  const { auth, ...eventData } = data;
+  let authToken: string | null = null;
+
+  if (auth === "farcaster") {
+    authToken = await getFarcasterToken();
+  }
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (authToken) {
+    headers["Authorization"] = `Bearer ${authToken}`;
+  }
 
   try {
-    fetch(`${UMAMI_URL}/api/send`, {
+    fetch(`${API_URL}/events/track`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({
-        type: "event",
-        payload: {
-          website: WEBSITE_ID,
-          url,
-          referrer,
-          hostname,
-          name: eventName,
-          data,
-        },
+        event: eventName,
+        url: window.location.href,
+        referrer: document.referrer || undefined,
+        hostname: window.location.hostname,
+        data: eventData,
+        authMethod: auth || "none",
       }),
       keepalive: true,
     }).catch(() => {});
@@ -43,7 +80,6 @@ function sendEvent(eventName: string, data: TrackingPayload): void {
 
 /**
  * Track a unique impression (once per slot per page load).
- * Returns a cleanup function for the IntersectionObserver.
  */
 export function trackImpression(
   element: HTMLElement | null,
@@ -64,7 +100,7 @@ export function trackImpression(
         }
       }
     },
-    { threshold: 0.5 }, // 50% visible
+    { threshold: 0.5 },
   );
 
   observer.observe(element);
@@ -73,7 +109,7 @@ export function trackImpression(
 }
 
 /**
- * Track a click event (no dedup — every click counts).
+ * Track a click event.
  */
 export function trackClick(eventName: string, data: TrackingPayload): void {
   sendEvent(eventName, data);
