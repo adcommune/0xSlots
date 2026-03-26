@@ -9,6 +9,7 @@ import { pinata } from "./services/pinata";
 import { slotsClient } from "./services/subgraph";
 import { getChainClient } from "@0xslots/config";
 import { startEventListener } from "./services/events";
+import { verifyFarcasterAuth, forwardToUmami } from "./services/tracking";
 
 const alchemyKey = process.env.ALCHEMY_KEY as string
 
@@ -496,6 +497,41 @@ app.get("/metadata/link", async (c) => {
       },
       500,
     );
+  }
+});
+
+// ── Tracking proxy (client → verify → Umami) ─────────────────────────────────
+
+const TRACKING_DOMAIN = process.env.TRACKING_DOMAIN || "api.0xslots.org";
+
+app.post("/events/track", async (c) => {
+  try {
+    const body = await c.req.json();
+    const { event, url, referrer, hostname, data, authMethod } = body;
+
+    if (!event || !hostname || !data?.slot) {
+      return c.json({ error: "Missing required fields" }, 400);
+    }
+
+    let verified = false;
+    let user = null;
+
+    if (authMethod === "farcaster") {
+      const authorization = c.req.header("Authorization");
+      if (authorization?.startsWith("Bearer ")) {
+        const token = authorization.slice(7);
+        user = await verifyFarcasterAuth(token, TRACKING_DOMAIN);
+        verified = user !== null;
+      }
+    }
+
+    // Fire and forget — don't block the client
+    forwardToUmami({ event, url, referrer, hostname, data, authMethod }, verified, user);
+
+    return c.json({ ok: true, verified });
+  } catch (error) {
+    console.error("[tracking] Error:", error);
+    return c.json({ ok: true, verified: false });
   }
 });
 
