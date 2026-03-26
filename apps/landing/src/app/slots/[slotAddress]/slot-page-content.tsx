@@ -189,7 +189,7 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
   const isMetadataModule =
     hasModule &&
     moduleEntity?.verified === true &&
-    moduleEntity.name === "MetadataModule";
+    moduleEntity.name === "AdLandModule";
 
   const role = isConnected
     ? isOccupant && isRecipient
@@ -411,12 +411,20 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <span className={`inline-flex items-center rounded px-1 py-0.5 text-[10px] font-medium cursor-default ${slot.mutableTax ? "bg-amber-100 text-amber-700" : "bg-muted text-muted-foreground"}`}>
-                                  {slot.mutableTax ? <LockOpen className="size-2.5" /> : <Lock className="size-2.5" />}
+                                <span
+                                  className={`inline-flex items-center rounded px-1 py-0.5 text-[10px] font-medium cursor-default ${slot.mutableTax ? "bg-amber-100 text-amber-700" : "bg-muted text-muted-foreground"}`}
+                                >
+                                  {slot.mutableTax ? (
+                                    <LockOpen className="size-2.5" />
+                                  ) : (
+                                    <Lock className="size-2.5" />
+                                  )}
                                 </span>
                               </TooltipTrigger>
                               <TooltipContent side="top">
-                                {slot.mutableTax ? "Mutable — tax rate can be changed" : "Immutable — tax rate is fixed"}
+                                {slot.mutableTax
+                                  ? "Mutable — tax rate can be changed"
+                                  : "Immutable — tax rate is fixed"}
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
@@ -465,12 +473,20 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <span className={`inline-flex items-center rounded px-1 py-0.5 text-[10px] font-medium cursor-default ${slot.mutableModule ? "bg-amber-100 text-amber-700" : "bg-muted text-muted-foreground"}`}>
-                                  {slot.mutableModule ? <LockOpen className="size-2.5" /> : <Lock className="size-2.5" />}
+                                <span
+                                  className={`inline-flex items-center rounded px-1 py-0.5 text-[10px] font-medium cursor-default ${slot.mutableModule ? "bg-amber-100 text-amber-700" : "bg-muted text-muted-foreground"}`}
+                                >
+                                  {slot.mutableModule ? (
+                                    <LockOpen className="size-2.5" />
+                                  ) : (
+                                    <Lock className="size-2.5" />
+                                  )}
                                 </span>
                               </TooltipTrigger>
                               <TooltipContent side="top">
-                                {slot.mutableModule ? "Mutable — module can be changed" : "Immutable — module is fixed"}
+                                {slot.mutableModule
+                                  ? "Mutable — module can be changed"
+                                  : "Immutable — module is fixed"}
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
