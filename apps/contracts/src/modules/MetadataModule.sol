@@ -10,7 +10,12 @@ import {Initializable} from "@openzeppelin-upgradeable/contracts/proxy/utils/Ini
 /// @title MetadataModule
 /// @notice UUPS-upgradeable module that stores a URI per slot. Only the slot's occupant can update.
 /// @dev msg.sender in hooks = the slot contract calling the module.
-contract MetadataModule is Initializable, UUPSUpgradeable, OwnableUpgradeable, ISlotsModule {
+contract MetadataModule is
+    Initializable,
+    UUPSUpgradeable,
+    OwnableUpgradeable,
+    ISlotsModule
+{
     /// @notice slot address => URI
     mapping(address => string) public tokenURI;
 
@@ -27,42 +32,65 @@ contract MetadataModule is Initializable, UUPSUpgradeable, OwnableUpgradeable, I
         __Ownable_init(initialOwner);
     }
 
+    modifier onlyOccupant(address slot) {
+        if (msg.sender != _slotOccupant(slot)) revert NotOccupant();
+        _;
+    }
+
     /// @notice Update the URI for a slot. Only callable by the current occupant.
     /// @param slot The slot contract address
     /// @param uri The new URI (e.g. ipfs://...)
-    function updateMetadata(address slot, string calldata uri) external {
-        (bool ok, bytes memory data) = slot.staticcall(abi.encodeWithSignature("occupant()"));
-        require(ok, "occupant() call failed");
-        address occupant = abi.decode(data, (address));
-        if (msg.sender != occupant) revert NotOccupant();
-
+    function updateMetadata(
+        address slot,
+        string calldata uri
+    ) external onlyOccupant(slot) {
         tokenURI[slot] = uri;
         emit MetadataUpdated(slot, uri);
     }
 
     // ── Module hooks ──────────────────────────────────────────
 
-    function onTransfer(uint256, address, address) external override {}
+    function onTransfer(uint256, address, address) external override {
+        _clearMetadata(msg.sender);
+    }
 
     function onPriceUpdate(uint256, uint256, uint256) external override {}
 
     function onRelease(uint256, address) external override {
-        delete tokenURI[msg.sender];
-        emit MetadataUpdated(msg.sender, "");
+        _clearMetadata(msg.sender);
     }
 
     // ── ERC-165 ───────────────────────────────────────────────
 
     function name() external pure override returns (string memory) {
-        return "MetadataModule";
+        return "AdLandModule";
     }
 
     function version() external pure override returns (string memory) {
-        return "1.0.0";
+        return "2.0.0";
     }
 
-    function supportsInterface(bytes4 interfaceId) external pure override returns (bool) {
-        return interfaceId == type(ISlotsModule).interfaceId || interfaceId == type(IERC165).interfaceId;
+    function supportsInterface(
+        bytes4 interfaceId
+    ) external pure override returns (bool) {
+        return
+            interfaceId == type(ISlotsModule).interfaceId ||
+            interfaceId == type(IERC165).interfaceId;
+    }
+
+    // ── INTERNALS ─────────────────────────────────────────────
+
+    function _clearMetadata(address slot) internal {
+        delete tokenURI[slot];
+        emit MetadataUpdated(slot, "");
+    }
+
+    function _slotOccupant(address slot) internal view returns (address) {
+        (bool ok, bytes memory data) = slot.staticcall(
+            abi.encodeWithSignature("occupant()")
+        );
+        require(ok, "occupant() call failed");
+        return abi.decode(data, (address));
     }
 
     // ── UUPS ──────────────────────────────────────────────────

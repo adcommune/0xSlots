@@ -121,11 +121,11 @@ contract MetadataModuleTest is Test {
     // ═══════════════════════════════════════════════════════════
 
     function test_name() public view {
-        assertEq(module.name(), "MetadataModule");
+        assertEq(module.name(), "AdLandModule");
     }
 
     function test_version() public view {
-        assertEq(module.version(), "1.0.0");
+        assertEq(module.version(), "2.0.0");
     }
 
     function test_supportsISlotsModule() public view {
@@ -300,10 +300,10 @@ contract MetadataModuleTest is Test {
         // Bob buys the slot from Alice
         _buySlot(slot, bob, 15 ether, 200 ether);
 
-        // Alice's metadata still there (onTransfer is a no-op)
-        assertEq(module.tokenURI(address(slot)), "ipfs://alice");
+        // Metadata cleared on transfer
+        assertEq(module.tokenURI(address(slot)), "");
 
-        // Bob can overwrite
+        // Bob sets his own
         vm.prank(bob);
         module.updateMetadata(address(slot), "ipfs://bob");
 
