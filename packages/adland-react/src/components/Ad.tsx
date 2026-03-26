@@ -50,7 +50,10 @@ export function Ad({
     async () => {
       if (!client || !slot) throw new Error(AdDataQueryError.NO_AD);
       const uri = await fetchMetadataURI(client, slot);
-      if (!uri) throw new Error(AdDataQueryError.NO_AD);
+      if (!uri) {
+        console.info("[Ad] no metadata URI found for slot", slot);
+        return null;
+      }
       return fetchAdFromURI(uri);
     },
     { enabled: !!slot && !staticData },

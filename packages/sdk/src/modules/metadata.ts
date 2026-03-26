@@ -3,7 +3,7 @@ import type { Address, Chain, Hash, PublicClient, WalletClient } from "viem";
 import { SlotsError } from "../errors";
 import { getSdk } from "../generated/graphql";
 
-const EXPECTED_MODULE_NAME = "MetadataModule";
+const EXPECTED_MODULE_NAME = "AdLandModule";
 
 /**
  * Module namespace for MetadataModule operations.
