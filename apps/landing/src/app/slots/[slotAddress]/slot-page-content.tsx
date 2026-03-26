@@ -19,6 +19,7 @@ import {
   LandPlot,
   Loader2,
   Lock,
+  LockOpen,
   RefreshCw,
   Settings,
   Shield,
@@ -48,6 +49,12 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useChain } from "@/context/chain";
 import { useFarcaster } from "@/context/farcaster";
 import { NavLink } from "@/context/navigation";
@@ -401,6 +408,18 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
                       <div className="flex justify-between">
                         <span className="text-muted-foreground flex items-center gap-1.5">
                           <HandCoins className="size-3" /> Tax Rate
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className={`inline-flex items-center rounded px-1 py-0.5 text-[10px] font-medium cursor-default ${slot.mutableTax ? "bg-amber-100 text-amber-700" : "bg-muted text-muted-foreground"}`}>
+                                  {slot.mutableTax ? <LockOpen className="size-2.5" /> : <Lock className="size-2.5" />}
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent side="top">
+                                {slot.mutableTax ? "Mutable — tax rate can be changed" : "Immutable — tax rate is fixed"}
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         </span>
                         <span>
                           {formatBps(slot.taxPercentage.toString())}/mo
@@ -443,6 +462,18 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
                       <div className="flex justify-between">
                         <span className="text-muted-foreground flex items-center gap-1.5">
                           <FileBox className="size-3" /> Module
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className={`inline-flex items-center rounded px-1 py-0.5 text-[10px] font-medium cursor-default ${slot.mutableModule ? "bg-amber-100 text-amber-700" : "bg-muted text-muted-foreground"}`}>
+                                  {slot.mutableModule ? <LockOpen className="size-2.5" /> : <Lock className="size-2.5" />}
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent side="top">
+                                {slot.mutableModule ? "Mutable — module can be changed" : "Immutable — module is fixed"}
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         </span>
                         <span className="text-xs">
                           {!hasModule
@@ -459,22 +490,6 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
                           </p>
                         </div>
                       )}
-
-                      <div className="border-t" />
-
-                      {/* Configuration flags */}
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground flex items-center gap-1.5">
-                          <Lock className="size-3" /> Mutable Tax
-                        </span>
-                        <span>{slot.mutableTax ? "Yes" : "No"}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground flex items-center gap-1.5">
-                          <Settings className="size-3" /> Mutable Module
-                        </span>
-                        <span>{slot.mutableModule ? "Yes" : "No"}</span>
-                      </div>
 
                       {moduleUnverified && (
                         <>
