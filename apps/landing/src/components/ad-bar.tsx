@@ -110,11 +110,7 @@ function AdCarousel({
         <CarouselContent>
           {slots.map((slot) => (
             <CarouselItem key={slot}>
-              <AdCard
-                slot={slot}
-                chainId={chainId}
-                rpcUrl={rpcUrl}
-              />
+              <AdCard slot={slot} chainId={chainId} rpcUrl={rpcUrl} />
             </CarouselItem>
           ))}
         </CarouselContent>
@@ -148,22 +144,13 @@ export function AdBar() {
     <div className="">
       {/* Mobile: carousel */}
       <div className="md:hidden">
-        <AdCarousel
-          slots={slots}
-          chainId={chainId}
-          rpcUrl={rpcUrl}
-        />
+        <AdCarousel slots={slots} chainId={chainId} rpcUrl={rpcUrl} />
       </div>
 
       {/* Desktop: flex row */}
       <div className="hidden md:grid md:grid-cols-3 gap-3">
         {slots.map((slot) => (
-          <AdCard
-            key={slot}
-            slot={slot}
-            chainId={chainId}
-            rpcUrl={rpcUrl}
-          />
+          <AdCard key={slot} slot={slot} chainId={chainId} rpcUrl={rpcUrl} />
         ))}
       </div>
     </div>
