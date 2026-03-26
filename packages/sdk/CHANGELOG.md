@@ -1,5 +1,11 @@
 # @0xslots/sdk
 
+## 0.10.2
+
+### Patch Changes
+
+- 41b227c: fix: approval amount bug in buy/topUp
+
 ## 0.10.1
 
 ### Patch Changes
