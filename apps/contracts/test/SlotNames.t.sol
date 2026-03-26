@@ -147,7 +147,7 @@ contract SlotNamesTest is Test {
         // Alice buys the slot
         vm.startPrank(alice);
         usdc.approve(slot, 100e6);
-        Slot(slot).buy(50e6, 100e6); // deposit 50, price 100
+        Slot(slot).buy(alice, 50e6, 100e6); // deposit 50, price 100
         vm.stopPrank();
 
         // Alice is now the occupant
@@ -165,7 +165,7 @@ contract SlotNamesTest is Test {
         // Alice buys
         vm.startPrank(alice);
         usdc.approve(slot, 100e6);
-        Slot(slot).buy(50e6, 100e6);
+        Slot(slot).buy(alice, 50e6, 100e6);
 
         // Set custom resolution address
         bytes32 subnode = keccak256(abi.encodePacked(PARENT_NODE, keccak256("nike")));
@@ -181,7 +181,7 @@ contract SlotNamesTest is Test {
 
         vm.startPrank(alice);
         usdc.approve(slot, 100e6);
-        Slot(slot).buy(50e6, 100e6);
+        Slot(slot).buy(alice, 50e6, 100e6);
 
         bytes32 subnode = keccak256(abi.encodePacked(PARENT_NODE, keccak256("nike")));
         resolver.setText(subnode, "avatar", "https://example.com/avatar.png");
@@ -197,7 +197,7 @@ contract SlotNamesTest is Test {
 
         vm.startPrank(alice);
         usdc.approve(slot, 100e6);
-        Slot(slot).buy(50e6, 100e6);
+        Slot(slot).buy(alice, 50e6, 100e6);
         vm.stopPrank();
 
         // Bob tries to set addr — should fail
@@ -213,7 +213,7 @@ contract SlotNamesTest is Test {
         // Alice buys first
         vm.startPrank(alice);
         usdc.approve(slot, 100e6);
-        Slot(slot).buy(50e6, 100e6);
+        Slot(slot).buy(alice, 50e6, 100e6);
         
         bytes32 subnode = keccak256(abi.encodePacked(PARENT_NODE, keccak256("nike")));
         resolver.setAddr(subnode, alice);
@@ -225,7 +225,7 @@ contract SlotNamesTest is Test {
         usdc.mint(bob, 1000e6);
         vm.startPrank(bob);
         usdc.approve(slot, 200e6);
-        Slot(slot).buy(100e6, 200e6); // deposit 100, new price 200
+        Slot(slot).buy(bob, 100e6, 200e6); // deposit 100, new price 200
         vm.stopPrank();
 
         // Bob is now occupant

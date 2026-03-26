@@ -88,8 +88,8 @@ contract BatchCollectTest is Test {
 
         // Buyer buys both slots at 1 USDC, 2 USDC deposit each
         vm.startPrank(buyer);
-        Slot(slot1).buy(2e6, 1e6);
-        Slot(slot2).buy(2e6, 1e6);
+        Slot(slot1).buy(buyer, 2e6, 1e6);
+        Slot(slot2).buy(buyer, 2e6, 1e6);
         vm.stopPrank();
 
         // Verify both bought — collectedTax should be 0
@@ -131,8 +131,8 @@ contract BatchCollectTest is Test {
         address slot2 = _createSlot();
 
         vm.startPrank(buyer);
-        Slot(slot1).buy(2e6, 1e6);
-        Slot(slot2).buy(2e6, 1e6);
+        Slot(slot1).buy(buyer, 2e6, 1e6);
+        Slot(slot2).buy(buyer, 2e6, 1e6);
         vm.stopPrank();
 
         // No time passed — collect should silently skip both (NothingToCollect)
@@ -154,14 +154,14 @@ contract BatchCollectTest is Test {
 
         // Buy slot1
         vm.prank(buyer);
-        Slot(slot1).buy(2e6, 1e6);
+        Slot(slot1).buy(buyer, 2e6, 1e6);
 
         // Wait 1 hour
         vm.warp(block.timestamp + 1 hours);
 
         // Buy slot2 (slot1 has been accruing tax for 1h)
         vm.prank(buyer);
-        Slot(slot2).buy(2e6, 1e6);
+        Slot(slot2).buy(buyer, 2e6, 1e6);
 
         // Immediately collectAll — slot1 has tax, slot2 was JUST bought
         address[] memory slots = new address[](2);
@@ -186,7 +186,7 @@ contract BatchCollectTest is Test {
 
         // Buy slot1
         vm.prank(buyer);
-        Slot(slot1).buy(2e6, 1e6);
+        Slot(slot1).buy(buyer, 2e6, 1e6);
 
         // Wait 1 hour — tax accrues
         vm.warp(block.timestamp + 1 hours);
@@ -208,7 +208,7 @@ contract BatchCollectTest is Test {
 
         // First buyer buys
         vm.prank(buyer);
-        Slot(slot1).buy(2e6, 1e6);
+        Slot(slot1).buy(buyer, 2e6, 1e6);
 
         // Wait 1 hour — tax accrues
         vm.warp(block.timestamp + 1 hours);
@@ -220,7 +220,7 @@ contract BatchCollectTest is Test {
         usdc.mint(forceBuyer, 100e6);
         vm.startPrank(forceBuyer);
         usdc.approve(slot1, type(uint256).max);
-        Slot(slot1).buy(2e6, 1e6);
+        Slot(slot1).buy(forceBuyer, 2e6, 1e6);
         vm.stopPrank();
 
         uint256 collectedAfter = Slot(slot1).collectedTax();

@@ -84,7 +84,7 @@ contract SlotV3Test is Test {
     function _buySlot(Slot slot, address buyer, uint256 depositAmt, uint256 selfPrice) internal {
         vm.startPrank(buyer);
         token.approve(address(slot), depositAmt + slot.price());
-        slot.buy(depositAmt, selfPrice);
+        slot.buy(buyer, depositAmt, selfPrice);
         vm.stopPrank();
     }
 
@@ -193,7 +193,7 @@ contract SlotV3Test is Test {
         vm.startPrank(alice);
         token.approve(address(slot), 200 ether);
         vm.expectRevert(Slot.CannotBuyFromYourself.selector);
-        slot.buy(10 ether, 100 ether);
+        slot.buy(alice, 10 ether, 100 ether);
         vm.stopPrank();
     }
 
@@ -203,7 +203,7 @@ contract SlotV3Test is Test {
         vm.startPrank(alice);
         token.approve(address(slot), 1 ether);
         vm.expectRevert(Slot.InsufficientDeposit.selector);
-        slot.buy(1, 100 ether); // 1 wei deposit for 100 ETH price = way below min
+        slot.buy(alice, 1, 100 ether); // 1 wei deposit for 100 ETH price = way below min
         vm.stopPrank();
     }
 

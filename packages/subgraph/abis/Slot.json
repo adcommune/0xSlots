@@ -35,6 +35,11 @@
     "name": "buy",
     "inputs": [
       {
+        "name": "account",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
         "name": "depositAmount",
         "type": "uint256",
         "internalType": "uint256"

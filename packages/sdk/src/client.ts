@@ -81,6 +81,7 @@ export interface CreateSlotsParams extends CreateSlotParams {
 
 export interface BuyParams {
   slot: Address;
+  account: Address;
   depositAmount: bigint;
   selfAssessedPrice: bigint;
 }
@@ -455,7 +456,7 @@ export class SlotsClient {
       to: params.slot,
       abi: slotAbi,
       functionName: "buy",
-      args: [params.depositAmount, params.selfAssessedPrice],
+      args: [params.account, params.depositAmount, params.selfAssessedPrice],
     });
   }
 
@@ -477,7 +478,8 @@ export class SlotsClient {
   }
 
   /**
-   * Top up deposit on a slot (occupant only). Handles ERC-20 approval automatically.
+   * Top up deposit on a slot. Anyone can pay to extend the occupant's deposit.
+   * Handles ERC-20 approval automatically.
    * @param slot - The slot contract address.
    * @param amount - The amount to deposit (must be > 0).
    * @returns Transaction hash.
@@ -677,7 +679,7 @@ export class SlotsClient {
       to: Address;
       abi: typeof slotAbi;
       functionName: "topUp" | "buy";
-      args: readonly bigint[];
+      args: readonly unknown[];
     },
   ): Promise<Hash> {
     const currency = await this.publicClient.readContract({
@@ -727,7 +729,7 @@ export class SlotsClient {
       address: call.to,
       abi: call.abi,
       functionName: call.functionName,
-      args: call.args as [bigint, bigint],
+      args: call.args as any,
       account: this.account,
       chain: this.chain,
     });

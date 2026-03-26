@@ -133,10 +133,14 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     // CORE
     // ═══════════════════════════════════════════════════════════
 
-    /// @notice Buy the slot. If vacant (price=0), just deposit and self-assess.
-    function buy(uint256 depositAmount, uint256 selfAssessedPrice) external nonReentrant {
+    /// @notice Buy the slot. `account` becomes the new occupant, `msg.sender` pays.
+    /// @param account The address that will occupy the slot
+    /// @param depositAmount Deposit to fund the tax escrow
+    /// @param selfAssessedPrice The new self-assessed price
+    function buy(address account, uint256 depositAmount, uint256 selfAssessedPrice) external nonReentrant {
         if (selfAssessedPrice == 0) revert InvalidPrice();
-        if (msg.sender == occupant) revert CannotBuyFromYourself();
+        if (account == address(0)) revert InvalidRecipient();
+        if (account == occupant) revert CannotBuyFromYourself();
 
         uint256 currentPrice = price;
         address prev = occupant;
@@ -153,12 +157,12 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         _enforceMinDeposit(depositAmount, selfAssessedPrice);
 
         if (prev == address(0)) {
-            // Vacant: buyer just deposits, no payment to anyone
+            // Vacant: payer just deposits, no payment to anyone
             if (depositAmount > 0) {
                 currency.safeTransferFrom(msg.sender, address(this), depositAmount);
             }
         } else {
-            // Occupied: buyer pays price + deposit in one transfer
+            // Occupied: payer pays price + deposit in one transfer
             uint256 totalFromBuyer = currentPrice + depositAmount;
             if (totalFromBuyer > 0) {
                 currency.safeTransferFrom(msg.sender, address(this), totalFromBuyer);
@@ -172,16 +176,16 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
             }
         }
 
-        // Update state
-        occupant = msg.sender;
+        // Update state — account is the occupant, not msg.sender
+        occupant = account;
         price = selfAssessedPrice;
         deposit = depositAmount;
         lastSettled = block.timestamp;
 
-        _notifyModule("onTransfer", abi.encodeCall(ISlotsModule.onTransfer, (0, prev, msg.sender)));
+        _notifyModule("onTransfer", abi.encodeCall(ISlotsModule.onTransfer, (0, prev, account)));
 
-        emit Bought(msg.sender, prev, currentPrice, depositAmount, selfAssessedPrice);
-        _emitProtocolEvent(EVT_BOUGHT, abi.encode(msg.sender, prev, currentPrice, depositAmount, selfAssessedPrice));
+        emit Bought(account, prev, currentPrice, depositAmount, selfAssessedPrice);
+        _emitProtocolEvent(EVT_BOUGHT, abi.encode(account, prev, currentPrice, depositAmount, selfAssessedPrice));
     }
 
     /// @notice Occupant releases the slot (voluntary exit)
@@ -239,8 +243,9 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     // ESCROW
     // ═══════════════════════════════════════════════════════════
 
-    /// @notice Occupant tops up their deposit
-    function topUp(uint256 amount) external nonReentrant onlyOccupant {
+    /// @notice Top up the occupant's deposit. Anyone can pay.
+    function topUp(uint256 amount) external nonReentrant {
+        if (occupant == address(0)) revert NotOccupant();
         _settle();
         currency.safeTransferFrom(msg.sender, address(this), amount);
         deposit += amount;

@@ -94,7 +94,7 @@ contract MetadataModuleTest is Test {
     function _buySlot(Slot slot, address buyer, uint256 depositAmt, uint256 selfPrice) internal {
         vm.startPrank(buyer);
         token.approve(address(slot), depositAmt + slot.price());
-        slot.buy(depositAmt, selfPrice);
+        slot.buy(buyer, depositAmt, selfPrice);
         vm.stopPrank();
     }
 

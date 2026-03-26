@@ -1,14 +1,14 @@
 "use client";
 
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { Address, Hash } from "viem";
+import { useWaitForTransactionReceipt } from "wagmi";
 import type {
   BuyParams,
   CreateSlotParams,
   CreateSlotsParams,
   SlotsChain,
 } from "../client";
-import { useCallback, useEffect, useRef, useState } from "react";
-import type { Address, Hash } from "viem";
-import { useWaitForTransactionReceipt } from "wagmi";
 import { useSlotsClient } from "./useSlotsClient";
 
 function extractErrorMessage(error: unknown): string {
@@ -163,9 +163,7 @@ export function useSlotAction(opts?: SlotActionCallbacks) {
   );
   const proposeModuleUpdate = useCallback(
     (slot: Address, newModule: Address) =>
-      exec("Propose module", () =>
-        client.proposeModuleUpdate(slot, newModule),
-      ),
+      exec("Propose module", () => client.proposeModuleUpdate(slot, newModule)),
     [exec, client],
   );
   const cancelPendingUpdates = useCallback(
