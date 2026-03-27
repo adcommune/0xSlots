@@ -67,6 +67,7 @@ export async function forwardToUmami(
 ): Promise<void> {
   const eventData: Record<string, string | number | boolean | undefined> = {
     ...req.data,
+    hostname: req.hostname,
     verified,
     authMethod: req.authMethod,
   };
