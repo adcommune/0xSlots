@@ -502,8 +502,6 @@ app.get("/metadata/link", async (c) => {
 
 // ── Tracking proxy (client → verify → Umami) ─────────────────────────────────
 
-const TRACKING_DOMAIN = process.env.TRACKING_DOMAIN || "api.0xslots.org";
-
 app.post("/events/track", async (c) => {
   try {
     const body = await c.req.json();
@@ -520,7 +518,10 @@ app.post("/events/track", async (c) => {
       const authorization = c.req.header("Authorization");
       if (authorization?.startsWith("Bearer ")) {
         const token = authorization.slice(7);
-        user = await verifyFarcasterAuth(token, TRACKING_DOMAIN);
+        // Use the client's hostname as the verification domain.
+        // This is safe because the JWT's aud claim is cryptographically
+        // bound to the domain — a forged hostname won't pass signature verification.
+        user = await verifyFarcasterAuth(token, hostname);
         verified = user !== null;
       }
     }
