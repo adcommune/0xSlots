@@ -507,7 +507,10 @@ app.post("/events/track", async (c) => {
     const body = await c.req.json();
     const { event, url, referrer, hostname, data, authMethod } = body;
 
+    console.info(`[tracking] ${event} | slot=${data?.slot} | host=${hostname} | auth=${authMethod}`);
+
     if (!event || !hostname || !data?.slot) {
+      console.warn("[tracking] Rejected: missing required fields", { event, hostname, slot: data?.slot });
       return c.json({ error: "Missing required fields" }, 400);
     }
 
@@ -523,12 +526,14 @@ app.post("/events/track", async (c) => {
         // bound to the domain — a forged hostname won't pass signature verification.
         user = await verifyFarcasterAuth(token, hostname);
         verified = user !== null;
+        console.info(`[tracking] Farcaster auth: verified=${verified}${user ? ` fid=${user.fid}` : ""}`);
       }
     }
 
     // Fire and forget — don't block the client
     forwardToUmami({ event, url, referrer, hostname, data, authMethod }, verified, user);
 
+    console.info(`[tracking] Forwarded to Umami: ${event} | verified=${verified}`);
     return c.json({ ok: true, verified });
   } catch (error) {
     console.error("[tracking] Error:", error);
