@@ -62,9 +62,8 @@ export async function forwardToUmami(
   req: TrackEventRequest,
   verified: boolean,
   user?: VerifiedUser | null,
+  clientUserAgent?: string,
 ): Promise<void> {
-  console.log({ unami_website_id: UMAMI_WEBSITE_ID });
-
   const eventData: Record<string, string | number | boolean | undefined> = {
     ...req.data,
     verified,
@@ -83,7 +82,6 @@ export async function forwardToUmami(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "User-Agent": "Mozilla/5.0 (compatible; AdLand/1.0)",
       },
       body: JSON.stringify({
         type: "event",
@@ -94,6 +92,7 @@ export async function forwardToUmami(
           hostname: req.hostname,
           name: req.event,
           data: eventData,
+          userAgent: clientUserAgent,
         },
       }),
     });
