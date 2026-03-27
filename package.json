@@ -10,6 +10,8 @@
     "dev:all": "turbo dev --filter=landing --filter=@0xslots/mcp",
     "build:landing": "turbo build --filter=landing",
     "start:landing": "turbo start --filter=landing",
+    "build:adland": "turbo build --filter=adland",
+    "start:adland": "turbo start --filter=adland",
     "build:api": "turbo build --filter=api",
     "start:api": "turbo start --filter=api",
     "lint": "turbo lint",
