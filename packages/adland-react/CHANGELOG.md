@@ -1,5 +1,11 @@
 # @adland/react
 
+## 0.16.3
+
+### Patch Changes
+
+- dd50f2f: fix: event hostname prop missin
+
 ## 0.16.2
 
 ### Patch Changes
