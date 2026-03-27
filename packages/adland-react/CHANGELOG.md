@@ -1,5 +1,11 @@
 # @adland/react
 
+## 0.16.2
+
+### Patch Changes
+
+- edfe5df: add tracking for ad component
+
 ## 0.16.1
 
 ### Patch Changes
