@@ -41,6 +41,7 @@ function AdCard({
       chainId={chainId}
       rpcUrl={rpcUrl}
       baseLinkUrl={APP_URL}
+      auth="farcaster"
       className="flex items-center gap-3 rounded-lg border bg-card p-2 cursor-pointer hover:bg-accent/50 transition-colors h-16 md:h-18"
     >
       <AdLoaded className="flex items-center gap-3 w-full">
