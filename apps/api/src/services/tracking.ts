@@ -75,7 +75,7 @@ export async function forwardToUmami(
   }
 
   try {
-    await fetch(`${UMAMI_URL}/api/send`, {
+    const res = await fetch(`${UMAMI_URL}/api/send`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -93,6 +93,10 @@ export async function forwardToUmami(
         },
       }),
     });
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      console.error(`[tracking] Umami responded ${res.status}: ${text}`);
+    }
   } catch (e) {
     console.error("[tracking] Failed to forward to Umami:", e);
   }
