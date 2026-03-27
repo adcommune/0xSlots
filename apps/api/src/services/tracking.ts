@@ -2,7 +2,7 @@ import { createClient, Errors } from "@farcaster/quick-auth";
 
 const UMAMI_URL = process.env.UMAMI_URL || "https://umami.api.0xslots.org";
 const UMAMI_WEBSITE_ID =
-  process.env.UMAMI_WEBSITE_ID || "b02a0a73-70c1-44cd-b4ae-cd70fa3d632f";
+  process.env.UMAMI_WEBSITE_ID || "de57f532-8be9-4979-a400-97dae9a0a449";
 
 const quickAuthClient = createClient();
 
@@ -93,9 +93,11 @@ export async function forwardToUmami(
         },
       }),
     });
+    const text = await res.text().catch(() => "");
     if (!res.ok) {
-      const text = await res.text().catch(() => "");
       console.error(`[tracking] Umami responded ${res.status}: ${text}`);
+    } else {
+      console.info(`[tracking] Umami accepted (${res.status}): ${text}`);
     }
   } catch (e) {
     console.error("[tracking] Failed to forward to Umami:", e);
