@@ -10,8 +10,14 @@ import { slotsClient } from "./services/subgraph";
 import { getChainClient } from "@0xslots/config";
 import { startEventListener } from "./services/events";
 import { verifyFarcasterAuth, forwardToUmami } from "./services/tracking";
+import {
+  getDomainDetail,
+  getSlotSeries,
+  getSlotSummary,
+  listDomains,
+} from "./services/umami";
 
-const alchemyKey = process.env.ALCHEMY_KEY as string
+const alchemyKey = process.env.ALCHEMY_KEY as string;
 
 const AdDataQueryError = {
   NO_AD: "NO_AD",
@@ -500,6 +506,56 @@ app.get("/metadata/link", async (c) => {
   }
 });
 
+// ── Analytics (read from Umami) ────────────────────────────────────────────────
+
+/** List all domains with impression + click totals (past 90 days). */
+app.get("/analytics/domains", async (c) => {
+  try {
+    const domains = await listDomains();
+    return c.json(domains);
+  } catch (error) {
+    console.error("[analytics] Error listing domains:", error);
+    return c.json({ error: "Failed to fetch domain analytics" }, 500);
+  }
+});
+
+/** Single domain: daily impressions + clicks for the past 7 days. */
+app.get("/analytics/domains/:domain", async (c) => {
+  try {
+    const { domain } = c.req.param();
+    const detail = await getDomainDetail(domain);
+    return c.json(detail);
+  } catch (error) {
+    console.error("[analytics] Error fetching domain detail:", error);
+    return c.json({ error: "Failed to fetch domain detail" }, 500);
+  }
+});
+
+/** Single slot: impression + click totals for the past 7 days. */
+app.get("/analytics/slots/:slot", async (c) => {
+  try {
+    const { slot } = c.req.param();
+    const summary = await getSlotSummary(slot);
+    return c.json(summary);
+  } catch (error) {
+    console.error("[analytics] Error fetching slot summary:", error);
+    return c.json({ error: "Failed to fetch slot analytics" }, 500);
+  }
+});
+
+/** Single slot time-series: daily impressions + clicks. ?period=7d|30d */
+app.get("/analytics/slots/:slot/series", async (c) => {
+  try {
+    const { slot } = c.req.param();
+    const period = c.req.query("period") === "30d" ? "30d" : "7d";
+    const series = await getSlotSeries(slot, period);
+    return c.json(series);
+  } catch (error) {
+    console.error("[analytics] Error fetching slot series:", error);
+    return c.json({ error: "Failed to fetch slot series" }, 500);
+  }
+});
+
 // ── Tracking proxy (client → verify → Umami) ─────────────────────────────────
 
 app.post("/events/track", async (c) => {
@@ -507,10 +563,16 @@ app.post("/events/track", async (c) => {
     const body = await c.req.json();
     const { event, url, referrer, hostname, data, authMethod } = body;
 
-    console.info(`[tracking] ${event} | slot=${data?.slot} | host=${hostname} | auth=${authMethod}`);
+    console.info(
+      `[tracking] ${event} | slot=${data?.slot} | host=${hostname} | auth=${authMethod}`,
+    );
 
     if (!event || !hostname || !data?.slot) {
-      console.warn("[tracking] Rejected: missing required fields", { event, hostname, slot: data?.slot });
+      console.warn("[tracking] Rejected: missing required fields", {
+        event,
+        hostname,
+        slot: data?.slot,
+      });
       return c.json({ error: "Missing required fields" }, 400);
     }
 
@@ -526,18 +588,29 @@ app.post("/events/track", async (c) => {
         // bound to the domain — a forged hostname won't pass signature verification.
         user = await verifyFarcasterAuth(token, hostname);
         verified = user !== null;
-        console.info(`[tracking] Farcaster auth: verified=${verified}${user ? ` fid=${user.fid}` : ""}`);
+        console.info(
+          `[tracking] Farcaster auth: verified=${verified}${user ? ` fid=${user.fid}` : ""}`,
+        );
       }
     }
 
     // Fire and forget — don't block the client
     const clientUserAgent = c.req.header("User-Agent");
-    const clientIp = c.req.header("X-Forwarded-For")?.split(",")[0]?.trim()
-      || c.req.header("X-Real-IP")
-      || "";
-    forwardToUmami({ event, url, referrer, hostname, data, authMethod }, verified, user, clientUserAgent, clientIp);
+    const clientIp =
+      c.req.header("X-Forwarded-For")?.split(",")[0]?.trim() ||
+      c.req.header("X-Real-IP") ||
+      "";
+    forwardToUmami(
+      { event, url, referrer, hostname, data, authMethod },
+      verified,
+      user,
+      clientUserAgent,
+      clientIp,
+    );
 
-    console.info(`[tracking] Forwarded to Umami: ${event} | verified=${verified}`);
+    console.info(
+      `[tracking] Forwarded to Umami: ${event} | verified=${verified}`,
+    );
     return c.json({ ok: true, verified });
   } catch (error) {
     console.error("[tracking] Error:", error);
