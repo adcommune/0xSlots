@@ -7,6 +7,7 @@ interface TrackingPayload {
   chainId: number;
   auth?: AdAuth;
   context?: string;
+  cid?: string | null;
   empty?: boolean;
 }
 

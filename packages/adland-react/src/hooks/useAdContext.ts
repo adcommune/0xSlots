@@ -4,6 +4,7 @@ import { createContext, useContext } from "react";
 
 export interface AdContextValue {
   data: AdData | null;
+  cid: string | null;
   isLoading: boolean;
   error: unknown;
   isEmpty: boolean;

@@ -50,10 +50,10 @@ export function Ad({
   );
 
   const {
-    data: fetchedData,
+    data: fetchResult,
     isLoading,
     error,
-  } = useFetch<AdData>(
+  } = useFetch<{ data: AdData; cid: string | null } | null>(
     `ad-data-${slot}`,
     async () => {
       if (!client || !slot) throw new Error(AdDataQueryError.NO_AD);
@@ -67,7 +67,8 @@ export function Ad({
     { enabled: !!slot && !staticData },
   );
 
-  const adData = staticData ?? fetchedData;
+  const adData = staticData ?? fetchResult?.data ?? null;
+  const cid = fetchResult?.cid ?? null;
 
   const isEmpty =
     !adData &&
@@ -79,8 +80,8 @@ export function Ad({
   // Track impression when ad is visible in viewport (once per slot per page load)
   useEffect(() => {
     if (!adData || !slot) return;
-    return trackImpression(ref.current, { slot, chainId, auth, context });
-  }, [adData, slot, chainId, auth, context]);
+    return trackImpression(ref.current, { slot, chainId, auth, context, cid });
+  }, [adData, slot, chainId, auth, context, cid]);
 
   // Track impression for empty slots too
   useEffect(() => {
@@ -105,20 +106,21 @@ export function Ad({
       if (isInteractive) return;
 
       if (adData) {
-        if (slot) trackClick("click", { slot, chainId, auth, context });
+        if (slot) trackClick("click", { slot, chainId, auth, context, cid });
         performAdAction(adData);
       } else if (isEmpty && slot) {
         trackClick("click-empty", { slot, chainId, auth, context });
         performEmptyAdAction(slot, chainId, baseLinkUrl);
       }
     },
-    [adData, isEmpty, slot, chainId, baseLinkUrl],
+    [adData, isEmpty, slot, chainId, baseLinkUrl, cid],
   );
 
   return (
     <AdContext.Provider
       value={{
         data: adData ?? null,
+        cid,
         isLoading: !!slot && !staticData && isLoading,
         error,
         isEmpty,

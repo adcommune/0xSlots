@@ -1,4 +1,5 @@
 import { SlotsClient, type SlotsChain } from "@0xslots/sdk";
+import type { AdData } from "@adland/data";
 import { type Address, createPublicClient, http } from "viem";
 import { base, baseSepolia } from "viem/chains";
 
@@ -30,14 +31,25 @@ export function createReadClient(
 }
 
 /**
- * Fetch ad content from a metadata URI (IPFS or HTTP)
+ * Extract the IPFS CID from a metadata URI, or null for non-IPFS URIs.
  */
-export const fetchAdFromURI = async (uri: string) => {
+export function extractCid(uri: string): string | null {
+  if (uri.startsWith("ipfs://")) return uri.slice(7);
+  if (uri.startsWith("Qm") || uri.startsWith("bafy")) return uri;
+  return null;
+}
+
+/**
+ * Fetch ad content from a metadata URI (IPFS or HTTP).
+ * Returns both the ad data and the CID (if IPFS).
+ */
+export const fetchAdFromURI = async (
+  uri: string,
+): Promise<{ data: AdData; cid: string | null }> => {
   if (!uri) throw new Error(AdDataQueryError.NO_AD);
 
-  const url = uri.startsWith("ipfs://")
-    ? `${IPFS_GATEWAY}${uri.slice(7)}`
-    : uri;
+  const cid = extractCid(uri);
+  const url = cid ? `${IPFS_GATEWAY}${cid}` : uri;
 
   const res = await fetch(url, {
     method: "GET",
@@ -52,7 +64,7 @@ export const fetchAdFromURI = async (uri: string) => {
   const data = await res.json();
   if (data.error) throw new Error(data.error);
 
-  return data;
+  return { data, cid };
 };
 
 /**
