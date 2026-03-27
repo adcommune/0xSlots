@@ -532,7 +532,10 @@ app.post("/events/track", async (c) => {
 
     // Fire and forget — don't block the client
     const clientUserAgent = c.req.header("User-Agent");
-    forwardToUmami({ event, url, referrer, hostname, data, authMethod }, verified, user, clientUserAgent);
+    const clientIp = c.req.header("X-Forwarded-For")?.split(",")[0]?.trim()
+      || c.req.header("X-Real-IP")
+      || "";
+    forwardToUmami({ event, url, referrer, hostname, data, authMethod }, verified, user, clientUserAgent, clientIp);
 
     console.info(`[tracking] Forwarded to Umami: ${event} | verified=${verified}`);
     return c.json({ ok: true, verified });

@@ -63,6 +63,7 @@ export async function forwardToUmami(
   verified: boolean,
   user?: VerifiedUser | null,
   clientUserAgent?: string,
+  clientIp?: string,
 ): Promise<void> {
   const eventData: Record<string, string | number | boolean | undefined> = {
     ...req.data,
@@ -93,6 +94,7 @@ export async function forwardToUmami(
           name: req.event,
           data: eventData,
           userAgent: clientUserAgent,
+          ip: clientIp || undefined,
         },
       }),
     });
