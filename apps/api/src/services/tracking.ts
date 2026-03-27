@@ -83,7 +83,7 @@ export async function forwardToUmami(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "User-Agent": "AdLand-API/1.0",
+        "User-Agent": "Mozilla/5.0 (compatible; AdLand/1.0)",
       },
       body: JSON.stringify({
         type: "event",
