@@ -82,6 +82,18 @@ export function Ad({
     return trackImpression(ref.current, { slot, chainId, auth, context });
   }, [adData, slot, chainId, auth, context]);
 
+  // Track impression for empty slots too
+  useEffect(() => {
+    if (!isEmpty || !slot) return;
+    return trackImpression(ref.current, {
+      slot,
+      chainId,
+      auth,
+      context,
+      empty: true,
+    });
+  }, [isEmpty, slot, chainId, auth, context]);
+
   const onClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
       const target = e.target as HTMLElement;

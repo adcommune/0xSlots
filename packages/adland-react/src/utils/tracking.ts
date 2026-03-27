@@ -7,6 +7,7 @@ interface TrackingPayload {
   chainId: number;
   auth?: AdAuth;
   context?: string;
+  empty?: boolean;
 }
 
 /** Track which slot+url combos have already been counted this session */
@@ -87,7 +88,8 @@ export function trackImpression(
 ): (() => void) | undefined {
   if (!element || typeof window === "undefined") return;
 
-  const key = `${data.slot}:${window.location.href}`;
+  const eventName = data.empty ? "impression-empty" : "impression";
+  const key = `${eventName}:${data.slot}:${window.location.href}`;
   if (tracked.has(key)) return;
 
   const observer = new IntersectionObserver(
@@ -95,7 +97,7 @@ export function trackImpression(
       for (const entry of entries) {
         if (entry.isIntersecting && !tracked.has(key)) {
           tracked.add(key);
-          sendEvent("impression", data);
+          sendEvent(eventName, data);
           observer.disconnect();
         }
       }
