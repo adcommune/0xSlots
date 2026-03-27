@@ -89,8 +89,7 @@ export function trackImpression(
 ): (() => void) | undefined {
   if (!element || typeof window === "undefined") return;
 
-  const eventName = data.empty ? "impression-empty" : "impression";
-  const key = `${eventName}:${data.slot}:${window.location.href}`;
+  const key = `impression:${data.slot}:${window.location.href}`;
   if (tracked.has(key)) return;
 
   const observer = new IntersectionObserver(
@@ -98,7 +97,7 @@ export function trackImpression(
       for (const entry of entries) {
         if (entry.isIntersecting && !tracked.has(key)) {
           tracked.add(key);
-          sendEvent(eventName, data);
+          sendEvent("impression", data);
           observer.disconnect();
         }
       }

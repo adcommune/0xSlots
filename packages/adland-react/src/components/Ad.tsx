@@ -77,23 +77,18 @@ export function Ad({
       ? error.message === AdDataQueryError.NO_AD
       : !error);
 
-  // Track impression when ad is visible in viewport (once per slot per page load)
+  // Track impression when ad or empty state is visible in viewport
   useEffect(() => {
-    if (!adData || !slot) return;
-    return trackImpression(ref.current, { slot, chainId, auth, context, cid });
-  }, [adData, slot, chainId, auth, context, cid]);
-
-  // Track impression for empty slots too
-  useEffect(() => {
-    if (!isEmpty || !slot) return;
+    if (!slot || (!adData && !isEmpty)) return;
     return trackImpression(ref.current, {
       slot,
       chainId,
       auth,
       context,
-      empty: true,
+      cid,
+      empty: isEmpty,
     });
-  }, [isEmpty, slot, chainId, auth, context]);
+  }, [adData, isEmpty, slot, chainId, auth, context, cid]);
 
   const onClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
