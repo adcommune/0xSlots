@@ -23,6 +23,7 @@ import { AD_SLOTS, APP_URL, alchemyKey } from "@/constants";
 import { useChain } from "@/context/chain";
 import { useSlotOnChain } from "@/hooks/use-slot-onchain";
 import { truncateAddress } from "@/utils";
+import { useFarcaster } from "@/context/farcaster";
 
 function AdCard({
   slot,
@@ -33,6 +34,7 @@ function AdCard({
   chainId: number;
   rpcUrl?: string;
 }) {
+  const { isMiniApp } = useFarcaster();
   const { data: slotData } = useSlotOnChain(slot, chainId);
 
   return (
@@ -41,7 +43,7 @@ function AdCard({
       chainId={chainId}
       rpcUrl={rpcUrl}
       baseLinkUrl={APP_URL}
-      auth="farcaster"
+      auth={isMiniApp ? "farcaster" : "none"}
       className="flex items-center gap-3 rounded-lg border bg-card p-2 cursor-pointer hover:bg-accent/50 transition-colors h-16 md:h-18"
     >
       <AdLoaded className="flex items-center gap-3 w-full">
