@@ -6,6 +6,8 @@ const UMAMI_WEBSITE_ID =
 
 const quickAuthClient = createClient();
 
+console.log({ unami_website_id: UMAMI_WEBSITE_ID });
+
 interface TrackEventRequest {
   event: string;
   url: string;
@@ -61,6 +63,8 @@ export async function forwardToUmami(
   verified: boolean,
   user?: VerifiedUser | null,
 ): Promise<void> {
+  console.log({ unami_website_id: UMAMI_WEBSITE_ID });
+
   const eventData: Record<string, string | number | boolean | undefined> = {
     ...req.data,
     verified,
