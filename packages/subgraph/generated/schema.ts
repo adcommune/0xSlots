@@ -729,6 +729,23 @@ export class MetadataSlot extends Entity {
     this.set("uri", Value.fromString(value));
   }
 
+  get cid(): string | null {
+    let value = this.get("cid");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set cid(value: string | null) {
+    if (!value) {
+      this.unset("cid");
+    } else {
+      this.set("cid", Value.fromString(<string>value));
+    }
+  }
+
   get rawJson(): string | null {
     let value = this.get("rawJson");
     if (!value || value.kind == ValueKind.NULL) {
@@ -922,6 +939,23 @@ export class MetadataUpdatedEvent extends Entity {
 
   set uri(value: string) {
     this.set("uri", Value.fromString(value));
+  }
+
+  get cid(): string | null {
+    let value = this.get("cid");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set cid(value: string | null) {
+    if (!value) {
+      this.unset("cid");
+    } else {
+      this.set("cid", Value.fromString(<string>value));
+    }
   }
 
   get rawJson(): string | null {

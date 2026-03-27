@@ -28,6 +28,16 @@ function resolveContent(uri: string): string | null {
 }
 
 /**
+ * Extract the IPFS CID from a URI string.
+ * Returns null for inline JSON or non-IPFS URIs.
+ */
+function extractCid(uri: string): string | null {
+  if (uri.startsWith("Qm") || uri.startsWith("bafy")) return uri;
+  if (uri.startsWith("ipfs://")) return uri.slice(7);
+  return null;
+}
+
+/**
  * Try to extract "type" from a JSON string.
  */
 function extractAdType(rawJson: string): string | null {
@@ -50,6 +60,7 @@ export function handleMetadataUpdated(event: MetadataUpdated): void {
   // Resolve content once, reuse for both entities
   let content = resolveContent(event.params.uri);
   let adType: string | null = content ? extractAdType(content) : null;
+  let cid = extractCid(event.params.uri);
 
   // Upsert MetadataSlot (mutable — latest state)
   let metadataSlot = MetadataSlot.load(slotId);
@@ -61,6 +72,7 @@ export function handleMetadataUpdated(event: MetadataUpdated): void {
     metadataSlot.createdTx = event.transaction.hash;
   }
   metadataSlot.uri = event.params.uri;
+  metadataSlot.cid = cid;
   metadataSlot.rawJson = content;
   metadataSlot.adType = adType;
   metadataSlot.updatedBy = event.transaction.from;
@@ -76,6 +88,7 @@ export function handleMetadataUpdated(event: MetadataUpdated): void {
   metadataEvent.slot = slotId;
   metadataEvent.author = author.id;
   metadataEvent.uri = event.params.uri;
+  metadataEvent.cid = cid;
   metadataEvent.rawJson = content;
   metadataEvent.adType = adType;
   metadataEvent.timestamp = event.block.timestamp;

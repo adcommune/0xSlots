@@ -79,6 +79,7 @@ type MetadataSlot @entity(immutable: false) {
   id: ID! # slot address (same as Slot.id)
   slot: Slot!
   uri: String!
+  cid: String # IPFS CID extracted from uri (null for inline JSON or non-IPFS URIs)
   rawJson: String # full JSON content (from IPFS or inline), null if fetch failed
   adType: String # parsed "type" field from JSON (e.g. "banner", "native", "video")
   updatedBy: Bytes! # last address that set the URI
@@ -94,6 +95,7 @@ type MetadataUpdatedEvent @entity(immutable: true) {
   slot: Slot!
   author: Account!
   uri: String!
+  cid: String # IPFS CID extracted from uri (null for inline JSON or non-IPFS URIs)
   rawJson: String # full JSON content (from IPFS or inline), null if fetch failed
   adType: String # parsed "type" field from JSON
   timestamp: BigInt!

@@ -1044,12 +1044,16 @@ export class BuyCall__Inputs {
     this._call = call;
   }
 
+  get account(): Address {
+    return this._call.inputValues[0].value.toAddress();
+  }
+
   get depositAmount(): BigInt {
-    return this._call.inputValues[0].value.toBigInt();
+    return this._call.inputValues[1].value.toBigInt();
   }
 
   get selfAssessedPrice(): BigInt {
-    return this._call.inputValues[1].value.toBigInt();
+    return this._call.inputValues[2].value.toBigInt();
   }
 }
 
