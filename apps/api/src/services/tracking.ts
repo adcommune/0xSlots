@@ -84,6 +84,9 @@ export async function forwardToUmami(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        // Forward the real client User-Agent so Umami's bot detection
+        // evaluates the browser, not this server's Node.js agent.
+        ...(clientUserAgent ? { "User-Agent": clientUserAgent } : {}),
       },
       body: JSON.stringify({
         type: "event",
@@ -103,7 +106,18 @@ export async function forwardToUmami(
     if (!res.ok) {
       console.error(`[tracking] Umami responded ${res.status}: ${text}`);
     } else {
-      console.info(`[tracking] Umami accepted (${res.status}): ${text}`);
+      try {
+        const json = JSON.parse(text);
+        if (json?.beep === "boop") {
+          console.warn(
+            `[tracking] Umami flagged as bot — event not recorded. ua=${clientUserAgent ?? "unknown"}`,
+          );
+        } else {
+          console.info(`[tracking] Umami accepted (${res.status}): ${text}`);
+        }
+      } catch {
+        console.info(`[tracking] Umami accepted (${res.status}): ${text}`);
+      }
     }
   } catch (e) {
     console.error("[tracking] Failed to forward to Umami:", e);
