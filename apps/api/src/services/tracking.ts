@@ -1,23 +1,8 @@
 import { createClient, Errors } from "@farcaster/quick-auth";
 
-const UMAMI_URL = process.env.UMAMI_URL || "https://umami.api.0xslots.org";
-const UMAMI_WEBSITE_ID =
-  process.env.UMAMI_WEBSITE_ID || "de57f532-8be9-4979-a400-97dae9a0a449";
-
 const quickAuthClient = createClient();
 
-console.log({ unami_website_id: UMAMI_WEBSITE_ID });
-
-interface TrackEventRequest {
-  event: string;
-  url: string;
-  referrer?: string;
-  hostname: string;
-  data: Record<string, string | number | boolean | undefined>;
-  authMethod: "farcaster" | "none";
-}
-
-interface VerifiedUser {
+export interface VerifiedUser {
   fid: number;
   primaryAddress?: string;
 }
@@ -49,77 +34,8 @@ export async function verifyFarcasterAuth(
     return { fid: payload.sub, primaryAddress };
   } catch (e) {
     if (e instanceof Errors.InvalidTokenError) {
-      console.info("[tracking] Invalid Farcaster token:", e.message);
+      console.info("[auth] Invalid Farcaster token:", e.message);
     }
     return null;
-  }
-}
-
-/**
- * Forward a tracking event to Umami with verification metadata.
- */
-export async function forwardToUmami(
-  req: TrackEventRequest,
-  verified: boolean,
-  user?: VerifiedUser | null,
-  clientUserAgent?: string,
-  clientIp?: string,
-): Promise<void> {
-  const eventData: Record<string, string | number | boolean | undefined> = {
-    ...req.data,
-    hostname: req.hostname,
-    verified,
-    authMethod: req.authMethod,
-  };
-
-  if (user) {
-    eventData.fid = user.fid;
-    if (user.primaryAddress) {
-      eventData.userAddress = user.primaryAddress;
-    }
-  }
-
-  try {
-    const res = await fetch(`${UMAMI_URL}/api/send`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        // Forward the real client User-Agent so Umami's bot detection
-        // evaluates the browser, not this server's Node.js agent.
-        ...(clientUserAgent ? { "User-Agent": clientUserAgent } : {}),
-      },
-      body: JSON.stringify({
-        type: "event",
-        payload: {
-          website: UMAMI_WEBSITE_ID,
-          url: req.url,
-          referrer: req.referrer,
-          hostname: req.hostname,
-          name: req.event,
-          data: eventData,
-          userAgent: clientUserAgent,
-          ip: clientIp || undefined,
-        },
-      }),
-    });
-    const text = await res.text().catch(() => "");
-    if (!res.ok) {
-      console.error(`[tracking] Umami responded ${res.status}: ${text}`);
-    } else {
-      try {
-        const json = JSON.parse(text);
-        if (json?.beep === "boop") {
-          console.warn(
-            `[tracking] Umami flagged as bot — event not recorded. ua=${clientUserAgent ?? "unknown"}`,
-          );
-        } else {
-          console.info(`[tracking] Umami accepted (${res.status}): ${text}`);
-        }
-      } catch {
-        console.info(`[tracking] Umami accepted (${res.status}): ${text}`);
-      }
-    }
-  } catch (e) {
-    console.error("[tracking] Failed to forward to Umami:", e);
   }
 }

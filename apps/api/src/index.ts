@@ -9,7 +9,7 @@ import { pinata } from "./services/pinata";
 import { slotsClient } from "./services/subgraph";
 import { getChainClient } from "@0xslots/config";
 import { startEventListener } from "./services/events";
-import { verifyFarcasterAuth, forwardToUmami } from "./services/tracking";
+import { verifyFarcasterAuth } from "./services/tracking";
 import {
   getDomainDetail,
   getSlotSeries,
@@ -556,65 +556,34 @@ app.get("/analytics/slots/:slot/series", async (c) => {
   }
 });
 
-// ── Tracking proxy (client → verify → Umami) ─────────────────────────────────
+// ── Farcaster verification (client calls this, then sends directly to Umami) ──
 
-app.post("/events/track", async (c) => {
+app.post("/auth/verify", async (c) => {
   try {
     const body = await c.req.json();
-    const { event, url, referrer, hostname, data, authMethod } = body;
+    const { token, domain } = body;
+
+    if (!token || !domain) {
+      return c.json({ verified: false });
+    }
+
+    // The JWT's aud claim is cryptographically bound to the domain —
+    // a forged domain won't pass signature verification.
+    const user = await verifyFarcasterAuth(token, domain);
+    const verified = user !== null;
 
     console.info(
-      `[tracking] ${event} | slot=${data?.slot} | host=${hostname} | auth=${authMethod}`,
+      `[auth] Farcaster verify: verified=${verified}${user ? ` fid=${user.fid}` : ""}`,
     );
 
-    if (!event || !hostname || !data?.slot) {
-      console.warn("[tracking] Rejected: missing required fields", {
-        event,
-        hostname,
-        slot: data?.slot,
-      });
-      return c.json({ error: "Missing required fields" }, 400);
-    }
-
-    let verified = false;
-    let user = null;
-
-    if (authMethod === "farcaster") {
-      const authorization = c.req.header("Authorization");
-      if (authorization?.startsWith("Bearer ")) {
-        const token = authorization.slice(7);
-        // Use the client's hostname as the verification domain.
-        // This is safe because the JWT's aud claim is cryptographically
-        // bound to the domain — a forged hostname won't pass signature verification.
-        user = await verifyFarcasterAuth(token, hostname);
-        verified = user !== null;
-        console.info(
-          `[tracking] Farcaster auth: verified=${verified}${user ? ` fid=${user.fid}` : ""}`,
-        );
-      }
-    }
-
-    // Fire and forget — don't block the client
-    const clientUserAgent = c.req.header("User-Agent");
-    const clientIp =
-      c.req.header("X-Forwarded-For")?.split(",")[0]?.trim() ||
-      c.req.header("X-Real-IP") ||
-      "";
-    forwardToUmami(
-      { event, url, referrer, hostname, data, authMethod },
+    return c.json({
       verified,
-      user,
-      clientUserAgent,
-      clientIp,
-    );
-
-    console.info(
-      `[tracking] Forwarded to Umami: ${event} | verified=${verified}`,
-    );
-    return c.json({ ok: true, verified });
+      fid: user?.fid,
+      address: user?.primaryAddress,
+    });
   } catch (error) {
-    console.error("[tracking] Error:", error);
-    return c.json({ ok: true, verified: false });
+    console.error("[auth] Verify error:", error);
+    return c.json({ verified: false });
   }
 });
 

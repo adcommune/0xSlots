@@ -1,6 +1,8 @@
 import type { AdAuth } from "../types";
 
 const API_URL = "https://api.0xslots.org";
+const UMAMI_URL = "https://umami.api.0xslots.org";
+const UMAMI_WEBSITE_ID = "de57f532-8be9-4979-a400-97dae9a0a449";
 
 interface TrackingPayload {
   slot: string;
@@ -11,12 +13,22 @@ interface TrackingPayload {
   empty?: boolean;
 }
 
+interface VerificationPayload {
+  verified: boolean;
+  fid?: number;
+  address?: string;
+}
+
 /** Track which slot+url combos have already been counted this session */
 const tracked = new Set<string>();
 
-/** Cache the auth token per session */
+/** Cache the Farcaster auth token per session */
 let cachedAuthToken: string | null = null;
 let authAttempted = false;
+
+/** Cache the verification result per session */
+let cachedVerification: VerificationPayload | null = null;
+let verificationAttempted = false;
 
 /**
  * Get a Farcaster Quick Auth token via miniapp SDK.
@@ -40,7 +52,33 @@ async function getFarcasterToken(): Promise<string | null> {
 }
 
 /**
- * Send a tracking event through the API proxy.
+ * Verify a Farcaster token via the API and cache the result.
+ */
+async function getVerification(
+  token: string,
+  domain: string,
+): Promise<VerificationPayload> {
+  if (cachedVerification) return cachedVerification;
+  if (verificationAttempted) return { verified: false };
+
+  verificationAttempted = true;
+  try {
+    const res = await fetch(`${API_URL}/auth/verify`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, domain }),
+    });
+    if (res.ok) {
+      cachedVerification = (await res.json()) as VerificationPayload;
+      return cachedVerification;
+    }
+  } catch {}
+
+  return { verified: false };
+}
+
+/**
+ * Send a tracking event directly to Umami, enriched with optional verification data.
  */
 async function sendEvent(
   eventName: string,
@@ -49,31 +87,39 @@ async function sendEvent(
   if (typeof window === "undefined") return;
 
   const { auth, ...eventData } = data;
-  let authToken: string | null = null;
+
+  let verification: VerificationPayload = { verified: false };
 
   if (auth === "farcaster") {
-    authToken = await getFarcasterToken();
+    const token = await getFarcasterToken();
+    if (token) {
+      verification = await getVerification(token, window.location.hostname);
+    }
   }
 
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
+  const enrichedData: Record<string, string | number | boolean | undefined> = {
+    ...eventData,
+    hostname: window.location.hostname,
+    verified: verification.verified,
+    authMethod: auth ?? "none",
+    ...(verification.fid !== undefined ? { fid: verification.fid } : {}),
+    ...(verification.address ? { userAddress: verification.address } : {}),
   };
 
-  if (authToken) {
-    headers["Authorization"] = `Bearer ${authToken}`;
-  }
-
   try {
-    fetch(`${API_URL}/events/track`, {
+    fetch(`${UMAMI_URL}/api/send`, {
       method: "POST",
-      headers,
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        event: eventName,
-        url: window.location.href,
-        referrer: document.referrer || undefined,
-        hostname: window.location.hostname,
-        data: eventData,
-        authMethod: auth || "none",
+        type: "event",
+        payload: {
+          website: UMAMI_WEBSITE_ID,
+          url: window.location.href,
+          referrer: document.referrer || undefined,
+          hostname: window.location.hostname,
+          name: eventName,
+          data: enrichedData,
+        },
       }),
       keepalive: true,
     }).catch(() => {});
