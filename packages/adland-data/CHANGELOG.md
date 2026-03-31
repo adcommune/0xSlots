@@ -1,5 +1,11 @@
 # @adland/data
 
+## 0.14.3
+
+### Patch Changes
+
+- 9296ae2: update tracking system by custom DB & event handling
+
 ## 0.14.2
 
 ### Patch Changes
