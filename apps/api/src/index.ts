@@ -15,7 +15,9 @@ import {
   getSlotSeries,
   getSlotSummary,
   listDomains,
-} from "./services/umami";
+} from "./services/analytics";
+import { db } from "./db";
+import { events, domainMetadata } from "./db/schema";
 
 const alchemyKey = process.env.ALCHEMY_KEY as string;
 
@@ -556,7 +558,45 @@ app.get("/analytics/slots/:slot/series", async (c) => {
   }
 });
 
-// ── Farcaster verification (client calls this, then sends directly to Umami) ──
+// ── Event tracking (direct DB insert) ─────────────────────────────────────────
+
+app.post("/track", async (c) => {
+  try {
+    const body = await c.req.json();
+    const { type, slot, cid, domain, auth } = body;
+
+    if (!type || !slot) {
+      return c.json({ error: "Missing required fields" }, 400);
+    }
+
+    if (type !== "view" && type !== "click") {
+      return c.json({ error: "Invalid event type" }, 400);
+    }
+
+    // Upsert domain metadata if domain is provided
+    if (domain) {
+      await db
+        .insert(domainMetadata)
+        .values({ domain, lastUpdatedAt: new Date() })
+        .onConflictDoNothing();
+    }
+
+    await db.insert(events).values({
+      type,
+      authType: auth === "farcaster" ? "farcaster" : "none",
+      domain: domain || null,
+      slotAddress: slot,
+      cid: cid || null,
+    });
+
+    return c.json({ ok: true });
+  } catch (error) {
+    console.error("[tracking] Error:", error);
+    return c.json({ ok: true });
+  }
+});
+
+// ── Farcaster verification (separate concern from tracking) ───────────────────
 
 app.post("/auth/verify", async (c) => {
   try {
