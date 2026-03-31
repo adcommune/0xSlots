@@ -10,12 +10,7 @@ import { slotsClient } from "./services/subgraph";
 import { getChainClient } from "@0xslots/config";
 import { startEventListener } from "./services/events";
 import { verifyFarcasterAuth } from "./services/tracking";
-import {
-  getDomainDetail,
-  getSlotSeries,
-  getSlotSummary,
-  listDomains,
-} from "./services/analytics";
+import analyticsRoutes from "./routes/analytics";
 import { parseAccountAssociation, type ParsedAccountAssociation } from "@adland/data";
 import { db } from "./db";
 import { events, domains } from "./db/schema";
@@ -512,53 +507,7 @@ app.get("/metadata/link", async (c) => {
 
 // ── Analytics ─────────────────────────────────────────────────────────────────
 
-/** List all domains with impression + click totals (past 90 days). */
-app.get("/analytics/domains", async (c) => {
-  try {
-    const domains = await listDomains();
-    return c.json(domains);
-  } catch (error) {
-    console.error("[analytics] Error listing domains:", error);
-    return c.json({ error: "Failed to fetch domain analytics" }, 500);
-  }
-});
-
-/** Single domain: daily impressions + clicks for the past 7 days. */
-app.get("/analytics/domains/:domain", async (c) => {
-  try {
-    const { domain } = c.req.param();
-    const detail = await getDomainDetail(domain);
-    return c.json(detail);
-  } catch (error) {
-    console.error("[analytics] Error fetching domain detail:", error);
-    return c.json({ error: "Failed to fetch domain detail" }, 500);
-  }
-});
-
-/** Single slot: impression + click totals for the past 7 days. */
-app.get("/analytics/slots/:slot", async (c) => {
-  try {
-    const { slot } = c.req.param();
-    const summary = await getSlotSummary(slot);
-    return c.json(summary);
-  } catch (error) {
-    console.error("[analytics] Error fetching slot summary:", error);
-    return c.json({ error: "Failed to fetch slot analytics" }, 500);
-  }
-});
-
-/** Single slot time-series: daily impressions + clicks. ?period=7d|30d */
-app.get("/analytics/slots/:slot/series", async (c) => {
-  try {
-    const { slot } = c.req.param();
-    const period = c.req.query("period") === "30d" ? "30d" : "7d";
-    const series = await getSlotSeries(slot, period);
-    return c.json(series);
-  } catch (error) {
-    console.error("[analytics] Error fetching slot series:", error);
-    return c.json({ error: "Failed to fetch slot series" }, 500);
-  }
-});
+app.route("/analytics", analyticsRoutes);
 
 // ── Event tracking (direct DB insert) ─────────────────────────────────────────
 
