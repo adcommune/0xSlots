@@ -1,5 +1,13 @@
 # @adland/react
 
+## 0.16.5
+
+### Patch Changes
+
+- 9296ae2: update tracking system by custom DB & event handling
+- Updated dependencies [9296ae2]
+  - @adland/data@0.14.3
+
 ## 0.16.4
 
 ### Patch Changes
