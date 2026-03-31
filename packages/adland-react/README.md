@@ -1,56 +1,113 @@
 # @adland/react
 
-A simple React component library for tracking ad views and clicks with built-in support for Farcaster MiniApp SDK & AdLand ads
+React components for displaying and tracking ads from [0xSlots](https://0xslots.org) — the on-chain advertising protocol.
 
-## Installation
+## Install
 
 ```bash
 npm install @adland/react
-# or
-pnpm add @adland/react
-# or
-yarn add @adland/react
 ```
 
-## Usage
+**Peer dependencies:** `react` ^18 || ^19, `react-dom` ^18 || ^19
+
+## Quick Start
 
 ```tsx
-import { Ad } from "@adland/react";
+import { Ad, AdImage, AdTitle, AdDescription, AdBadge } from "@adland/react";
 
-function App() {
+function AdSlot() {
   return (
-    <Ad owner="0x123..." adId="ad-1" network="testnet">
-      <img src="ad.jpg" alt="Advertisement" />
+    <Ad slot="0x123..." auth="farcaster" context="sidebar">
+      <AdImage className="h-20 w-20 rounded" />
+      <AdTitle className="font-semibold" />
+      <AdDescription className="text-sm text-gray-600" />
+      <AdBadge />
     </Ad>
   );
 }
-
-// network defaults to "testnet" if omitted
-<Ad owner="0x123..." adId="ad-1">
-  <img src="ad.jpg" alt="Advertisement" />
-</Ad>
 ```
 
-## Features
+## Components
 
-- 🎯 **Simple API**: Minimal configuration required
-- 📊 **View & Click Tracking**: Automatic view tracking with IntersectionObserver and click tracking
-- 🔐 **Farcaster SDK Integration**: Built-in support for Farcaster MiniApp SDK's `quickAuth` for authenticated requests
-- 🛡️ **Session-based Deduplication**: Prevents duplicate view tracking within the same browser session
-- 📦 **TypeScript Support**: Full TypeScript definitions included
+Uses the **compound component** pattern — nest sub-components inside `<Ad>`.
 
-## API
-
-### `<Ad />` Component
+### `<Ad>` (Root)
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
-| `owner` | `string` | **required** | The owner/creator address of the ad |
-| `adId` | `string` | **required** | Unique identifier for the ad |
-| `children` | `ReactNode` | **required** | The content to display in the ad |
-| `network` | `"testnet"` | `"testnet"` | Network to use for tracking requests. Currently only testnet is supported. Maps to `testnet.adland.space` |
+| `slot` | `string` | — | Slot contract address (on-chain fetch) |
+| `data` | `AdData` | — | Static ad data (skips on-chain fetch) |
+| `chainId` | `number` | `8453` | BASE or BASE Sepolia |
+| `rpcUrl` | `string` | — | Custom RPC URL |
+| `auth` | `"farcaster" \| "none"` | `"none"` | Auth method for verified tracking |
+| `context` | `string` | — | Placement context (e.g. `"sidebar"`) |
+
+### Sub-components
+
+| Component | Description |
+|-----------|-------------|
+| `<AdImage>` | Ad image with fallback |
+| `<AdTitle>` | Ad title |
+| `<AdDescription>` | Ad description |
+| `<AdBadge>` | Ad type badge with icon |
+| `<AdLabel>` | "AD" label |
+
+### State components
+
+Conditionally render based on ad state:
+
+```tsx
+<Ad slot="0x123...">
+  <AdLoading>Loading...</AdLoading>
+  <AdError>Failed to load</AdError>
+  <AdEmpty>Your ad here</AdEmpty>
+  <AdLoaded>
+    <AdImage />
+    <AdTitle />
+  </AdLoaded>
+</Ad>
+```
+
+## Hook
+
+Access ad context from any child component:
+
+```tsx
+import { useAd } from "@adland/react";
+
+function Custom() {
+  const { data, isLoading, error, isEmpty } = useAd();
+  if (!data) return null;
+  return <p>{data.data.title}</p>;
+}
+```
+
+## Utilities
+
+```ts
+import {
+  getAdImage,
+  getAdTitle,
+  getAdDescription,
+  getAdType,
+  adCardIcon,
+  adCardLabel,
+} from "@adland/react";
+```
+
+## Ad Types
+
+Supports 5 ad types: **link**, **cast**, **miniapp**, **token**, **farcasterProfile**.
+
+## Tracking
+
+Impressions and clicks are tracked automatically:
+
+- **Impressions** — triggered via `IntersectionObserver` (50%+ visibility)
+- **Clicks** — tracked on ad interaction
+- **Deduplication** — one impression per slot per session
+- **Farcaster auth** — verified identity when `auth="farcaster"`
 
 ## License
 
 MIT
-
