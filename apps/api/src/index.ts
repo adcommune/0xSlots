@@ -11,7 +11,10 @@ import { getChainClient } from "@0xslots/config";
 import { startEventListener } from "./services/events";
 import { verifyFarcasterAuth } from "./services/tracking";
 import analyticsRoutes from "./routes/analytics";
-import { parseAccountAssociation, type ParsedAccountAssociation } from "@adland/data";
+import {
+  parseAccountAssociation,
+  type ParsedAccountAssociation,
+} from "@adland/data";
 import { db } from "./db";
 import { events, domains } from "./db/schema";
 import { eq } from "drizzle-orm";
@@ -65,6 +68,11 @@ app.post("/verify/miniapp", async (c) => {
   const farcasterAPI = new FarcasterAPI(
     process.env.FARCASTER_API_KEY as string,
   );
+
+  if (!domain) {
+    return c.json({ verified: false });
+  }
+
   try {
     const manifest = await farcasterAPI.getDomainManifest(domain);
     return c.json({ verified: manifest.verified });
@@ -105,6 +113,9 @@ app.post("/verify/cast", async (c) => {
 app.get("/metadata/cast", async (c) => {
   try {
     const { hash } = c.req.query();
+    if (!hash) {
+      return c.json({ error: "Hash is required" }, 400);
+    }
     const response = await neynar.fetchBulkCasts({ casts: [hash] });
     const cast = response.result?.casts?.[0];
     if (!cast) {
@@ -544,7 +555,9 @@ app.post("/track", async (c) => {
       if (existing.length === 0) {
         let isMiniapp = false;
         let manifest: Record<string, unknown> | null = null;
-        let owner: (ParsedAccountAssociation & { username?: string; pfpUrl?: string }) | null = null;
+        let owner:
+          | (ParsedAccountAssociation & { username?: string; pfpUrl?: string })
+          | null = null;
 
         try {
           const res = await fetch(
@@ -555,11 +568,13 @@ app.post("/track", async (c) => {
             manifest = json;
             isMiniapp = true;
 
-            const accountAssociation = json.accountAssociation as {
-              header: string;
-              payload: string;
-              signature: string;
-            } | undefined;
+            const accountAssociation = json.accountAssociation as
+              | {
+                  header: string;
+                  payload: string;
+                  signature: string;
+                }
+              | undefined;
 
             if (accountAssociation) {
               owner = parseAccountAssociation(accountAssociation);
