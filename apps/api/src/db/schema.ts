@@ -1,4 +1,5 @@
 import {
+  boolean,
   text,
   varchar,
   uuid,
@@ -21,7 +22,7 @@ export const events = pgTable(
     id: uuid("id").defaultRandom().primaryKey(),
     type: eventType().notNull(),
     authType: authType().default("none").notNull(),
-    domain: text("domain").references(() => domainMetadata.domain, {
+    domain: text("domain").references(() => domains.domain, {
       onDelete: "set null",
     }),
     slotAddress: text("slot_address"),
@@ -39,14 +40,15 @@ export const events = pgTable(
 );
 
 export const eventRelations = relations(events, ({ one }) => ({
-  domainMetadata: one(domainMetadata, {
+  domain: one(domains, {
     fields: [events.domain],
-    references: [domainMetadata.domain],
+    references: [domains.domain],
   }),
 }));
 
-export const domainMetadata = pgTable("domain_metadata", {
+export const domains = pgTable("domains", {
   domain: text("domain").primaryKey(),
+  isMiniapp: boolean("is_miniapp").default(false).notNull(),
   manifest: jsonb("manifest").$type<Record<string, unknown>>(),
   owner: jsonb("owner").$type<
     ParsedAccountAssociation & { username?: string; pfpUrl?: string }
@@ -57,5 +59,5 @@ export const domainMetadata = pgTable("domain_metadata", {
 // Types
 export type Event = typeof events.$inferSelect;
 export type NewEvent = typeof events.$inferInsert;
-export type DomainMetadata = typeof domainMetadata.$inferSelect;
-export type NewDomainMetadata = typeof domainMetadata.$inferInsert;
+export type Domain = typeof domains.$inferSelect;
+export type NewDomain = typeof domains.$inferInsert;

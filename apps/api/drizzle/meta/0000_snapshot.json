@@ -1,11 +1,11 @@
 {
-  "id": "fa1fb541-e378-4b06-9da9-2ce68fafb111",
+  "id": "746f8b2c-3c28-414f-95eb-3876bc32280f",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
-    "public.domain_metadata": {
-      "name": "domain_metadata",
+    "public.domains": {
+      "name": "domains",
       "schema": "",
       "columns": {
         "domain": {
@@ -13,6 +13,13 @@
           "type": "text",
           "primaryKey": true,
           "notNull": true
+        },
+        "is_miniapp": {
+          "name": "is_miniapp",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         },
         "manifest": {
           "name": "manifest",
@@ -193,10 +200,10 @@
         }
       },
       "foreignKeys": {
-        "events_domain_domain_metadata_domain_fk": {
-          "name": "events_domain_domain_metadata_domain_fk",
+        "events_domain_domains_domain_fk": {
+          "name": "events_domain_domains_domain_fk",
           "tableFrom": "events",
-          "tableTo": "domain_metadata",
+          "tableTo": "domains",
           "columnsFrom": [
             "domain"
           ],

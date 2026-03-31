@@ -1,7 +1,8 @@
 CREATE TYPE "public"."auth_type" AS ENUM('none', 'farcaster');--> statement-breakpoint
 CREATE TYPE "public"."event_type" AS ENUM('view', 'click');--> statement-breakpoint
-CREATE TABLE "domain_metadata" (
+CREATE TABLE "domains" (
 	"domain" text PRIMARY KEY NOT NULL,
+	"is_miniapp" boolean DEFAULT false NOT NULL,
 	"manifest" jsonb,
 	"owner" jsonb,
 	"last_updated_at" timestamp DEFAULT now() NOT NULL
@@ -17,7 +18,7 @@ CREATE TABLE "events" (
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-ALTER TABLE "events" ADD CONSTRAINT "events_domain_domain_metadata_domain_fk" FOREIGN KEY ("domain") REFERENCES "public"."domain_metadata"("domain") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "events" ADD CONSTRAINT "events_domain_domains_domain_fk" FOREIGN KEY ("domain") REFERENCES "public"."domains"("domain") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "idx_events_domain" ON "events" USING btree ("domain");--> statement-breakpoint
 CREATE INDEX "idx_events_type" ON "events" USING btree ("type");--> statement-breakpoint
 CREATE INDEX "idx_events_auth_type" ON "events" USING btree ("authType");--> statement-breakpoint

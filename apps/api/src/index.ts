@@ -16,8 +16,10 @@ import {
   getSlotSummary,
   listDomains,
 } from "./services/analytics";
+import { parseAccountAssociation, type ParsedAccountAssociation } from "@adland/data";
 import { db } from "./db";
-import { events, domainMetadata } from "./db/schema";
+import { events, domains } from "./db/schema";
+import { eq } from "drizzle-orm";
 
 const alchemyKey = process.env.ALCHEMY_KEY as string;
 
@@ -508,7 +510,7 @@ app.get("/metadata/link", async (c) => {
   }
 });
 
-// ── Analytics (read from Umami) ────────────────────────────────────────────────
+// ── Analytics ─────────────────────────────────────────────────────────────────
 
 /** List all domains with impression + click totals (past 90 days). */
 app.get("/analytics/domains", async (c) => {
@@ -563,7 +565,7 @@ app.get("/analytics/slots/:slot/series", async (c) => {
 app.post("/track", async (c) => {
   try {
     const body = await c.req.json();
-    const { type, slot, cid, domain, auth } = body;
+    const { type, slot, cid, domain, auth, token } = body;
 
     if (!type || !slot) {
       return c.json({ error: "Missing required fields" }, 400);
@@ -573,17 +575,64 @@ app.post("/track", async (c) => {
       return c.json({ error: "Invalid event type" }, 400);
     }
 
-    // Upsert domain metadata if domain is provided
+    // Verify Farcaster auth if claimed
+    let resolvedAuth: "farcaster" | "none" = "none";
+    if (auth === "farcaster" && token && domain) {
+      const user = await verifyFarcasterAuth(token, domain);
+      if (user) {
+        resolvedAuth = "farcaster";
+      }
+    }
+
+    // Resolve domain on first encounter
     if (domain) {
-      await db
-        .insert(domainMetadata)
-        .values({ domain, lastUpdatedAt: new Date() })
-        .onConflictDoNothing();
+      const existing = await db
+        .select({ domain: domains.domain })
+        .from(domains)
+        .where(eq(domains.domain, domain))
+        .limit(1);
+
+      if (existing.length === 0) {
+        let isMiniapp = false;
+        let manifest: Record<string, unknown> | null = null;
+        let owner: (ParsedAccountAssociation & { username?: string; pfpUrl?: string }) | null = null;
+
+        try {
+          const res = await fetch(
+            `https://${domain}/.well-known/farcaster.json`,
+          );
+          if (res.ok) {
+            const json = (await res.json()) as Record<string, unknown>;
+            manifest = json;
+            isMiniapp = true;
+
+            const accountAssociation = json.accountAssociation as {
+              header: string;
+              payload: string;
+              signature: string;
+            } | undefined;
+
+            if (accountAssociation) {
+              owner = parseAccountAssociation(accountAssociation);
+            }
+          }
+        } catch {
+          // Not a miniapp — record as simple domain
+        }
+
+        await db.insert(domains).values({
+          domain,
+          isMiniapp,
+          manifest,
+          owner,
+          lastUpdatedAt: new Date(),
+        });
+      }
     }
 
     await db.insert(events).values({
       type,
-      authType: auth === "farcaster" ? "farcaster" : "none",
+      authType: resolvedAuth,
       domain: domain || null,
       slotAddress: slot,
       cid: cid || null,
@@ -593,37 +642,6 @@ app.post("/track", async (c) => {
   } catch (error) {
     console.error("[tracking] Error:", error);
     return c.json({ ok: true });
-  }
-});
-
-// ── Farcaster verification (separate concern from tracking) ───────────────────
-
-app.post("/auth/verify", async (c) => {
-  try {
-    const body = await c.req.json();
-    const { token, domain } = body;
-
-    if (!token || !domain) {
-      return c.json({ verified: false });
-    }
-
-    // The JWT's aud claim is cryptographically bound to the domain —
-    // a forged domain won't pass signature verification.
-    const user = await verifyFarcasterAuth(token, domain);
-    const verified = user !== null;
-
-    console.info(
-      `[auth] Farcaster verify: verified=${verified}${user ? ` fid=${user.fid}` : ""}`,
-    );
-
-    return c.json({
-      verified,
-      fid: user?.fid,
-      address: user?.primaryAddress,
-    });
-  } catch (error) {
-    console.error("[auth] Verify error:", error);
-    return c.json({ verified: false });
   }
 });
 
