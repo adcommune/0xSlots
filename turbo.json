@@ -10,7 +10,7 @@
         "FARCASTER_API_KEY",
         "NEYNAR_API_KEY",
         "PINATA_JWT",
-        "UMAMI_WEBSITE_ID"
+        "DATABASE_URL"
       ]
     },
     "dev": {
@@ -27,7 +27,7 @@
         "FARCASTER_API_KEY",
         "NEYNAR_API_KEY",
         "PINATA_JWT",
-        "UMAMI_WEBSITE_ID"
+        "DATABASE_URL"
       ]
     },
     "lint": {}

@@ -14,14 +14,41 @@ interface TrackingPayload {
 /** Track which slot+url combos have already been counted this session */
 const tracked = new Set<string>();
 
+/** Cache the Farcaster auth token per session */
+let cachedAuthToken: string | null = null;
+let authAttempted = false;
+
+async function getFarcasterToken(): Promise<string | null> {
+  if (cachedAuthToken) return cachedAuthToken;
+  if (authAttempted) return null;
+
+  authAttempted = true;
+  try {
+    const sdk = await import("@farcaster/miniapp-sdk").then((m) => m.default);
+    const isInMiniApp = await sdk.isInMiniApp();
+    if (!isInMiniApp) return null;
+
+    const result = await sdk.quickAuth.getToken();
+    cachedAuthToken = result.token;
+    return cachedAuthToken;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Send a tracking event to the API.
  */
-function sendEvent(
+async function sendEvent(
   eventType: "view" | "click",
   data: TrackingPayload,
-): void {
+): Promise<void> {
   if (typeof window === "undefined") return;
+
+  let token: string | null = null;
+  if (data.auth === "farcaster") {
+    token = await getFarcasterToken();
+  }
 
   try {
     fetch(`${API_URL}/track`, {
@@ -33,6 +60,7 @@ function sendEvent(
         cid: data.cid ?? null,
         domain: window.location.hostname,
         auth: data.auth ?? "none",
+        ...(token ? { token } : {}),
       }),
       keepalive: true,
     }).catch(() => {});
