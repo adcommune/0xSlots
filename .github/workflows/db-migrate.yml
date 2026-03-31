@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'apps/api/src/db/schema.ts'
+      - 'apps/api/drizzle/**'
 
   workflow_dispatch:
 
