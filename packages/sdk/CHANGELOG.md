@@ -1,5 +1,13 @@
 # @0xslots/sdk
 
+## 0.11.1
+
+### Patch Changes
+
+- ddc11a7: adding feeBps & feeRecipient to modules
+- Updated dependencies [ddc11a7]
+  - @0xslots/contracts@0.8.1
+
 ## 0.11.0
 
 ### Minor Changes
