@@ -1,5 +1,11 @@
 # @0xslots/contracts
 
+## 0.8.1
+
+### Patch Changes
+
+- ddc11a7: adding feeBps & feeRecipient to modules
+
 ## 0.8.0
 
 ### Minor Changes
