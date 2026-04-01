@@ -245,6 +245,31 @@ export const slotAbi = [
             "internalType": "bool"
           },
           {
+            "name": "moduleName",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "moduleVersion",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "moduleFeeBps",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "moduleFeeRecipient",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "moduleURI",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
             "name": "hasPendingTax",
             "type": "bool",
             "internalType": "bool"
@@ -783,6 +808,31 @@ export const slotAbi = [
     "inputs": [
       {
         "name": "newBps",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "ModuleFeePaid",
+    "inputs": [
+      {
+        "name": "module",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "feeBps",
         "type": "uint256",
         "indexed": false,
         "internalType": "uint256"
