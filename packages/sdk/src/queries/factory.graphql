@@ -11,5 +11,10 @@ query GetModules($first: Int!) {
     verified
     name
     version
+    feeBps
+    moduleURI
+    image
+    description
+    totalFeesCollected
   }
 }

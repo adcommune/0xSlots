@@ -720,6 +720,7 @@ export type LiquidatedEvent_OrderBy =
 export type MetadataSlot = {
   __typename?: 'MetadataSlot';
   adType?: Maybe<Scalars['String']['output']>;
+  cid?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['BigInt']['output'];
   createdTx: Scalars['Bytes']['output'];
   id: Scalars['ID']['output'];
@@ -756,6 +757,26 @@ export type MetadataSlot_Filter = {
   adType_starts_with?: InputMaybe<Scalars['String']['input']>;
   adType_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
   and?: InputMaybe<Array<InputMaybe<MetadataSlot_Filter>>>;
+  cid?: InputMaybe<Scalars['String']['input']>;
+  cid_contains?: InputMaybe<Scalars['String']['input']>;
+  cid_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  cid_ends_with?: InputMaybe<Scalars['String']['input']>;
+  cid_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  cid_gt?: InputMaybe<Scalars['String']['input']>;
+  cid_gte?: InputMaybe<Scalars['String']['input']>;
+  cid_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  cid_lt?: InputMaybe<Scalars['String']['input']>;
+  cid_lte?: InputMaybe<Scalars['String']['input']>;
+  cid_not?: InputMaybe<Scalars['String']['input']>;
+  cid_not_contains?: InputMaybe<Scalars['String']['input']>;
+  cid_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  cid_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  cid_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  cid_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  cid_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  cid_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  cid_starts_with?: InputMaybe<Scalars['String']['input']>;
+  cid_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
   createdAt?: InputMaybe<Scalars['BigInt']['input']>;
   createdAt_gt?: InputMaybe<Scalars['BigInt']['input']>;
   createdAt_gte?: InputMaybe<Scalars['BigInt']['input']>;
@@ -884,6 +905,7 @@ export type MetadataSlot_Filter = {
 
 export type MetadataSlot_OrderBy =
   | 'adType'
+  | 'cid'
   | 'createdAt'
   | 'createdTx'
   | 'id'
@@ -916,6 +938,7 @@ export type MetadataUpdatedEvent = {
   adType?: Maybe<Scalars['String']['output']>;
   author: Account;
   blockNumber: Scalars['BigInt']['output'];
+  cid?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   rawJson?: Maybe<Scalars['String']['output']>;
   slot: Slot;
@@ -977,6 +1000,26 @@ export type MetadataUpdatedEvent_Filter = {
   blockNumber_lte?: InputMaybe<Scalars['BigInt']['input']>;
   blockNumber_not?: InputMaybe<Scalars['BigInt']['input']>;
   blockNumber_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  cid?: InputMaybe<Scalars['String']['input']>;
+  cid_contains?: InputMaybe<Scalars['String']['input']>;
+  cid_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  cid_ends_with?: InputMaybe<Scalars['String']['input']>;
+  cid_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  cid_gt?: InputMaybe<Scalars['String']['input']>;
+  cid_gte?: InputMaybe<Scalars['String']['input']>;
+  cid_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  cid_lt?: InputMaybe<Scalars['String']['input']>;
+  cid_lte?: InputMaybe<Scalars['String']['input']>;
+  cid_not?: InputMaybe<Scalars['String']['input']>;
+  cid_not_contains?: InputMaybe<Scalars['String']['input']>;
+  cid_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  cid_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  cid_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  cid_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  cid_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  cid_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  cid_starts_with?: InputMaybe<Scalars['String']['input']>;
+  cid_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
   id?: InputMaybe<Scalars['ID']['input']>;
   id_gt?: InputMaybe<Scalars['ID']['input']>;
   id_gte?: InputMaybe<Scalars['ID']['input']>;
@@ -1075,6 +1118,7 @@ export type MetadataUpdatedEvent_OrderBy =
   | 'author__slotCount'
   | 'author__type'
   | 'blockNumber'
+  | 'cid'
   | 'id'
   | 'rawJson'
   | 'slot'
@@ -1100,12 +1144,200 @@ export type MetadataUpdatedEvent_OrderBy =
 
 export type Module = {
   __typename?: 'Module';
+  description?: Maybe<Scalars['String']['output']>;
   factory: Factory;
+  feeBps: Scalars['BigInt']['output'];
+  feePayments: Array<ModuleFeePaidEvent>;
   id: Scalars['ID']['output'];
+  image?: Maybe<Scalars['String']['output']>;
+  moduleURI?: Maybe<Scalars['String']['output']>;
   name: Scalars['String']['output'];
+  totalFeesCollected: Scalars['BigInt']['output'];
   verified: Scalars['Boolean']['output'];
   version: Scalars['String']['output'];
 };
+
+
+export type ModuleFeePaymentsArgs = {
+  first?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<ModuleFeePaidEvent_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  where?: InputMaybe<ModuleFeePaidEvent_Filter>;
+};
+
+export type ModuleFeePaidEvent = {
+  __typename?: 'ModuleFeePaidEvent';
+  amount: Scalars['BigInt']['output'];
+  blockNumber: Scalars['BigInt']['output'];
+  currency: Currency;
+  feeBps: Scalars['BigInt']['output'];
+  id: Scalars['ID']['output'];
+  module: Module;
+  slot: Slot;
+  timestamp: Scalars['BigInt']['output'];
+  tx: Scalars['Bytes']['output'];
+};
+
+export type ModuleFeePaidEvent_Filter = {
+  /** Filter for the block changed event. */
+  _change_block?: InputMaybe<BlockChangedFilter>;
+  amount?: InputMaybe<Scalars['BigInt']['input']>;
+  amount_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  amount_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  amount_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  amount_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  amount_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  amount_not?: InputMaybe<Scalars['BigInt']['input']>;
+  amount_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  and?: InputMaybe<Array<InputMaybe<ModuleFeePaidEvent_Filter>>>;
+  blockNumber?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  blockNumber_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_not?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  currency?: InputMaybe<Scalars['String']['input']>;
+  currency_?: InputMaybe<Currency_Filter>;
+  currency_contains?: InputMaybe<Scalars['String']['input']>;
+  currency_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  currency_ends_with?: InputMaybe<Scalars['String']['input']>;
+  currency_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  currency_gt?: InputMaybe<Scalars['String']['input']>;
+  currency_gte?: InputMaybe<Scalars['String']['input']>;
+  currency_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  currency_lt?: InputMaybe<Scalars['String']['input']>;
+  currency_lte?: InputMaybe<Scalars['String']['input']>;
+  currency_not?: InputMaybe<Scalars['String']['input']>;
+  currency_not_contains?: InputMaybe<Scalars['String']['input']>;
+  currency_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  currency_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  currency_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  currency_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  currency_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  currency_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  currency_starts_with?: InputMaybe<Scalars['String']['input']>;
+  currency_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  feeBps?: InputMaybe<Scalars['BigInt']['input']>;
+  feeBps_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  feeBps_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  feeBps_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  feeBps_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  feeBps_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  feeBps_not?: InputMaybe<Scalars['BigInt']['input']>;
+  feeBps_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  id?: InputMaybe<Scalars['ID']['input']>;
+  id_gt?: InputMaybe<Scalars['ID']['input']>;
+  id_gte?: InputMaybe<Scalars['ID']['input']>;
+  id_in?: InputMaybe<Array<Scalars['ID']['input']>>;
+  id_lt?: InputMaybe<Scalars['ID']['input']>;
+  id_lte?: InputMaybe<Scalars['ID']['input']>;
+  id_not?: InputMaybe<Scalars['ID']['input']>;
+  id_not_in?: InputMaybe<Array<Scalars['ID']['input']>>;
+  module?: InputMaybe<Scalars['String']['input']>;
+  module_?: InputMaybe<Module_Filter>;
+  module_contains?: InputMaybe<Scalars['String']['input']>;
+  module_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  module_ends_with?: InputMaybe<Scalars['String']['input']>;
+  module_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  module_gt?: InputMaybe<Scalars['String']['input']>;
+  module_gte?: InputMaybe<Scalars['String']['input']>;
+  module_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  module_lt?: InputMaybe<Scalars['String']['input']>;
+  module_lte?: InputMaybe<Scalars['String']['input']>;
+  module_not?: InputMaybe<Scalars['String']['input']>;
+  module_not_contains?: InputMaybe<Scalars['String']['input']>;
+  module_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  module_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  module_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  module_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  module_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  module_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  module_starts_with?: InputMaybe<Scalars['String']['input']>;
+  module_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  or?: InputMaybe<Array<InputMaybe<ModuleFeePaidEvent_Filter>>>;
+  slot?: InputMaybe<Scalars['String']['input']>;
+  slot_?: InputMaybe<Slot_Filter>;
+  slot_contains?: InputMaybe<Scalars['String']['input']>;
+  slot_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_ends_with?: InputMaybe<Scalars['String']['input']>;
+  slot_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_gt?: InputMaybe<Scalars['String']['input']>;
+  slot_gte?: InputMaybe<Scalars['String']['input']>;
+  slot_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  slot_lt?: InputMaybe<Scalars['String']['input']>;
+  slot_lte?: InputMaybe<Scalars['String']['input']>;
+  slot_not?: InputMaybe<Scalars['String']['input']>;
+  slot_not_contains?: InputMaybe<Scalars['String']['input']>;
+  slot_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  slot_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  slot_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  slot_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_starts_with?: InputMaybe<Scalars['String']['input']>;
+  slot_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  timestamp?: InputMaybe<Scalars['BigInt']['input']>;
+  timestamp_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  timestamp_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  timestamp_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  timestamp_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  timestamp_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  timestamp_not?: InputMaybe<Scalars['BigInt']['input']>;
+  timestamp_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  tx?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_gt?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_gte?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  tx_lt?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_lte?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_not?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+};
+
+export type ModuleFeePaidEvent_OrderBy =
+  | 'amount'
+  | 'blockNumber'
+  | 'currency'
+  | 'currency__decimals'
+  | 'currency__id'
+  | 'currency__name'
+  | 'currency__symbol'
+  | 'feeBps'
+  | 'id'
+  | 'module'
+  | 'module__description'
+  | 'module__feeBps'
+  | 'module__id'
+  | 'module__image'
+  | 'module__moduleURI'
+  | 'module__name'
+  | 'module__totalFeesCollected'
+  | 'module__verified'
+  | 'module__version'
+  | 'slot'
+  | 'slot__collectedTax'
+  | 'slot__createdAt'
+  | 'slot__createdTx'
+  | 'slot__deposit'
+  | 'slot__id'
+  | 'slot__liquidationBountyBps'
+  | 'slot__manager'
+  | 'slot__minDepositSeconds'
+  | 'slot__mutableModule'
+  | 'slot__mutableTax'
+  | 'slot__occupant'
+  | 'slot__price'
+  | 'slot__recipient'
+  | 'slot__taxPercentage'
+  | 'slot__totalCollected'
+  | 'slot__updatedAt'
+  | 'timestamp'
+  | 'tx';
 
 export type ModuleUpdateProposedEvent = {
   __typename?: 'ModuleUpdateProposedEvent';
@@ -1217,6 +1449,26 @@ export type Module_Filter = {
   /** Filter for the block changed event. */
   _change_block?: InputMaybe<BlockChangedFilter>;
   and?: InputMaybe<Array<InputMaybe<Module_Filter>>>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  description_contains?: InputMaybe<Scalars['String']['input']>;
+  description_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  description_ends_with?: InputMaybe<Scalars['String']['input']>;
+  description_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  description_gt?: InputMaybe<Scalars['String']['input']>;
+  description_gte?: InputMaybe<Scalars['String']['input']>;
+  description_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  description_lt?: InputMaybe<Scalars['String']['input']>;
+  description_lte?: InputMaybe<Scalars['String']['input']>;
+  description_not?: InputMaybe<Scalars['String']['input']>;
+  description_not_contains?: InputMaybe<Scalars['String']['input']>;
+  description_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  description_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  description_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  description_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  description_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  description_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  description_starts_with?: InputMaybe<Scalars['String']['input']>;
+  description_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
   factory?: InputMaybe<Scalars['String']['input']>;
   factory_?: InputMaybe<Factory_Filter>;
   factory_contains?: InputMaybe<Scalars['String']['input']>;
@@ -1238,6 +1490,15 @@ export type Module_Filter = {
   factory_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
   factory_starts_with?: InputMaybe<Scalars['String']['input']>;
   factory_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  feeBps?: InputMaybe<Scalars['BigInt']['input']>;
+  feeBps_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  feeBps_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  feeBps_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  feeBps_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  feeBps_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  feeBps_not?: InputMaybe<Scalars['BigInt']['input']>;
+  feeBps_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  feePayments_?: InputMaybe<ModuleFeePaidEvent_Filter>;
   id?: InputMaybe<Scalars['ID']['input']>;
   id_gt?: InputMaybe<Scalars['ID']['input']>;
   id_gte?: InputMaybe<Scalars['ID']['input']>;
@@ -1246,6 +1507,46 @@ export type Module_Filter = {
   id_lte?: InputMaybe<Scalars['ID']['input']>;
   id_not?: InputMaybe<Scalars['ID']['input']>;
   id_not_in?: InputMaybe<Array<Scalars['ID']['input']>>;
+  image?: InputMaybe<Scalars['String']['input']>;
+  image_contains?: InputMaybe<Scalars['String']['input']>;
+  image_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  image_ends_with?: InputMaybe<Scalars['String']['input']>;
+  image_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  image_gt?: InputMaybe<Scalars['String']['input']>;
+  image_gte?: InputMaybe<Scalars['String']['input']>;
+  image_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  image_lt?: InputMaybe<Scalars['String']['input']>;
+  image_lte?: InputMaybe<Scalars['String']['input']>;
+  image_not?: InputMaybe<Scalars['String']['input']>;
+  image_not_contains?: InputMaybe<Scalars['String']['input']>;
+  image_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  image_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  image_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  image_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  image_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  image_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  image_starts_with?: InputMaybe<Scalars['String']['input']>;
+  image_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  moduleURI?: InputMaybe<Scalars['String']['input']>;
+  moduleURI_contains?: InputMaybe<Scalars['String']['input']>;
+  moduleURI_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  moduleURI_ends_with?: InputMaybe<Scalars['String']['input']>;
+  moduleURI_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  moduleURI_gt?: InputMaybe<Scalars['String']['input']>;
+  moduleURI_gte?: InputMaybe<Scalars['String']['input']>;
+  moduleURI_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  moduleURI_lt?: InputMaybe<Scalars['String']['input']>;
+  moduleURI_lte?: InputMaybe<Scalars['String']['input']>;
+  moduleURI_not?: InputMaybe<Scalars['String']['input']>;
+  moduleURI_not_contains?: InputMaybe<Scalars['String']['input']>;
+  moduleURI_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  moduleURI_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  moduleURI_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  moduleURI_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  moduleURI_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  moduleURI_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  moduleURI_starts_with?: InputMaybe<Scalars['String']['input']>;
+  moduleURI_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
   name_contains?: InputMaybe<Scalars['String']['input']>;
   name_contains_nocase?: InputMaybe<Scalars['String']['input']>;
@@ -1267,6 +1568,14 @@ export type Module_Filter = {
   name_starts_with?: InputMaybe<Scalars['String']['input']>;
   name_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
   or?: InputMaybe<Array<InputMaybe<Module_Filter>>>;
+  totalFeesCollected?: InputMaybe<Scalars['BigInt']['input']>;
+  totalFeesCollected_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  totalFeesCollected_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  totalFeesCollected_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  totalFeesCollected_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  totalFeesCollected_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  totalFeesCollected_not?: InputMaybe<Scalars['BigInt']['input']>;
+  totalFeesCollected_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
   verified?: InputMaybe<Scalars['Boolean']['input']>;
   verified_in?: InputMaybe<Array<Scalars['Boolean']['input']>>;
   verified_not?: InputMaybe<Scalars['Boolean']['input']>;
@@ -1294,11 +1603,17 @@ export type Module_Filter = {
 };
 
 export type Module_OrderBy =
+  | 'description'
   | 'factory'
   | 'factory__id'
   | 'factory__slotCount'
+  | 'feeBps'
+  | 'feePayments'
   | 'id'
+  | 'image'
+  | 'moduleURI'
   | 'name'
+  | 'totalFeesCollected'
   | 'verified'
   | 'version';
 
@@ -1883,6 +2198,8 @@ export type Query = {
   metadataUpdatedEvent?: Maybe<MetadataUpdatedEvent>;
   metadataUpdatedEvents: Array<MetadataUpdatedEvent>;
   module?: Maybe<Module>;
+  moduleFeePaidEvent?: Maybe<ModuleFeePaidEvent>;
+  moduleFeePaidEvents: Array<ModuleFeePaidEvent>;
   moduleUpdateProposedEvent?: Maybe<ModuleUpdateProposedEvent>;
   moduleUpdateProposedEvents: Array<ModuleUpdateProposedEvent>;
   modules: Array<Module>;
@@ -2064,6 +2381,24 @@ export type QueryModuleArgs = {
   block?: InputMaybe<Block_Height>;
   id: Scalars['ID']['input'];
   subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type QueryModuleFeePaidEventArgs = {
+  block?: InputMaybe<Block_Height>;
+  id: Scalars['ID']['input'];
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type QueryModuleFeePaidEventsArgs = {
+  block?: InputMaybe<Block_Height>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<ModuleFeePaidEvent_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  subgraphError?: _SubgraphErrorPolicy_;
+  where?: InputMaybe<ModuleFeePaidEvent_Filter>;
 };
 
 
@@ -2604,6 +2939,7 @@ export type Slot = {
   metadataUpdates: Array<MetadataUpdatedEvent>;
   minDepositSeconds: Scalars['BigInt']['output'];
   module?: Maybe<Module>;
+  moduleFees: Array<ModuleFeePaidEvent>;
   moduleUpdateProposals: Array<ModuleUpdateProposedEvent>;
   mutableModule: Scalars['Boolean']['output'];
   mutableTax: Scalars['Boolean']['output'];
@@ -2650,6 +2986,15 @@ export type SlotMetadataUpdatesArgs = {
   orderDirection?: InputMaybe<OrderDirection>;
   skip?: InputMaybe<Scalars['Int']['input']>;
   where?: InputMaybe<MetadataUpdatedEvent_Filter>;
+};
+
+
+export type SlotModuleFeesArgs = {
+  first?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<ModuleFeePaidEvent_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  where?: InputMaybe<ModuleFeePaidEvent_Filter>;
 };
 
 
@@ -3043,6 +3388,7 @@ export type Slot_Filter = {
   minDepositSeconds_not?: InputMaybe<Scalars['BigInt']['input']>;
   minDepositSeconds_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
   module?: InputMaybe<Scalars['String']['input']>;
+  moduleFees_?: InputMaybe<ModuleFeePaidEvent_Filter>;
   moduleUpdateProposals_?: InputMaybe<ModuleUpdateProposedEvent_Filter>;
   module_?: InputMaybe<Module_Filter>;
   module_contains?: InputMaybe<Scalars['String']['input']>;
@@ -3209,6 +3555,7 @@ export type Slot_OrderBy =
   | 'metadata'
   | 'metadataUpdates'
   | 'metadata__adType'
+  | 'metadata__cid'
   | 'metadata__createdAt'
   | 'metadata__createdTx'
   | 'metadata__id'
@@ -3220,9 +3567,15 @@ export type Slot_OrderBy =
   | 'metadata__uri'
   | 'minDepositSeconds'
   | 'module'
+  | 'moduleFees'
   | 'moduleUpdateProposals'
+  | 'module__description'
+  | 'module__feeBps'
   | 'module__id'
+  | 'module__image'
+  | 'module__moduleURI'
   | 'module__name'
+  | 'module__totalFeesCollected'
   | 'module__verified'
   | 'module__version'
   | 'mutableModule'
@@ -3835,7 +4188,7 @@ export type GetModulesQueryVariables = Exact<{
 }>;
 
 
-export type GetModulesQuery = { __typename?: 'Query', modules: Array<{ __typename?: 'Module', id: string, verified: boolean, name: string, version: string }> };
+export type GetModulesQuery = { __typename?: 'Query', modules: Array<{ __typename?: 'Module', id: string, verified: boolean, name: string, version: string, feeBps: string, moduleURI?: string | null, image?: string | null, description?: string | null, totalFeesCollected: string }> };
 
 export type MetadataSlotFieldsFragment = { __typename?: 'MetadataSlot', id: string, uri: string, rawJson?: string | null, adType?: string | null, updatedBy: string, updateCount: string, createdAt: string, createdTx: string, updatedAt: string, updatedTx: string, slot: { __typename?: 'Slot', id: string, recipient: string, occupant?: string | null, price: string, deposit: string, currency: { __typename?: 'Currency', id: string, symbol?: string | null, decimals: number } } };
 
@@ -3874,7 +4227,7 @@ export type GetMetadataUpdatedEventsQueryVariables = Exact<{
 
 export type GetMetadataUpdatedEventsQuery = { __typename?: 'Query', metadataUpdatedEvents: Array<{ __typename?: 'MetadataUpdatedEvent', id: string, uri: string, rawJson?: string | null, adType?: string | null, timestamp: string, blockNumber: string, tx: string, slot: { __typename?: 'Slot', id: string }, author: { __typename?: 'Account', id: string, type: AccountType } }> };
 
-export type SlotFieldsFragment = { __typename?: 'Slot', id: string, recipient: string, manager: string, mutableTax: boolean, mutableModule: boolean, taxPercentage: string, occupant?: string | null, price: string, deposit: string, collectedTax: string, totalCollected: string, liquidationBountyBps: string, minDepositSeconds: string, createdAt: string, createdTx: string, updatedAt: string, recipientAccount: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number }, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number }, module?: { __typename?: 'Module', id: string, verified: boolean, name: string, version: string } | null, occupantAccount?: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number } | null };
+export type SlotFieldsFragment = { __typename?: 'Slot', id: string, recipient: string, manager: string, mutableTax: boolean, mutableModule: boolean, taxPercentage: string, occupant?: string | null, price: string, deposit: string, collectedTax: string, totalCollected: string, liquidationBountyBps: string, minDepositSeconds: string, createdAt: string, createdTx: string, updatedAt: string, recipientAccount: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number }, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number }, module?: { __typename?: 'Module', id: string, verified: boolean, name: string, version: string, feeBps: string, moduleURI?: string | null, image?: string | null, description?: string | null, totalFeesCollected: string } | null, occupantAccount?: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number } | null };
 
 export type GetSlotsQueryVariables = Exact<{
   first: Scalars['Int']['input'];
@@ -3886,7 +4239,7 @@ export type GetSlotsQueryVariables = Exact<{
 }>;
 
 
-export type GetSlotsQuery = { __typename?: 'Query', slots: Array<{ __typename?: 'Slot', id: string, recipient: string, manager: string, mutableTax: boolean, mutableModule: boolean, taxPercentage: string, occupant?: string | null, price: string, deposit: string, collectedTax: string, totalCollected: string, liquidationBountyBps: string, minDepositSeconds: string, createdAt: string, createdTx: string, updatedAt: string, recipientAccount: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number }, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number }, module?: { __typename?: 'Module', id: string, verified: boolean, name: string, version: string } | null, occupantAccount?: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number } | null }> };
+export type GetSlotsQuery = { __typename?: 'Query', slots: Array<{ __typename?: 'Slot', id: string, recipient: string, manager: string, mutableTax: boolean, mutableModule: boolean, taxPercentage: string, occupant?: string | null, price: string, deposit: string, collectedTax: string, totalCollected: string, liquidationBountyBps: string, minDepositSeconds: string, createdAt: string, createdTx: string, updatedAt: string, recipientAccount: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number }, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number }, module?: { __typename?: 'Module', id: string, verified: boolean, name: string, version: string, feeBps: string, moduleURI?: string | null, image?: string | null, description?: string | null, totalFeesCollected: string } | null, occupantAccount?: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number } | null }> };
 
 export type GetSlotQueryVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -3894,7 +4247,7 @@ export type GetSlotQueryVariables = Exact<{
 }>;
 
 
-export type GetSlotQuery = { __typename?: 'Query', slot?: { __typename?: 'Slot', id: string, recipient: string, manager: string, mutableTax: boolean, mutableModule: boolean, taxPercentage: string, occupant?: string | null, price: string, deposit: string, collectedTax: string, totalCollected: string, liquidationBountyBps: string, minDepositSeconds: string, createdAt: string, createdTx: string, updatedAt: string, recipientAccount: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number }, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number }, module?: { __typename?: 'Module', id: string, verified: boolean, name: string, version: string } | null, occupantAccount?: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number } | null } | null };
+export type GetSlotQuery = { __typename?: 'Query', slot?: { __typename?: 'Slot', id: string, recipient: string, manager: string, mutableTax: boolean, mutableModule: boolean, taxPercentage: string, occupant?: string | null, price: string, deposit: string, collectedTax: string, totalCollected: string, liquidationBountyBps: string, minDepositSeconds: string, createdAt: string, createdTx: string, updatedAt: string, recipientAccount: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number }, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number }, module?: { __typename?: 'Module', id: string, verified: boolean, name: string, version: string, feeBps: string, moduleURI?: string | null, image?: string | null, description?: string | null, totalFeesCollected: string } | null, occupantAccount?: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number } | null } | null };
 
 export type GetSlotsByRecipientQueryVariables = Exact<{
   recipient: Scalars['Bytes']['input'];
@@ -3906,7 +4259,7 @@ export type GetSlotsByRecipientQueryVariables = Exact<{
 }>;
 
 
-export type GetSlotsByRecipientQuery = { __typename?: 'Query', slots: Array<{ __typename?: 'Slot', id: string, recipient: string, manager: string, mutableTax: boolean, mutableModule: boolean, taxPercentage: string, occupant?: string | null, price: string, deposit: string, collectedTax: string, totalCollected: string, liquidationBountyBps: string, minDepositSeconds: string, createdAt: string, createdTx: string, updatedAt: string, recipientAccount: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number }, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number }, module?: { __typename?: 'Module', id: string, verified: boolean, name: string, version: string } | null, occupantAccount?: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number } | null }> };
+export type GetSlotsByRecipientQuery = { __typename?: 'Query', slots: Array<{ __typename?: 'Slot', id: string, recipient: string, manager: string, mutableTax: boolean, mutableModule: boolean, taxPercentage: string, occupant?: string | null, price: string, deposit: string, collectedTax: string, totalCollected: string, liquidationBountyBps: string, minDepositSeconds: string, createdAt: string, createdTx: string, updatedAt: string, recipientAccount: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number }, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number }, module?: { __typename?: 'Module', id: string, verified: boolean, name: string, version: string, feeBps: string, moduleURI?: string | null, image?: string | null, description?: string | null, totalFeesCollected: string } | null, occupantAccount?: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number } | null }> };
 
 export type GetSlotsByOccupantQueryVariables = Exact<{
   occupant: Scalars['Bytes']['input'];
@@ -3918,7 +4271,7 @@ export type GetSlotsByOccupantQueryVariables = Exact<{
 }>;
 
 
-export type GetSlotsByOccupantQuery = { __typename?: 'Query', slots: Array<{ __typename?: 'Slot', id: string, recipient: string, manager: string, mutableTax: boolean, mutableModule: boolean, taxPercentage: string, occupant?: string | null, price: string, deposit: string, collectedTax: string, totalCollected: string, liquidationBountyBps: string, minDepositSeconds: string, createdAt: string, createdTx: string, updatedAt: string, recipientAccount: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number }, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number }, module?: { __typename?: 'Module', id: string, verified: boolean, name: string, version: string } | null, occupantAccount?: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number } | null }> };
+export type GetSlotsByOccupantQuery = { __typename?: 'Query', slots: Array<{ __typename?: 'Slot', id: string, recipient: string, manager: string, mutableTax: boolean, mutableModule: boolean, taxPercentage: string, occupant?: string | null, price: string, deposit: string, collectedTax: string, totalCollected: string, liquidationBountyBps: string, minDepositSeconds: string, createdAt: string, createdTx: string, updatedAt: string, recipientAccount: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number }, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number }, module?: { __typename?: 'Module', id: string, verified: boolean, name: string, version: string, feeBps: string, moduleURI?: string | null, image?: string | null, description?: string | null, totalFeesCollected: string } | null, occupantAccount?: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number } | null }> };
 
 export const AccountFieldsFragmentDoc = gql`
     fragment AccountFields on Account {
@@ -3993,6 +4346,11 @@ export const SlotFieldsFragmentDoc = gql`
     verified
     name
     version
+    feeBps
+    moduleURI
+    image
+    description
+    totalFeesCollected
   }
   occupant
   occupantAccount {
@@ -4633,6 +4991,11 @@ export const GetModulesDocument = gql`
     verified
     name
     version
+    feeBps
+    moduleURI
+    image
+    description
+    totalFeesCollected
   }
 }
     `;

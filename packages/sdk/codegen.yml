@@ -1,4 +1,4 @@
-schema: https://gateway.thegraph.com/api/subgraphs/id/Z361DLoMdPh9WAopH7shJP8WoXYAB9XeKrLUCTYjdZR
+schema: https://api.studio.thegraph.com/query/958/0-xslots-base/v4.2.0
 documents: ./src/queries/**/*.graphql
 generates:
   ./src/generated/graphql.ts:
