@@ -1,5 +1,11 @@
 # @adland/react
 
+## 0.16.7
+
+### Patch Changes
+
+- de24d6b: udpate endpoint for tracking
+
 ## 0.16.6
 
 ### Patch Changes
