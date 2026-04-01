@@ -16,4 +16,13 @@ interface ISlotsModule is IERC165 {
   ) external;
 
   function onRelease(uint256 slotId, address from) external;
+
+  /// @notice Module fee in basis points (e.g. 500 = 5%), taken from collected tax
+  function feeBps() external view returns (uint256);
+
+  /// @notice Address that receives module fees (EOA, multisig, Splits, etc.)
+  function feeRecipient() external view returns (address);
+
+  /// @notice Module metadata URI (e.g. ipfs://Qm... pointing to JSON with image, description)
+  function moduleURI() external view returns (string memory);
 }

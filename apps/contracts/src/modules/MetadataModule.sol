@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {ISlotsModule} from "../ISlotsModule.sol";
+import {ISlotsModule} from "../interfaces/ISlotsModule.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {UUPSUpgradeable} from "@openzeppelin-upgradeable/contracts/proxy/utils/UUPSUpgradeable.sol";
 import {OwnableUpgradeable} from "@openzeppelin-upgradeable/contracts/access/OwnableUpgradeable.sol";
@@ -58,6 +58,21 @@ contract MetadataModule is
 
     function onRelease(uint256, address) external override {
         _clearMetadata(msg.sender);
+    }
+
+    /// @notice No fee for metadata module
+    function feeBps() external pure override returns (uint256) {
+        return 0;
+    }
+
+    /// @notice Fee recipient
+    function feeRecipient() external pure override returns (address) {
+        return 0x78a9e2891a47bAa6Ac9D541317b1278f9628dFf7;
+    }
+
+    /// @notice Module metadata URI
+    function moduleURI() external pure override returns (string memory) {
+        return "";
     }
 
     // ── ERC-165 ───────────────────────────────────────────────

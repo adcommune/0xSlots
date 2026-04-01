@@ -6,7 +6,7 @@ import {Initializable} from "@openzeppelin-upgradeable/contracts/proxy/utils/Ini
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Slot} from "./Slot.sol";
 import {SlotFactory} from "./SlotFactory.sol";
-import {SlotConfig, SlotInitParams, SlotInfo} from "./ISlot.sol";
+import {SlotConfig, SlotInitParams, SlotInfo} from "./interfaces/ISlot.sol";
 
 /// @title ERC721Slots — Harberger-taxed NFTs powered by 0xSlots
 /// @notice Each token is backed by a Slot. Ownership = occupancy.
@@ -14,7 +14,6 @@ import {SlotConfig, SlotInitParams, SlotInfo} from "./ISlot.sol";
 ///         Tax flows to the collection creator (recipient) forever.
 ///         Deployed as BeaconProxy via ERC721SlotsFactory.
 contract ERC721Slots is Initializable, ERC721Upgradeable {
-
     // ═══════════════════════════════════════════════════════════
     // ERRORS
     // ═══════════════════════════════════════════════════════════
@@ -62,7 +61,11 @@ contract ERC721Slots is Initializable, ERC721Upgradeable {
     // EVENTS
     // ═══════════════════════════════════════════════════════════
 
-    event TokenMinted(uint256 indexed tokenId, address indexed slot, string uri);
+    event TokenMinted(
+        uint256 indexed tokenId,
+        address indexed slot,
+        string uri
+    );
 
     // ═══════════════════════════════════════════════════════════
     // INITIALIZER
@@ -96,7 +99,9 @@ contract ERC721Slots is Initializable, ERC721Upgradeable {
 
     /// @notice Mint a new Harberger NFT. Deploys a backing slot.
     /// @param uri Token metadata URI
-    function mint(string calldata uri) external returns (uint256 tokenId, address slot) {
+    function mint(
+        string calldata uri
+    ) external returns (uint256 tokenId, address slot) {
         if (msg.sender != creator) revert NotCreator();
         if (bytes(uri).length == 0) revert InvalidTokenURI();
 
@@ -123,7 +128,9 @@ contract ERC721Slots is Initializable, ERC721Upgradeable {
 
     /// @notice Batch mint multiple tokens
     /// @param uris Array of metadata URIs
-    function mintBatch(string[] calldata uris) external returns (uint256[] memory tokenIds, address[] memory slots) {
+    function mintBatch(
+        string[] calldata uris
+    ) external returns (uint256[] memory tokenIds, address[] memory slots) {
         if (msg.sender != creator) revert NotCreator();
 
         uint256 count = uris.length;
@@ -175,7 +182,9 @@ contract ERC721Slots is Initializable, ERC721Upgradeable {
     }
 
     /// @notice Balance based on how many slots an address occupies
-    function balanceOf(address owner) public view override returns (uint256 count) {
+    function balanceOf(
+        address owner
+    ) public view override returns (uint256 count) {
         for (uint256 i = 0; i < nextTokenId; i++) {
             address slot = tokenSlot[i];
             if (slot != address(0)) {
@@ -186,14 +195,20 @@ contract ERC721Slots is Initializable, ERC721Upgradeable {
     }
 
     /// @notice Token URI from stored mapping
-    function tokenURI(uint256 tokenId) public view override returns (string memory) {
+    function tokenURI(
+        uint256 tokenId
+    ) public view override returns (string memory) {
         address slot = tokenSlot[tokenId];
         if (slot == address(0)) revert TokenDoesNotExist();
         return _tokenURIs[tokenId];
     }
 
     /// @dev Block all standard transfers. Ownership changes via slot buy/release/liquidate.
-    function _update(address to, uint256 tokenId, address auth) internal override returns (address) {
+    function _update(
+        address to,
+        uint256 tokenId,
+        address auth
+    ) internal override returns (address) {
         // Allow minting (from == address(0))
         address from = _ownerOf(tokenId);
         if (from != address(0)) {
@@ -216,7 +231,9 @@ contract ERC721Slots is Initializable, ERC721Upgradeable {
     // ═══════════════════════════════════════════════════════════
 
     /// @notice Get full slot info for a token
-    function getTokenSlotInfo(uint256 tokenId) external view returns (SlotInfo memory) {
+    function getTokenSlotInfo(
+        uint256 tokenId
+    ) external view returns (SlotInfo memory) {
         address slot = tokenSlot[tokenId];
         if (slot == address(0)) revert TokenDoesNotExist();
         return Slot(payable(slot)).getSlotInfo();
@@ -237,12 +254,19 @@ contract ERC721Slots is Initializable, ERC721Upgradeable {
     }
 
     /// @notice ERC-165 interface support
-    function supportsInterface(bytes4 interfaceId) public view override returns (bool) {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view override returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 
     /// @notice ERC721Receiver — accept NFTs minted to self
-    function onERC721Received(address, address, uint256, bytes calldata) external pure returns (bytes4) {
+    function onERC721Received(
+        address,
+        address,
+        uint256,
+        bytes calldata
+    ) external pure returns (bytes4) {
         return this.onERC721Received.selector;
     }
 }

@@ -62,7 +62,7 @@ contract DeployV3 is BaseScript {
         _saveDeployment(address(metaProxy), "MetadataModule");
 
         // 6. Verify MetadataModule on the factory
-        factory.setModuleVerified(address(metaProxy), true, "MetadataModule", "1.0.0");
+        factory.setModuleVerified(address(metaProxy), true);
         console2.log("MetadataModule verified on factory");
 
         console2.log("=== Done ===");

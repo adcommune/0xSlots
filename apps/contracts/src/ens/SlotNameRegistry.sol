@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IENSRegistry} from "./IENSRegistry.sol";
-import {SlotConfig, SlotInitParams} from "../ISlot.sol";
+import {SlotConfig, SlotInitParams} from "../interfaces/ISlot.sol";
 import {SlotFactory} from "../SlotFactory.sol";
 import {Slot} from "../Slot.sol";
 import {SlotNameResolver} from "./SlotNameResolver.sol";

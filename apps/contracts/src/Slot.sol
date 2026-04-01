@@ -6,8 +6,8 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
 import {Multicall} from "@openzeppelin/contracts/utils/Multicall.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {ISlotsModule} from "./ISlotsModule.sol";
-import {SlotConfig, SlotInitParams, PendingUpdate, SlotInfo, ISlotEvents, EVT_BOUGHT, EVT_RELEASED, EVT_LIQUIDATED, EVT_PRICE_UPDATED, EVT_DEPOSITED, EVT_WITHDRAWN, EVT_TAX_COLLECTED, EVT_SETTLED} from "./ISlot.sol";
+import {ISlotsModule} from "./interfaces/ISlotsModule.sol";
+import {SlotConfig, SlotInitParams, PendingUpdate, SlotInfo, ISlotEvents, EVT_BOUGHT, EVT_RELEASED, EVT_LIQUIDATED, EVT_PRICE_UPDATED, EVT_DEPOSITED, EVT_WITHDRAWN, EVT_TAX_COLLECTED, EVT_SETTLED} from "./interfaces/ISlot.sol";
 import {SlotFactory} from "./SlotFactory.sol";
 
 /// @title Slot (v3) — Immutable & modular Harberger-taxed slot
@@ -43,31 +43,31 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     // ═══════════════════════════════════════════════════════════
 
     // --- Slot 0-2: identity (set in initialize, never changed) ---
-    address public recipient;           // slot 0
-    IERC20 public currency;             // slot 1, offset 0
-    bool public mutableTax;             // slot 1, offset 20
-    bool public mutableModule;          // slot 1, offset 21
-    address public manager;             // slot 2
+    address public recipient; // slot 0
+    IERC20 public currency; // slot 1, offset 0
+    bool public mutableTax; // slot 1, offset 20
+    bool public mutableModule; // slot 1, offset 21
+    address public manager; // slot 2
 
     // --- Slot 3+: mutable state ---
-    address public occupant;            // slot 3
-    uint256 public price;               // slot 4
-    uint256 public taxPercentage;       // slot 5
-    address public module;              // slot 6
+    address public occupant; // slot 3
+    uint256 public price; // slot 4
+    uint256 public taxPercentage; // slot 5
+    address public module; // slot 6
     uint256 public liquidationBountyBps; // slot 7
-    uint256 public minDepositSeconds;   // slot 8
+    uint256 public minDepositSeconds; // slot 8
 
-    uint256 public deposit;             // slot 9
-    uint256 public lastSettled;         // slot 10
-    uint256 public collectedTax;        // slot 11
+    uint256 public deposit; // slot 9
+    uint256 public lastSettled; // slot 10
+    uint256 public collectedTax; // slot 11
 
     PendingUpdate public pendingUpdate; // slots 12-13
 
     /// @dev Legacy manual init flag — DO NOT REMOVE (preserves storage layout)
-    bool private _legacyInitialized;    // slot 14
+    bool private _legacyInitialized; // slot 14
 
     // --- v2 storage (appended after beacon upgrade) ---
-    address public factory;             // slot 15
+    address public factory; // slot 15
 
     // ═══════════════════════════════════════════════════════════
     // INITIALIZATION
@@ -94,7 +94,8 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         if (_recipient == address(0)) revert InvalidRecipient();
         if (address(_currency) == address(0)) revert InvalidCurrency();
         if (_init.taxPercentage == 0) revert InvalidTaxPercentage();
-        if (_init.liquidationBountyBps > BASIS_POINTS) revert InvalidLiquidationBounty();
+        if (_init.liquidationBountyBps > BASIS_POINTS)
+            revert InvalidLiquidationBounty();
 
         recipient = _recipient;
         currency = _currency;
@@ -137,7 +138,11 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     /// @param account The address that will occupy the slot
     /// @param depositAmount Deposit to fund the tax escrow
     /// @param selfAssessedPrice The new self-assessed price
-    function buy(address account, uint256 depositAmount, uint256 selfAssessedPrice) external nonReentrant {
+    function buy(
+        address account,
+        uint256 depositAmount,
+        uint256 selfAssessedPrice
+    ) external nonReentrant {
         if (selfAssessedPrice == 0) revert InvalidPrice();
         if (account == address(0)) revert InvalidRecipient();
         if (account == occupant) revert CannotBuyFromYourself();
@@ -159,13 +164,21 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         if (prev == address(0)) {
             // Vacant: payer just deposits, no payment to anyone
             if (depositAmount > 0) {
-                currency.safeTransferFrom(msg.sender, address(this), depositAmount);
+                currency.safeTransferFrom(
+                    msg.sender,
+                    address(this),
+                    depositAmount
+                );
             }
         } else {
             // Occupied: payer pays price + deposit in one transfer
             uint256 totalFromBuyer = currentPrice + depositAmount;
             if (totalFromBuyer > 0) {
-                currency.safeTransferFrom(msg.sender, address(this), totalFromBuyer);
+                currency.safeTransferFrom(
+                    msg.sender,
+                    address(this),
+                    totalFromBuyer
+                );
             }
 
             // Refund previous occupant: their remaining deposit + purchase price
@@ -182,10 +195,28 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         deposit = depositAmount;
         lastSettled = block.timestamp;
 
-        _notifyModule("onTransfer", abi.encodeCall(ISlotsModule.onTransfer, (0, prev, account)));
+        _notifyModule(
+            "onTransfer",
+            abi.encodeCall(ISlotsModule.onTransfer, (0, prev, account))
+        );
 
-        emit Bought(account, prev, currentPrice, depositAmount, selfAssessedPrice);
-        _emitProtocolEvent(EVT_BOUGHT, abi.encode(account, prev, currentPrice, depositAmount, selfAssessedPrice));
+        emit Bought(
+            account,
+            prev,
+            currentPrice,
+            depositAmount,
+            selfAssessedPrice
+        );
+        _emitProtocolEvent(
+            EVT_BOUGHT,
+            abi.encode(
+                account,
+                prev,
+                currentPrice,
+                depositAmount,
+                selfAssessedPrice
+            )
+        );
     }
 
     /// @notice Occupant releases the slot (voluntary exit)
@@ -215,7 +246,10 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
             currency.safeTransfer(prev, refund);
         }
 
-        _notifyModule("onRelease", abi.encodeCall(ISlotsModule.onRelease, (0, prev)));
+        _notifyModule(
+            "onRelease",
+            abi.encodeCall(ISlotsModule.onRelease, (0, prev))
+        );
 
         emit Released(prev, refund);
         _emitProtocolEvent(EVT_RELEASED, abi.encode(prev, refund));
@@ -233,7 +267,10 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         // Ensure remaining deposit still meets minimum after price change
         _enforceMinDepositExisting(newPrice);
 
-        _notifyModule("onPriceUpdate", abi.encodeCall(ISlotsModule.onPriceUpdate, (0, oldPrice, newPrice)));
+        _notifyModule(
+            "onPriceUpdate",
+            abi.encodeCall(ISlotsModule.onPriceUpdate, (0, oldPrice, newPrice))
+        );
 
         emit PriceUpdated(oldPrice, newPrice);
         _emitProtocolEvent(EVT_PRICE_UPDATED, abi.encode(oldPrice, newPrice));
@@ -283,11 +320,11 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
             collectedTax -= bounty;
         }
 
-        // Flush remaining collected tax to recipient
+        // Flush remaining collected tax to recipient (minus module fee if any)
         uint256 remainingTax = collectedTax;
         if (remainingTax > 0) {
             collectedTax = 0;
-            currency.safeTransfer(recipient, remainingTax);
+            _distributeTax(remainingTax);
         }
 
         // Clear slot
@@ -303,19 +340,25 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
             currency.safeTransfer(msg.sender, bounty);
         }
 
-        _notifyModule("onRelease", abi.encodeCall(ISlotsModule.onRelease, (0, prev)));
+        _notifyModule(
+            "onRelease",
+            abi.encodeCall(ISlotsModule.onRelease, (0, prev))
+        );
 
         emit Liquidated(msg.sender, prev, bounty);
-        _emitProtocolEvent(EVT_LIQUIDATED, abi.encode(msg.sender, prev, bounty));
+        _emitProtocolEvent(
+            EVT_LIQUIDATED,
+            abi.encode(msg.sender, prev, bounty)
+        );
     }
 
-    /// @notice Flush accumulated tax to recipient
+    /// @notice Flush accumulated tax to recipient (minus module fee if any)
     function collect() external nonReentrant {
         _settle();
         uint256 amount = collectedTax;
         if (amount == 0) revert NothingToCollect();
         collectedTax = 0;
-        currency.safeTransfer(recipient, amount);
+        _distributeTax(amount);
         emit TaxCollected(recipient, amount);
         _emitProtocolEvent(EVT_TAX_COLLECTED, abi.encode(recipient, amount));
     }
@@ -347,7 +390,8 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
 
     /// @notice Cancel all pending updates
     function cancelPendingUpdates() external onlyManager {
-        if (!pendingUpdate.hasTaxUpdate && !pendingUpdate.hasModuleUpdate) revert NoPendingUpdate();
+        if (!pendingUpdate.hasTaxUpdate && !pendingUpdate.hasModuleUpdate)
+            revert NoPendingUpdate();
         delete pendingUpdate;
         emit PendingUpdateCancelled();
     }
@@ -412,6 +456,16 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         info.secondsUntilLiquidation = secondsUntilLiquidation();
         info.insolvent = isInsolvent();
 
+        // Module info
+        if (module != address(0)) {
+            ISlotsModule mod = ISlotsModule(module);
+            try mod.name() returns (string memory n) { info.moduleName = n; } catch {}
+            try mod.version() returns (string memory v) { info.moduleVersion = v; } catch {}
+            try mod.feeBps() returns (uint256 f) { info.moduleFeeBps = f; } catch {}
+            try mod.feeRecipient() returns (address r) { info.moduleFeeRecipient = r; } catch {}
+            try mod.moduleURI() returns (string memory u) { info.moduleURI = u; } catch {}
+        }
+
         info.hasPendingTax = pendingUpdate.hasTaxUpdate;
         info.pendingTaxPercentage = pendingUpdate.newTaxPercentage;
         info.hasPendingModule = pendingUpdate.hasModuleUpdate;
@@ -430,7 +484,8 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         uint256 elapsed = block.timestamp - lastSettled;
         if (elapsed == 0) return;
 
-        uint256 owed = (price * taxPercentage * elapsed) / (MONTH * BASIS_POINTS);
+        uint256 owed = (price * taxPercentage * elapsed) /
+            (MONTH * BASIS_POINTS);
 
         uint256 paid;
         if (owed >= deposit) {
@@ -448,7 +503,8 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     }
 
     function _applyPendingUpdates() internal {
-        if (!pendingUpdate.hasTaxUpdate && !pendingUpdate.hasModuleUpdate) return;
+        if (!pendingUpdate.hasTaxUpdate && !pendingUpdate.hasModuleUpdate)
+            return;
 
         uint256 newTax = taxPercentage;
         address newMod = module;
@@ -469,10 +525,15 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
 
     function _minDepositFor(uint256 _price) internal view returns (uint256) {
         if (minDepositSeconds == 0) return 0;
-        return (_price * taxPercentage * minDepositSeconds) / (MONTH * BASIS_POINTS);
+        return
+            (_price * taxPercentage * minDepositSeconds) /
+            (MONTH * BASIS_POINTS);
     }
 
-    function _enforceMinDeposit(uint256 depositAmount, uint256 _price) internal view {
+    function _enforceMinDeposit(
+        uint256 depositAmount,
+        uint256 _price
+    ) internal view {
         uint256 minDep = _minDepositFor(_price);
         if (depositAmount < minDep) revert InsufficientDeposit();
     }
@@ -482,9 +543,45 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         if (deposit < minDep) revert InsufficientDeposit();
     }
 
+    /// @dev Query module fee and split tax between module and recipient
+    function _distributeTax(uint256 amount) internal {
+        uint256 moduleFee = 0;
+        uint256 feeBps_ = 0;
+        if (module != address(0)) {
+            (bool ok, bytes memory data) = module.staticcall(
+                abi.encodeWithSignature("feeBps()")
+            );
+            if (ok && data.length >= 32) {
+                uint256 bps = abi.decode(data, (uint256));
+                if (bps > 0 && bps <= BASIS_POINTS) {
+                    feeBps_ = bps;
+                    moduleFee = (amount * bps) / BASIS_POINTS;
+                }
+            }
+        }
+        if (moduleFee > 0) {
+            // Send fee to module's designated recipient
+            address feeTarget = address(0);
+            (bool recipientOk, bytes memory recipientData) = module.staticcall(
+                abi.encodeWithSignature("feeRecipient()")
+            );
+            if (recipientOk && recipientData.length >= 32) {
+                feeTarget = abi.decode(recipientData, (address));
+            }
+            if (feeTarget == address(0)) {
+                // No valid recipient — skip fee, send all to recipient
+                moduleFee = 0;
+            } else {
+                currency.safeTransfer(feeTarget, moduleFee);
+                emit ModuleFeePaid(module, moduleFee, feeBps_);
+            }
+        }
+        currency.safeTransfer(recipient, amount - moduleFee);
+    }
+
     function _notifyModule(string memory name, bytes memory data) internal {
         if (module == address(0)) return;
-        (bool ok,) = module.call{gas: 500_000}(data);
+        (bool ok, ) = module.call{gas: 500_000}(data);
         if (!ok) emit ModuleCallFailed(name);
     }
 

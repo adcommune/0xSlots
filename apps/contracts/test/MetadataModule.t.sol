@@ -8,8 +8,8 @@ import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.s
 import {MetadataModule} from "../src/modules/MetadataModule.sol";
 import {Slot} from "../src/Slot.sol";
 import {SlotFactory} from "../src/SlotFactory.sol";
-import {SlotConfig, SlotInitParams} from "../src/ISlot.sol";
-import {ISlotsModule} from "../src/ISlotsModule.sol";
+import {SlotConfig, SlotInitParams} from "../src/interfaces/ISlot.sol";
+import {ISlotsModule} from "../src/interfaces/ISlotsModule.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 contract MockERC20 is ERC20 {

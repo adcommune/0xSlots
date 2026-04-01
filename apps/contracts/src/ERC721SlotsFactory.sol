@@ -6,13 +6,12 @@ import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/Upgradeabl
 import {UUPSUpgradeable} from "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import {ERC721Slots} from "./ERC721Slots.sol";
-import {SlotConfig, SlotInitParams} from "./ISlot.sol";
+import {SlotConfig, SlotInitParams} from "./interfaces/ISlot.sol";
 
 /// @title ERC721SlotsFactory — Deploy Harberger NFT collections via Beacon Proxy
 /// @notice UUPS-upgradeable factory. All collections delegate to a shared beacon.
 ///         Upgrading the beacon upgrades all collections.
 contract ERC721SlotsFactory is UUPSUpgradeable {
-
     // ═══════════════════════════════════════════════════════════
     // ERRORS
     // ═══════════════════════════════════════════════════════════
@@ -34,7 +33,10 @@ contract ERC721SlotsFactory is UUPSUpgradeable {
         address slotFactory
     );
 
-    event AdminTransferred(address indexed previousAdmin, address indexed newAdmin);
+    event AdminTransferred(
+        address indexed previousAdmin,
+        address indexed newAdmin
+    );
 
     // ═══════════════════════════════════════════════════════════
     // STATE
@@ -116,7 +118,15 @@ contract ERC721SlotsFactory is UUPSUpgradeable {
 
         bytes memory initData = abi.encodeCall(
             ERC721Slots.initialize,
-            (name_, symbol_, slotFactory, msg.sender, currency_, config_, initParams_)
+            (
+                name_,
+                symbol_,
+                slotFactory,
+                msg.sender,
+                currency_,
+                config_,
+                initParams_
+            )
         );
         BeaconProxy proxy = new BeaconProxy(address(beacon), initData);
         collection = address(proxy);

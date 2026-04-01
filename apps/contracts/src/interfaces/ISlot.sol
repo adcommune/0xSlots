@@ -56,6 +56,12 @@ struct SlotInfo {
     uint256 taxOwed;
     uint256 secondsUntilLiquidation;
     bool insolvent;
+    // Module info (populated if module != address(0))
+    string moduleName;
+    string moduleVersion;
+    uint256 moduleFeeBps;
+    address moduleFeeRecipient;
+    string moduleURI;
     // Pending updates
     bool hasPendingTax;
     uint256 pendingTaxPercentage;
@@ -107,6 +113,8 @@ interface ISlotEvents {
     event Withdrawn(address indexed occupant, uint256 amount);
 
     event TaxCollected(address indexed recipient, uint256 amount);
+
+    event ModuleFeePaid(address indexed module, uint256 amount, uint256 feeBps);
 
     event Settled(uint256 taxOwed, uint256 taxPaid, uint256 depositRemaining);
 

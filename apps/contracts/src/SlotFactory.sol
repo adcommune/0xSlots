@@ -7,13 +7,13 @@ import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/Upgradeabl
 import {UUPSUpgradeable} from "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import {Slot} from "./Slot.sol";
-import {SlotConfig, SlotInitParams, ISlotEvents} from "./ISlot.sol";
+import {SlotConfig, SlotInitParams, ISlotEvents} from "./interfaces/ISlot.sol";
+import {ISlotsModule} from "./interfaces/ISlotsModule.sol";
 
 /// @title SlotFactory — Deploy Harberger-taxed slots via Beacon Proxy
 /// @notice UUPS-upgradeable factory. All slots delegate to a shared beacon.
 ///         Upgrading the beacon upgrades all slots. Upgrading the factory upgrades deployment logic.
 contract SlotFactory is UUPSUpgradeable {
-
     // ═══════════════════════════════════════════════════════════
     // ERRORS
     // ═══════════════════════════════════════════════════════════
@@ -37,8 +37,18 @@ contract SlotFactory is UUPSUpgradeable {
         SlotInitParams initParams
     );
 
-    event ModuleVerified(address indexed module, bool verified, string name, string version);
-    event AdminTransferred(address indexed previousAdmin, address indexed newAdmin);
+    event ModuleVerified(
+        address indexed module,
+        bool verified,
+        string name,
+        string version,
+        uint256 feeBps,
+        string moduleURI
+    );
+    event AdminTransferred(
+        address indexed previousAdmin,
+        address indexed newAdmin
+    );
     event SlotEvent(address indexed slot, uint8 indexed eventType, bytes data);
 
     // ═══════════════════════════════════════════════════════════
@@ -145,13 +155,24 @@ contract SlotFactory is UUPSUpgradeable {
 
     /// @notice Mark a module as verified/unverified (admin only)
     function setModuleVerified(
-        address module,
-        bool verified,
-        string memory name,
-        string memory version
+        address _module,
+        bool verified
     ) external onlyAdmin {
-        verifiedModules[module] = verified;
-        emit ModuleVerified(module, verified, name, version);
+        ISlotsModule mod = ISlotsModule(_module);
+        // Verify it implements the interface
+        require(
+            mod.supportsInterface(type(ISlotsModule).interfaceId),
+            "not ISlotsModule"
+        );
+        verifiedModules[_module] = verified;
+        emit ModuleVerified(
+            _module,
+            verified,
+            mod.name(),
+            mod.version(),
+            mod.feeBps(),
+            mod.moduleURI()
+        );
     }
 
     /// @notice Check if a module is verified
@@ -195,11 +216,16 @@ contract SlotFactory is UUPSUpgradeable {
     // INTERNAL
     // ═══════════════════════════════════════════════════════════
 
-    function _validateConfig(SlotConfig memory config, SlotInitParams memory initParams) internal pure {
+    function _validateConfig(
+        SlotConfig memory config,
+        SlotInitParams memory initParams
+    ) internal pure {
         if (config.mutableTax || config.mutableModule) {
-            if (config.manager == address(0)) revert InvalidConfig_ManagerRequired();
+            if (config.manager == address(0))
+                revert InvalidConfig_ManagerRequired();
         } else {
-            if (config.manager != address(0)) revert InvalidConfig_ManagerMustBeZero();
+            if (config.manager != address(0))
+                revert InvalidConfig_ManagerMustBeZero();
         }
         if (initParams.taxPercentage == 0) revert InvalidTaxPercentage();
     }
@@ -218,6 +244,12 @@ contract SlotFactory is UUPSUpgradeable {
         slot = address(proxy);
         isSlot[slot] = true;
         Slot(slot).initializeV2(address(this));
-        emit SlotDeployed(slot, recipient, address(currency), config, initParams);
+        emit SlotDeployed(
+            slot,
+            recipient,
+            address(currency),
+            config,
+            initParams
+        );
     }
 }

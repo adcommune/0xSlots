@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {IPermit2} from "./IPermit2.sol";
+import {IPermit2} from "./interfaces/IPermit2.sol";
 import {Slot} from "./Slot.sol";
 
 /// @title SlotsRouter — Permit2-powered entry point for 0xSlots
@@ -18,7 +18,8 @@ contract SlotsRouter {
     // ═══════════════════════════════════════════════════════════
 
     /// @notice Canonical Permit2 deployment (same on all EVM chains)
-    IPermit2 public constant PERMIT2 = IPermit2(0x000000000022D473030F116dDEE9F6B43aC78BA3);
+    IPermit2 public constant PERMIT2 =
+        IPermit2(0x000000000022D473030F116dDEE9F6B43aC78BA3);
 
     // ═══════════════════════════════════════════════════════════
     // ERRORS
