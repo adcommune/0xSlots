@@ -1,98 +1,133 @@
 # Protocol
 
-## Architecture
+## SlotFactory
 
-Every slot is a **standalone smart contract** — no shared state. Slots are deployed through a Factory using CREATE2 (ERC-1167 minimal proxy clones), giving deterministic addresses based on `keccak256(recipient, currency, config)`.
+The factory deploys slots via BeaconProxy (UUPS-upgradeable). Each slot gets a deterministic address based on `keccak256(recipient, currency, config)`.
 
+```solidity
+function createSlot(
+    address recipient,
+    IERC20 currency,
+    SlotConfig memory config,
+    SlotInitParams memory initParams
+) external returns (address slot);
+
+function createSlots(
+    address recipient,
+    IERC20 currency,
+    SlotConfig memory config,
+    SlotInitParams memory initParams,
+    uint256 count
+) external returns (address[] memory slots)
 ```
-Factory
-  └─ createSlot(recipient, currency, config, initParams)
-       └─ CREATE2 → Slot Proxy (clone)
-            ├─ immutable: recipient, currency, mutableTax, mutableModule, manager
-            └─ mutable: occupant, price, deposit, taxPercentage, module
+
+### SlotConfig (immutable)
+
+```solidity
+struct SlotConfig {
+    bool mutableTax;      // Can the tax rate be changed?
+    bool mutableModule;   // Can the module be changed?
+    address manager;      // Who can propose config changes (address(0) = no one)
+}
 ```
 
-### Immutable Parameters (set at deployment)
+### SlotInitParams
 
-| Parameter | Description |
-|---|---|
-| `recipient` | Receives tax revenue. Can be EOA, multisig, Splits, DAO. |
-| `currency` | ERC-20 token for pricing, deposits, and tax. |
-| `mutableTax` | Whether tax rate can be changed by the manager. |
-| `mutableModule` | Whether module can be changed by the manager. |
-| `manager` | Can propose config updates. `address(0)` if both flags are false. |
+```solidity
+struct SlotInitParams {
+    uint256 taxPercentage;         // Tax rate in bps per month (100 = 1%)
+    address module;                // Hook contract (address(0) = none)
+    uint256 liquidationBountyBps;  // Bounty for liquidators in bps
+    uint256 minDepositSeconds;     // Minimum deposit to cover (protocol min: 1 day)
+}
+```
 
-### Mutable State
-
-| Field | Description |
-|---|---|
-| `occupant` | Current holder (zero address = vacant). |
-| `price` | Self-assessed price (0 when vacant). |
-| `deposit` | Escrowed ERC-20 for tax payments. |
-| `taxPercentage` | Tax rate in basis points per month (100 = 1%). |
-| `module` | Hook contract address. |
-| `collectedTax` | Accumulated uncollected tax. |
+The factory also maintains a **module registry** — modules can be verified so users know they're safe to use.
 
 ---
 
-## Slot Lifecycle
+## Slot
 
-### `buy(depositAmount, selfAssessedPrice)`
-Settles tax on current occupant → refunds them → transfers price from buyer → stores deposit → sets new price. If vacant: buyer just deposits and self-assesses.
+Each slot is a standalone smart contract. No shared state between slots.
 
-### `release()`
-Occupant exits. Settles tax → refunds deposit → slot becomes vacant.
+### Core operations
 
-### `selfAssess(newPrice)` / `topUp(amount)` / `withdraw(amount)`
-Occupant manages price and deposit. Cannot withdraw below `minDepositSeconds`.
+```solidity
+/// Buy a slot (or take it from current occupant)
+function buy(address account, uint256 depositAmount, uint256 selfAssessedPrice) external;
 
-### `liquidate()`
-Anyone can call when deposit is depleted. Slot returns to vacant, liquidator earns a bounty.
+/// Leave the slot, get remaining deposit back
+function release() external;
 
-### `collect()`
-Permissionless. Sends accumulated tax to the `recipient`.
+/// Change your self-assessed price
+function selfAssess(uint256 newPrice) external;
 
----
+/// Add to your deposit
+function topUp(uint256 amount) external;
 
-## Tax System
+/// Withdraw excess deposit
+function withdraw(uint256 amount) external;
 
-Tax accrues linearly: `taxOwed = price × taxPercentage × elapsed / (30 days × 10000)`
+/// Liquidate an insolvent slot (anyone can call, earns bounty)
+function liquidate() external;
 
-Tax is settled on every state change (`buy`, `release`, `selfAssess`, `topUp`, `withdraw`, `liquidate`).
+/// Send accumulated tax to the recipient (anyone can call)
+function collect() external;
+```
 
-The occupant maintains a deposit that covers future tax. When it's depleted, anyone can `liquidate()` and earn a bounty (`liquidationBountyBps`).
+### Manager operations
 
-If `mutableTax` is true, the manager can propose rate changes via `proposeTaxUpdate()`. Changes only apply on the next ownership transition — the current occupant's terms are never changed under them.
+If `mutableTax` or `mutableModule` is true, the manager can propose changes. Updates only apply on the **next ownership transition** — the current occupant's terms never change under them.
 
----
+```solidity
+function proposeTaxUpdate(uint256 newPct) external;
+function proposeModuleUpdate(address newModule) external;
+function cancelPendingUpdates() external;
+function setLiquidationBounty(uint256 newBps) external;
+```
 
-## Roles
+### Tax
 
-| Role | Revenue | Config | Slot State |
+Tax accrues linearly: `taxOwed = price * taxPercentage * elapsed / (30 days * 10000)`
+
+The occupant maintains a deposit that covers future tax. When depleted, anyone can `liquidate()` and earn a bounty.
+
+### Roles
+
+| Role | Revenue | Config | Slot state |
 |---|---|---|---|
 | **Recipient** | Receives tax + sale proceeds | No control | No control |
 | **Manager** | No revenue | Proposes tax/module changes | No control |
 | **Occupant** | Pays tax | No control | Sets price, manages deposit |
 
-No single address has "god-mode" admin powers. Recipient and manager can be the same address but don't have to be.
-
 ---
 
 ## Modules
 
-Modules are optional hook contracts called on ownership transitions (`buy`, `release`, `liquidate`).
+Modules are optional hook contracts called on slot events. They implement `ISlotsModule`:
+
+```solidity
+interface ISlotsModule {
+    function name() external view returns (string memory);
+    function version() external view returns (string memory);
+    function onTransfer(uint256 slotId, address from, address to) external;
+    function onPriceUpdate(uint256 slotId, uint256 oldPrice, uint256 newPrice) external;
+    function onRelease(uint256 slotId, address from) external;
+}
+```
 
 ### MetadataModule
 
-The primary module. Lets the occupant attach a URI (metadata) to the slot.
+The primary module. Lets the occupant attach a URI (e.g. IPFS) to the slot.
 
-```ts
-await client.modules.metadata.updateMetadata(moduleAddress, slotAddress, "ipfs://...");
-const uri = await client.modules.metadata.getURI(moduleAddress, slotAddress);
+```solidity
+// Set metadata for a slot (occupant only)
+function updateMetadata(address slot, string calldata uri) external;
+
+// Read metadata
+function tokenURI(address slot) external view returns (string memory);
 ```
 
-If `mutableModule` is true, the manager can propose module changes via `proposeModuleUpdate()`. Same pending-update model as tax changes.
-
 :::warning
-Modules execute arbitrary code during slot transitions. Only use verified modules or modules you've audited.
+Modules execute arbitrary code during slot transitions. Only use verified modules.
 :::

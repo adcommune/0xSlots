@@ -1,22 +1,20 @@
-# 0xSlots
+---
+layout: landing
+---
 
-**Collectively Owned Slots Protocol**
+import { HomePage } from 'vocs/components'
 
-0xSlots is a protocol for creating **Harberger-taxed slots** on Ethereum. Each slot is a standalone smart contract where the occupant self-assesses a price, pays continuous tax to the slot's recipient, and can be force-bought by anyone willing to pay that price.
-
-## Partial Common Ownership
-
-1. **Self-assessed pricing** — The occupant sets their own price
-2. **Continuous taxation** — Tax on the self-assessed price streams to the recipient
-3. **Force-buy** — Anyone can buy the slot at the stated price
-
-Set the price too high → excessive tax. Too low → someone buys it.
-
-## Quick Links
-
-- [Getting Started](/getting-started) — Install the SDK and create your first slot
-- [Protocol](/protocol) — Architecture, tax system, roles, and modules
-- [SDK Reference](/sdk/client) — `SlotsClient` API
-- [React Hooks](/sdk/react) — wagmi hooks for React apps
-- [Contracts](/contracts) — Addresses and ABIs
-- [Subgraph](/subgraph) — GraphQL queries
+<HomePage.Root>
+  <HomePage.Logo />
+  <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem 0' }}>
+    <img src="/hero.jpg" alt="0xSlots" style={{ maxWidth: '100%', borderRadius: '12px' }} />
+  </div>
+  <HomePage.Tagline>A property primitive for scarce onchain assets</HomePage.Tagline>
+  <HomePage.Description>
+    Harberger-taxed slots that are **always priced** and **always contestable**. Fair pricing, productive ownership, aligned revenue.
+  </HomePage.Description>
+  <HomePage.Buttons>
+    <HomePage.Button href="/overview" variant="accent">Get Started</HomePage.Button>
+    <HomePage.Button href="https://github.com/nezz0746/0xSlots">GitHub</HomePage.Button>
+  </HomePage.Buttons>
+</HomePage.Root>

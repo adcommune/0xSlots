@@ -1,0 +1,50 @@
+# Overview
+
+Today, valuable onchain property can be held passively, left idle, or priced arbitrarily high with no real cost to the owner. Scarce digital positions end up squatted, blocked, or held hostage by whoever got there first. There is no built-in pressure toward productive use or fair pricing.
+
+0xSlots is a **property primitive** for scarce onchain assets, based on a Harberger-tax-style model.
+
+It introduces slots: onchain positions that are **always priced** and **always contestable**.
+
+Each holder sets their own price and pays an ongoing fee based on that self-assessed value. But that price is not just informational, it is a standing sell offer. Anyone can buy the slot at that declared price, at any time.
+
+- Set the price too high, and the ongoing cost becomes expensive.
+- Set it too low, and someone takes it.
+- Set it fairly, and you keep control.
+
+This creates continuous pressure toward **fair** pricing and **productive** ownership. Passive property becomes costly to hold, while valuable positions tend to flow toward the people who value them most.
+
+**Revenue** can be directed to a creator, community, protocol, or public good, turning scarce digital property into an ongoing source of aligned revenue instead of idle control.
+
+---
+
+## How it works
+
+![How 0xSlots works](/hand-drawn-diagram.jpg)
+
+Think of it like [Splits](https://splits.org) but for open ownership.
+
+Slots are smart contracts that are single use.
+
+- They fund **one recipient**
+- Use a **single currency**
+- At a fixed **tax percentage**
+
+If you want a different configuration, just deploy another!
+
+Slots can also hook into a **module** that listens to ownership transfer, price update & release events.
+
+Slots hold a minimum deposit of currency (defined at launch by the user, protocol minimum: 1 day) that is the source of tax collections (which can be triggered by anyone). At creation you can also define a bounty % of the tax being collected to incentivize liquidations.
+
+Slots are immutable by default, unless a manager is defined at creation.
+
+---
+
+## Quick Links
+
+- [Getting Started](/getting-started) — Install the SDK and create your first slot
+- [Protocol](/protocol) — Architecture, tax system, roles, and modules
+- [SDK Reference](/sdk/client) — `SlotsClient` API
+- [React Hooks](/sdk/react) — wagmi hooks for React apps
+- [Contracts](/contracts) — Addresses and ABIs
+- [Subgraph](/subgraph) — GraphQL queries

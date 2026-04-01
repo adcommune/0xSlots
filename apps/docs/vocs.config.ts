@@ -5,12 +5,15 @@ export default defineConfig({
   description: "Collectively Owned Slots Protocol",
   ogImageUrl:
     "https://vocs.dev/api/og?logo=%logo&title=%title&description=%description",
-  iconUrl: "/icon.svg",
+  iconUrl: "/logo.png",
   theme: {
-    accentColor: "#a78bfa",
+    accentColor: "#000000",
+  },
+  font: {
+    google: "Roboto",
   },
   topNav: [
-    { text: "Guide", link: "/getting-started" },
+    { text: "Overview", link: "/overview" },
     { text: "SDK", link: "/sdk/client" },
     {
       text: "GitHub",
@@ -21,7 +24,7 @@ export default defineConfig({
     {
       text: "Introduction",
       items: [
-        { text: "Overview", link: "/" },
+        { text: "Overview", link: "/overview" },
         { text: "Getting Started", link: "/getting-started" },
       ],
     },
@@ -38,9 +41,7 @@ export default defineConfig({
     },
     {
       text: "Modules",
-      items: [
-        { text: "Adland", link: "/modules/adland" },
-      ],
+      items: [{ text: "Adland", link: "/modules/adland" }],
     },
     {
       text: "Contracts",
