@@ -1,12 +1,26 @@
-import { BigInt, Address, DataSourceContext } from "@graphprotocol/graph-ts";
+import {
+  Address,
+  BigInt,
+  DataSourceContext,
+  ipfs,
+  json,
+  log,
+} from "@graphprotocol/graph-ts";
 import {
   SlotDeployed,
   ModuleVerified,
   AdminTransferred,
 } from "../generated/SlotFactory/SlotFactory";
-import { Slot as SlotTemplate, MetadataModule as MetadataModuleTemplate } from "../generated/templates";
+import {
+  Slot as SlotTemplate,
+  MetadataModule as MetadataModuleTemplate,
+} from "../generated/templates";
 import { Factory, Slot, Module, SlotDeployedEvent } from "../generated/schema";
-import { getOrCreateAccount, getOrCreateCurrency, getOrCreateModule } from "./helpers";
+import {
+  getOrCreateAccount,
+  getOrCreateCurrency,
+  getOrCreateModule,
+} from "./helpers";
 
 function getOrCreateFactory(address: string): Factory {
   let factory = Factory.load(address);
@@ -65,7 +79,8 @@ export function handleSlotDeployed(event: SlotDeployed): void {
   slot.save();
 
   // Record deploy event
-  let evId = event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
+  let evId =
+    event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
   let ev = new SlotDeployedEvent(evId);
   ev.slot = slot.id;
   ev.recipient = event.params.recipient;
@@ -87,6 +102,11 @@ export function handleSlotDeployed(event: SlotDeployed): void {
   let context = new DataSourceContext();
   context.setString("factory", event.address.toHexString());
   SlotTemplate.createWithContext(event.params.slot, context);
+
+  // If the slot uses a module, start indexing MetadataUpdated events from it
+  if (!moduleAddr.equals(Address.zero())) {
+    MetadataModuleTemplate.create(moduleAddr);
+  }
 }
 
 export function handleModuleVerified(event: ModuleVerified): void {
@@ -100,10 +120,48 @@ export function handleModuleVerified(event: ModuleVerified): void {
   module.verified = event.params.verified;
   module.name = event.params.name;
   module.version = event.params.version;
+  module.feeBps = event.params.feeBps;
+  if (!module.totalFeesCollected) {
+    module.totalFeesCollected = BigInt.zero();
+  }
+
+  let uri = event.params.moduleURI;
+  module.moduleURI = uri;
+  if (uri.length > 0) {
+    let hash: string | null = null;
+    if (uri.startsWith("ipfs://")) {
+      hash = uri.slice(7);
+    } else if (uri.startsWith("Qm") || uri.startsWith("bafy")) {
+      hash = uri;
+    }
+    if (hash) {
+      let data = ipfs.cat(hash);
+      if (data) {
+        let result = json.try_fromString(data.toString());
+        if (!result.isError) {
+          let obj = result.value.toObject();
+          let img = obj.get("image");
+          if (img && !img.isNull()) module.image = img.toString();
+          let desc = obj.get("description");
+          if (desc && !desc.isNull()) module.description = desc.toString();
+        }
+      }
+    }
+  }
+
   module.save();
 
   // Start indexing MetadataUpdated events from newly verified MetadataModules
-  if (event.params.verified && !wasVerified && event.params.name == "MetadataModule") {
+  if (
+    event.params.verified &&
+    !wasVerified &&
+    (event.params.name == "MetadataModule" ||
+      event.params.name == "AdLandModule")
+  ) {
+    log.info("Creating template for module {} at address {}", [
+      event.params.name,
+      event.params.module.toHexString(),
+    ]);
     MetadataModuleTemplate.create(event.params.module);
   }
 }

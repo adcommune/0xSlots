@@ -33,7 +33,7 @@ dataSources:
       eventHandlers:
         - event: SlotDeployed(indexed address,indexed address,indexed address,(bool,bool,address),(uint256,address,uint256,uint256))
           handler: handleSlotDeployed
-        - event: ModuleVerified(indexed address,bool,string,string)
+        - event: ModuleVerified(indexed address,bool,string,string,uint256,string)
           handler: handleModuleVerified
         - event: AdminTransferred(indexed address,indexed address)
           handler: handleAdminTransferred
@@ -65,7 +65,7 @@ dataSources:
       eventHandlers:
         - event: SlotDeployed(indexed address,indexed address,indexed address,(bool,bool,address),(uint256,address,uint256,uint256))
           handler: handleSlotDeployed
-        - event: ModuleVerified(indexed address,bool,string,string)
+        - event: ModuleVerified(indexed address,bool,string,string,uint256,string)
           handler: handleModuleVerified
         - event: AdminTransferred(indexed address,indexed address)
           handler: handleAdminTransferred
@@ -112,6 +112,7 @@ templates:
         - WithdrawnEvent
         - SettledEvent
         - TaxCollectedEvent
+        - ModuleFeePaidEvent
       abis:
         - name: Slot
           file: ./abis/Slot.json
@@ -142,6 +143,8 @@ templates:
           handler: handlePendingUpdateApplied
         - event: LiquidationBountyUpdated(uint256)
           handler: handleLiquidationBountyUpdated
+        - event: ModuleFeePaid(indexed address,uint256,uint256)
+          handler: handleModuleFeePaid
       file: ./src/slot.ts
   - kind: ethereum
     name: MetadataModule

@@ -63,6 +63,7 @@ type Slot @entity(immutable: false) {
   withdrawals: [WithdrawnEvent!]! @derivedFrom(field: "slot")
   settlements: [SettledEvent!]! @derivedFrom(field: "slot")
   taxCollections: [TaxCollectedEvent!]! @derivedFrom(field: "slot")
+  moduleFees: [ModuleFeePaidEvent!]! @derivedFrom(field: "slot")
   taxUpdateProposals: [TaxUpdateProposedEvent!]! @derivedFrom(field: "slot")
   moduleUpdateProposals: [ModuleUpdateProposedEvent!]!
     @derivedFrom(field: "slot")
@@ -218,6 +219,18 @@ type TaxCollectedEvent @entity(immutable: true) {
   tx: Bytes!
 }
 
+type ModuleFeePaidEvent @entity(immutable: true) {
+  id: ID!
+  slot: Slot!
+  currency: Currency!
+  module: Module!
+  amount: BigInt!
+  feeBps: BigInt!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  tx: Bytes!
+}
+
 type TaxUpdateProposedEvent @entity(immutable: true) {
   id: ID!
   slot: Slot!
@@ -278,4 +291,10 @@ type Module @entity(immutable: false) {
   verified: Boolean!
   name: String!
   version: String!
+  feeBps: BigInt!
+  moduleURI: String
+  image: String
+  description: String
+  totalFeesCollected: BigInt!
+  feePayments: [ModuleFeePaidEvent!]! @derivedFrom(field: "module")
 }

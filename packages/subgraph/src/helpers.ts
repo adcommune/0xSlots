@@ -1,4 +1,4 @@
-import { Address, ethereum } from "@graphprotocol/graph-ts";
+import { Address, BigInt, ethereum } from "@graphprotocol/graph-ts";
 import { Account, Currency, Module } from "../generated/schema";
 import { ERC20 } from "../generated/SlotFactory/ERC20";
 import { SplitV2 } from "../generated/SlotFactory/SplitV2";
@@ -76,6 +76,8 @@ export function getOrCreateModule(address: Address, factoryId: string): Module {
     module.verified = false;
     module.name = "";
     module.version = "";
+    module.feeBps = BigInt.zero();
+    module.totalFeesCollected = BigInt.zero();
     module.save();
   }
   return module;

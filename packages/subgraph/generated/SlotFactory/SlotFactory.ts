@@ -60,6 +60,14 @@ export class ModuleVerified__Params {
   get version(): string {
     return this._event.parameters[3].value.toString();
   }
+
+  get feeBps(): BigInt {
+    return this._event.parameters[4].value.toBigInt();
+  }
+
+  get moduleURI(): string {
+    return this._event.parameters[5].value.toString();
+  }
 }
 
 export class SlotDeployed extends ethereum.Event {
@@ -831,20 +839,12 @@ export class SetModuleVerifiedCall__Inputs {
     this._call = call;
   }
 
-  get module(): Address {
+  get _module(): Address {
     return this._call.inputValues[0].value.toAddress();
   }
 
   get verified(): boolean {
     return this._call.inputValues[1].value.toBoolean();
-  }
-
-  get name(): string {
-    return this._call.inputValues[2].value.toString();
-  }
-
-  get version(): string {
-    return this._call.inputValues[3].value.toString();
   }
 }
 

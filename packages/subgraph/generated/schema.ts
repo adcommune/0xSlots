@@ -629,6 +629,14 @@ export class Slot extends Entity {
     );
   }
 
+  get moduleFees(): ModuleFeePaidEventLoader {
+    return new ModuleFeePaidEventLoader(
+      "Slot",
+      this.get("id")!.toString(),
+      "moduleFees",
+    );
+  }
+
   get taxUpdateProposals(): TaxUpdateProposedEventLoader {
     return new TaxUpdateProposedEventLoader(
       "Slot",
@@ -2391,6 +2399,154 @@ export class TaxCollectedEvent extends Entity {
   }
 }
 
+export class ModuleFeePaidEvent extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id != null, "Cannot save ModuleFeePaidEvent entity without an ID");
+    if (id) {
+      assert(
+        id.kind == ValueKind.STRING,
+        `Entities of type ModuleFeePaidEvent must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`,
+      );
+      store.set("ModuleFeePaidEvent", id.toString(), this);
+    }
+  }
+
+  static loadInBlock(id: string): ModuleFeePaidEvent | null {
+    return changetype<ModuleFeePaidEvent | null>(
+      store.get_in_block("ModuleFeePaidEvent", id),
+    );
+  }
+
+  static load(id: string): ModuleFeePaidEvent | null {
+    return changetype<ModuleFeePaidEvent | null>(
+      store.get("ModuleFeePaidEvent", id),
+    );
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get slot(): string {
+    let value = this.get("slot");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set slot(value: string) {
+    this.set("slot", Value.fromString(value));
+  }
+
+  get currency(): string {
+    let value = this.get("currency");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set currency(value: string) {
+    this.set("currency", Value.fromString(value));
+  }
+
+  get module(): string {
+    let value = this.get("module");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set module(value: string) {
+    this.set("module", Value.fromString(value));
+  }
+
+  get amount(): BigInt {
+    let value = this.get("amount");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set amount(value: BigInt) {
+    this.set("amount", Value.fromBigInt(value));
+  }
+
+  get feeBps(): BigInt {
+    let value = this.get("feeBps");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set feeBps(value: BigInt) {
+    this.set("feeBps", Value.fromBigInt(value));
+  }
+
+  get timestamp(): BigInt {
+    let value = this.get("timestamp");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set timestamp(value: BigInt) {
+    this.set("timestamp", Value.fromBigInt(value));
+  }
+
+  get blockNumber(): BigInt {
+    let value = this.get("blockNumber");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set blockNumber(value: BigInt) {
+    this.set("blockNumber", Value.fromBigInt(value));
+  }
+
+  get tx(): Bytes {
+    let value = this.get("tx");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set tx(value: Bytes) {
+    this.set("tx", Value.fromBytes(value));
+  }
+}
+
 export class TaxUpdateProposedEvent extends Entity {
   constructor(id: string) {
     super();
@@ -3089,6 +3245,91 @@ export class Module extends Entity {
   set version(value: string) {
     this.set("version", Value.fromString(value));
   }
+
+  get feeBps(): BigInt {
+    let value = this.get("feeBps");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set feeBps(value: BigInt) {
+    this.set("feeBps", Value.fromBigInt(value));
+  }
+
+  get moduleURI(): string | null {
+    let value = this.get("moduleURI");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set moduleURI(value: string | null) {
+    if (!value) {
+      this.unset("moduleURI");
+    } else {
+      this.set("moduleURI", Value.fromString(<string>value));
+    }
+  }
+
+  get image(): string | null {
+    let value = this.get("image");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set image(value: string | null) {
+    if (!value) {
+      this.unset("image");
+    } else {
+      this.set("image", Value.fromString(<string>value));
+    }
+  }
+
+  get description(): string | null {
+    let value = this.get("description");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set description(value: string | null) {
+    if (!value) {
+      this.unset("description");
+    } else {
+      this.set("description", Value.fromString(<string>value));
+    }
+  }
+
+  get totalFeesCollected(): BigInt {
+    let value = this.get("totalFeesCollected");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set totalFeesCollected(value: BigInt) {
+    this.set("totalFeesCollected", Value.fromBigInt(value));
+  }
+
+  get feePayments(): ModuleFeePaidEventLoader {
+    return new ModuleFeePaidEventLoader(
+      "Module",
+      this.get("id")!.toString(),
+      "feePayments",
+    );
+  }
 }
 
 export class ModuleLoader extends Entity {
@@ -3304,6 +3545,24 @@ export class TaxCollectedEventLoader extends Entity {
   load(): TaxCollectedEvent[] {
     let value = store.loadRelated(this._entity, this._id, this._field);
     return changetype<TaxCollectedEvent[]>(value);
+  }
+}
+
+export class ModuleFeePaidEventLoader extends Entity {
+  _entity: string;
+  _field: string;
+  _id: string;
+
+  constructor(entity: string, id: string, field: string) {
+    super();
+    this._entity = entity;
+    this._id = id;
+    this._field = field;
+  }
+
+  load(): ModuleFeePaidEvent[] {
+    let value = store.loadRelated(this._entity, this._id, this._field);
+    return changetype<ModuleFeePaidEvent[]>(value);
   }
 }
 

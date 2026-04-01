@@ -13,6 +13,7 @@ import {
   PendingUpdateApplied,
   PendingUpdateCancelled,
   LiquidationBountyUpdated,
+  ModuleFeePaid,
 } from "../generated/templates/Slot/Slot";
 import {
   Slot,
@@ -27,6 +28,8 @@ import {
   TaxUpdateProposedEvent,
   ModuleUpdateProposedEvent,
   PendingUpdateCancelledEvent,
+  ModuleFeePaidEvent,
+  Module,
 } from "../generated/schema";
 import { getOrCreateAccount, getOrCreateModule } from "./helpers";
 
@@ -268,4 +271,25 @@ export function handleLiquidationBountyUpdated(event: LiquidationBountyUpdated):
   slot.liquidationBountyBps = event.params.newBps;
   slot.updatedAt = event.block.timestamp;
   slot.save();
+}
+
+export function handleModuleFeePaid(event: ModuleFeePaid): void {
+  let slot = getSlot(event.address);
+  let moduleId = event.params.module.toHexString();
+  let mod = Module.load(moduleId);
+  if (mod) {
+    mod.totalFeesCollected = mod.totalFeesCollected.plus(event.params.amount);
+    mod.save();
+  }
+
+  let ev = new ModuleFeePaidEvent(evtId(event.transaction.hash, event.logIndex));
+  ev.slot = slot.id;
+  ev.currency = slot.currency;
+  ev.module = moduleId;
+  ev.amount = event.params.amount;
+  ev.feeBps = event.params.feeBps;
+  ev.timestamp = event.block.timestamp;
+  ev.blockNumber = event.block.number;
+  ev.tx = event.transaction.hash;
+  ev.save();
 }

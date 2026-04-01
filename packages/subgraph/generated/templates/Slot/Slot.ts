@@ -146,6 +146,32 @@ export class ModuleCallFailed__Params {
   }
 }
 
+export class ModuleFeePaid extends ethereum.Event {
+  get params(): ModuleFeePaid__Params {
+    return new ModuleFeePaid__Params(this);
+  }
+}
+
+export class ModuleFeePaid__Params {
+  _event: ModuleFeePaid;
+
+  constructor(event: ModuleFeePaid) {
+    this._event = event;
+  }
+
+  get module(): Address {
+    return this._event.parameters[0].value.toAddress();
+  }
+
+  get amount(): BigInt {
+    return this._event.parameters[1].value.toBigInt();
+  }
+
+  get feeBps(): BigInt {
+    return this._event.parameters[2].value.toBigInt();
+  }
+}
+
 export class ModuleUpdateProposed extends ethereum.Event {
   get params(): ModuleUpdateProposed__Params {
     return new ModuleUpdateProposed__Params(this);
