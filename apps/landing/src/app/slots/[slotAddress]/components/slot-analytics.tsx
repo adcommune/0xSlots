@@ -90,6 +90,8 @@ export function SlotAnalytics({ slotAddress }: { slotAddress: string }) {
         >
           <BarChart
             data={data.series}
+            barCategoryGap="20%"
+            barGap={-20}
             margin={{ top: 4, right: 0, bottom: 0, left: 0 }}
           >
             <CartesianGrid vertical={false} strokeDasharray="3 3" />
@@ -123,11 +125,14 @@ export function SlotAnalytics({ slotAddress }: { slotAddress: string }) {
             <Bar
               dataKey="views"
               fill="var(--color-views)"
+              opacity={0.35}
+              barSize={20}
               radius={[3, 3, 0, 0]}
             />
             <Bar
               dataKey="clicks"
               fill="var(--color-clicks)"
+              barSize={20}
               radius={[3, 3, 0, 0]}
             />
           </BarChart>
