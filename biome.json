@@ -32,7 +32,9 @@
         "noSvgWithoutTitle": "off"
       },
       "suspicious": {
-        "noArrayIndexKey": "warn"
+        "noArrayIndexKey": "warn",
+        "noDoubleEquals": "warn",
+        "noShadowRestrictedNames": "warn"
       },
       "correctness": {
         "useExhaustiveDependencies": {
