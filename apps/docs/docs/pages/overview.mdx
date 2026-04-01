@@ -2,9 +2,6 @@ import { Callout } from 'vocs/components'
 
 # Overview
 
-<Callout type="warning">
-    Trigger Warning: You might witness terrible hand-drawn diagrams in this page. We apologize in advance. Also, this is a high-level overview and protocol is still in early stages, so expect some details to change as we iterate.
-</Callout>
 
 0xSlots is a **property primitive** for scarce onchain assets, based on a Harberger-tax-style model.
 
@@ -26,21 +23,24 @@ This creates continuous pressure toward **fair** pricing and **productive** owne
 
 ![How 0xSlots works](/hand-drawn-diagram.jpg)
 
-Think of it like [Splits](https://splits.org) but for open ownership.
+Think of it like [Splits](https://splits.org) but for collective ownership.
 
-Slots are smart contracts that are single use.
+### Slots
+
+Slots are smart contracts that are single use & immutable by default.
 
 - They fund **one recipient**
 - Use a **single currency**
-- At a fixed **tax percentage**
+- At a **tax percentage** *(optionally mutable)*
+- Implement a **single module** *(optionally mutable)*
 
-If you want a different configuration, just deploy another!
-
-Slots can also hook into a **module** that listens to ownership transfer, price update & release events.
+If you want a different configuration, just deploy another.
 
 Slots hold a minimum deposit of currency (defined at launch by the user, protocol minimum: 1 day) that is the source of tax collections (which can be triggered by anyone). At creation you can also define a bounty % of the tax being collected to incentivize liquidations.
 
-Slots are immutable by default, unless a manager is defined at creation.
+### Modules
+
+Slots can hook into a **module** that listens to ownership transfer, price update & release events. Modules grant any rights to the occupant of the slot and can request a portion of the tax collected by the slot owner.
 
 ---
 
@@ -49,10 +49,6 @@ Slots are immutable by default, unless a manager is defined at creation.
 A slot starts empty. It's a position — nothing more.
 
 What makes it valuable is what the owner does with it. Modules attached to a slot define the rights it grants: ad space, access, governance weight, revenue share, anything. The slot is the plot; the module is the crop.
-
-- Build something valuable on your slot, and people will pay more to take it.
-- Let it sit idle, and the tax eats your deposit until someone else steps in.
-- Price it fairly, produce something good, and you keep it — sustainably.
 
 Each slot becomes a small, bounded space of productive ownership. Not a walled garden you lock people out of — a public garden you tend. The market decides if you're tending it well enough to keep it.
 
