@@ -37,7 +37,8 @@
       "react-dom": "$react-dom",
       "@tanstack/react-query": "$@tanstack/react-query",
       "graphql-request": "$graphql-request",
-      "graphql": "$graphql"
+      "graphql": "$graphql",
+      "d3-path": "3.1.0"
     }
   },
   "dependencies": {

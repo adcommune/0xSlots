@@ -1,9 +1,19 @@
 import { Hono } from "hono";
 import { db } from "../db";
 import { events, domains } from "../db/schema";
-import { eq, and, gte, sql, count } from "drizzle-orm";
+import { eq, and, gte, sql, count, notIlike } from "drizzle-orm";
 
 const app = new Hono();
+
+// ── Excluded domains (dev/testing traffic) ─────────────────────────────────
+
+const EXCLUDED_DOMAIN_PATTERNS = ["localhost%", "%really-intense-guppy%"];
+
+function excludeDevDomains() {
+  return EXCLUDED_DOMAIN_PATTERNS.map((pattern) =>
+    notIlike(events.domain, pattern),
+  );
+}
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -12,7 +22,7 @@ type Period = "24h" | "7d" | "30d";
 function periodToDays(period: Period): number {
   switch (period) {
     case "24h":
-      return 1;
+      return 2; // yesterday + today
     case "7d":
       return 7;
     case "30d":
@@ -93,7 +103,13 @@ app.get("/domains/:domain", async (c) => {
         count: count(),
       })
       .from(events)
-      .where(and(eq(events.domain, domain), gte(events.createdAt, since)))
+      .where(
+        and(
+          eq(events.domain, domain),
+          gte(events.createdAt, since),
+          ...excludeDevDomains(),
+        ),
+      )
       .groupBy(sql`date_trunc('day', ${events.createdAt})::date`, events.type);
 
     const { series, totals } = aggregateRows(rows, prefillDays(numDays));
@@ -122,7 +138,13 @@ app.get("/slots/:slot", async (c) => {
         count: count(),
       })
       .from(events)
-      .where(and(eq(events.slotAddress, slot), gte(events.createdAt, since)))
+      .where(
+        and(
+          eq(events.slotAddress, slot),
+          gte(events.createdAt, since),
+          ...excludeDevDomains(),
+        ),
+      )
       .groupBy(sql`date_trunc('day', ${events.createdAt})::date`, events.type);
 
     const { series, totals } = aggregateRows(rows, prefillDays(numDays));
@@ -131,6 +153,54 @@ app.get("/slots/:slot", async (c) => {
   } catch (error) {
     console.error("[analytics] Error fetching slot stats:", error);
     return c.json({ error: "Failed to fetch slot stats" }, 500);
+  }
+});
+
+/** Per-domain breakdown for a slot. ?period=24h|7d|30d */
+app.get("/slots/:slot/domains", async (c) => {
+  try {
+    const { slot } = c.req.param();
+    const period = parsePeriod(c.req.query("period"));
+    const numDays = periodToDays(period);
+    const since = daysAgo(numDays);
+
+    const rows = await db
+      .select({
+        domain: events.domain,
+        type: events.type,
+        count: count(),
+      })
+      .from(events)
+      .where(
+        and(
+          eq(events.slotAddress, slot),
+          gte(events.createdAt, since),
+          ...excludeDevDomains(),
+        ),
+      )
+      .groupBy(events.domain, events.type);
+
+    const domainMap = new Map<
+      string,
+      { domain: string; views: number; clicks: number }
+    >();
+
+    for (const row of rows) {
+      const key = row.domain ?? "unknown";
+      const entry = domainMap.get(key) ?? { domain: key, views: 0, clicks: 0 };
+      if (row.type === "view") entry.views = row.count;
+      if (row.type === "click") entry.clicks = row.count;
+      domainMap.set(key, entry);
+    }
+
+    const domains = Array.from(domainMap.values()).sort(
+      (a, b) => b.views + b.clicks - (a.views + a.clicks),
+    );
+
+    return c.json({ slot, period, domains });
+  } catch (error) {
+    console.error("[analytics] Error fetching slot domain breakdown:", error);
+    return c.json({ error: "Failed to fetch domain breakdown" }, 500);
   }
 });
 

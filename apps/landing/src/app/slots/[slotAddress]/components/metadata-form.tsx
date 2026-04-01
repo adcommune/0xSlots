@@ -43,6 +43,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useChain } from "@/context/chain";
 import { useSlotAction } from "@/hooks/use-slot-action";
 import { useIpfsContent, useMetadataHistory } from "../hooks/use-metadata";
@@ -53,6 +54,7 @@ import {
   adTypeLabels,
 } from "../lib/ad-helpers";
 import { MetadataPreview } from "./metadata-preview";
+import { SlotAnalytics } from "./slot-analytics";
 import { ZodFormBuilder } from "./zod-form-builder";
 
 type Phase = "edit" | "verifying" | "preview" | "publishing" | "done";
@@ -278,41 +280,55 @@ export function MetadataForm({
         </>
       )}
 
-      {/* History */}
+      {/* Tabs: History / Analytics */}
       <div className="border-t pt-3">
-        {!updateHistory || updateHistory.length === 0 ? (
-          <p className="text-center text-muted-foreground py-6 text-sm">
-            No updates yet
-          </p>
-        ) : (
-          <Accordion type="single" collapsible>
-            {updateHistory.map((event) => (
-              <AccordionItem key={event.tx} value={event.tx}>
-                <AccordionTrigger className="py-2.5 px-1 text-sm hover:no-underline">
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 text-xs shrink-0">
-                      <AccountTypeIcon
-                        type={event.author.type}
-                        className="size-3"
+        <Tabs defaultValue="history">
+          <TabsList className="w-full">
+            <TabsTrigger value="history">History</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          </TabsList>
+          <TabsContent value="analytics">
+            <SlotAnalytics slotAddress={slotAddress} />
+          </TabsContent>
+          <TabsContent value="history">
+            {!updateHistory || updateHistory.length === 0 ? (
+              <p className="text-center text-muted-foreground py-6 text-sm">
+                No updates yet
+              </p>
+            ) : (
+              <Accordion type="single" collapsible>
+                {updateHistory.map((event) => (
+                  <AccordionItem key={event.tx} value={event.tx}>
+                    <AccordionTrigger className="py-2.5 px-1 text-sm hover:no-underline">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 text-xs shrink-0">
+                          <AccountTypeIcon
+                            type={event.author.type}
+                            className="size-3"
+                          />
+                          <EnsAddress address={event.author.id} />
+                        </div>
+                        <HistoryTypeBadge adType={event.adType} />
+                        <span className="text-muted-foreground text-xs whitespace-nowrap ml-auto">
+                          {formatDistanceToNow(
+                            new Date(Number(event.timestamp) * 1000),
+                            { addSuffix: true },
+                          )}
+                        </span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <HistoryItemContent
+                        uri={event.uri}
+                        rawJson={event.rawJson}
                       />
-                      <EnsAddress address={event.author.id} />
-                    </div>
-                    <HistoryTypeBadge adType={event.adType} />
-                    <span className="text-muted-foreground text-xs whitespace-nowrap ml-auto">
-                      {formatDistanceToNow(
-                        new Date(Number(event.timestamp) * 1000),
-                        { addSuffix: true },
-                      )}
-                    </span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <HistoryItemContent uri={event.uri} rawJson={event.rawJson} />
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        )}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

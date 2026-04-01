@@ -1,6 +1,5 @@
 import type { AdAuth } from "../types";
-
-const API_URL = "https://api.0xslots.org";
+import { adlandApiUrl } from "./constants";
 
 interface TrackingPayload {
   slot: string;
@@ -51,7 +50,7 @@ async function sendEvent(
   }
 
   try {
-    fetch(`${API_URL}/track`, {
+    fetch(`${adlandApiUrl}/track`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
