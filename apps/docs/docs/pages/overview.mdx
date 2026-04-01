@@ -1,6 +1,10 @@
+import { Callout } from 'vocs/components'
+
 # Overview
 
-Today, valuable onchain property can be held passively, left idle, or priced arbitrarily high with no real cost to the owner. Scarce digital positions end up squatted, blocked, or held hostage by whoever got there first. There is no built-in pressure toward productive use or fair pricing.
+<Callout type="warning">
+    Trigger Warning: You might witness terrible hand-drawn diagrams in this page. We apologize in advance. Also, this is a high-level overview and protocol is still in early stages, so expect some details to change as we iterate.
+</Callout>
 
 0xSlots is a **property primitive** for scarce onchain assets, based on a Harberger-tax-style model.
 
@@ -37,6 +41,22 @@ Slots can also hook into a **module** that listens to ownership transfer, price 
 Slots hold a minimum deposit of currency (defined at launch by the user, protocol minimum: 1 day) that is the source of tax collections (which can be triggered by anyone). At creation you can also define a bounty % of the tax being collected to incentivize liquidations.
 
 Slots are immutable by default, unless a manager is defined at creation.
+
+---
+
+## Conclusion: Slots as Fertile Ground
+
+A slot starts empty. It's a position — nothing more.
+
+What makes it valuable is what the owner does with it. Modules attached to a slot define the rights it grants: ad space, access, governance weight, revenue share, anything. The slot is the plot; the module is the crop.
+
+- Build something valuable on your slot, and people will pay more to take it.
+- Let it sit idle, and the tax eats your deposit until someone else steps in.
+- Price it fairly, produce something good, and you keep it — sustainably.
+
+Each slot becomes a small, bounded space of productive ownership. Not a walled garden you lock people out of — a public garden you tend. The market decides if you're tending it well enough to keep it.
+
+This is the primitive. What grows on it is up to you.
 
 ---
 
