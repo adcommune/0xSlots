@@ -23,6 +23,27 @@
       }
     },
     {
+      "label": "Dev: API",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["dev:api"],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "focus": false,
+        "group": "dev"
+      },
+      "icon": {
+        "id": "plug",
+        "color": "terminal.ansiRed"
+      },
+      "isBackground": true,
+      "runOptions": {
+        "instanceLimit": 1
+      }
+    },
+    {
       "label": "Dev: MCP",
       "type": "shell",
       "command": "pnpm",
@@ -64,8 +85,8 @@
       }
     },
     {
-      "label": "Dev: Landing + MCP (Split)",
-      "dependsOn": ["Dev: Landing", "Dev: MCP"],
+      "label": "Dev: Landing + API",
+      "dependsOn": ["Dev: Landing", "Dev: API"],
       "dependsOrder": "parallel",
       "problemMatcher": [],
       "icon": {

@@ -99,6 +99,9 @@ export function trackImpression(
 /**
  * Track a click event.
  */
-export function trackClick(_eventName: string, data: TrackingPayload): void {
-  sendEvent("click", data);
+export function trackClick(
+  _eventName: string,
+  data: TrackingPayload,
+): Promise<void> {
+  return sendEvent("click", data);
 }

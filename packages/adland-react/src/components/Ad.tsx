@@ -91,7 +91,7 @@ export function Ad({
   }, [adData, isEmpty, slot, chainId, auth, context, cid]);
 
   const onClick = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
+    async (e: React.MouseEvent<HTMLDivElement>) => {
       const target = e.target as HTMLElement;
       const isInteractive =
         target.tagName === "A" ||
@@ -104,7 +104,7 @@ export function Ad({
         if (slot) trackClick("click", { slot, chainId, auth, context, cid });
         performAdAction(adData);
       } else if (isEmpty && slot) {
-        trackClick("click-empty", { slot, chainId, auth, context });
+        await trackClick("click-empty", { slot, chainId, auth, context });
         performEmptyAdAction(slot, chainId, baseLinkUrl);
       }
     },
