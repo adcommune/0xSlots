@@ -4,7 +4,7 @@
   "startBlock": 38406000,
   "factory2Address": "0x6D87C1647f228Baf8DE0374FCd7FdEBF6900fdFF",
   "factory2StartBlock": 39341061,
-  "erc721FactoryAddress": "0x1BC3EbE800fDda10d81675c0d757252A9589Fe42",
-  "erc721StartBlock": 39086351,
+  "erc721FactoryAddress": "0x77aaDBcDaecFED7Fc542E5A68A0e77154367a9EB",
+  "erc721StartBlock": 39679046,
   "studioName": "0-x-slots-base-sepolia"
 }
