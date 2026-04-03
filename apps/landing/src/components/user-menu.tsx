@@ -10,6 +10,7 @@ import {
   LogOut,
   Network,
   User,
+  Wallet,
 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
@@ -57,35 +58,11 @@ export function UserMenu() {
         account,
         chain,
         openConnectModal,
-        openChainModal,
         mounted,
       }) => {
         const connected = mounted && account && chain;
 
-        if (!connected) {
-          return (
-            <div
-              {...(!mounted && {
-                "aria-hidden": true,
-                style: { opacity: 0, pointerEvents: "none", userSelect: "none" },
-              })}
-            >
-              <Button onClick={openConnectModal} size="sm">
-                Connect
-              </Button>
-            </div>
-          );
-        }
-
-        if (chain.unsupported) {
-          return (
-            <Button onClick={openChainModal} variant="destructive" size="sm">
-              Wrong Network
-            </Button>
-          );
-        }
-
-        return (
+        return connected ? (
           <ConnectedMenu
             account={account}
             chainId={chainId}
@@ -97,9 +74,92 @@ export function UserMenu() {
             copied={copied}
             copyAddress={copyAddress}
           />
+        ) : (
+          <DisconnectedMenu
+            mounted={!!mounted}
+            openConnectModal={openConnectModal}
+            chainId={chainId}
+            setChain={setChain}
+            isMiniApp={isMiniApp}
+          />
         );
       }}
     </RainbowConnectButton.Custom>
+  );
+}
+
+function DisconnectedMenu({
+  mounted,
+  openConnectModal,
+  chainId,
+  setChain,
+  isMiniApp,
+}: {
+  mounted: boolean;
+  openConnectModal: () => void;
+  chainId: number;
+  setChain: (id: number) => void;
+  isMiniApp: boolean;
+}) {
+  return (
+    <div
+      {...(!mounted && {
+        "aria-hidden": true,
+        style: { opacity: 0, pointerEvents: "none", userSelect: "none" },
+      })}
+    >
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" size="sm" className="gap-2">
+            <Wallet className="size-4" />
+            No Wallet
+          </Button>
+        </DropdownMenuTrigger>
+
+        <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuGroup>
+            <DropdownMenuItem onClick={openConnectModal}>
+              <Wallet className="size-4" />
+              Connect Wallet
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                if (isMiniApp) {
+                  sdk.actions.openUrl("https://docs.0xslots.org");
+                } else {
+                  window.open("https://docs.0xslots.org", "_blank");
+                }
+              }}
+            >
+              <BookOpen className="size-4" />
+              Docs
+            </DropdownMenuItem>
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>
+                <Network className="size-4" />
+                Network
+                <span className="ml-auto text-xs text-muted-foreground">
+                  {CHAINS.find((c) => c.id === chainId)?.name ?? `Chain ${chainId}`}
+                </span>
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                {CHAINS.map((c) => (
+                  <DropdownMenuItem
+                    key={c.id}
+                    onClick={() => setChain(c.id)}
+                  >
+                    {c.name}
+                    {c.id === chainId && (
+                      <Check className="ml-auto size-3.5" />
+                    )}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+          </DropdownMenuGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
 }
 
@@ -150,7 +210,6 @@ function ConnectedMenu({
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end" className="w-56">
-        {/* Header — click to copy */}
         <DropdownMenuLabel className="font-normal">
           <button
             type="button"

@@ -2,7 +2,15 @@
 
 import { CHAINS, DEFAULT_CHAIN } from "@0xslots/contracts";
 import type { SlotsChain } from "@0xslots/sdk";
-import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo } from "react";
+import {
+  createContext,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { useAccount, useSwitchChain } from "wagmi";
 import { getExplorerUrl } from "@/lib/config";
 
@@ -15,29 +23,31 @@ interface ChainContextValue {
 const ChainContext = createContext<ChainContextValue | null>(null);
 
 export function ChainProvider({ children }: { children: ReactNode }) {
-  const { chainId: walletChainId } = useAccount();
+  const [chainId, setChainId] = useState<SlotsChain>(
+    DEFAULT_CHAIN.id as SlotsChain,
+  );
+  const { isConnected } = useAccount();
   const { mutate: switchChain } = useSwitchChain();
 
-  const chainId: SlotsChain =
-    walletChainId && CHAINS.some((c) => c.id === walletChainId)
-      ? (walletChainId as SlotsChain)
-      : (DEFAULT_CHAIN.id as SlotsChain);
-
-  // Switch to chain from ?chain= query param on mount
+  // Handle ?chain= query param on mount
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const chainParam = params.get("chain");
     if (chainParam) {
       const parsed = Number(chainParam);
-      if (CHAINS.some((c) => c.id === parsed) && parsed !== walletChainId) {
-        switchChain({ chainId: parsed });
+      if (CHAINS.some((c) => c.id === parsed)) {
+        setChainId(parsed as SlotsChain);
+        if (isConnected) switchChain({ chainId: parsed });
       }
     }
   }, []);
 
   const setChain = useCallback(
-    (id: number) => switchChain({ chainId: id }),
-    [switchChain],
+    (id: number) => {
+      setChainId(id as SlotsChain);
+      if (isConnected) switchChain({ chainId: id });
+    },
+    [isConnected, switchChain],
   );
 
   const explorerUrl = useMemo(() => getExplorerUrl(chainId), [chainId]);
