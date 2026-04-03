@@ -1,6 +1,6 @@
 {
   "name": "@adland/react",
-  "version": "0.16.8",
+  "version": "0.16.9",
   "private": false,
   "publishConfig": {
     "access": "public"
