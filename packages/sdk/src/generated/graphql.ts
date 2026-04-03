@@ -4197,6 +4197,7 @@ export type GetMetadataSlotsQueryVariables = Exact<{
   skip?: InputMaybe<Scalars['Int']['input']>;
   orderBy?: InputMaybe<MetadataSlot_OrderBy>;
   orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<MetadataSlot_Filter>;
 }>;
 
 
@@ -4218,10 +4219,11 @@ export type GetMetadataSlotsByRecipientQueryVariables = Exact<{
 export type GetMetadataSlotsByRecipientQuery = { __typename?: 'Query', metadataSlots: Array<{ __typename?: 'MetadataSlot', id: string, uri: string, rawJson?: string | null, adType?: string | null, updatedBy: string, updateCount: string, createdAt: string, createdTx: string, updatedAt: string, updatedTx: string, slot: { __typename?: 'Slot', id: string, recipient: string, occupant?: string | null, price: string, deposit: string, currency: { __typename?: 'Currency', id: string, symbol?: string | null, decimals: number } } }> };
 
 export type GetMetadataUpdatedEventsQueryVariables = Exact<{
-  slot?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
   orderBy?: InputMaybe<MetadataUpdatedEvent_OrderBy>;
   orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<MetadataUpdatedEvent_Filter>;
 }>;
 
 
@@ -5000,12 +5002,13 @@ export const GetModulesDocument = gql`
 }
     `;
 export const GetMetadataSlotsDocument = gql`
-    query GetMetadataSlots($first: Int = 100, $skip: Int = 0, $orderBy: MetadataSlot_orderBy = updatedAt, $orderDirection: OrderDirection = desc) {
+    query GetMetadataSlots($first: Int = 100, $skip: Int = 0, $orderBy: MetadataSlot_orderBy = updatedAt, $orderDirection: OrderDirection = desc, $where: MetadataSlot_filter) {
   metadataSlots(
     first: $first
     skip: $skip
     orderBy: $orderBy
     orderDirection: $orderDirection
+    where: $where
   ) {
     ...MetadataSlotFields
   }
@@ -5031,12 +5034,13 @@ export const GetMetadataSlotsByRecipientDocument = gql`
 }
     ${MetadataSlotFieldsFragmentDoc}`;
 export const GetMetadataUpdatedEventsDocument = gql`
-    query GetMetadataUpdatedEvents($slot: String, $first: Int = 50, $orderBy: MetadataUpdatedEvent_orderBy = timestamp, $orderDirection: OrderDirection = desc) {
+    query GetMetadataUpdatedEvents($first: Int = 50, $skip: Int = 0, $orderBy: MetadataUpdatedEvent_orderBy = timestamp, $orderDirection: OrderDirection = desc, $where: MetadataUpdatedEvent_filter) {
   metadataUpdatedEvents(
     first: $first
-    where: {slot: $slot}
+    skip: $skip
     orderBy: $orderBy
     orderDirection: $orderDirection
+    where: $where
   ) {
     id
     slot {

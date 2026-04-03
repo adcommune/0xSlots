@@ -23,8 +23,8 @@ fragment MetadataSlotFields on MetadataSlot {
   }
 }
 
-query GetMetadataSlots($first: Int = 100, $skip: Int = 0, $orderBy: MetadataSlot_orderBy = updatedAt, $orderDirection: OrderDirection = desc) {
-  metadataSlots(first: $first, skip: $skip, orderBy: $orderBy, orderDirection: $orderDirection) {
+query GetMetadataSlots($first: Int = 100, $skip: Int = 0, $orderBy: MetadataSlot_orderBy = updatedAt, $orderDirection: OrderDirection = desc, $where: MetadataSlot_filter) {
+  metadataSlots(first: $first, skip: $skip, orderBy: $orderBy, orderDirection: $orderDirection, where: $where) {
     ...MetadataSlotFields
   }
 }
@@ -41,8 +41,8 @@ query GetMetadataSlotsByRecipient($recipient: Bytes!, $first: Int = 100) {
   }
 }
 
-query GetMetadataUpdatedEvents($slot: String, $first: Int = 50, $orderBy: MetadataUpdatedEvent_orderBy = timestamp, $orderDirection: OrderDirection = desc) {
-  metadataUpdatedEvents(first: $first, where: { slot: $slot }, orderBy: $orderBy, orderDirection: $orderDirection) {
+query GetMetadataUpdatedEvents($first: Int = 50, $skip: Int = 0, $orderBy: MetadataUpdatedEvent_orderBy = timestamp, $orderDirection: OrderDirection = desc, $where: MetadataUpdatedEvent_filter) {
+  metadataUpdatedEvents(first: $first, skip: $skip, orderBy: $orderBy, orderDirection: $orderDirection, where: $where) {
     id
     slot {
       id

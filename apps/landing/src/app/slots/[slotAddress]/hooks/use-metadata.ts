@@ -70,7 +70,7 @@ export function useMetadataHistory(slotAddress: string) {
     queryFn: async () => {
       const { metadataUpdatedEvents } =
         await subgraphClient.modules.metadata.getUpdateHistory({
-          slot: slotAddress.toLowerCase(),
+          where: { slot: slotAddress.toLowerCase() },
           first: 10,
         });
       return metadataUpdatedEvents;
