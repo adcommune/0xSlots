@@ -7,8 +7,8 @@ import {
   type ReactNode,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
+  useEffect,
 } from "react";
 import { useAccount, useSwitchChain } from "wagmi";
 import { getExplorerUrl } from "@/lib/config";
@@ -19,20 +19,33 @@ interface ChainContextValue {
   setChain: (chainId: number) => void;
 }
 
+const CHAIN_STORAGE_KEY = "0xslots:chainId";
 const ChainContext = createContext<ChainContextValue | null>(null);
 
 function isSupportedChain(id: number): id is SlotsChain {
   return CHAINS.some((c) => c.id === id);
 }
 
+function getStoredChain(): SlotsChain | null {
+  if (typeof window === "undefined") return null;
+  const stored = localStorage.getItem(CHAIN_STORAGE_KEY);
+  if (stored) {
+    const parsed = Number(stored);
+    if (isSupportedChain(parsed)) return parsed;
+  }
+  return null;
+}
+
 export function ChainProvider({ children }: { children: ReactNode }) {
-  const { chainId: walletChainId } = useAccount();
+  const { chainId: walletChainId, isConnected } = useAccount();
   const { mutate: switchChain } = useSwitchChain();
 
+  // Wallet connected + on a supported chain → use it
+  // Otherwise → stored preference or default
   const chainId: SlotsChain =
-    walletChainId && isSupportedChain(walletChainId)
+    isConnected && walletChainId && isSupportedChain(walletChainId)
       ? walletChainId
-      : (DEFAULT_CHAIN.id as SlotsChain);
+      : (getStoredChain() ?? (DEFAULT_CHAIN.id as SlotsChain));
 
   // Handle ?chain= query param on mount
   useEffect(() => {
@@ -40,14 +53,18 @@ export function ChainProvider({ children }: { children: ReactNode }) {
     const chainParam = params.get("chain");
     if (chainParam) {
       const parsed = Number(chainParam);
-      if (isSupportedChain(parsed) && parsed !== walletChainId) {
-        switchChain({ chainId: parsed });
+      if (isSupportedChain(parsed)) {
+        localStorage.setItem(CHAIN_STORAGE_KEY, String(parsed));
+        if (isConnected && parsed !== walletChainId) {
+          switchChain({ chainId: parsed });
+        }
       }
     }
   }, []);
 
   const setChain = useCallback(
     (id: number) => {
+      localStorage.setItem(CHAIN_STORAGE_KEY, String(id));
       switchChain({ chainId: id });
     },
     [switchChain],
