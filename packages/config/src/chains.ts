@@ -1,12 +1,8 @@
 import type { Chain } from "viem";
-import { base, baseSepolia, mainnet } from "viem/chains";
+import { base, baseSepolia } from "viem/chains";
 
 /**
- * All chains for the app: DEFAULT_CHAIN first, then remaining protocol chains, plus mainnet for ENS.
+ * All chains for the app: DEFAULT_CHAIN first, then remaining protocol chains.
+ * ENS resolution uses a standalone mainnet client (see apps/landing/src/lib/ens.ts).
  */
-export const appChains = [
-  base,
-  baseSepolia,
-  mainnet, // Last — only here for ENS resolution
-] as [Chain, ...Chain[]];
-
+export const appChains = [base, baseSepolia] as [Chain, ...Chain[]];

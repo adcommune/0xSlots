@@ -3,8 +3,7 @@
 import { forwardRef } from "react";
 import { getAddress, isAddress } from "viem";
 import { normalize } from "viem/ens";
-import { useEnsAddress } from "wagmi";
-import { mainnet } from "wagmi/chains";
+import { useEnsAddress } from "@/lib/ens";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
@@ -17,11 +16,7 @@ export function useResolveAddress(input: string) {
   } catch {
     ensName = undefined;
   }
-  const { data: ensAddress, isLoading } = useEnsAddress({
-    name: ensName,
-    chainId: mainnet.id,
-    query: { enabled: !!ensName },
-  });
+  const { data: ensAddress, isLoading } = useEnsAddress(ensName);
   let resolved = isEns && ensAddress ? ensAddress : input;
   try {
     if (isAddress(resolved, { strict: false })) {

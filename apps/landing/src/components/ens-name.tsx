@@ -1,9 +1,6 @@
 "use client";
 
-import type { Address } from "viem";
-import { normalize } from "viem/ens";
-import { useEnsAvatar, useEnsName } from "wagmi";
-import { mainnet } from "wagmi/chains";
+import { useEnsAvatar, useEnsName } from "@/lib/ens";
 import { truncateAddress } from "@/utils";
 
 interface EnsNameProps {
@@ -13,15 +10,8 @@ interface EnsNameProps {
 }
 
 export function EnsName({ address, className, showAvatar }: EnsNameProps) {
-  const { data: ensName } = useEnsName({
-    address: address as Address,
-    chainId: mainnet.id,
-  });
-
-  const { data: avatarUrl } = useEnsAvatar({
-    name: ensName ? normalize(ensName) : undefined,
-    chainId: mainnet.id,
-  });
+  const { data: ensName } = useEnsName(address);
+  const { data: avatarUrl } = useEnsAvatar(ensName);
 
   const label = ensName ?? truncateAddress(address);
 

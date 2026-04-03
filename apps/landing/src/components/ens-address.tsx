@@ -1,10 +1,8 @@
 "use client";
 
-import { useEnsName } from "wagmi";
-import { mainnet } from "viem/chains";
+import { useEnsName } from "@/lib/ens";
 import { NavLink } from "@/context/navigation";
 import { truncateAddress } from "@/utils";
-import type { Address } from "viem";
 
 export function EnsAddress({
   address,
@@ -15,10 +13,7 @@ export function EnsAddress({
   href?: string;
   onClick?: (e: React.MouseEvent) => void;
 }) {
-  const { data: ensName } = useEnsName({
-    address: address as Address,
-    chainId: mainnet.id,
-  });
+  const { data: ensName } = useEnsName(address);
 
   const display = ensName || truncateAddress(address);
 

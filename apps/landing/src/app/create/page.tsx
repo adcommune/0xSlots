@@ -7,9 +7,8 @@ import { useNavigation } from "@/context/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { type Address, getAddress, isAddress, zeroAddress } from "viem";
-import { normalize } from "viem/ens";
-import { useAccount, usePublicClient, useSwitchChain } from "wagmi";
-import { mainnet } from "wagmi/chains";
+import { useAccount, useSwitchChain } from "wagmi";
+import { resolveEnsAddress } from "@/lib/ens";
 import { getChainTokens } from "@0xslots/sdk";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -42,7 +41,6 @@ export default function CreatePage() {
   const { address, isConnected, chainId: walletChainId, chain } = useAccount();
   const { switchChain } = useSwitchChain();
   const { chainId: selectedChainId } = useChain();
-  const mainnetClient = usePublicClient({ chainId: mainnet.id });
   const {
     createSlot: sdkCreateSlot,
     createSlots: sdkCreateSlots,
@@ -137,12 +135,8 @@ export default function CreatePage() {
             let addr = r.address.trim();
             if (isAddress(addr, { strict: false })) {
               addr = getAddress(addr);
-            } else if (mainnetClient) {
-              const resolved = await mainnetClient.getEnsAddress({
-                name: normalize(addr),
-              });
-              if (!resolved) throw new Error(`Could not resolve ${addr}`);
-              addr = resolved;
+            } else {
+              addr = await resolveEnsAddress(addr);
             }
             return {
               address: addr as Address,

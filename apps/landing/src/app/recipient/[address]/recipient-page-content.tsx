@@ -2,11 +2,9 @@
 
 import { Banknote, Check, Copy, HandCoins, LandPlot } from "lucide-react";
 import { useState } from "react";
-import { type Address, formatUnits } from "viem";
-import { normalize } from "viem/ens";
-import { useEnsAvatar, useEnsName } from "wagmi";
-import { mainnet } from "wagmi/chains";
+import { formatUnits } from "viem";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { useEnsAvatar, useEnsName } from "@/lib/ens";
 import { AccountTypeIcon } from "@/components/account-type-icon";
 import { Blockie } from "@/components/blockie";
 import { PageHeader } from "@/components/page-header";
@@ -44,14 +42,8 @@ export function RecipientPageContent({ address }: { address: string }) {
   const { data: slots, isLoading: onchainLoading } =
     useSlotsOnChain(slotAddresses, selectedChainId);
 
-  const { data: ensName } = useEnsName({
-    address: address as Address,
-    chainId: mainnet.id,
-  });
-  const { data: ensAvatar } = useEnsAvatar({
-    name: ensName ? normalize(ensName) : undefined,
-    chainId: mainnet.id,
-  });
+  const { data: ensName } = useEnsName(address);
+  const { data: ensAvatar } = useEnsAvatar(ensName);
 
   const isLoading = onchainLoading;
   const recipientType = subgraphSlots?.[0]?.recipientAccount?.type;
