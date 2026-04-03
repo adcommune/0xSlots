@@ -20,30 +20,44 @@ interface ChainContextValue {
   setChain: (chainId: number) => void;
 }
 
+const CHAIN_STORAGE_KEY = "0xslots:chainId";
+
+function getInitialChain(): SlotsChain {
+  if (typeof window === "undefined") return DEFAULT_CHAIN.id as SlotsChain;
+
+  // Query param takes priority
+  const params = new URLSearchParams(window.location.search);
+  const chainParam = params.get("chain");
+  if (chainParam) {
+    const parsed = Number(chainParam);
+    if (CHAINS.some((c) => c.id === parsed)) return parsed as SlotsChain;
+  }
+
+  // Then localStorage
+  const stored = localStorage.getItem(CHAIN_STORAGE_KEY);
+  if (stored) {
+    const parsed = Number(stored);
+    if (CHAINS.some((c) => c.id === parsed)) return parsed as SlotsChain;
+  }
+
+  return DEFAULT_CHAIN.id as SlotsChain;
+}
+
 const ChainContext = createContext<ChainContextValue | null>(null);
 
 export function ChainProvider({ children }: { children: ReactNode }) {
-  const [chainId, setChainId] = useState<SlotsChain>(
-    DEFAULT_CHAIN.id as SlotsChain,
-  );
+  const [chainId, setChainId] = useState<SlotsChain>(getInitialChain);
   const { mutate: switchWalletChain } = useSwitchChain();
 
-  // Read ?chain= search param on mount
+  // Sync wallet to the initial chain on mount
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const chainParam = params.get("chain");
-    if (chainParam) {
-      const parsed = Number(chainParam);
-      if (CHAINS.some((c) => c.id === parsed)) {
-        setChainId(parsed as SlotsChain);
-        switchWalletChain({ chainId: parsed });
-      }
-    }
+    switchWalletChain({ chainId });
   }, []);
 
   const setChain = useCallback(
     (id: number) => {
       setChainId(id as SlotsChain);
+      localStorage.setItem(CHAIN_STORAGE_KEY, String(id));
       switchWalletChain({ chainId: id });
     },
     [switchWalletChain],
