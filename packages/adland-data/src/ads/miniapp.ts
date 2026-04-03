@@ -27,14 +27,14 @@ export const miniappAd = defineAd({
     if (!domain) {
       throw new Error(errorMessage);
     }
-    const res = await adlandAPI.verifyMiniapp({ domain });
+    const res = await adlandAPI.verify.miniapp({ domain });
     console.log("verifyMiniapp:res", res);
     if (!res.verified) {
       throw new Error(errorMessage);
     }
   },
   async getMetadata({ url }) {
-    const res = await adlandAPI.getMiniappMetadata({ url });
+    const res = await adlandAPI.metadata.miniapp({ url });
     console.log("getMetadata:res", res);
     return {
       icon: res.icon,

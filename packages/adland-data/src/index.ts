@@ -2,13 +2,13 @@ import { z } from "zod";
 import { castAd } from "./ads/cast";
 import { linkAd } from "./ads/link";
 import { miniappAd } from "./ads/miniapp";
+import { tokenAd } from "./ads/token";
+import { farcasterProfileAd } from "./ads/profile";
 import type { CastAd } from "./ads/cast";
 import type { LinkAd } from "./ads/link";
 import type { MiniAppAd } from "./ads/miniapp";
 import type { TokenAd } from "./ads/token";
 import type { FarcasterProfileAd } from "./ads/profile";
-import { tokenAd } from "./ads/token";
-import { farcasterProfileAd } from "./ads/profile";
 
 /**
  * Union type for all complete ad structures with type, data, and optional metadata

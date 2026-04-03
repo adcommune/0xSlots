@@ -24,7 +24,7 @@ export const linkAd = defineAd({
     }
   },
   async getMetadata({ url }) {
-    const metadata = await adlandAPI.getLinkMetadata({ url });
+    const metadata = await adlandAPI.metadata.link({ url });
     return {
       title: metadata.title,
       description: metadata.description,

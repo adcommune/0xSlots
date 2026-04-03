@@ -29,9 +29,9 @@
     "CHANGELOG.md"
   ],
   "dependencies": {
-    "zod": "4.1.12",
+    "@farcaster/miniapp-sdk": "latest",
     "tsup": "^8.0.1",
-    "@farcaster/miniapp-sdk": "latest"
+    "zod": "4.1.12"
   },
   "devDependencies": {
     "@types/node": "^20",

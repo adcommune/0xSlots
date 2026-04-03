@@ -14,24 +14,24 @@ export const castAd = defineAd({
   metadata: z.object({
     username: z.string().optional(),
     pfpUrl: z.string().optional(),
-    text: z.string().optional(),
-    timestamp: z.number().optional(),
+    text: z.string(),
+    timestamp: z.string(),
   }),
   async verify({ hash }) {
     if (!/^0x[0-9a-fA-F]{40}$/.test(hash)) {
       throw new Error("Invalid Farcaster cast hash");
     }
 
-    const res = await adlandAPI.verifyCast({ hash });
+    const res = await adlandAPI.verify.cast({ hash });
     if (!res.verified) {
       throw new Error("Cast hash verification failed");
     }
   },
   async getMetadata({ hash }) {
-    const cast = await adlandAPI.getCastMetadata({ hash });
+    const { cast } = await adlandAPI.metadata.cast({ hash });
     return {
-      username: cast.username,
-      pfpUrl: cast.pfpUrl,
+      username: cast.author.username,
+      pfpUrl: cast.author.pfp_url,
       text: cast.text,
       timestamp: cast.timestamp,
     };

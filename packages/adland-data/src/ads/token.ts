@@ -22,13 +22,13 @@ export const tokenAd = defineAd({
     logoURI: z.string().optional(),
   }),
   async verify({ address, chainId }) {
-    const res = await adlandAPI.verifyToken({ address, chainId });
+    const res = await adlandAPI.verify.token({ address, chainId });
     if (!res.verified) {
       throw new Error("Token verification failed");
     }
   },
   async getMetadata({ address, chainId }) {
-    const token = await adlandAPI.getTokenMetadata({ address, chainId });
+    const token = await adlandAPI.metadata.token({ address, chainId });
     return {
       name: token.name,
       symbol: token.symbol,

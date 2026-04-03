@@ -17,13 +17,13 @@ export const farcasterProfileAd = defineAd({
     pro: z.boolean().optional(),
   }),
   async verify({ fid }) {
-    const res = await adlandAPI.verifyFarcasterProfile({ fid });
+    const res = await adlandAPI.verify.profile({ fid });
     if (!res.verified) {
       throw new Error("Farcaster profile verification failed");
     }
   },
   async getMetadata({ fid }) {
-    const res = await adlandAPI.getFarcasterProfile({ fid });
+    const res = await adlandAPI.metadata.profile({ fid });
     return {
       pfpUrl: res.pfpUrl,
       bio: res.bio,
