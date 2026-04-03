@@ -9,6 +9,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { useAccount, useSwitchChain } from "wagmi";
@@ -28,6 +29,7 @@ export function ChainProvider({ children }: { children: ReactNode }) {
   );
   const { mutate: switchWalletChain } = useSwitchChain();
   const { chainId: walletChainId } = useAccount();
+  const isSwitching = useRef(false);
 
   // Read ?chain= search param on mount
   useEffect(() => {
@@ -41,11 +43,16 @@ export function ChainProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Keep the connected wallet chain in sync with the selected chain at all times.
+  // Keep the connected wallet chain in sync with the selected chain.
   useEffect(() => {
-    if (walletChainId && walletChainId !== chainId) {
-      switchWalletChain({ chainId });
+    if (isSwitching.current || !walletChainId || walletChainId === chainId) {
+      return;
     }
+    isSwitching.current = true;
+    switchWalletChain(
+      { chainId },
+      { onSettled: () => { isSwitching.current = false; } },
+    );
   }, [chainId, walletChainId, switchWalletChain]);
 
   const setChain = useCallback(
