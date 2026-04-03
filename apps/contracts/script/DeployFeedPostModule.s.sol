@@ -6,7 +6,7 @@ import {FeedPostModule} from "../src/modules/FeedPostModule.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 contract DeployFeedPostModule is BaseScript {
-    function run() external broadcastOn(DeployementChain.Base) {
+    function run() external broadcastOn(DeployementChain.BaseSepolia) {
         // Deploy implementation
         FeedPostModule impl = new FeedPostModule();
         console2.log("FeedPostModule impl:", address(impl));

@@ -9,7 +9,7 @@ import {Initializable} from "@openzeppelin-upgradeable/contracts/proxy/utils/Ini
 
 /// @title FeedPostModule
 /// @notice UUPS-upgradeable module that stores a URI per slot for The Feed.
-/// @dev Same pattern as MetadataModule but for feed post content.
+/// @dev Supports trusted routers for atomic buy+post flows.
 contract FeedPostModule is
     Initializable,
     UUPSUpgradeable,
@@ -19,9 +19,15 @@ contract FeedPostModule is
     /// @notice slot address => URI
     mapping(address => string) public tokenURI;
 
+    /// @notice Trusted routers that can call postFor
+    mapping(address => bool) public trustedRouters;
+
     event MetadataUpdated(address indexed slot, string uri);
+    event RouterUpdated(address indexed router, bool trusted);
 
     error NotOccupant();
+    error NotTrustedRouter();
+    error NotActualOccupant();
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -32,18 +38,40 @@ contract FeedPostModule is
         __Ownable_init(initialOwner);
     }
 
+    // ── Router management ─────────────────────────────────────
+
+    /// @notice Add or remove a trusted router. Only owner.
+    function setTrustedRouter(address router, bool trusted) external onlyOwner {
+        trustedRouters[router] = trusted;
+        emit RouterUpdated(router, trusted);
+    }
+
+    // ── Metadata ──────────────────────────────────────────────
+
     modifier onlyOccupant(address slot) {
         if (msg.sender != _slotOccupant(slot)) revert NotOccupant();
         _;
     }
 
     /// @notice Update the URI for a slot. Only callable by the current occupant.
-    /// @param slot The slot contract address
-    /// @param uri The new URI (e.g. ipfs://...)
     function updateMetadata(
         address slot,
         string calldata uri
     ) external onlyOccupant(slot) {
+        tokenURI[slot] = uri;
+        emit MetadataUpdated(slot, uri);
+    }
+
+    /// @notice Post metadata on behalf of a user. Only callable by trusted routers.
+    /// @dev Verifies that `account` is actually the current occupant of the slot.
+    function postFor(
+        address account,
+        address slot,
+        string calldata uri
+    ) external {
+        if (!trustedRouters[msg.sender]) revert NotTrustedRouter();
+        if (account != _slotOccupant(slot)) revert NotActualOccupant();
+
         tokenURI[slot] = uri;
         emit MetadataUpdated(slot, uri);
     }
