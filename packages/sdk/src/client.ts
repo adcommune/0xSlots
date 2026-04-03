@@ -16,6 +16,7 @@ import {
 import { SlotsError } from "./errors";
 import { getSdk } from "./generated/graphql";
 import { MetadataModuleClient } from "./modules/metadata";
+import { FeedModuleClient } from "./modules/feed";
 
 // ─── GraphQL Meta ─────────────────────────────────────────────────────────────
 
@@ -125,6 +126,7 @@ export class SlotsClient {
   /** Module namespaces for protocol extensions. */
   public readonly modules: {
     metadata: MetadataModuleClient;
+    feed: FeedModuleClient;
   };
 
   constructor(config: SlotsClientConfig) {
@@ -145,6 +147,12 @@ export class SlotsClient {
     this.modules = {
       metadata: new MetadataModuleClient({
         sdk: this.sdk,
+        publicClient: config.publicClient,
+        walletClient: config.walletClient,
+      }),
+      feed: new FeedModuleClient({
+        sdk: this.sdk,
+        chainId: config.chainId,
         publicClient: config.publicClient,
         walletClient: config.walletClient,
       }),

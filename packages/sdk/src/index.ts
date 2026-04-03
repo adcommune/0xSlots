@@ -15,6 +15,7 @@ export {
 
 // Modules
 export { MetadataModuleClient } from "./modules/metadata";
+export { FeedModuleClient } from "./modules/feed";
 
 // Tokens
 export {

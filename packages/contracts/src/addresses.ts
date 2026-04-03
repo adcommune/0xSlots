@@ -17,6 +17,16 @@ export const erc721SlotsAddress = {
   [baseSepolia.id]: "0x65e88189ac09527c5F7da0296ef33C77E5a6BE27",
 } as const;
 
+export const feedModuleAddress = {
+  [baseSepolia.id]: "0x17b663b7C779B64f339ab916aB734A6a4f0b075E",
+  [base.id]: "0xe92BE44E3D77be84E2aC4D6da9FFDaC0FCa67f72",
+} as const;
+
+export const feedRouterAddress = {
+  [baseSepolia.id]: "0x31D6eE9028f5C102c2116e9552Fc20f3aA468194",
+  [base.id]: "0x0000000000000000000000000000000000000000", // not deployed yet
+} as const;
+
 /**
  * Supported chain IDs for 0xSlots protocol
  */

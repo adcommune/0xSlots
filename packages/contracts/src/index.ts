@@ -12,6 +12,8 @@ export {
   slotFactoryAbi,
 } from "./abis";
 export { metadataModuleAbi } from "./abis/metadata-module";
+export { feedModuleAbi } from "./abis/feed-module";
+export { feedRouterAbi } from "./abis/feed-router";
 
 // Re-export addresses and utilities
 export {
@@ -22,6 +24,8 @@ export {
   isSlotsHubDeployed,
   type SupportedChainId,
   slotFactoryAddress,
+  feedModuleAddress,
+  feedRouterAddress,
 } from "./addresses";
 
 /** Viem chain objects for known 0xSlots networks — add here when deploying to new chains */
