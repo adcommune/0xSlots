@@ -1,5 +1,12 @@
 # @adland/react
 
+## 0.16.8
+
+### Patch Changes
+
+- Updated dependencies [0c9cc04]
+  - @adland/data@0.15.0
+
 ## 0.16.7
 
 ### Patch Changes

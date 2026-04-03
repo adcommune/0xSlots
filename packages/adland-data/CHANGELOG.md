@@ -1,5 +1,11 @@
 # @adland/data
 
+## 0.15.0
+
+### Minor Changes
+
+- 0c9cc04: update route
+
 ## 0.14.3
 
 ### Patch Changes
