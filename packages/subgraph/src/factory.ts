@@ -118,14 +118,12 @@ export function handleModuleVerified(event: ModuleVerified): void {
   if (!module) {
     module = new Module(id);
     module.factory = event.address.toHexString();
+    module.totalFeesCollected = BigInt.zero();
   }
   module.verified = event.params.verified;
   module.name = event.params.name;
   module.version = event.params.version;
   module.feeBps = event.params.feeBps;
-  if (!module.totalFeesCollected) {
-    module.totalFeesCollected = BigInt.zero();
-  }
 
   let uri = event.params.moduleURI;
   module.moduleURI = uri;

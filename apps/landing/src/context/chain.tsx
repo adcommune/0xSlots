@@ -9,10 +9,9 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from "react";
-import { useAccount, useSwitchChain } from "wagmi";
+import { useSwitchChain } from "wagmi";
 import { getExplorerUrl } from "@/lib/config";
 
 interface ChainContextValue {
@@ -28,8 +27,6 @@ export function ChainProvider({ children }: { children: ReactNode }) {
     DEFAULT_CHAIN.id as SlotsChain,
   );
   const { mutate: switchWalletChain } = useSwitchChain();
-  const { chainId: walletChainId } = useAccount();
-  const isSwitching = useRef(false);
 
   // Read ?chain= search param on mount
   useEffect(() => {
@@ -39,27 +36,17 @@ export function ChainProvider({ children }: { children: ReactNode }) {
       const parsed = Number(chainParam);
       if (CHAINS.some((c) => c.id === parsed)) {
         setChainId(parsed as SlotsChain);
+        switchWalletChain({ chainId: parsed });
       }
     }
   }, []);
 
-  // Keep the connected wallet chain in sync with the selected chain.
-  useEffect(() => {
-    if (isSwitching.current || !walletChainId || walletChainId === chainId) {
-      return;
-    }
-    isSwitching.current = true;
-    switchWalletChain(
-      { chainId },
-      { onSettled: () => { isSwitching.current = false; } },
-    );
-  }, [chainId, walletChainId, switchWalletChain]);
-
   const setChain = useCallback(
     (id: number) => {
       setChainId(id as SlotsChain);
+      switchWalletChain({ chainId: id });
     },
-    [],
+    [switchWalletChain],
   );
 
   const explorerUrl = useMemo(() => getExplorerUrl(chainId), [chainId]);
