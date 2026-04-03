@@ -1,5 +1,11 @@
 # @0xslots/sdk
 
+## 0.13.0
+
+### Minor Changes
+
+- e27cc99: include full where filter in the metadata queries
+
 ## 0.12.0
 
 ### Minor Changes
