@@ -20,8 +20,3 @@ export function getExplorerUrl(chainId: number): string {
     "https://sepolia.basescan.org"
   );
 }
-
-export function parseChain(chain?: string): SlotsChain {
-  if (chain === "base-sepolia") return SlotsChain.BASE_SEPOLIA;
-  return SlotsChain.BASE_SEPOLIA;
-}
