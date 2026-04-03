@@ -166,6 +166,25 @@ templates:
           handler: handleMetadataUpdated
       file: ./src/metadata.ts
   - kind: ethereum
+    name: FeedPostModule
+    network: {{network}}
+    source:
+      abi: FeedPostModule
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - MetadataSlot
+        - MetadataUpdatedEvent
+      abis:
+        - name: FeedPostModule
+          file: ./abis/FeedPostModule.json
+      eventHandlers:
+        - event: MetadataUpdated(indexed address,string)
+          handler: handleMetadataUpdated
+      file: ./src/metadata.ts
+  - kind: ethereum
     name: ERC721Slots
     network: {{network}}
     source:

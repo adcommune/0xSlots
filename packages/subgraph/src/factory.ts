@@ -14,6 +14,7 @@ import {
 import {
   Slot as SlotTemplate,
   MetadataModule as MetadataModuleTemplate,
+  FeedPostModule as FeedPostModuleTemplate,
 } from "../generated/templates";
 import { Factory, Slot, Module, SlotDeployedEvent } from "../generated/schema";
 import {
@@ -106,6 +107,7 @@ export function handleSlotDeployed(event: SlotDeployed): void {
   // If the slot uses a module, start indexing MetadataUpdated events from it
   if (!moduleAddr.equals(Address.zero())) {
     MetadataModuleTemplate.create(moduleAddr);
+    FeedPostModuleTemplate.create(moduleAddr);
   }
 }
 
@@ -163,6 +165,18 @@ export function handleModuleVerified(event: ModuleVerified): void {
       event.params.module.toHexString(),
     ]);
     MetadataModuleTemplate.create(event.params.module);
+  }
+
+  // Also start indexing FeedPostModule instances
+  if (
+    event.params.verified &&
+    !wasVerified &&
+    event.params.name == "FeedPostModule"
+  ) {
+    log.info("Creating FeedPostModule template at address {}", [
+      event.params.module.toHexString(),
+    ]);
+    FeedPostModuleTemplate.create(event.params.module);
   }
 }
 

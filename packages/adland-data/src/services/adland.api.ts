@@ -5,7 +5,6 @@ import type {
   MiniappMetadata,
   ProfileMetadata,
   TokenMetadata,
-  TweetData,
 } from "../types";
 
 const baseUrl = `${adlandApiUrl}/adland`;

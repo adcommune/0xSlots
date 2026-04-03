@@ -30,6 +30,20 @@ export class MetadataModule extends DataSourceTemplate {
   }
 }
 
+export class FeedPostModule extends DataSourceTemplate {
+  static create(address: Address): void {
+    DataSourceTemplate.create("FeedPostModule", [address.toHex()]);
+  }
+
+  static createWithContext(address: Address, context: DataSourceContext): void {
+    DataSourceTemplate.createWithContext(
+      "FeedPostModule",
+      [address.toHex()],
+      context,
+    );
+  }
+}
+
 export class ERC721Slots extends DataSourceTemplate {
   static create(address: Address): void {
     DataSourceTemplate.create("ERC721Slots", [address.toHex()]);
