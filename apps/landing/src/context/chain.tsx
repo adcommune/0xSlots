@@ -9,9 +9,8 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useState,
 } from "react";
-import { useSwitchChain } from "wagmi";
+import { useAccount, useSwitchChain } from "wagmi";
 import { getExplorerUrl } from "@/lib/config";
 
 interface ChainContextValue {
@@ -20,47 +19,38 @@ interface ChainContextValue {
   setChain: (chainId: number) => void;
 }
 
-const CHAIN_STORAGE_KEY = "0xslots:chainId";
-
-function getInitialChain(): SlotsChain {
-  if (typeof window === "undefined") return DEFAULT_CHAIN.id as SlotsChain;
-
-  // Query param takes priority
-  const params = new URLSearchParams(window.location.search);
-  const chainParam = params.get("chain");
-  if (chainParam) {
-    const parsed = Number(chainParam);
-    if (CHAINS.some((c) => c.id === parsed)) return parsed as SlotsChain;
-  }
-
-  // Then localStorage
-  const stored = localStorage.getItem(CHAIN_STORAGE_KEY);
-  if (stored) {
-    const parsed = Number(stored);
-    if (CHAINS.some((c) => c.id === parsed)) return parsed as SlotsChain;
-  }
-
-  return DEFAULT_CHAIN.id as SlotsChain;
-}
-
 const ChainContext = createContext<ChainContextValue | null>(null);
 
-export function ChainProvider({ children }: { children: ReactNode }) {
-  const [chainId, setChainId] = useState<SlotsChain>(getInitialChain);
-  const { mutate: switchWalletChain } = useSwitchChain();
+function isSupportedChain(id: number): id is SlotsChain {
+  return CHAINS.some((c) => c.id === id);
+}
 
-  // Sync wallet to the initial chain on mount
+export function ChainProvider({ children }: { children: ReactNode }) {
+  const { chainId: walletChainId } = useAccount();
+  const { mutate: switchChain } = useSwitchChain();
+
+  const chainId: SlotsChain =
+    walletChainId && isSupportedChain(walletChainId)
+      ? walletChainId
+      : (DEFAULT_CHAIN.id as SlotsChain);
+
+  // Handle ?chain= query param on mount
   useEffect(() => {
-    switchWalletChain({ chainId });
+    const params = new URLSearchParams(window.location.search);
+    const chainParam = params.get("chain");
+    if (chainParam) {
+      const parsed = Number(chainParam);
+      if (isSupportedChain(parsed) && parsed !== walletChainId) {
+        switchChain({ chainId: parsed });
+      }
+    }
   }, []);
 
   const setChain = useCallback(
     (id: number) => {
-      setChainId(id as SlotsChain);
-      localStorage.setItem(CHAIN_STORAGE_KEY, String(id));
-      switchWalletChain({ chainId: id });
+      switchChain({ chainId: id });
     },
-    [switchWalletChain],
+    [switchChain],
   );
 
   const explorerUrl = useMemo(() => getExplorerUrl(chainId), [chainId]);
