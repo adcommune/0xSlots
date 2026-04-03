@@ -1,5 +1,11 @@
 # @0xslots/contracts
 
+## 0.9.0
+
+### Minor Changes
+
+- 5ed4d22: include feed router & feed module functions to 0xSlots sdks
+
 ## 0.8.1
 
 ### Patch Changes
