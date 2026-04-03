@@ -25,7 +25,7 @@ export default function Home() {
               Explorer
             </h1>
             <p className="text-muted-foreground text-xs">
-              {chain && `${chain?.name} •`} v3
+              {chain && `${chain?.name}`}
             </p>
           </div>
           <div className="hidden md:flex w-px h-6 bg-border" />
