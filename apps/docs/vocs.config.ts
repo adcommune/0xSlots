@@ -19,6 +19,10 @@ export default defineConfig({
       text: "GitHub",
       link: "https://github.com/nezz0746/0xSlots",
     },
+    {
+      text: "Telegram",
+      link: "https://t.me/+AQ3SdkC0SCM4NTdk",
+    },
   ],
   sidebar: [
     {
