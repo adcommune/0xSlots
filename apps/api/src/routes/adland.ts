@@ -4,6 +4,7 @@ import { erc20Abi } from "viem";
 import { neynar } from "../services/neynar";
 import { getChainClient } from "@0xslots/config";
 import { extractTweetId, fetchTweet } from "../services/twitter";
+import { Cast } from "@neynar/nodejs-sdk/build/api";
 
 const alchemyKey = process.env.ALCHEMY_KEY as string;
 
@@ -37,8 +38,7 @@ app.get("/tweet", async (c) => {
     console.error("[adland] Error fetching tweet:", error);
     return c.json(
       {
-        error:
-          error instanceof Error ? error.message : "Failed to fetch tweet",
+        error: error instanceof Error ? error.message : "Failed to fetch tweet",
       },
       500,
     );
@@ -49,14 +49,23 @@ app.get("/tweet", async (c) => {
 
 app.post("/verify/cast", async (c) => {
   try {
-    const { hash } = await c.req.json();
+    const { hash, url } = await c.req.json();
 
-    if (!hash) {
+    if (!hash && !url) {
       return c.json({ verified: false });
     }
 
-    const response = await neynar.fetchBulkCasts({ casts: [hash] });
-    const cast = response.result?.casts?.[0];
+    let cast: Cast | undefined;
+    if (url) {
+      const response = await neynar.lookupCastByHashOrUrl({
+        identifier: url,
+        type: "url",
+      });
+      cast = response?.cast;
+    } else {
+      const response = await neynar.fetchBulkCasts({ casts: [hash] });
+      cast = response.result?.casts?.[0];
+    }
 
     if (!cast) {
       return c.json({ verified: false });
@@ -196,12 +205,24 @@ app.post("/verify/tweet", async (c) => {
 
 app.get("/metadata/cast", async (c) => {
   try {
-    const { hash } = c.req.query();
-    if (!hash) {
-      return c.json({ error: "Hash is required" }, 400);
+    const { hash, url } = c.req.query();
+
+    if (!hash && !url) {
+      return c.json({ error: "Hash or url is required" }, 400);
     }
-    const response = await neynar.fetchBulkCasts({ casts: [hash] });
-    const cast = response.result?.casts?.[0];
+
+    let cast: Cast | undefined;
+    if (url) {
+      const response = await neynar.lookupCastByHashOrUrl({
+        identifier: url,
+        type: "url",
+      });
+      cast = response?.cast;
+    } else {
+      const response = await neynar.fetchBulkCasts({ casts: [hash] });
+      cast = response.result?.casts?.[0];
+    }
+
     if (!cast) {
       return c.json({ error: "Cast not found" }, 404);
     }
