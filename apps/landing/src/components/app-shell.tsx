@@ -2,7 +2,7 @@
 
 import { CHAINS } from "@0xslots/contracts";
 import sdk from "@farcaster/miniapp-sdk";
-import { BookOpen, Check, ChevronDown, Menu, User } from "lucide-react";
+import { BookOpen, Check, ChevronDown, Github, Menu, Send, User } from "lucide-react";
 import Image from "next/image";
 import { NavLink } from "@/context/navigation";
 import type { ReactNode } from "react";
@@ -12,6 +12,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { UserMenu } from "@/components/user-menu";
@@ -86,6 +87,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <User className="size-4" />
           My Slots
         </DropdownMenuItem>
+        <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={() => {
             if (isMiniApp) {
@@ -97,6 +99,30 @@ export function AppShell({ children }: { children: ReactNode }) {
         >
           <BookOpen className="size-4" />
           Docs
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => {
+            if (isMiniApp) {
+              sdk.actions.openUrl("https://github.com/adcommune/0xSlots");
+            } else {
+              window.open("https://github.com/adcommune/0xSlots", "_blank");
+            }
+          }}
+        >
+          <Github className="size-4" />
+          GitHub
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => {
+            if (isMiniApp) {
+              sdk.actions.openUrl("https://t.me/+AQ3SdkC0SCM4NTdk");
+            } else {
+              window.open("https://t.me/+AQ3SdkC0SCM4NTdk", "_blank");
+            }
+          }}
+        >
+          <Send className="size-4" />
+          Telegram
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -159,22 +185,22 @@ export function AppShell({ children }: { children: ReactNode }) {
       <footer className="hidden md:block px-6 py-6 border-t">
         <div className="max-w-5xl mx-auto flex justify-between items-center text-sm text-muted-foreground">
           <span>0xSlots</span>
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-3">
             <a
               href="https://github.com/adcommune/0xSlots"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-foreground transition-colors"
             >
-              GitHub
+              <Github className="size-4" />
             </a>
             <a
-              href="https://github.com/adcommune"
+              href="https://t.me/+AQ3SdkC0SCM4NTdk"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-foreground transition-colors"
             >
-              adcommune
+              <Send className="size-4" />
             </a>
           </div>
         </div>

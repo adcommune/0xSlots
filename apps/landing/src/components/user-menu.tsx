@@ -7,8 +7,10 @@ import {
   BookOpen,
   Check,
   Copy,
+  Github,
   LogOut,
   Network,
+  Send,
   User,
   Wallet,
 } from "lucide-react";
@@ -122,18 +124,6 @@ function DisconnectedMenu({
               <Wallet className="size-4" />
               Connect Wallet
             </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => {
-                if (isMiniApp) {
-                  sdk.actions.openUrl("https://docs.0xslots.org");
-                } else {
-                  window.open("https://docs.0xslots.org", "_blank");
-                }
-              }}
-            >
-              <BookOpen className="size-4" />
-              Docs
-            </DropdownMenuItem>
             <DropdownMenuSub>
               <DropdownMenuSubTrigger>
                 <Network className="size-4" />
@@ -156,6 +146,45 @@ function DisconnectedMenu({
                 ))}
               </DropdownMenuSubContent>
             </DropdownMenuSub>
+          </DropdownMenuGroup>
+          <DropdownMenuSeparator />
+          <DropdownMenuGroup>
+            <DropdownMenuItem
+              onClick={() => {
+                if (isMiniApp) {
+                  sdk.actions.openUrl("https://docs.0xslots.org");
+                } else {
+                  window.open("https://docs.0xslots.org", "_blank");
+                }
+              }}
+            >
+              <BookOpen className="size-4" />
+              Docs
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                if (isMiniApp) {
+                  sdk.actions.openUrl("https://github.com/adcommune/0xSlots");
+                } else {
+                  window.open("https://github.com/adcommune/0xSlots", "_blank");
+                }
+              }}
+            >
+              <Github className="size-4" />
+              GitHub
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                if (isMiniApp) {
+                  sdk.actions.openUrl("https://t.me/+AQ3SdkC0SCM4NTdk");
+                } else {
+                  window.open("https://t.me/+AQ3SdkC0SCM4NTdk", "_blank");
+                }
+              }}
+            >
+              <Send className="size-4" />
+              Telegram
+            </DropdownMenuItem>
           </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -270,18 +299,6 @@ function ConnectedMenu({
             <User className="size-4" />
             My Slots
           </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => {
-              if (isMiniApp) {
-                sdk.actions.openUrl("https://docs.0xslots.org");
-              } else {
-                window.open("https://docs.0xslots.org", "_blank");
-              }
-            }}
-          >
-            <BookOpen className="size-4" />
-            Docs
-          </DropdownMenuItem>
           <DropdownMenuSub>
             <DropdownMenuSubTrigger>
               <Network className="size-4" />
@@ -304,6 +321,47 @@ function ConnectedMenu({
               ))}
             </DropdownMenuSubContent>
           </DropdownMenuSub>
+        </DropdownMenuGroup>
+
+        <DropdownMenuSeparator />
+
+        <DropdownMenuGroup>
+          <DropdownMenuItem
+            onClick={() => {
+              if (isMiniApp) {
+                sdk.actions.openUrl("https://docs.0xslots.org");
+              } else {
+                window.open("https://docs.0xslots.org", "_blank");
+              }
+            }}
+          >
+            <BookOpen className="size-4" />
+            Docs
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => {
+              if (isMiniApp) {
+                sdk.actions.openUrl("https://github.com/adcommune/0xSlots");
+              } else {
+                window.open("https://github.com/adcommune/0xSlots", "_blank");
+              }
+            }}
+          >
+            <Github className="size-4" />
+            GitHub
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => {
+              if (isMiniApp) {
+                sdk.actions.openUrl("https://t.me/+AQ3SdkC0SCM4NTdk");
+              } else {
+                window.open("https://t.me/+AQ3SdkC0SCM4NTdk", "_blank");
+              }
+            }}
+          >
+            <Send className="size-4" />
+            Telegram
+          </DropdownMenuItem>
         </DropdownMenuGroup>
 
         <DropdownMenuSeparator />
