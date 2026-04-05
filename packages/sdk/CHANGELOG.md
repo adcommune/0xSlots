@@ -1,5 +1,11 @@
 # @0xslots/sdk
 
+## 0.13.1
+
+### Patch Changes
+
+- 54e266f: add module data in getSlotsMetadata query
+
 ## 0.13.0
 
 ### Minor Changes
