@@ -60,8 +60,7 @@ export class FeedModuleClient {
 
   private get chain(): Chain {
     const chain = this.wallet.chain;
-    if (!chain)
-      throw new SlotsError("feed", "WalletClient must have a chain");
+    if (!chain) throw new SlotsError("feed", "WalletClient must have a chain");
     return chain;
   }
 
@@ -117,9 +116,7 @@ export class FeedModuleClient {
 
   /** Get a single metadata slot by slot address. */
   getSlot(...args: Parameters<ReturnType<typeof getSdk>["GetMetadataSlot"]>) {
-    return this.query("feed.getSlot", () =>
-      this.sdk.GetMetadataSlot(...args),
-    );
+    return this.query("feed.getSlot", () => this.sdk.GetMetadataSlot(...args));
   }
 
   /** Get metadata update history for a slot. */

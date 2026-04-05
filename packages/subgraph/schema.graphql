@@ -72,6 +72,21 @@ type Slot @entity(immutable: false) {
   metadataUpdates: [MetadataUpdatedEvent!]! @derivedFrom(field: "slot")
 }
 
+type Module @entity(immutable: false) {
+  id: ID! # module address
+  factory: Factory!
+  verified: Boolean!
+  name: String!
+  version: String!
+  feeBps: BigInt!
+  moduleURI: String
+  image: String
+  description: String
+  totalFeesCollected: BigInt!
+  feePayments: [ModuleFeePaidEvent!]! @derivedFrom(field: "module")
+}
+
+
 # ──────────────────────────────────────────
 # Metadata (mutable, one per slot with a MetadataModule)
 # ──────────────────────────────────────────
@@ -285,16 +300,3 @@ type NFTToken @entity(immutable: false) {
   mintedTx: Bytes!
 }
 
-type Module @entity(immutable: false) {
-  id: ID! # module address
-  factory: Factory!
-  verified: Boolean!
-  name: String!
-  version: String!
-  feeBps: BigInt!
-  moduleURI: String
-  image: String
-  description: String
-  totalFeesCollected: BigInt!
-  feePayments: [ModuleFeePaidEvent!]! @derivedFrom(field: "module")
-}

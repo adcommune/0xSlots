@@ -4190,7 +4190,7 @@ export type GetModulesQueryVariables = Exact<{
 
 export type GetModulesQuery = { __typename?: 'Query', modules: Array<{ __typename?: 'Module', id: string, verified: boolean, name: string, version: string, feeBps: string, moduleURI?: string | null, image?: string | null, description?: string | null, totalFeesCollected: string }> };
 
-export type MetadataSlotFieldsFragment = { __typename?: 'MetadataSlot', id: string, uri: string, rawJson?: string | null, adType?: string | null, updatedBy: string, updateCount: string, createdAt: string, createdTx: string, updatedAt: string, updatedTx: string, slot: { __typename?: 'Slot', id: string, recipient: string, occupant?: string | null, price: string, deposit: string, currency: { __typename?: 'Currency', id: string, symbol?: string | null, decimals: number } } };
+export type MetadataSlotFieldsFragment = { __typename?: 'MetadataSlot', id: string, uri: string, rawJson?: string | null, adType?: string | null, updatedBy: string, updateCount: string, createdAt: string, createdTx: string, updatedAt: string, updatedTx: string, slot: { __typename?: 'Slot', id: string, recipient: string, occupant?: string | null, price: string, deposit: string, currency: { __typename?: 'Currency', id: string, symbol?: string | null, decimals: number }, module?: { __typename?: 'Module', id: string, verified: boolean, name: string, version: string } | null } };
 
 export type GetMetadataSlotsQueryVariables = Exact<{
   first?: InputMaybe<Scalars['Int']['input']>;
@@ -4201,14 +4201,14 @@ export type GetMetadataSlotsQueryVariables = Exact<{
 }>;
 
 
-export type GetMetadataSlotsQuery = { __typename?: 'Query', metadataSlots: Array<{ __typename?: 'MetadataSlot', id: string, uri: string, rawJson?: string | null, adType?: string | null, updatedBy: string, updateCount: string, createdAt: string, createdTx: string, updatedAt: string, updatedTx: string, slot: { __typename?: 'Slot', id: string, recipient: string, occupant?: string | null, price: string, deposit: string, currency: { __typename?: 'Currency', id: string, symbol?: string | null, decimals: number } } }> };
+export type GetMetadataSlotsQuery = { __typename?: 'Query', metadataSlots: Array<{ __typename?: 'MetadataSlot', id: string, uri: string, rawJson?: string | null, adType?: string | null, updatedBy: string, updateCount: string, createdAt: string, createdTx: string, updatedAt: string, updatedTx: string, slot: { __typename?: 'Slot', id: string, recipient: string, occupant?: string | null, price: string, deposit: string, currency: { __typename?: 'Currency', id: string, symbol?: string | null, decimals: number }, module?: { __typename?: 'Module', id: string, verified: boolean, name: string, version: string } | null } }> };
 
 export type GetMetadataSlotQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type GetMetadataSlotQuery = { __typename?: 'Query', metadataSlot?: { __typename?: 'MetadataSlot', id: string, uri: string, rawJson?: string | null, adType?: string | null, updatedBy: string, updateCount: string, createdAt: string, createdTx: string, updatedAt: string, updatedTx: string, slot: { __typename?: 'Slot', id: string, recipient: string, occupant?: string | null, price: string, deposit: string, currency: { __typename?: 'Currency', id: string, symbol?: string | null, decimals: number } } } | null };
+export type GetMetadataSlotQuery = { __typename?: 'Query', metadataSlot?: { __typename?: 'MetadataSlot', id: string, uri: string, rawJson?: string | null, adType?: string | null, updatedBy: string, updateCount: string, createdAt: string, createdTx: string, updatedAt: string, updatedTx: string, slot: { __typename?: 'Slot', id: string, recipient: string, occupant?: string | null, price: string, deposit: string, currency: { __typename?: 'Currency', id: string, symbol?: string | null, decimals: number }, module?: { __typename?: 'Module', id: string, verified: boolean, name: string, version: string } | null } } | null };
 
 export type GetMetadataSlotsByRecipientQueryVariables = Exact<{
   recipient: Scalars['Bytes']['input'];
@@ -4216,7 +4216,7 @@ export type GetMetadataSlotsByRecipientQueryVariables = Exact<{
 }>;
 
 
-export type GetMetadataSlotsByRecipientQuery = { __typename?: 'Query', metadataSlots: Array<{ __typename?: 'MetadataSlot', id: string, uri: string, rawJson?: string | null, adType?: string | null, updatedBy: string, updateCount: string, createdAt: string, createdTx: string, updatedAt: string, updatedTx: string, slot: { __typename?: 'Slot', id: string, recipient: string, occupant?: string | null, price: string, deposit: string, currency: { __typename?: 'Currency', id: string, symbol?: string | null, decimals: number } } }> };
+export type GetMetadataSlotsByRecipientQuery = { __typename?: 'Query', metadataSlots: Array<{ __typename?: 'MetadataSlot', id: string, uri: string, rawJson?: string | null, adType?: string | null, updatedBy: string, updateCount: string, createdAt: string, createdTx: string, updatedAt: string, updatedTx: string, slot: { __typename?: 'Slot', id: string, recipient: string, occupant?: string | null, price: string, deposit: string, currency: { __typename?: 'Currency', id: string, symbol?: string | null, decimals: number }, module?: { __typename?: 'Module', id: string, verified: boolean, name: string, version: string } | null } }> };
 
 export type GetMetadataUpdatedEventsQueryVariables = Exact<{
   first?: InputMaybe<Scalars['Int']['input']>;
@@ -4319,6 +4319,12 @@ export const MetadataSlotFieldsFragmentDoc = gql`
       id
       symbol
       decimals
+    }
+    module {
+      id
+      verified
+      name
+      version
     }
   }
 }

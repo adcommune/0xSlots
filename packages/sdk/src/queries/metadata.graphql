@@ -20,6 +20,12 @@ fragment MetadataSlotFields on MetadataSlot {
       symbol
       decimals
     }
+    module {
+      id
+      verified
+      name
+      version
+    }
   }
 }
 
