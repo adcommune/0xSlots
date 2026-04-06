@@ -43,8 +43,22 @@ query GetSlotDeployedEvents(
   }
 }
 
-query GetRecentEvents($first: Int!, $skip: Int, $slots: [String!]) {
-  slotDeployedEvents(first: $first, skip: $skip, orderBy: timestamp, orderDirection: desc, where: { slot_in: $slots }) {
+query GetRecentEvents(
+  $first: Int!
+  $skip: Int
+  $whereDeployed: SlotDeployedEvent_filter
+  $whereBought: BoughtEvent_filter
+  $whereReleased: ReleasedEvent_filter
+  $whereLiquidated: LiquidatedEvent_filter
+  $wherePriceUpdated: PriceUpdatedEvent_filter
+  $whereDeposited: DepositedEvent_filter
+  $whereWithdrawn: WithdrawnEvent_filter
+  $whereTaxCollected: TaxCollectedEvent_filter
+  $whereTaxUpdateProposed: TaxUpdateProposedEvent_filter
+  $whereModuleUpdateProposed: ModuleUpdateProposedEvent_filter
+  $wherePendingUpdateCancelled: PendingUpdateCancelledEvent_filter
+) {
+  slotDeployedEvents(first: $first, skip: $skip, orderBy: timestamp, orderDirection: desc, where: $whereDeployed) {
     id
     slot { id }
     recipient
@@ -53,7 +67,7 @@ query GetRecentEvents($first: Int!, $skip: Int, $slots: [String!]) {
     timestamp
     tx
   }
-  boughtEvents(first: $first, skip: $skip, orderBy: timestamp, orderDirection: desc, where: { slot_in: $slots }) {
+  boughtEvents(first: $first, skip: $skip, orderBy: timestamp, orderDirection: desc, where: $whereBought) {
     id
     slot { id }
     currency { ...CurrencyFields }
@@ -65,7 +79,7 @@ query GetRecentEvents($first: Int!, $skip: Int, $slots: [String!]) {
     timestamp
     tx
   }
-  releasedEvents(first: $first, skip: $skip, orderBy: timestamp, orderDirection: desc, where: { slot_in: $slots }) {
+  releasedEvents(first: $first, skip: $skip, orderBy: timestamp, orderDirection: desc, where: $whereReleased) {
     id
     slot { id }
     currency { ...CurrencyFields }
@@ -74,7 +88,7 @@ query GetRecentEvents($first: Int!, $skip: Int, $slots: [String!]) {
     timestamp
     tx
   }
-  liquidatedEvents(first: $first, skip: $skip, orderBy: timestamp, orderDirection: desc, where: { slot_in: $slots }) {
+  liquidatedEvents(first: $first, skip: $skip, orderBy: timestamp, orderDirection: desc, where: $whereLiquidated) {
     id
     slot { id }
     currency { ...CurrencyFields }
@@ -84,7 +98,7 @@ query GetRecentEvents($first: Int!, $skip: Int, $slots: [String!]) {
     timestamp
     tx
   }
-  priceUpdatedEvents(first: $first, skip: $skip, orderBy: timestamp, orderDirection: desc, where: { slot_in: $slots }) {
+  priceUpdatedEvents(first: $first, skip: $skip, orderBy: timestamp, orderDirection: desc, where: $wherePriceUpdated) {
     id
     slot { id }
     currency { ...CurrencyFields }
@@ -93,7 +107,7 @@ query GetRecentEvents($first: Int!, $skip: Int, $slots: [String!]) {
     timestamp
     tx
   }
-  depositedEvents(first: $first, skip: $skip, orderBy: timestamp, orderDirection: desc, where: { slot_in: $slots }) {
+  depositedEvents(first: $first, skip: $skip, orderBy: timestamp, orderDirection: desc, where: $whereDeposited) {
     id
     slot { id }
     currency { ...CurrencyFields }
@@ -102,7 +116,7 @@ query GetRecentEvents($first: Int!, $skip: Int, $slots: [String!]) {
     timestamp
     tx
   }
-  withdrawnEvents(first: $first, skip: $skip, orderBy: timestamp, orderDirection: desc, where: { slot_in: $slots }) {
+  withdrawnEvents(first: $first, skip: $skip, orderBy: timestamp, orderDirection: desc, where: $whereWithdrawn) {
     id
     slot { id }
     currency { ...CurrencyFields }
@@ -111,7 +125,7 @@ query GetRecentEvents($first: Int!, $skip: Int, $slots: [String!]) {
     timestamp
     tx
   }
-  taxCollectedEvents(first: $first, skip: $skip, orderBy: timestamp, orderDirection: desc, where: { slot_in: $slots }) {
+  taxCollectedEvents(first: $first, skip: $skip, orderBy: timestamp, orderDirection: desc, where: $whereTaxCollected) {
     id
     slot { id }
     currency { ...CurrencyFields }
@@ -120,21 +134,21 @@ query GetRecentEvents($first: Int!, $skip: Int, $slots: [String!]) {
     timestamp
     tx
   }
-  taxUpdateProposedEvents(first: $first, skip: $skip, orderBy: timestamp, orderDirection: desc, where: { slot_in: $slots }) {
+  taxUpdateProposedEvents(first: $first, skip: $skip, orderBy: timestamp, orderDirection: desc, where: $whereTaxUpdateProposed) {
     id
     slot { id }
     newPercentage
     timestamp
     tx
   }
-  moduleUpdateProposedEvents(first: $first, skip: $skip, orderBy: timestamp, orderDirection: desc, where: { slot_in: $slots }) {
+  moduleUpdateProposedEvents(first: $first, skip: $skip, orderBy: timestamp, orderDirection: desc, where: $whereModuleUpdateProposed) {
     id
     slot { id }
     newModule
     timestamp
     tx
   }
-  pendingUpdateCancelledEvents(first: $first, skip: $skip, orderBy: timestamp, orderDirection: desc, where: { slot_in: $slots }) {
+  pendingUpdateCancelledEvents(first: $first, skip: $skip, orderBy: timestamp, orderDirection: desc, where: $wherePendingUpdateCancelled) {
     id
     slot { id }
     timestamp

@@ -4068,7 +4068,17 @@ export type GetSlotDeployedEventsQuery = { __typename?: 'Query', slotDeployedEve
 export type GetRecentEventsQueryVariables = Exact<{
   first: Scalars['Int']['input'];
   skip?: InputMaybe<Scalars['Int']['input']>;
-  slots?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
+  whereDeployed?: InputMaybe<SlotDeployedEvent_Filter>;
+  whereBought?: InputMaybe<BoughtEvent_Filter>;
+  whereReleased?: InputMaybe<ReleasedEvent_Filter>;
+  whereLiquidated?: InputMaybe<LiquidatedEvent_Filter>;
+  wherePriceUpdated?: InputMaybe<PriceUpdatedEvent_Filter>;
+  whereDeposited?: InputMaybe<DepositedEvent_Filter>;
+  whereWithdrawn?: InputMaybe<WithdrawnEvent_Filter>;
+  whereTaxCollected?: InputMaybe<TaxCollectedEvent_Filter>;
+  whereTaxUpdateProposed?: InputMaybe<TaxUpdateProposedEvent_Filter>;
+  whereModuleUpdateProposed?: InputMaybe<ModuleUpdateProposedEvent_Filter>;
+  wherePendingUpdateCancelled?: InputMaybe<PendingUpdateCancelledEvent_Filter>;
 }>;
 
 
@@ -4433,13 +4443,13 @@ export const GetSlotDeployedEventsDocument = gql`
 }
     ${CurrencyFieldsFragmentDoc}`;
 export const GetRecentEventsDocument = gql`
-    query GetRecentEvents($first: Int!, $skip: Int, $slots: [String!]) {
+    query GetRecentEvents($first: Int!, $skip: Int, $whereDeployed: SlotDeployedEvent_filter, $whereBought: BoughtEvent_filter, $whereReleased: ReleasedEvent_filter, $whereLiquidated: LiquidatedEvent_filter, $wherePriceUpdated: PriceUpdatedEvent_filter, $whereDeposited: DepositedEvent_filter, $whereWithdrawn: WithdrawnEvent_filter, $whereTaxCollected: TaxCollectedEvent_filter, $whereTaxUpdateProposed: TaxUpdateProposedEvent_filter, $whereModuleUpdateProposed: ModuleUpdateProposedEvent_filter, $wherePendingUpdateCancelled: PendingUpdateCancelledEvent_filter) {
   slotDeployedEvents(
     first: $first
     skip: $skip
     orderBy: timestamp
     orderDirection: desc
-    where: {slot_in: $slots}
+    where: $whereDeployed
   ) {
     id
     slot {
@@ -4458,7 +4468,7 @@ export const GetRecentEventsDocument = gql`
     skip: $skip
     orderBy: timestamp
     orderDirection: desc
-    where: {slot_in: $slots}
+    where: $whereBought
   ) {
     id
     slot {
@@ -4480,7 +4490,7 @@ export const GetRecentEventsDocument = gql`
     skip: $skip
     orderBy: timestamp
     orderDirection: desc
-    where: {slot_in: $slots}
+    where: $whereReleased
   ) {
     id
     slot {
@@ -4499,7 +4509,7 @@ export const GetRecentEventsDocument = gql`
     skip: $skip
     orderBy: timestamp
     orderDirection: desc
-    where: {slot_in: $slots}
+    where: $whereLiquidated
   ) {
     id
     slot {
@@ -4519,7 +4529,7 @@ export const GetRecentEventsDocument = gql`
     skip: $skip
     orderBy: timestamp
     orderDirection: desc
-    where: {slot_in: $slots}
+    where: $wherePriceUpdated
   ) {
     id
     slot {
@@ -4538,7 +4548,7 @@ export const GetRecentEventsDocument = gql`
     skip: $skip
     orderBy: timestamp
     orderDirection: desc
-    where: {slot_in: $slots}
+    where: $whereDeposited
   ) {
     id
     slot {
@@ -4557,7 +4567,7 @@ export const GetRecentEventsDocument = gql`
     skip: $skip
     orderBy: timestamp
     orderDirection: desc
-    where: {slot_in: $slots}
+    where: $whereWithdrawn
   ) {
     id
     slot {
@@ -4576,7 +4586,7 @@ export const GetRecentEventsDocument = gql`
     skip: $skip
     orderBy: timestamp
     orderDirection: desc
-    where: {slot_in: $slots}
+    where: $whereTaxCollected
   ) {
     id
     slot {
@@ -4595,7 +4605,7 @@ export const GetRecentEventsDocument = gql`
     skip: $skip
     orderBy: timestamp
     orderDirection: desc
-    where: {slot_in: $slots}
+    where: $whereTaxUpdateProposed
   ) {
     id
     slot {
@@ -4610,7 +4620,7 @@ export const GetRecentEventsDocument = gql`
     skip: $skip
     orderBy: timestamp
     orderDirection: desc
-    where: {slot_in: $slots}
+    where: $whereModuleUpdateProposed
   ) {
     id
     slot {
@@ -4625,7 +4635,7 @@ export const GetRecentEventsDocument = gql`
     skip: $skip
     orderBy: timestamp
     orderDirection: desc
-    where: {slot_in: $slots}
+    where: $wherePendingUpdateCancelled
   ) {
     id
     slot {
