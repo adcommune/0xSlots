@@ -391,6 +391,24 @@ export class SlotsClient {
     );
   }
 
+  /**
+   * Read full slot info for multiple slots in a single RPC call via multicall.
+   * @param slots - Array of slot contract addresses.
+   * @returns Array of results matching the input order.
+   * @throws {SlotsError} If the multicall fails.
+   */
+  getSlotsInfo(slots: Address[]) {
+    return this.query("getSlotsInfo", () =>
+      this.publicClient.multicall({
+        contracts: slots.map((address) => ({
+          address,
+          abi: slotAbi,
+          functionName: "getSlotInfo" as const,
+        })),
+      }),
+    );
+  }
+
   // ═══════════════════════════════════════════════════════════════════════════
   // WRITE — Factory Functions
   // ═══════════════════════════════════════════════════════════════════════════
