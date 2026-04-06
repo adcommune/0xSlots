@@ -4068,6 +4068,7 @@ export type GetSlotDeployedEventsQuery = { __typename?: 'Query', slotDeployedEve
 export type GetRecentEventsQueryVariables = Exact<{
   first: Scalars['Int']['input'];
   skip?: InputMaybe<Scalars['Int']['input']>;
+  slots?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
 }>;
 
 
@@ -4432,12 +4433,13 @@ export const GetSlotDeployedEventsDocument = gql`
 }
     ${CurrencyFieldsFragmentDoc}`;
 export const GetRecentEventsDocument = gql`
-    query GetRecentEvents($first: Int!, $skip: Int) {
+    query GetRecentEvents($first: Int!, $skip: Int, $slots: [String!]) {
   slotDeployedEvents(
     first: $first
     skip: $skip
     orderBy: timestamp
     orderDirection: desc
+    where: {slot_in: $slots}
   ) {
     id
     slot {
@@ -4456,6 +4458,7 @@ export const GetRecentEventsDocument = gql`
     skip: $skip
     orderBy: timestamp
     orderDirection: desc
+    where: {slot_in: $slots}
   ) {
     id
     slot {
@@ -4477,6 +4480,7 @@ export const GetRecentEventsDocument = gql`
     skip: $skip
     orderBy: timestamp
     orderDirection: desc
+    where: {slot_in: $slots}
   ) {
     id
     slot {
@@ -4495,6 +4499,7 @@ export const GetRecentEventsDocument = gql`
     skip: $skip
     orderBy: timestamp
     orderDirection: desc
+    where: {slot_in: $slots}
   ) {
     id
     slot {
@@ -4514,6 +4519,7 @@ export const GetRecentEventsDocument = gql`
     skip: $skip
     orderBy: timestamp
     orderDirection: desc
+    where: {slot_in: $slots}
   ) {
     id
     slot {
@@ -4532,6 +4538,7 @@ export const GetRecentEventsDocument = gql`
     skip: $skip
     orderBy: timestamp
     orderDirection: desc
+    where: {slot_in: $slots}
   ) {
     id
     slot {
@@ -4550,6 +4557,7 @@ export const GetRecentEventsDocument = gql`
     skip: $skip
     orderBy: timestamp
     orderDirection: desc
+    where: {slot_in: $slots}
   ) {
     id
     slot {
@@ -4568,6 +4576,7 @@ export const GetRecentEventsDocument = gql`
     skip: $skip
     orderBy: timestamp
     orderDirection: desc
+    where: {slot_in: $slots}
   ) {
     id
     slot {
@@ -4586,6 +4595,7 @@ export const GetRecentEventsDocument = gql`
     skip: $skip
     orderBy: timestamp
     orderDirection: desc
+    where: {slot_in: $slots}
   ) {
     id
     slot {
@@ -4600,6 +4610,7 @@ export const GetRecentEventsDocument = gql`
     skip: $skip
     orderBy: timestamp
     orderDirection: desc
+    where: {slot_in: $slots}
   ) {
     id
     slot {
@@ -4614,6 +4625,7 @@ export const GetRecentEventsDocument = gql`
     skip: $skip
     orderBy: timestamp
     orderDirection: desc
+    where: {slot_in: $slots}
   ) {
     id
     slot {
