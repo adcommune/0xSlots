@@ -1,5 +1,11 @@
 # @0xslots/sdk
 
+## 0.13.4
+
+### Patch Changes
+
+- 341f244: fix: bad slots event filtering
+
 ## 0.13.3
 
 ### Patch Changes
