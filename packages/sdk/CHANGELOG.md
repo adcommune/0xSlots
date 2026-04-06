@@ -1,5 +1,11 @@
 # @0xslots/sdk
 
+## 0.13.2
+
+### Patch Changes
+
+- 09a62ec: add getSlotsInfo method
+
 ## 0.13.1
 
 ### Patch Changes
