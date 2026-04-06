@@ -1,5 +1,11 @@
 # @0xslots/sdk
 
+## 0.13.3
+
+### Patch Changes
+
+- f28499a: add slot ids in recentEventsQuery
+
 ## 0.13.2
 
 ### Patch Changes
