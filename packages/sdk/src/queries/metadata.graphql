@@ -15,6 +15,7 @@ fragment MetadataSlotFields on MetadataSlot {
     occupant
     price
     deposit
+    taxPercentage
     currency {
       id
       symbol
