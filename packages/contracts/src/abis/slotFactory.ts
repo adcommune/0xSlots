@@ -45,6 +45,25 @@ export const slotFactoryAbi = [
   },
   {
     "type": "function",
+    "name": "collectAll",
+    "inputs": [
+      {
+        "name": "slots",
+        "type": "address[]",
+        "internalType": "address[]"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "collected",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "createSlot",
     "inputs": [
       {
@@ -325,7 +344,7 @@ export const slotFactoryAbi = [
     "name": "setModuleVerified",
     "inputs": [
       {
-        "name": "module",
+        "name": "_module",
         "type": "address",
         "internalType": "address"
       },
@@ -333,16 +352,6 @@ export const slotFactoryAbi = [
         "name": "verified",
         "type": "bool",
         "internalType": "bool"
-      },
-      {
-        "name": "name",
-        "type": "string",
-        "internalType": "string"
-      },
-      {
-        "name": "version",
-        "type": "string",
-        "internalType": "string"
       }
     ],
     "outputs": [],
@@ -441,6 +450,18 @@ export const slotFactoryAbi = [
       },
       {
         "name": "version",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      },
+      {
+        "name": "feeBps",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "moduleURI",
         "type": "string",
         "indexed": false,
         "internalType": "string"

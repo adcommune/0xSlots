@@ -464,6 +464,23 @@ export class SlotsClient {
     });
   }
 
+  /**
+   * Collect tax from multiple slots in a single transaction via the factory.
+   * Skips slots that aren't registered or have nothing to collect.
+   * @param slots - Array of slot contract addresses.
+   * @returns Transaction hash.
+   */
+  async collectAll(slots: Address[]): Promise<Hash> {
+    return this.wallet.writeContract({
+      address: this.factory,
+      abi: slotFactoryAbi,
+      functionName: "collectAll",
+      args: [slots],
+      account: this.account,
+      chain: this.chain,
+    });
+  }
+
   // ═══════════════════════════════════════════════════════════════════════════
   // WRITE — Slot Functions
   // ═══════════════════════════════════════════════════════════════════════════

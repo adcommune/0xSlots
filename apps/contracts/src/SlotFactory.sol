@@ -181,6 +181,28 @@ contract SlotFactory is UUPSUpgradeable {
     }
 
     // ═══════════════════════════════════════════════════════════
+    // BATCH OPERATIONS
+    // ═══════════════════════════════════════════════════════════
+
+    /// @notice Collect tax from multiple slots in a single transaction
+    /// @param slots Array of slot addresses to collect from
+    /// @return collected Amount collected from each slot (0 if skipped or nothing to collect)
+    function collectAll(
+        address[] calldata slots
+    ) external returns (uint256[] memory collected) {
+        collected = new uint256[](slots.length);
+        for (uint256 i = 0; i < slots.length; i++) {
+            if (!isSlot[slots[i]]) continue;
+            Slot s = Slot(slots[i]);
+            uint256 tax = s.collectedTax() + s.taxOwed();
+            if (tax == 0) continue;
+            try s.collect() {
+                collected[i] = tax;
+            } catch {}
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════
     // PROTOCOL EVENT HUB
     // ═══════════════════════════════════════════════════════════
 

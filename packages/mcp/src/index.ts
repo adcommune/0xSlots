@@ -321,6 +321,17 @@ server.tool(
 );
 
 server.tool(
+  "collect_all",
+  "Batch-collect tax from multiple slots in a single transaction via the factory. Skips unregistered slots and slots with nothing to collect.",
+  { slots: z.array(z.string()).describe("Array of slot contract addresses") },
+  async ({ slots }) => {
+    const hash = await client.collectAll(slots as Address[]);
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    return msg(`Batch collect done! tx: ${hash}\nStatus: ${receipt.status}\nSlots processed: ${slots.length}`);
+  }
+);
+
+server.tool(
   "liquidate_slot",
   "Liquidate an insolvent slot (permissionless — earn bounty if configured)",
   { slot: z.string().describe("Slot contract address") },

@@ -1,6 +1,6 @@
 # @0xslots/sdk
 
-Unified SDK for the 0xSlots protocol — subgraph reads + on-chain writes with ERC-20 approval handling and EIP-5792 atomic batch support.
+Unified SDK for the 0xSlots protocol — subgraph reads + on-chain writes with automatic ERC-20 approval handling.
 
 ## Install
 
@@ -28,7 +28,6 @@ import { createSlotsClient, SlotsChain } from "@0xslots/sdk";
 
 const client = createSlotsClient({
   chainId: SlotsChain.BASE_SEPOLIA,
-  factoryAddress: "0x...",
   publicClient, // viem PublicClient
   walletClient, // viem WalletClient
 });
@@ -70,7 +69,7 @@ await client.collect("0x...");
 | `setLiquidationBounty(slot, bps)` | Set liquidation bounty (manager) |
 | `multicall(slot, calls)` | Batch multiple slot calls |
 
-ERC-20 approvals are handled automatically for `buy` and `topUp`. If the wallet supports EIP-5792 atomic batching, approve + action are sent as a single atomic call.
+ERC-20 approvals are handled automatically for `buy` and `topUp`.
 
 ## License
 
