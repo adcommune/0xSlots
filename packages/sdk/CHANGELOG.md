@@ -1,5 +1,11 @@
 # @0xslots/sdk
 
+## 0.13.5
+
+### Patch Changes
+
+- 0ec196a: add taxPercentage to slot object in feed metadata query
+
 ## 0.13.4
 
 ### Patch Changes

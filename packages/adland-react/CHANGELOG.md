@@ -1,5 +1,12 @@
 # @adland/react
 
+## 0.16.15
+
+### Patch Changes
+
+- Updated dependencies [0ec196a]
+  - @0xslots/sdk@0.13.5
+
 ## 0.16.14
 
 ### Patch Changes
