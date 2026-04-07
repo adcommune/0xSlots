@@ -1,5 +1,11 @@
 # @0xslots/sdk
 
+## 0.13.6
+
+### Patch Changes
+
+- 60504e9: add getSlotsWithMetadata query in sdk
+
 ## 0.13.5
 
 ### Patch Changes
