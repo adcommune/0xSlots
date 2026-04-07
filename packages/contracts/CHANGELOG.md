@@ -1,5 +1,11 @@
 # @0xslots/contracts
 
+## 0.9.1
+
+### Patch Changes
+
+- bd5779e: add collectAll to factory
+
 ## 0.9.0
 
 ### Minor Changes
