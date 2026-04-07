@@ -86,3 +86,39 @@ query GetSlotsByOccupant(
     ...SlotFields
   }
 }
+
+fragment SlotMetadataFields on MetadataSlot {
+  id
+  uri
+  rawJson
+  adType
+  updatedBy
+  updateCount
+  createdAt
+  createdTx
+  updatedAt
+  updatedTx
+}
+
+query GetSlotsWithMetadata(
+  $first: Int!
+  $skip: Int
+  $orderBy: Slot_orderBy
+  $orderDirection: OrderDirection
+  $where: Slot_filter
+  $block: Block_height
+) {
+  slots(
+    first: $first
+    skip: $skip
+    orderBy: $orderBy
+    orderDirection: $orderDirection
+    where: $where
+    block: $block
+  ) {
+    ...SlotFields
+    metadata {
+      ...SlotMetadataFields
+    }
+  }
+}

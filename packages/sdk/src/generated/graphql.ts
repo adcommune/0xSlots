@@ -4286,6 +4286,20 @@ export type GetSlotsByOccupantQueryVariables = Exact<{
 
 export type GetSlotsByOccupantQuery = { __typename?: 'Query', slots: Array<{ __typename?: 'Slot', id: string, recipient: string, manager: string, mutableTax: boolean, mutableModule: boolean, taxPercentage: string, occupant?: string | null, price: string, deposit: string, collectedTax: string, totalCollected: string, liquidationBountyBps: string, minDepositSeconds: string, createdAt: string, createdTx: string, updatedAt: string, recipientAccount: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number }, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number }, module?: { __typename?: 'Module', id: string, verified: boolean, name: string, version: string, feeBps: string, moduleURI?: string | null, image?: string | null, description?: string | null, totalFeesCollected: string } | null, occupantAccount?: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number } | null }> };
 
+export type SlotMetadataFieldsFragment = { __typename?: 'MetadataSlot', id: string, uri: string, rawJson?: string | null, adType?: string | null, updatedBy: string, updateCount: string, createdAt: string, createdTx: string, updatedAt: string, updatedTx: string };
+
+export type GetSlotsWithMetadataQueryVariables = Exact<{
+  first: Scalars['Int']['input'];
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Slot_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<Slot_Filter>;
+  block?: InputMaybe<Block_Height>;
+}>;
+
+
+export type GetSlotsWithMetadataQuery = { __typename?: 'Query', slots: Array<{ __typename?: 'Slot', id: string, recipient: string, manager: string, mutableTax: boolean, mutableModule: boolean, taxPercentage: string, occupant?: string | null, price: string, deposit: string, collectedTax: string, totalCollected: string, liquidationBountyBps: string, minDepositSeconds: string, createdAt: string, createdTx: string, updatedAt: string, metadata?: { __typename?: 'MetadataSlot', id: string, uri: string, rawJson?: string | null, adType?: string | null, updatedBy: string, updateCount: string, createdAt: string, createdTx: string, updatedAt: string, updatedTx: string } | null, recipientAccount: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number }, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number }, module?: { __typename?: 'Module', id: string, verified: boolean, name: string, version: string, feeBps: string, moduleURI?: string | null, image?: string | null, description?: string | null, totalFeesCollected: string } | null, occupantAccount?: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number } | null }> };
+
 export const AccountFieldsFragmentDoc = gql`
     fragment AccountFields on Account {
   id
@@ -4388,6 +4402,20 @@ export const SlotFieldsFragmentDoc = gql`
   createdAt
   createdTx
   updatedAt
+}
+    `;
+export const SlotMetadataFieldsFragmentDoc = gql`
+    fragment SlotMetadataFields on MetadataSlot {
+  id
+  uri
+  rawJson
+  adType
+  updatedBy
+  updateCount
+  createdAt
+  createdTx
+  updatedAt
+  updatedTx
 }
     `;
 export const GetAccountDocument = gql`
@@ -5137,6 +5165,24 @@ export const GetSlotsByOccupantDocument = gql`
   }
 }
     ${SlotFieldsFragmentDoc}`;
+export const GetSlotsWithMetadataDocument = gql`
+    query GetSlotsWithMetadata($first: Int!, $skip: Int, $orderBy: Slot_orderBy, $orderDirection: OrderDirection, $where: Slot_filter, $block: Block_height) {
+  slots(
+    first: $first
+    skip: $skip
+    orderBy: $orderBy
+    orderDirection: $orderDirection
+    where: $where
+    block: $block
+  ) {
+    ...SlotFields
+    metadata {
+      ...SlotMetadataFields
+    }
+  }
+}
+    ${SlotFieldsFragmentDoc}
+${SlotMetadataFieldsFragmentDoc}`;
 
 export type SdkFunctionWrapper = <T>(action: (requestHeaders?:Record<string, string>) => Promise<T>, operationName: string, operationType?: string, variables?: any) => Promise<T>;
 
@@ -5213,6 +5259,9 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     GetSlotsByOccupant(variables: GetSlotsByOccupantQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetSlotsByOccupantQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetSlotsByOccupantQuery>({ document: GetSlotsByOccupantDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetSlotsByOccupant', 'query', variables);
+    },
+    GetSlotsWithMetadata(variables: GetSlotsWithMetadataQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetSlotsWithMetadataQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetSlotsWithMetadataQuery>({ document: GetSlotsWithMetadataDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetSlotsWithMetadata', 'query', variables);
     }
   };
 }

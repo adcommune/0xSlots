@@ -245,6 +245,14 @@ export class SlotsClient {
       this.sdk.GetSlotsByOccupant(...args),
     );
   }
+  /** Fetch a paginated list of slots with their metadata. */
+  getSlotsWithMetadata(
+    ...args: Parameters<ReturnType<typeof getSdk>["GetSlotsWithMetadata"]>
+  ) {
+    return this.query("getSlotsWithMetadata", () =>
+      this.sdk.GetSlotsWithMetadata(...args),
+    );
+  }
 
   // Factory queries
 
