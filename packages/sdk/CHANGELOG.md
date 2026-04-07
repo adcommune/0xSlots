@@ -1,5 +1,13 @@
 # @0xslots/sdk
 
+## 0.13.7
+
+### Patch Changes
+
+- bd5779e: add collectAll to factory
+- Updated dependencies [bd5779e]
+  - @0xslots/contracts@0.9.1
+
 ## 0.13.6
 
 ### Patch Changes
