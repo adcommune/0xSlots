@@ -89,7 +89,10 @@ app.post("/verify/miniapp", async (c) => {
   }
 
   try {
-    const manifest = await farcasterAPI.getDomainManifest(domain);
+    const hostname = new URL(
+      domain.startsWith("http") ? domain : `https://${domain}`,
+    ).hostname;
+    const manifest = await farcasterAPI.getDomainManifest(hostname);
     return c.json({ verified: manifest.verified });
   } catch (error) {
     return c.json({ verified: false });
@@ -238,7 +241,7 @@ app.get("/metadata/miniapp", async (c) => {
   const farcasterAPI = new FarcasterAPI(
     process.env.FARCASTER_API_KEY as string,
   );
-  const domain = url.split("//")[1];
+  const domain = new URL(url.startsWith("http") ? url : `https://${url}`).hostname;
   const manifest = await farcasterAPI.getDomainManifest(domain);
   return c.json({
     icon:
