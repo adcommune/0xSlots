@@ -670,6 +670,183 @@ export class Slot extends Entity {
   }
 }
 
+export class Module extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id != null, "Cannot save Module entity without an ID");
+    if (id) {
+      assert(
+        id.kind == ValueKind.STRING,
+        `Entities of type Module must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`,
+      );
+      store.set("Module", id.toString(), this);
+    }
+  }
+
+  static loadInBlock(id: string): Module | null {
+    return changetype<Module | null>(store.get_in_block("Module", id));
+  }
+
+  static load(id: string): Module | null {
+    return changetype<Module | null>(store.get("Module", id));
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get factory(): string {
+    let value = this.get("factory");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set factory(value: string) {
+    this.set("factory", Value.fromString(value));
+  }
+
+  get verified(): boolean {
+    let value = this.get("verified");
+    if (!value || value.kind == ValueKind.NULL) {
+      return false;
+    } else {
+      return value.toBoolean();
+    }
+  }
+
+  set verified(value: boolean) {
+    this.set("verified", Value.fromBoolean(value));
+  }
+
+  get name(): string {
+    let value = this.get("name");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set name(value: string) {
+    this.set("name", Value.fromString(value));
+  }
+
+  get version(): string {
+    let value = this.get("version");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set version(value: string) {
+    this.set("version", Value.fromString(value));
+  }
+
+  get feeBps(): BigInt {
+    let value = this.get("feeBps");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set feeBps(value: BigInt) {
+    this.set("feeBps", Value.fromBigInt(value));
+  }
+
+  get moduleURI(): string | null {
+    let value = this.get("moduleURI");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set moduleURI(value: string | null) {
+    if (!value) {
+      this.unset("moduleURI");
+    } else {
+      this.set("moduleURI", Value.fromString(<string>value));
+    }
+  }
+
+  get image(): string | null {
+    let value = this.get("image");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set image(value: string | null) {
+    if (!value) {
+      this.unset("image");
+    } else {
+      this.set("image", Value.fromString(<string>value));
+    }
+  }
+
+  get description(): string | null {
+    let value = this.get("description");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set description(value: string | null) {
+    if (!value) {
+      this.unset("description");
+    } else {
+      this.set("description", Value.fromString(<string>value));
+    }
+  }
+
+  get totalFeesCollected(): BigInt {
+    let value = this.get("totalFeesCollected");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set totalFeesCollected(value: BigInt) {
+    this.set("totalFeesCollected", Value.fromBigInt(value));
+  }
+
+  get feePayments(): ModuleFeePaidEventLoader {
+    return new ModuleFeePaidEventLoader(
+      "Module",
+      this.get("id")!.toString(),
+      "feePayments",
+    );
+  }
+}
+
 export class MetadataSlot extends Entity {
   constructor(id: string) {
     super();
@@ -3152,183 +3329,6 @@ export class NFTToken extends Entity {
 
   set mintedTx(value: Bytes) {
     this.set("mintedTx", Value.fromBytes(value));
-  }
-}
-
-export class Module extends Entity {
-  constructor(id: string) {
-    super();
-    this.set("id", Value.fromString(id));
-  }
-
-  save(): void {
-    let id = this.get("id");
-    assert(id != null, "Cannot save Module entity without an ID");
-    if (id) {
-      assert(
-        id.kind == ValueKind.STRING,
-        `Entities of type Module must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`,
-      );
-      store.set("Module", id.toString(), this);
-    }
-  }
-
-  static loadInBlock(id: string): Module | null {
-    return changetype<Module | null>(store.get_in_block("Module", id));
-  }
-
-  static load(id: string): Module | null {
-    return changetype<Module | null>(store.get("Module", id));
-  }
-
-  get id(): string {
-    let value = this.get("id");
-    if (!value || value.kind == ValueKind.NULL) {
-      throw new Error("Cannot return null for a required field.");
-    } else {
-      return value.toString();
-    }
-  }
-
-  set id(value: string) {
-    this.set("id", Value.fromString(value));
-  }
-
-  get factory(): string {
-    let value = this.get("factory");
-    if (!value || value.kind == ValueKind.NULL) {
-      throw new Error("Cannot return null for a required field.");
-    } else {
-      return value.toString();
-    }
-  }
-
-  set factory(value: string) {
-    this.set("factory", Value.fromString(value));
-  }
-
-  get verified(): boolean {
-    let value = this.get("verified");
-    if (!value || value.kind == ValueKind.NULL) {
-      return false;
-    } else {
-      return value.toBoolean();
-    }
-  }
-
-  set verified(value: boolean) {
-    this.set("verified", Value.fromBoolean(value));
-  }
-
-  get name(): string {
-    let value = this.get("name");
-    if (!value || value.kind == ValueKind.NULL) {
-      throw new Error("Cannot return null for a required field.");
-    } else {
-      return value.toString();
-    }
-  }
-
-  set name(value: string) {
-    this.set("name", Value.fromString(value));
-  }
-
-  get version(): string {
-    let value = this.get("version");
-    if (!value || value.kind == ValueKind.NULL) {
-      throw new Error("Cannot return null for a required field.");
-    } else {
-      return value.toString();
-    }
-  }
-
-  set version(value: string) {
-    this.set("version", Value.fromString(value));
-  }
-
-  get feeBps(): BigInt {
-    let value = this.get("feeBps");
-    if (!value || value.kind == ValueKind.NULL) {
-      throw new Error("Cannot return null for a required field.");
-    } else {
-      return value.toBigInt();
-    }
-  }
-
-  set feeBps(value: BigInt) {
-    this.set("feeBps", Value.fromBigInt(value));
-  }
-
-  get moduleURI(): string | null {
-    let value = this.get("moduleURI");
-    if (!value || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toString();
-    }
-  }
-
-  set moduleURI(value: string | null) {
-    if (!value) {
-      this.unset("moduleURI");
-    } else {
-      this.set("moduleURI", Value.fromString(<string>value));
-    }
-  }
-
-  get image(): string | null {
-    let value = this.get("image");
-    if (!value || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toString();
-    }
-  }
-
-  set image(value: string | null) {
-    if (!value) {
-      this.unset("image");
-    } else {
-      this.set("image", Value.fromString(<string>value));
-    }
-  }
-
-  get description(): string | null {
-    let value = this.get("description");
-    if (!value || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toString();
-    }
-  }
-
-  set description(value: string | null) {
-    if (!value) {
-      this.unset("description");
-    } else {
-      this.set("description", Value.fromString(<string>value));
-    }
-  }
-
-  get totalFeesCollected(): BigInt {
-    let value = this.get("totalFeesCollected");
-    if (!value || value.kind == ValueKind.NULL) {
-      throw new Error("Cannot return null for a required field.");
-    } else {
-      return value.toBigInt();
-    }
-  }
-
-  set totalFeesCollected(value: BigInt) {
-    this.set("totalFeesCollected", Value.fromBigInt(value));
-  }
-
-  get feePayments(): ModuleFeePaidEventLoader {
-    return new ModuleFeePaidEventLoader(
-      "Module",
-      this.get("id")!.toString(),
-      "feePayments",
-    );
   }
 }
 
