@@ -104,21 +104,60 @@ The occupant maintains a deposit that covers future tax. When depleted, anyone c
 
 ## Modules
 
-Modules are optional hook contracts called on slot events. They implement `ISlotsModule`:
+Modules are optional hook contracts attached to a slot. They implement `ISlotsModule` (which extends `IERC165`):
 
 ```solidity
-interface ISlotsModule {
+interface ISlotsModule is IERC165 {
+    // Identity
     function name() external view returns (string memory);
     function version() external view returns (string memory);
+
+    // Lifecycle hooks (called by the Slot contract)
     function onTransfer(uint256 slotId, address from, address to) external;
     function onPriceUpdate(uint256 slotId, uint256 oldPrice, uint256 newPrice) external;
     function onRelease(uint256 slotId, address from) external;
+
+    // Fee configuration
+    function feeBps() external view returns (uint256);
+    function feeRecipient() external view returns (address);
+
+    // Metadata
+    function moduleURI() external view returns (string memory);
 }
 ```
 
+### Lifecycle Hooks
+
+Called by the Slot contract during state transitions. `msg.sender` is always the slot contract.
+
+| Hook | Triggered by | Typical use |
+|---|---|---|
+| `onTransfer(slotId, from, to)` | `buy()` | Clear metadata, update access control |
+| `onPriceUpdate(slotId, oldPrice, newPrice)` | `selfAssess()` | React to price changes |
+| `onRelease(slotId, from)` | `release()`, `liquidate()` | Clean up slot state |
+
+### Fee Configuration
+
+Modules can take a cut from collected tax. The fee is deducted when `collect()` is called on the slot.
+
+| Function | Description |
+|---|---|
+| `feeBps()` | Fee in basis points (e.g. `500` = 5%). Taken from collected tax before it reaches the `recipient`. Return `0` for no fee. |
+| `feeRecipient()` | Address that receives module fees — can be an EOA, multisig, Splits contract, etc. |
+
+### Metadata
+
+| Function | Description |
+|---|---|
+| `moduleURI()` | URI pointing to module metadata (e.g. `ipfs://Qm...` with JSON containing image, description). Can be empty. |
+
+### ERC-165
+
+Modules must return `true` for both `ISlotsModule.interfaceId` and `IERC165.interfaceId` in `supportsInterface()`. The factory uses this to verify a contract is a valid module.
+
 ### MetadataModule
 
-The primary module. Lets the occupant attach a URI (e.g. IPFS) to the slot.
+The primary module. Lets the occupant attach a URI (e.g. IPFS) to the slot. Clears metadata on transfer and release.
 
 ```solidity
 // Set metadata for a slot (occupant only)
@@ -126,6 +165,18 @@ function updateMetadata(address slot, string calldata uri) external;
 
 // Read metadata
 function tokenURI(address slot) external view returns (string memory);
+```
+
+### FeedPostModule
+
+Like MetadataModule but supports trusted routers for atomic buy+post flows. Used by The Feed.
+
+```solidity
+// Direct post (occupant only)
+function updateMetadata(address slot, string calldata uri) external;
+
+// Post via trusted router (atomic buy+post)
+function postFor(address account, address slot, string calldata uri) external;
 ```
 
 :::warning

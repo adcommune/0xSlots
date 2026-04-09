@@ -31,11 +31,11 @@ export default defineConfig({
         // { text: "Vision", link: "/vision" },
         { text: "Overview", link: "/overview" },
         { text: "Getting Started", link: "/getting-started" },
+        {
+          text: "Architecture",
+          link: "/protocol",
+        },
       ],
-    },
-    {
-      text: "Protocol",
-      link: "/protocol",
     },
     {
       text: "SDK",
@@ -44,10 +44,10 @@ export default defineConfig({
         { text: "React Hooks", link: "/sdk/react" },
       ],
     },
-    {
-      text: "Modules",
-      items: [{ text: "Adland", link: "/modules/adland" }],
-    },
+    // {
+    //   text: "Modules",
+    //   items: [{ text: "Adland", link: "/modules/adland" }],
+    // },
     {
       text: "Contracts",
       link: "/contracts",
