@@ -1,5 +1,11 @@
 # @0xslots/sdk
 
+## 0.14.0
+
+### Minor Changes
+
+- 8bde58c: include aggregates for account & new entity account_slot
+
 ## 0.13.7
 
 ### Patch Changes
