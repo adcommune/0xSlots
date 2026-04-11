@@ -1,4 +1,4 @@
-schema: https://api.studio.thegraph.com/query/958/0-xslots-base/v4.2.0
+schema: https://api.studio.thegraph.com/query/958/0-x-slots-base-sepolia/version/latest
 documents: ./src/queries/**/*.graphql
 generates:
   ./src/generated/graphql.ts:

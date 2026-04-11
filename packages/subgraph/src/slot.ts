@@ -31,7 +31,7 @@ import {
   ModuleFeePaidEvent,
   Module,
 } from "../generated/schema";
-import { getOrCreateAccount, getOrCreateModule } from "./helpers";
+import { getOrCreateAccount, getOrCreateAccountSlot, getOrCreateModule } from "./helpers";
 
 function evtId(txHash: Bytes, logIndex: BigInt): string {
   return txHash.toHexString() + "-" + logIndex.toString();
@@ -44,11 +44,22 @@ function getSlot(address: Address): Slot {
 export function handleBought(event: Bought): void {
   let slot = getSlot(event.address);
 
-  // Decrement previous occupant count
+  // Decrement previous occupant count & finalize hold time
   let zeroAddr = Address.zero();
   if (slot.occupant !== null && Address.fromBytes(slot.occupant as Bytes) != zeroAddr) {
-    let prevAccount = getOrCreateAccount(Address.fromBytes(slot.occupant as Bytes));
+    let prevAddr = Address.fromBytes(slot.occupant as Bytes);
+    let prevAccount = getOrCreateAccount(prevAddr);
     prevAccount.occupiedCount -= 1;
+
+    let prevAS = getOrCreateAccountSlot(prevAddr, event.address, event.block.timestamp);
+    if (prevAS.lastOccupiedAt !== null) {
+      let held = event.block.timestamp.minus(prevAS.lastOccupiedAt as BigInt);
+      prevAS.holdTime = prevAS.holdTime.plus(held);
+      prevAccount.totalHoldTime = prevAccount.totalHoldTime.plus(held);
+    }
+    prevAS.lastOccupiedAt = null;
+    prevAS.lastInteractedAt = event.block.timestamp;
+    prevAS.save();
     prevAccount.save();
   }
 
@@ -56,6 +67,11 @@ export function handleBought(event: Bought): void {
   let buyerAccount = getOrCreateAccount(event.params.buyer, true);
   buyerAccount.occupiedCount += 1;
   buyerAccount.save();
+
+  let buyerAS = getOrCreateAccountSlot(event.params.buyer, event.address, event.block.timestamp);
+  buyerAS.lastOccupiedAt = event.block.timestamp;
+  buyerAS.lastInteractedAt = event.block.timestamp;
+  buyerAS.save();
 
   slot.occupant = event.params.buyer;
   slot.occupantAccount = buyerAccount.id;
@@ -82,8 +98,19 @@ export function handleReleased(event: Released): void {
   let slot = getSlot(event.address);
 
   if (slot.occupant !== null) {
-    let prevAccount = getOrCreateAccount(Address.fromBytes(slot.occupant as Bytes));
+    let prevAddr = Address.fromBytes(slot.occupant as Bytes);
+    let prevAccount = getOrCreateAccount(prevAddr);
     prevAccount.occupiedCount -= 1;
+
+    let prevAS = getOrCreateAccountSlot(prevAddr, event.address, event.block.timestamp);
+    if (prevAS.lastOccupiedAt !== null) {
+      let held = event.block.timestamp.minus(prevAS.lastOccupiedAt as BigInt);
+      prevAS.holdTime = prevAS.holdTime.plus(held);
+      prevAccount.totalHoldTime = prevAccount.totalHoldTime.plus(held);
+    }
+    prevAS.lastOccupiedAt = null;
+    prevAS.lastInteractedAt = event.block.timestamp;
+    prevAS.save();
     prevAccount.save();
   }
 
@@ -110,8 +137,19 @@ export function handleLiquidated(event: Liquidated): void {
   let slot = getSlot(event.address);
 
   if (slot.occupant !== null) {
-    let prevAccount = getOrCreateAccount(Address.fromBytes(slot.occupant as Bytes));
+    let prevAddr = Address.fromBytes(slot.occupant as Bytes);
+    let prevAccount = getOrCreateAccount(prevAddr);
     prevAccount.occupiedCount -= 1;
+
+    let prevAS = getOrCreateAccountSlot(prevAddr, event.address, event.block.timestamp);
+    if (prevAS.lastOccupiedAt !== null) {
+      let held = event.block.timestamp.minus(prevAS.lastOccupiedAt as BigInt);
+      prevAS.holdTime = prevAS.holdTime.plus(held);
+      prevAccount.totalHoldTime = prevAccount.totalHoldTime.plus(held);
+    }
+    prevAS.lastOccupiedAt = null;
+    prevAS.lastInteractedAt = event.block.timestamp;
+    prevAS.save();
     prevAccount.save();
   }
 
@@ -191,6 +229,15 @@ export function handleSettled(event: Settled): void {
   slot.deposit = event.params.depositRemaining;
   slot.updatedAt = event.block.timestamp;
   slot.save();
+
+  // Track tax paid on the current occupant (per-slot, since currency is immutable per slot)
+  if (slot.occupant !== null) {
+    let occAddr = Address.fromBytes(slot.occupant as Bytes);
+    let occAS = getOrCreateAccountSlot(occAddr, event.address, event.block.timestamp);
+    occAS.taxPaid = occAS.taxPaid.plus(event.params.taxPaid);
+    occAS.lastInteractedAt = event.block.timestamp;
+    occAS.save();
+  }
 
   let ev = new SettledEvent(evtId(event.transaction.hash, event.logIndex));
   ev.slot = slot.id;

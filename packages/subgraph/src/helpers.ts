@@ -1,5 +1,5 @@
 import { Address, BigInt, ethereum } from "@graphprotocol/graph-ts";
-import { Account, Currency, Module } from "../generated/schema";
+import { Account, AccountSlot, Currency, Module } from "../generated/schema";
 import { ERC20 } from "../generated/SlotFactory/ERC20";
 import { SplitV2 } from "../generated/SlotFactory/SplitV2";
 
@@ -40,6 +40,8 @@ export function getOrCreateAccount(address: Address, isTxSender: bool = false): 
     account.type = detectAccountType(address, isTxSender);
     account.slotCount = 0;
     account.occupiedCount = 0;
+    account.metadataUpdateCount = BigInt.zero();
+    account.totalHoldTime = BigInt.zero();
     account.save();
   } else if (account.type == "CONTRACT" && isTxSender) {
     // Upgrade: previously classified as CONTRACT but now seen as tx sender
@@ -47,6 +49,28 @@ export function getOrCreateAccount(address: Address, isTxSender: bool = false): 
     account.save();
   }
   return account;
+}
+
+export function getOrCreateAccountSlot(
+  accountAddress: Address,
+  slotAddress: Address,
+  timestamp: BigInt
+): AccountSlot {
+  let id = accountAddress.toHexString() + "-" + slotAddress.toHexString();
+  let accountSlot = AccountSlot.load(id);
+  if (!accountSlot) {
+    accountSlot = new AccountSlot(id);
+    accountSlot.account = accountAddress.toHexString();
+    accountSlot.slot = slotAddress.toHexString();
+    accountSlot.metadataUpdateCount = BigInt.zero();
+    accountSlot.taxPaid = BigInt.zero();
+    accountSlot.holdTime = BigInt.zero();
+    accountSlot.lastOccupiedAt = null;
+    accountSlot.firstInteractedAt = timestamp;
+    accountSlot.lastInteractedAt = timestamp;
+    accountSlot.save();
+  }
+  return accountSlot;
 }
 
 export function getOrCreateCurrency(address: Address): Currency {

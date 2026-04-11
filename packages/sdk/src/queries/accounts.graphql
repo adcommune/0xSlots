@@ -3,6 +3,8 @@ fragment AccountFields on Account {
   type
   slotCount
   occupiedCount
+  metadataUpdateCount
+  totalHoldTime
   slotsAsRecipient {
     id
   }

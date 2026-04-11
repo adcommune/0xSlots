@@ -327,6 +327,25 @@ export class SlotsClient {
     return this.query("getAccounts", () => this.sdk.GetAccounts(...args));
   }
 
+  // AccountSlot queries
+
+  /** Fetch a single account-slot interaction by composite ID ({account}-{slot}). */
+  getAccountSlot(
+    ...args: Parameters<ReturnType<typeof getSdk>["GetAccountSlot"]>
+  ) {
+    return this.query("getAccountSlot", () =>
+      this.sdk.GetAccountSlot(...args),
+    );
+  }
+  /** Fetch a paginated list of account-slot interactions. */
+  getAccountSlots(
+    ...args: Parameters<ReturnType<typeof getSdk>["GetAccountSlots"]>
+  ) {
+    return this.query("getAccountSlots", () =>
+      this.sdk.GetAccountSlots(...args),
+    );
+  }
+
   // Individual event queries
 
   /** Fetch released events with optional filters. */

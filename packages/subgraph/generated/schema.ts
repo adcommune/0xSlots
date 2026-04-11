@@ -162,6 +162,190 @@ export class Account extends Entity {
   set occupiedCount(value: i32) {
     this.set("occupiedCount", Value.fromI32(value));
   }
+
+  get metadataUpdateCount(): BigInt {
+    let value = this.get("metadataUpdateCount");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set metadataUpdateCount(value: BigInt) {
+    this.set("metadataUpdateCount", Value.fromBigInt(value));
+  }
+
+  get totalHoldTime(): BigInt {
+    let value = this.get("totalHoldTime");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set totalHoldTime(value: BigInt) {
+    this.set("totalHoldTime", Value.fromBigInt(value));
+  }
+
+  get slotInteractions(): AccountSlotLoader {
+    return new AccountSlotLoader(
+      "Account",
+      this.get("id")!.toString(),
+      "slotInteractions",
+    );
+  }
+}
+
+export class AccountSlot extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id != null, "Cannot save AccountSlot entity without an ID");
+    if (id) {
+      assert(
+        id.kind == ValueKind.STRING,
+        `Entities of type AccountSlot must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`,
+      );
+      store.set("AccountSlot", id.toString(), this);
+    }
+  }
+
+  static loadInBlock(id: string): AccountSlot | null {
+    return changetype<AccountSlot | null>(
+      store.get_in_block("AccountSlot", id),
+    );
+  }
+
+  static load(id: string): AccountSlot | null {
+    return changetype<AccountSlot | null>(store.get("AccountSlot", id));
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get account(): string {
+    let value = this.get("account");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set account(value: string) {
+    this.set("account", Value.fromString(value));
+  }
+
+  get slot(): string {
+    let value = this.get("slot");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set slot(value: string) {
+    this.set("slot", Value.fromString(value));
+  }
+
+  get metadataUpdateCount(): BigInt {
+    let value = this.get("metadataUpdateCount");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set metadataUpdateCount(value: BigInt) {
+    this.set("metadataUpdateCount", Value.fromBigInt(value));
+  }
+
+  get taxPaid(): BigInt {
+    let value = this.get("taxPaid");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set taxPaid(value: BigInt) {
+    this.set("taxPaid", Value.fromBigInt(value));
+  }
+
+  get holdTime(): BigInt {
+    let value = this.get("holdTime");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set holdTime(value: BigInt) {
+    this.set("holdTime", Value.fromBigInt(value));
+  }
+
+  get lastOccupiedAt(): BigInt | null {
+    let value = this.get("lastOccupiedAt");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set lastOccupiedAt(value: BigInt | null) {
+    if (!value) {
+      this.unset("lastOccupiedAt");
+    } else {
+      this.set("lastOccupiedAt", Value.fromBigInt(<BigInt>value));
+    }
+  }
+
+  get firstInteractedAt(): BigInt {
+    let value = this.get("firstInteractedAt");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set firstInteractedAt(value: BigInt) {
+    this.set("firstInteractedAt", Value.fromBigInt(value));
+  }
+
+  get lastInteractedAt(): BigInt {
+    let value = this.get("lastInteractedAt");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set lastInteractedAt(value: BigInt) {
+    this.set("lastInteractedAt", Value.fromBigInt(value));
+  }
 }
 
 export class Currency extends Entity {
@@ -3365,6 +3549,24 @@ export class SlotLoader extends Entity {
   load(): Slot[] {
     let value = store.loadRelated(this._entity, this._id, this._field);
     return changetype<Slot[]>(value);
+  }
+}
+
+export class AccountSlotLoader extends Entity {
+  _entity: string;
+  _field: string;
+  _id: string;
+
+  constructor(entity: string, id: string, field: string) {
+    super();
+    this._entity = entity;
+    this._id = id;
+    this._field = field;
+  }
+
+  load(): AccountSlot[] {
+    let value = store.loadRelated(this._entity, this._id, this._field);
+    return changetype<AccountSlot[]>(value);
   }
 }
 

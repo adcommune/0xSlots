@@ -1,7 +1,7 @@
 import { MetadataUpdated } from "../generated/MetadataModule/MetadataModule";
 import { Slot, MetadataSlot, MetadataUpdatedEvent } from "../generated/schema";
 import { BigInt, ipfs, json } from "@graphprotocol/graph-ts";
-import { getOrCreateAccount } from "./helpers";
+import { getOrCreateAccount, getOrCreateAccountSlot } from "./helpers";
 
 /**
  * Try to resolve a URI to raw JSON content.
@@ -81,8 +81,17 @@ export function handleMetadataUpdated(event: MetadataUpdated): void {
   metadataSlot.updatedTx = event.transaction.hash;
   metadataSlot.save();
 
-  // Create immutable history event
+  // Track metadata update counts on Account & AccountSlot
   let author = getOrCreateAccount(event.transaction.from, true);
+  author.metadataUpdateCount = author.metadataUpdateCount.plus(BigInt.fromI32(1));
+  author.save();
+
+  let authorAS = getOrCreateAccountSlot(event.transaction.from, event.params.slot, event.block.timestamp);
+  authorAS.metadataUpdateCount = authorAS.metadataUpdateCount.plus(BigInt.fromI32(1));
+  authorAS.lastInteractedAt = event.block.timestamp;
+  authorAS.save();
+
+  // Create immutable history event
   let eventId = event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
   let metadataEvent = new MetadataUpdatedEvent(eventId);
   metadataEvent.slot = slotId;

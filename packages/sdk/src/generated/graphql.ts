@@ -25,11 +25,23 @@ export type Scalars = {
 export type Account = {
   __typename?: 'Account';
   id: Scalars['ID']['output'];
+  metadataUpdateCount: Scalars['BigInt']['output'];
   occupiedCount: Scalars['Int']['output'];
   slotCount: Scalars['Int']['output'];
+  slotInteractions: Array<AccountSlot>;
   slotsAsOccupant: Array<Slot>;
   slotsAsRecipient: Array<Slot>;
+  totalHoldTime: Scalars['BigInt']['output'];
   type: AccountType;
+};
+
+
+export type AccountSlotInteractionsArgs = {
+  first?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<AccountSlot_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  where?: InputMaybe<AccountSlot_Filter>;
 };
 
 
@@ -50,6 +62,157 @@ export type AccountSlotsAsRecipientArgs = {
   where?: InputMaybe<Slot_Filter>;
 };
 
+export type AccountSlot = {
+  __typename?: 'AccountSlot';
+  account: Account;
+  firstInteractedAt: Scalars['BigInt']['output'];
+  holdTime: Scalars['BigInt']['output'];
+  id: Scalars['ID']['output'];
+  lastInteractedAt: Scalars['BigInt']['output'];
+  lastOccupiedAt?: Maybe<Scalars['BigInt']['output']>;
+  metadataUpdateCount: Scalars['BigInt']['output'];
+  slot: Slot;
+  taxPaid: Scalars['BigInt']['output'];
+};
+
+export type AccountSlot_Filter = {
+  /** Filter for the block changed event. */
+  _change_block?: InputMaybe<BlockChangedFilter>;
+  account?: InputMaybe<Scalars['String']['input']>;
+  account_?: InputMaybe<Account_Filter>;
+  account_contains?: InputMaybe<Scalars['String']['input']>;
+  account_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  account_ends_with?: InputMaybe<Scalars['String']['input']>;
+  account_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  account_gt?: InputMaybe<Scalars['String']['input']>;
+  account_gte?: InputMaybe<Scalars['String']['input']>;
+  account_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  account_lt?: InputMaybe<Scalars['String']['input']>;
+  account_lte?: InputMaybe<Scalars['String']['input']>;
+  account_not?: InputMaybe<Scalars['String']['input']>;
+  account_not_contains?: InputMaybe<Scalars['String']['input']>;
+  account_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  account_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  account_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  account_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  account_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  account_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  account_starts_with?: InputMaybe<Scalars['String']['input']>;
+  account_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  and?: InputMaybe<Array<InputMaybe<AccountSlot_Filter>>>;
+  firstInteractedAt?: InputMaybe<Scalars['BigInt']['input']>;
+  firstInteractedAt_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  firstInteractedAt_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  firstInteractedAt_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  firstInteractedAt_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  firstInteractedAt_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  firstInteractedAt_not?: InputMaybe<Scalars['BigInt']['input']>;
+  firstInteractedAt_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  holdTime?: InputMaybe<Scalars['BigInt']['input']>;
+  holdTime_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  holdTime_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  holdTime_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  holdTime_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  holdTime_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  holdTime_not?: InputMaybe<Scalars['BigInt']['input']>;
+  holdTime_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  id?: InputMaybe<Scalars['ID']['input']>;
+  id_gt?: InputMaybe<Scalars['ID']['input']>;
+  id_gte?: InputMaybe<Scalars['ID']['input']>;
+  id_in?: InputMaybe<Array<Scalars['ID']['input']>>;
+  id_lt?: InputMaybe<Scalars['ID']['input']>;
+  id_lte?: InputMaybe<Scalars['ID']['input']>;
+  id_not?: InputMaybe<Scalars['ID']['input']>;
+  id_not_in?: InputMaybe<Array<Scalars['ID']['input']>>;
+  lastInteractedAt?: InputMaybe<Scalars['BigInt']['input']>;
+  lastInteractedAt_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  lastInteractedAt_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  lastInteractedAt_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  lastInteractedAt_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  lastInteractedAt_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  lastInteractedAt_not?: InputMaybe<Scalars['BigInt']['input']>;
+  lastInteractedAt_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  lastOccupiedAt?: InputMaybe<Scalars['BigInt']['input']>;
+  lastOccupiedAt_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  lastOccupiedAt_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  lastOccupiedAt_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  lastOccupiedAt_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  lastOccupiedAt_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  lastOccupiedAt_not?: InputMaybe<Scalars['BigInt']['input']>;
+  lastOccupiedAt_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  metadataUpdateCount?: InputMaybe<Scalars['BigInt']['input']>;
+  metadataUpdateCount_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  metadataUpdateCount_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  metadataUpdateCount_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  metadataUpdateCount_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  metadataUpdateCount_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  metadataUpdateCount_not?: InputMaybe<Scalars['BigInt']['input']>;
+  metadataUpdateCount_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  or?: InputMaybe<Array<InputMaybe<AccountSlot_Filter>>>;
+  slot?: InputMaybe<Scalars['String']['input']>;
+  slot_?: InputMaybe<Slot_Filter>;
+  slot_contains?: InputMaybe<Scalars['String']['input']>;
+  slot_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_ends_with?: InputMaybe<Scalars['String']['input']>;
+  slot_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_gt?: InputMaybe<Scalars['String']['input']>;
+  slot_gte?: InputMaybe<Scalars['String']['input']>;
+  slot_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  slot_lt?: InputMaybe<Scalars['String']['input']>;
+  slot_lte?: InputMaybe<Scalars['String']['input']>;
+  slot_not?: InputMaybe<Scalars['String']['input']>;
+  slot_not_contains?: InputMaybe<Scalars['String']['input']>;
+  slot_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  slot_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  slot_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  slot_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_starts_with?: InputMaybe<Scalars['String']['input']>;
+  slot_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  taxPaid?: InputMaybe<Scalars['BigInt']['input']>;
+  taxPaid_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  taxPaid_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  taxPaid_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  taxPaid_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  taxPaid_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  taxPaid_not?: InputMaybe<Scalars['BigInt']['input']>;
+  taxPaid_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+};
+
+export type AccountSlot_OrderBy =
+  | 'account'
+  | 'account__id'
+  | 'account__metadataUpdateCount'
+  | 'account__occupiedCount'
+  | 'account__slotCount'
+  | 'account__totalHoldTime'
+  | 'account__type'
+  | 'firstInteractedAt'
+  | 'holdTime'
+  | 'id'
+  | 'lastInteractedAt'
+  | 'lastOccupiedAt'
+  | 'metadataUpdateCount'
+  | 'slot'
+  | 'slot__collectedTax'
+  | 'slot__createdAt'
+  | 'slot__createdTx'
+  | 'slot__deposit'
+  | 'slot__id'
+  | 'slot__liquidationBountyBps'
+  | 'slot__manager'
+  | 'slot__minDepositSeconds'
+  | 'slot__mutableModule'
+  | 'slot__mutableTax'
+  | 'slot__occupant'
+  | 'slot__price'
+  | 'slot__recipient'
+  | 'slot__taxPercentage'
+  | 'slot__totalCollected'
+  | 'slot__updatedAt'
+  | 'taxPaid';
+
 export type AccountType =
   | 'CONTRACT'
   | 'DELEGATED'
@@ -68,6 +231,14 @@ export type Account_Filter = {
   id_lte?: InputMaybe<Scalars['ID']['input']>;
   id_not?: InputMaybe<Scalars['ID']['input']>;
   id_not_in?: InputMaybe<Array<Scalars['ID']['input']>>;
+  metadataUpdateCount?: InputMaybe<Scalars['BigInt']['input']>;
+  metadataUpdateCount_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  metadataUpdateCount_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  metadataUpdateCount_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  metadataUpdateCount_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  metadataUpdateCount_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  metadataUpdateCount_not?: InputMaybe<Scalars['BigInt']['input']>;
+  metadataUpdateCount_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
   occupiedCount?: InputMaybe<Scalars['Int']['input']>;
   occupiedCount_gt?: InputMaybe<Scalars['Int']['input']>;
   occupiedCount_gte?: InputMaybe<Scalars['Int']['input']>;
@@ -85,8 +256,17 @@ export type Account_Filter = {
   slotCount_lte?: InputMaybe<Scalars['Int']['input']>;
   slotCount_not?: InputMaybe<Scalars['Int']['input']>;
   slotCount_not_in?: InputMaybe<Array<Scalars['Int']['input']>>;
+  slotInteractions_?: InputMaybe<AccountSlot_Filter>;
   slotsAsOccupant_?: InputMaybe<Slot_Filter>;
   slotsAsRecipient_?: InputMaybe<Slot_Filter>;
+  totalHoldTime?: InputMaybe<Scalars['BigInt']['input']>;
+  totalHoldTime_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  totalHoldTime_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  totalHoldTime_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  totalHoldTime_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  totalHoldTime_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  totalHoldTime_not?: InputMaybe<Scalars['BigInt']['input']>;
+  totalHoldTime_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
   type?: InputMaybe<AccountType>;
   type_in?: InputMaybe<Array<AccountType>>;
   type_not?: InputMaybe<AccountType>;
@@ -95,10 +275,13 @@ export type Account_Filter = {
 
 export type Account_OrderBy =
   | 'id'
+  | 'metadataUpdateCount'
   | 'occupiedCount'
   | 'slotCount'
+  | 'slotInteractions'
   | 'slotsAsOccupant'
   | 'slotsAsRecipient'
+  | 'totalHoldTime'
   | 'type';
 
 /** Indicates whether the current, partially filled bucket should be included in the response. Defaults to `exclude` */
@@ -1114,8 +1297,10 @@ export type MetadataUpdatedEvent_OrderBy =
   | 'adType'
   | 'author'
   | 'author__id'
+  | 'author__metadataUpdateCount'
   | 'author__occupiedCount'
   | 'author__slotCount'
+  | 'author__totalHoldTime'
   | 'author__type'
   | 'blockNumber'
   | 'cid'
@@ -2182,6 +2367,8 @@ export type Query = {
   /** Access to subgraph metadata */
   _meta?: Maybe<_Meta_>;
   account?: Maybe<Account>;
+  accountSlot?: Maybe<AccountSlot>;
+  accountSlots: Array<AccountSlot>;
   accounts: Array<Account>;
   boughtEvent?: Maybe<BoughtEvent>;
   boughtEvents: Array<BoughtEvent>;
@@ -2237,6 +2424,24 @@ export type QueryAccountArgs = {
   block?: InputMaybe<Block_Height>;
   id: Scalars['ID']['input'];
   subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type QueryAccountSlotArgs = {
+  block?: InputMaybe<Block_Height>;
+  id: Scalars['ID']['input'];
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type QueryAccountSlotsArgs = {
+  block?: InputMaybe<Block_Height>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<AccountSlot_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  subgraphError?: _SubgraphErrorPolicy_;
+  where?: InputMaybe<AccountSlot_Filter>;
 };
 
 
@@ -3583,8 +3788,10 @@ export type Slot_OrderBy =
   | 'occupant'
   | 'occupantAccount'
   | 'occupantAccount__id'
+  | 'occupantAccount__metadataUpdateCount'
   | 'occupantAccount__occupiedCount'
   | 'occupantAccount__slotCount'
+  | 'occupantAccount__totalHoldTime'
   | 'occupantAccount__type'
   | 'pendingUpdateCancellations'
   | 'price'
@@ -3593,8 +3800,10 @@ export type Slot_OrderBy =
   | 'recipient'
   | 'recipientAccount'
   | 'recipientAccount__id'
+  | 'recipientAccount__metadataUpdateCount'
   | 'recipientAccount__occupiedCount'
   | 'recipientAccount__slotCount'
+  | 'recipientAccount__totalHoldTime'
   | 'recipientAccount__type'
   | 'releases'
   | 'settlements'
@@ -4029,7 +4238,29 @@ export type _SubgraphErrorPolicy_ =
   /** If the subgraph has indexing errors, data will be omitted. The default. */
   | 'deny';
 
-export type AccountFieldsFragment = { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number, slotsAsRecipient: Array<{ __typename?: 'Slot', id: string }>, slotsAsOccupant: Array<{ __typename?: 'Slot', id: string }> };
+export type AccountSlotFieldsFragment = { __typename?: 'AccountSlot', id: string, metadataUpdateCount: string, taxPaid: string, holdTime: string, lastOccupiedAt?: string | null, firstInteractedAt: string, lastInteractedAt: string, account: { __typename?: 'Account', id: string }, slot: { __typename?: 'Slot', id: string } };
+
+export type GetAccountSlotQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+  block?: InputMaybe<Block_Height>;
+}>;
+
+
+export type GetAccountSlotQuery = { __typename?: 'Query', accountSlot?: { __typename?: 'AccountSlot', id: string, metadataUpdateCount: string, taxPaid: string, holdTime: string, lastOccupiedAt?: string | null, firstInteractedAt: string, lastInteractedAt: string, account: { __typename?: 'Account', id: string }, slot: { __typename?: 'Slot', id: string } } | null };
+
+export type GetAccountSlotsQueryVariables = Exact<{
+  first: Scalars['Int']['input'];
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<AccountSlot_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<AccountSlot_Filter>;
+  block?: InputMaybe<Block_Height>;
+}>;
+
+
+export type GetAccountSlotsQuery = { __typename?: 'Query', accountSlots: Array<{ __typename?: 'AccountSlot', id: string, metadataUpdateCount: string, taxPaid: string, holdTime: string, lastOccupiedAt?: string | null, firstInteractedAt: string, lastInteractedAt: string, account: { __typename?: 'Account', id: string }, slot: { __typename?: 'Slot', id: string } }> };
+
+export type AccountFieldsFragment = { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number, metadataUpdateCount: string, totalHoldTime: string, slotsAsRecipient: Array<{ __typename?: 'Slot', id: string }>, slotsAsOccupant: Array<{ __typename?: 'Slot', id: string }> };
 
 export type GetAccountQueryVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -4037,7 +4268,7 @@ export type GetAccountQueryVariables = Exact<{
 }>;
 
 
-export type GetAccountQuery = { __typename?: 'Query', account?: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number, slotsAsRecipient: Array<{ __typename?: 'Slot', id: string }>, slotsAsOccupant: Array<{ __typename?: 'Slot', id: string }> } | null };
+export type GetAccountQuery = { __typename?: 'Query', account?: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number, metadataUpdateCount: string, totalHoldTime: string, slotsAsRecipient: Array<{ __typename?: 'Slot', id: string }>, slotsAsOccupant: Array<{ __typename?: 'Slot', id: string }> } | null };
 
 export type GetAccountsQueryVariables = Exact<{
   first: Scalars['Int']['input'];
@@ -4049,7 +4280,7 @@ export type GetAccountsQueryVariables = Exact<{
 }>;
 
 
-export type GetAccountsQuery = { __typename?: 'Query', accounts: Array<{ __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number, slotsAsRecipient: Array<{ __typename?: 'Slot', id: string }>, slotsAsOccupant: Array<{ __typename?: 'Slot', id: string }> }> };
+export type GetAccountsQuery = { __typename?: 'Query', accounts: Array<{ __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number, metadataUpdateCount: string, totalHoldTime: string, slotsAsRecipient: Array<{ __typename?: 'Slot', id: string }>, slotsAsOccupant: Array<{ __typename?: 'Slot', id: string }> }> };
 
 export type CurrencyFieldsFragment = { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number };
 
@@ -4300,12 +4531,31 @@ export type GetSlotsWithMetadataQueryVariables = Exact<{
 
 export type GetSlotsWithMetadataQuery = { __typename?: 'Query', slots: Array<{ __typename?: 'Slot', id: string, recipient: string, manager: string, mutableTax: boolean, mutableModule: boolean, taxPercentage: string, occupant?: string | null, price: string, deposit: string, collectedTax: string, totalCollected: string, liquidationBountyBps: string, minDepositSeconds: string, createdAt: string, createdTx: string, updatedAt: string, metadata?: { __typename?: 'MetadataSlot', id: string, uri: string, rawJson?: string | null, adType?: string | null, updatedBy: string, updateCount: string, createdAt: string, createdTx: string, updatedAt: string, updatedTx: string } | null, recipientAccount: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number }, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number }, module?: { __typename?: 'Module', id: string, verified: boolean, name: string, version: string, feeBps: string, moduleURI?: string | null, image?: string | null, description?: string | null, totalFeesCollected: string } | null, occupantAccount?: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number } | null }> };
 
+export const AccountSlotFieldsFragmentDoc = gql`
+    fragment AccountSlotFields on AccountSlot {
+  id
+  account {
+    id
+  }
+  slot {
+    id
+  }
+  metadataUpdateCount
+  taxPaid
+  holdTime
+  lastOccupiedAt
+  firstInteractedAt
+  lastInteractedAt
+}
+    `;
 export const AccountFieldsFragmentDoc = gql`
     fragment AccountFields on Account {
   id
   type
   slotCount
   occupiedCount
+  metadataUpdateCount
+  totalHoldTime
   slotsAsRecipient {
     id
   }
@@ -4418,6 +4668,27 @@ export const SlotMetadataFieldsFragmentDoc = gql`
   updatedTx
 }
     `;
+export const GetAccountSlotDocument = gql`
+    query GetAccountSlot($id: ID!, $block: Block_height) {
+  accountSlot(id: $id, block: $block) {
+    ...AccountSlotFields
+  }
+}
+    ${AccountSlotFieldsFragmentDoc}`;
+export const GetAccountSlotsDocument = gql`
+    query GetAccountSlots($first: Int!, $skip: Int, $orderBy: AccountSlot_orderBy, $orderDirection: OrderDirection, $where: AccountSlot_filter, $block: Block_height) {
+  accountSlots(
+    first: $first
+    skip: $skip
+    orderBy: $orderBy
+    orderDirection: $orderDirection
+    where: $where
+    block: $block
+  ) {
+    ...AccountSlotFields
+  }
+}
+    ${AccountSlotFieldsFragmentDoc}`;
 export const GetAccountDocument = gql`
     query GetAccount($id: ID!, $block: Block_height) {
   account(id: $id, block: $block) {
@@ -5191,6 +5462,12 @@ const defaultWrapper: SdkFunctionWrapper = (action, _operationName, _operationTy
 
 export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = defaultWrapper) {
   return {
+    GetAccountSlot(variables: GetAccountSlotQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetAccountSlotQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetAccountSlotQuery>({ document: GetAccountSlotDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetAccountSlot', 'query', variables);
+    },
+    GetAccountSlots(variables: GetAccountSlotsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetAccountSlotsQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetAccountSlotsQuery>({ document: GetAccountSlotsDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetAccountSlots', 'query', variables);
+    },
     GetAccount(variables: GetAccountQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetAccountQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetAccountQuery>({ document: GetAccountDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetAccount', 'query', variables);
     },

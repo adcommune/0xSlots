@@ -23,6 +23,24 @@ type Account @entity(immutable: false) {
   slotsAsOccupant: [Slot!]! @derivedFrom(field: "occupantAccount")
   slotCount: Int!
   occupiedCount: Int!
+  # feed metadata activity
+  metadataUpdateCount: BigInt!
+  # hold aggregate (tax is per-slot since currency is immutable per slot)
+  totalHoldTime: BigInt! # cumulative seconds holding any slot
+  # per-slot breakdown
+  slotInteractions: [AccountSlot!]! @derivedFrom(field: "account")
+}
+
+type AccountSlot @entity(immutable: false) {
+  id: ID! # {accountAddress}-{slotAddress}
+  account: Account!
+  slot: Slot!
+  metadataUpdateCount: BigInt!
+  taxPaid: BigInt!
+  holdTime: BigInt! # total seconds held this slot
+  lastOccupiedAt: BigInt # null if not currently holding
+  firstInteractedAt: BigInt!
+  lastInteractedAt: BigInt!
 }
 
 type Currency @entity(immutable: true) {

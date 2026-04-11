@@ -1,0 +1,41 @@
+fragment AccountSlotFields on AccountSlot {
+  id
+  account {
+    id
+  }
+  slot {
+    id
+  }
+  metadataUpdateCount
+  taxPaid
+  holdTime
+  lastOccupiedAt
+  firstInteractedAt
+  lastInteractedAt
+}
+
+query GetAccountSlot($id: ID!, $block: Block_height) {
+  accountSlot(id: $id, block: $block) {
+    ...AccountSlotFields
+  }
+}
+
+query GetAccountSlots(
+  $first: Int!
+  $skip: Int
+  $orderBy: AccountSlot_orderBy
+  $orderDirection: OrderDirection
+  $where: AccountSlot_filter
+  $block: Block_height
+) {
+  accountSlots(
+    first: $first
+    skip: $skip
+    orderBy: $orderBy
+    orderDirection: $orderDirection
+    where: $where
+    block: $block
+  ) {
+    ...AccountSlotFields
+  }
+}

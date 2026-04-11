@@ -62,7 +62,7 @@ Same params = same address. Can't deploy twice with identical config.
 | Parameter | Type | Mutable? | Description |
 |---|---|---|---|
 | `taxPercentage` | `uint256` | Only if `mutableTax == true` (by `manager`) | Basis points (100 = 1%). Tax rate per month. |
-| `module` | `address` | Only if `mutableModule == true` (by `manager`) | Hook contract called on buy/release/liquidate. |
+| `module` | `address` | Only if `mutableModule == true` (by `manager`) | Hook contract implementing `ISlotsModule`. Called on buy/release/liquidate. Can charge a fee (see [Module Interface](#module-interface-islotsmodule)). |
 
 ### Separation of Concerns
 
@@ -164,6 +164,74 @@ If vacant (price = 0): buyer just provides deposit + their self-assessed price. 
 
 ### `cancelTaxUpdate()` / `cancelModuleUpdate()`
 - `manager` only
+
+---
+
+## Module Interface (`ISlotsModule`)
+
+Modules are opt-in hook contracts attached to a slot. They must implement `ISlotsModule` (which extends `IERC165`).
+
+```solidity
+interface ISlotsModule is IERC165 {
+    function name() external view returns (string memory);
+    function version() external view returns (string memory);
+
+    // Lifecycle hooks — called by the Slot contract
+    function onTransfer(uint256 slotId, address from, address to) external;
+    function onPriceUpdate(uint256 slotId, uint256 oldPrice, uint256 newPrice) external;
+    function onRelease(uint256 slotId, address from) external;
+
+    // Fee configuration
+    function feeBps() external view returns (uint256);
+    function feeRecipient() external view returns (address);
+
+    // Metadata
+    function moduleURI() external view returns (string memory);
+}
+```
+
+### Identity
+
+| Function | Returns | Description |
+|---|---|---|
+| `name()` | `string` | Human-readable module name (e.g. `"AdLandModule"`, `"FeedPostModule"`). |
+| `version()` | `string` | Semver string (e.g. `"2.0.0"`). |
+
+### Lifecycle Hooks
+
+Called by the Slot contract during state transitions. `msg.sender` is always the slot contract.
+
+| Hook | When Called | Typical Use |
+|---|---|---|
+| `onTransfer(slotId, from, to)` | After a `buy()` completes | Clear metadata, update access control, emit events. |
+| `onPriceUpdate(slotId, oldPrice, newPrice)` | After `selfAssess()` | React to price changes (e.g. re-index, adjust ads). |
+| `onRelease(slotId, from)` | After `release()` or `liquidate()` | Clean up slot state (clear metadata, revoke permissions). |
+
+### Fee Configuration
+
+Modules can take a fee from collected tax. The fee is deducted when `collect()` is called on the slot.
+
+| Function | Returns | Description |
+|---|---|---|
+| `feeBps()` | `uint256` | Module fee in basis points (e.g. `500` = 5%). Taken from collected tax before it reaches the `recipient`. Return `0` for no fee. |
+| `feeRecipient()` | `address` | Address that receives module fees. Can be an EOA, multisig, Splits contract, etc. Must return a valid address even if `feeBps` is `0`. |
+
+### Metadata
+
+| Function | Returns | Description |
+|---|---|---|
+| `moduleURI()` | `string` | URI pointing to module metadata (e.g. `ipfs://Qm...` with JSON containing image, description). Can be empty. |
+
+### ERC-165
+
+Modules must return `true` for both `ISlotsModule.interfaceId` and `IERC165.interfaceId` in `supportsInterface()`. The factory uses this to verify a contract is a valid module before allowing it to be set on a slot.
+
+### Example Modules
+
+| Module | Purpose | `feeBps` | Hooks Used |
+|---|---|---|---|
+| **MetadataModule** | Stores a URI per slot (occupant-writable). Clears on transfer/release. | `0` | `onTransfer`, `onRelease` |
+| **FeedPostModule** | Like MetadataModule but supports trusted routers for atomic buy+post flows. | `0` | `onTransfer`, `onRelease` |
 
 ---
 
