@@ -6,6 +6,11 @@ import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {UUPSUpgradeable} from "@openzeppelin-upgradeable/contracts/proxy/utils/UUPSUpgradeable.sol";
 import {OwnableUpgradeable} from "@openzeppelin-upgradeable/contracts/access/OwnableUpgradeable.sol";
 import {Initializable} from "@openzeppelin-upgradeable/contracts/proxy/utils/Initializable.sol";
+import {EVT_FEED_METADATA_UPDATED, EVT_FEED_METADATA_CLEARED} from "../FeedRouter.sol";
+
+interface IFeedRouter {
+    function emitEvent(address slot, uint8 eventType, bytes calldata data) external;
+}
 
 /// @title FeedPostModule
 /// @notice UUPS-upgradeable module that stores a URI per slot for The Feed.
@@ -21,6 +26,9 @@ contract FeedPostModule is
 
     /// @notice Trusted routers that can call postFor
     mapping(address => bool) public trustedRouters;
+
+    /// @notice FeedRouter used as event hub
+    address public router;
 
     event MetadataUpdated(address indexed slot, string uri);
     event RouterUpdated(address indexed router, bool trusted);
@@ -41,9 +49,14 @@ contract FeedPostModule is
     // ── Router management ─────────────────────────────────────
 
     /// @notice Add or remove a trusted router. Only owner.
-    function setTrustedRouter(address router, bool trusted) external onlyOwner {
-        trustedRouters[router] = trusted;
-        emit RouterUpdated(router, trusted);
+    function setTrustedRouter(address _router, bool trusted) external onlyOwner {
+        trustedRouters[_router] = trusted;
+        emit RouterUpdated(_router, trusted);
+    }
+
+    /// @notice Set the FeedRouter event hub address. Only owner.
+    function setRouter(address _router) external onlyOwner {
+        router = _router;
     }
 
     // ── Metadata ──────────────────────────────────────────────
@@ -60,6 +73,7 @@ contract FeedPostModule is
     ) external onlyOccupant(slot) {
         tokenURI[slot] = uri;
         emit MetadataUpdated(slot, uri);
+        _emitFeedEvent(slot, EVT_FEED_METADATA_UPDATED, abi.encode(msg.sender, uri));
     }
 
     /// @notice Post metadata on behalf of a user. Only callable by trusted routers.
@@ -126,6 +140,12 @@ contract FeedPostModule is
     function _clearMetadata(address slot) internal {
         delete tokenURI[slot];
         emit MetadataUpdated(slot, "");
+        _emitFeedEvent(slot, EVT_FEED_METADATA_CLEARED, abi.encode(slot));
+    }
+
+    function _emitFeedEvent(address slot, uint8 eventType, bytes memory data) internal {
+        if (router == address(0)) return;
+        try IFeedRouter(router).emitEvent(slot, eventType, data) {} catch {}
     }
 
     function _slotOccupant(address slot) internal view returns (address) {
