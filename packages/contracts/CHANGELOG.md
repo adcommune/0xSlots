@@ -1,5 +1,11 @@
 # @0xslots/contracts
 
+## 0.10.0
+
+### Minor Changes
+
+- 5434154: add events & new router addresses
+
 ## 0.9.1
 
 ### Patch Changes
