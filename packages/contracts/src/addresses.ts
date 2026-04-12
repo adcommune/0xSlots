@@ -23,8 +23,8 @@ export const feedModuleAddress = {
 } as const;
 
 export const feedRouterAddress = {
-  [baseSepolia.id]: "0x31D6eE9028f5C102c2116e9552Fc20f3aA468194",
-  [base.id]: "0x0000000000000000000000000000000000000000", // not deployed yet
+  [baseSepolia.id]: "0x93E67283Cbb4bE7b86FeBbb9620e72777715C710",
+  [base.id]: "0xCfFA953EfC77591463a9560211bC783b5aaF3A4a",
 } as const;
 
 /**

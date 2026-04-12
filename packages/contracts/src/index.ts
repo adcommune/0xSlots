@@ -15,6 +15,9 @@ export { metadataModuleAbi } from "./abis/metadata-module";
 export { feedModuleAbi } from "./abis/feed-module";
 export { feedRouterAbi } from "./abis/feed-router";
 
+// Re-export feed events
+export { feedEvent, FeedEventType, FEED_EVENT_TYPES } from "./events";
+
 // Re-export addresses and utilities
 export {
   batchCollectorAddress,
