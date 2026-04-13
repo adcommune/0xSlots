@@ -1,6 +1,7 @@
 import { MetadataUpdated } from "../generated/MetadataModule/MetadataModule";
+import { MetadataUpdated as MetadataUpdatedV2 } from "../generated/templates/FeedPostModule/FeedPostModuleV2";
 import { Slot, MetadataSlot, MetadataUpdatedEvent } from "../generated/schema";
-import { BigInt, ipfs, json } from "@graphprotocol/graph-ts";
+import { Address, BigInt, ipfs, json } from "@graphprotocol/graph-ts";
 import { getOrCreateAccount, getOrCreateAccountSlot } from "./helpers";
 
 /**
@@ -83,16 +84,95 @@ export function handleMetadataUpdated(event: MetadataUpdated): void {
 
   // Track metadata update counts on Account & AccountSlot
   let author = getOrCreateAccount(event.transaction.from, true);
-  author.metadataUpdateCount = author.metadataUpdateCount.plus(BigInt.fromI32(1));
+  author.metadataUpdateCount = author.metadataUpdateCount.plus(
+    BigInt.fromI32(1),
+  );
   author.save();
 
-  let authorAS = getOrCreateAccountSlot(event.transaction.from, event.params.slot, event.block.timestamp);
-  authorAS.metadataUpdateCount = authorAS.metadataUpdateCount.plus(BigInt.fromI32(1));
+  let authorAS = getOrCreateAccountSlot(
+    event.transaction.from,
+    event.params.slot,
+    event.block.timestamp,
+  );
+  authorAS.metadataUpdateCount = authorAS.metadataUpdateCount.plus(
+    BigInt.fromI32(1),
+  );
   authorAS.lastInteractedAt = event.block.timestamp;
   authorAS.save();
 
   // Create immutable history event
-  let eventId = event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
+  let eventId =
+    event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
+  let metadataEvent = new MetadataUpdatedEvent(eventId);
+  metadataEvent.slot = slotId;
+  metadataEvent.author = author.id;
+  metadataEvent.uri = event.params.uri;
+  metadataEvent.cid = cid;
+  metadataEvent.rawJson = content;
+  metadataEvent.adType = adType;
+  metadataEvent.timestamp = event.block.timestamp;
+  metadataEvent.blockNumber = event.block.number;
+  metadataEvent.tx = event.transaction.hash;
+  metadataEvent.save();
+}
+
+/**
+ * V2 handler: MetadataUpdated(indexed address slot, indexed address updatedBy, string uri)
+ * Uses event.params.updatedBy instead of event.transaction.from for attribution.
+ */
+export function handleMetadataUpdatedV2(event: MetadataUpdatedV2): void {
+  let slotId = event.params.slot.toHexString();
+  let slot = Slot.load(slotId);
+  if (slot == null) return;
+
+  slot.updatedAt = event.block.timestamp;
+  slot.save();
+
+  let authorAddress: Address = event.params.updatedBy;
+  let content = resolveContent(event.params.uri);
+  let adType: string | null = content ? extractAdType(content) : null;
+  let cid = extractCid(event.params.uri);
+
+  // Upsert MetadataSlot (mutable — latest state)
+  let metadataSlot = MetadataSlot.load(slotId);
+  if (metadataSlot == null) {
+    metadataSlot = new MetadataSlot(slotId);
+    metadataSlot.slot = slotId;
+    metadataSlot.updateCount = BigInt.fromI32(0);
+    metadataSlot.createdAt = event.block.timestamp;
+    metadataSlot.createdTx = event.transaction.hash;
+  }
+  metadataSlot.uri = event.params.uri;
+  metadataSlot.cid = cid;
+  metadataSlot.rawJson = content;
+  metadataSlot.adType = adType;
+  metadataSlot.updatedBy = authorAddress;
+  metadataSlot.updateCount = metadataSlot.updateCount.plus(BigInt.fromI32(1));
+  metadataSlot.updatedAt = event.block.timestamp;
+  metadataSlot.updatedTx = event.transaction.hash;
+  metadataSlot.save();
+
+  // Track metadata update counts on Account & AccountSlot
+  let author = getOrCreateAccount(authorAddress, true);
+  author.metadataUpdateCount = author.metadataUpdateCount.plus(
+    BigInt.fromI32(1),
+  );
+  author.save();
+
+  let authorAS = getOrCreateAccountSlot(
+    authorAddress,
+    event.params.slot,
+    event.block.timestamp,
+  );
+  authorAS.metadataUpdateCount = authorAS.metadataUpdateCount.plus(
+    BigInt.fromI32(1),
+  );
+  authorAS.lastInteractedAt = event.block.timestamp;
+  authorAS.save();
+
+  // Create immutable history event
+  let eventId =
+    event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
   let metadataEvent = new MetadataUpdatedEvent(eventId);
   metadataEvent.slot = slotId;
   metadataEvent.author = author.id;

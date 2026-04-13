@@ -30,7 +30,7 @@ contract FeedPostModule is
     /// @notice FeedRouter used as event hub
     address public router;
 
-    event MetadataUpdated(address indexed slot, string uri);
+    event MetadataUpdated(address indexed slot, address indexed updatedBy, string uri);
     event RouterUpdated(address indexed router, bool trusted);
 
     error NotOccupant();
@@ -72,8 +72,25 @@ contract FeedPostModule is
         string calldata uri
     ) external onlyOccupant(slot) {
         tokenURI[slot] = uri;
-        emit MetadataUpdated(slot, uri);
+        emit MetadataUpdated(slot, msg.sender, uri);
         _emitFeedEvent(slot, EVT_FEED_METADATA_UPDATED, abi.encode(msg.sender, uri));
+    }
+
+    /// @notice Update metadata on behalf of `account`. Only callable by the occupant.
+    /// @dev The occupant (e.g. a FeedSocialGroup contract) calls this to attribute
+    ///      the post to `account` while retaining slot occupancy.
+    ///      updatedBy in the event = account, not msg.sender.
+    /// @param account The address to attribute the post to
+    /// @param slot The slot to update
+    /// @param uri The metadata URI
+    function updateMetadataFor(
+        address account,
+        address slot,
+        string calldata uri
+    ) external onlyOccupant(slot) {
+        tokenURI[slot] = uri;
+        emit MetadataUpdated(slot, account, uri);
+        _emitFeedEvent(slot, EVT_FEED_METADATA_UPDATED, abi.encode(account, uri));
     }
 
     /// @notice Post metadata on behalf of a user. Only callable by trusted routers.
@@ -87,7 +104,7 @@ contract FeedPostModule is
         if (account != _slotOccupant(slot)) revert NotActualOccupant();
 
         tokenURI[slot] = uri;
-        emit MetadataUpdated(slot, uri);
+        emit MetadataUpdated(slot, account, uri);
     }
 
     // ── Module hooks ──────────────────────────────────────────
@@ -139,7 +156,7 @@ contract FeedPostModule is
 
     function _clearMetadata(address slot) internal {
         delete tokenURI[slot];
-        emit MetadataUpdated(slot, "");
+        emit MetadataUpdated(slot, address(0), "");
         _emitFeedEvent(slot, EVT_FEED_METADATA_CLEARED, abi.encode(slot));
     }
 
