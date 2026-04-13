@@ -1,5 +1,11 @@
 # @0xslots/contracts
 
+## 0.11.0
+
+### Minor Changes
+
+- a0a9e54: feat: add social group contracts & methods
+
 ## 0.10.0
 
 ### Minor Changes

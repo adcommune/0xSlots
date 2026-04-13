@@ -1,5 +1,16 @@
 # @0xslots/sdk
 
+## 0.15.0
+
+### Minor Changes
+
+- a0a9e54: feat: add social group contracts & methods
+
+### Patch Changes
+
+- Updated dependencies [a0a9e54]
+  - @0xslots/contracts@0.11.0
+
 ## 0.14.1
 
 ### Patch Changes
