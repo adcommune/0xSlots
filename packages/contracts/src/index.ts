@@ -14,6 +14,7 @@ export {
 export { metadataModuleAbi } from "./abis/metadata-module";
 export { feedModuleAbi } from "./abis/feed-module";
 export { feedRouterAbi } from "./abis/feed-router";
+export { feedSocialGroupAbi } from "./abis/feed-social-group";
 
 // Re-export feed events
 export { feedEvent, FeedEventType, FEED_EVENT_TYPES } from "./events";
@@ -29,6 +30,7 @@ export {
   slotFactoryAddress,
   feedModuleAddress,
   feedRouterAddress,
+  feedSocialGroupAddress,
 } from "./addresses";
 
 /** Viem chain objects for known 0xSlots networks — add here when deploying to new chains */

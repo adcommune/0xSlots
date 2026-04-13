@@ -2,6 +2,8 @@ import {
   feedModuleAbi,
   feedRouterAbi,
   feedRouterAddress,
+  feedSocialGroupAbi,
+  feedSocialGroupAddress,
 } from "@0xslots/contracts";
 import {
   type Address,
@@ -75,6 +77,19 @@ export class FeedModuleClient {
       feedRouterAddress[this.chainId as keyof typeof feedRouterAddress];
     if (!addr)
       throw new SlotsError("feed", `No FeedRouter for chain ${this.chainId}`);
+    return addr as Address;
+  }
+
+  private get socialGroupAddress(): Address {
+    const addr =
+      feedSocialGroupAddress[
+        this.chainId as keyof typeof feedSocialGroupAddress
+      ];
+    if (!addr)
+      throw new SlotsError(
+        "feed",
+        `No FeedSocialGroup for chain ${this.chainId}`,
+      );
     return addr as Address;
   }
 
@@ -248,6 +263,78 @@ export class FeedModuleClient {
       abi: feedRouterAbi,
       functionName: "buyAndPost",
       args: [slot, depositAmount, selfAssessedPrice, uri],
+      account: this.account,
+      chain: this.chain,
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // WRITE — Social Group
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * Post via the social group contract. Anyone can call — attributed to msg.sender.
+   *
+   * @param slot - The slot address to post to
+   * @param uri - The metadata URI
+   * @returns Transaction hash
+   */
+  async socialGroupPost(slot: Address, uri: string): Promise<Hash> {
+    return this.wallet.writeContract({
+      address: this.socialGroupAddress,
+      abi: feedSocialGroupAbi,
+      functionName: "post",
+      args: [slot, uri],
+      account: this.account,
+      chain: this.chain,
+    });
+  }
+
+  /**
+   * Force post via the social group contract. Only callable by POSTING_MANAGER.
+   * The poster is passed as an argument — backend is trusted to attribute correctly.
+   *
+   * @param poster - The address to attribute the post to
+   * @param slot - The slot address to post to
+   * @param uri - The metadata URI
+   * @returns Transaction hash
+   */
+  async socialGroupPostAdmin(
+    poster: Address,
+    slot: Address,
+    uri: string,
+  ): Promise<Hash> {
+    return this.wallet.writeContract({
+      address: this.socialGroupAddress,
+      abi: feedSocialGroupAbi,
+      functionName: "postAdmin",
+      args: [poster, slot, uri],
+      account: this.account,
+      chain: this.chain,
+    });
+  }
+
+  /**
+   * Relayed post via the social group contract. Only callable by POSTING_MANAGER.
+   * The poster is cryptographically proven via their EIP-712 signature.
+   *
+   * @param slot - The slot address to post to
+   * @param uri - The metadata URI
+   * @param nonce - Unique bytes32 nonce for replay protection
+   * @param signature - EIP-712 signature from the poster
+   * @returns Transaction hash
+   */
+  async socialGroupPostWithSignature(
+    slot: Address,
+    uri: string,
+    nonce: `0x${string}`,
+    signature: `0x${string}`,
+  ): Promise<Hash> {
+    return this.wallet.writeContract({
+      address: this.socialGroupAddress,
+      abi: feedSocialGroupAbi,
+      functionName: "postWithSignature",
+      args: [slot, uri, nonce, signature],
       account: this.account,
       chain: this.chain,
     });

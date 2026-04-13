@@ -27,6 +27,11 @@ export const feedRouterAddress = {
   [base.id]: "0xCfFA953EfC77591463a9560211bC783b5aaF3A4a",
 } as const;
 
+export const feedSocialGroupAddress = {
+  [baseSepolia.id]: "0xC664a125F58cEc92d041c73c58388e58b7b5fE5D",
+  [base.id]: "0x5b524d7A1E7449963c42aEaFfAE751573e22F314",
+} as const;
+
 /**
  * Supported chain IDs for 0xSlots protocol
  */
