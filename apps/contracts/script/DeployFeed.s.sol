@@ -25,26 +25,35 @@ contract DeployFeed is BaseScript {
     // ── Per-chain addresses ───────────────────────────────────
 
     function _getFactory() internal view returns (address) {
-        if (block.chainid == 84532) return 0x6D87C1647f228Baf8DE0374FCd7FdEBF6900fdFF;
-        if (block.chainid == 8453)  return 0xbf2F890E8F5CCCB3A1D7c5030dBC1843B9E36B0e;
+        if (block.chainid == 84532)
+            return 0x6D87C1647f228Baf8DE0374FCd7FdEBF6900fdFF;
+        if (block.chainid == 8453)
+            return 0xbf2F890E8F5CCCB3A1D7c5030dBC1843B9E36B0e;
         revert("Unsupported chain");
     }
 
     function _getFeedModule() internal view returns (address) {
-        if (block.chainid == 84532) return 0x17b663b7C779B64f339ab916aB734A6a4f0b075E;
-        if (block.chainid == 8453)  return 0xe92BE44E3D77be84E2aC4D6da9FFDaC0FCa67f72;
+        if (block.chainid == 84532)
+            return 0x17b663b7C779B64f339ab916aB734A6a4f0b075E;
+        if (block.chainid == 8453)
+            return 0xe92BE44E3D77be84E2aC4D6da9FFDaC0FCa67f72;
         revert("Unsupported chain");
     }
 
     function _getCurrency() internal view returns (address) {
-        if (block.chainid == 84532) return 0xFA28A416810e39a7142C7557e6e43407d765f627; // USDCf
-        if (block.chainid == 8453)  return 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913; // USDC
+        if (block.chainid == 84532)
+            return 0xFA28A416810e39a7142C7557e6e43407d765f627; // USDCf
+        if (block.chainid == 8453)
+            return 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913; // USDC
         revert("Unsupported chain");
     }
 
     // ── Entry points ──────────────────────────────────────────
 
-    function runBaseSepolia() external broadcastOn(DeployementChain.BaseSepolia) {
+    function runBaseSepolia()
+        external
+        broadcastOn(DeployementChain.BaseSepolia)
+    {
         _deploy();
     }
 
@@ -57,10 +66,10 @@ contract DeployFeed is BaseScript {
     function _deploy() internal {
         string memory json = vm.readFile("./script/feed/slots.json");
 
-        address factory    = _getFactory();
+        address factory = _getFactory();
         address feedModule = _getFeedModule();
-        address currency   = _getCurrency();
-        address recipient  = vm.parseJsonAddress(json, ".recipient");
+        address currency = _getCurrency();
+        address recipient = vm.parseJsonAddress(json, ".recipient");
 
         bytes memory slotsRaw = vm.parseJson(json, ".slots");
         SlotEntry[] memory slots = abi.decode(slotsRaw, (SlotEntry[]));

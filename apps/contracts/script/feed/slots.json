@@ -1,5 +1,5 @@
 {
-  "recipient": "0x069345ba1B1f59DF99718538719F290059C895Fd",
+  "recipient": "0x54D023fDe5173BEc84D59AFfb0eEc5A711EC6630",
   "slots": [
     { "taxBps": 100, "liquidationBountyBps": 100, "minDepositSeconds": 86400 },
     { "taxBps": 100, "liquidationBountyBps": 100, "minDepositSeconds": 86400 },
