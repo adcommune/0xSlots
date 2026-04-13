@@ -2,10 +2,9 @@
 
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
-import { type Address, formatUnits, isAddress } from "viem";
+import { type Address, formatUnits } from "viem";
 import { useAccount } from "wagmi";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { MONTH_SECONDS } from "@/constants";
 import { useSlotAction } from "@/hooks/use-slot-action";
@@ -26,21 +25,12 @@ export function BuySection({
   const { buy, selfAssess, busy } = useSlotAction();
   const [buyPrice, setBuyPrice] = useState("");
   const [buyDeposit, setBuyDeposit] = useState("");
-  const [forMyself, setForMyself] = useState(!isOccupied);
-  const [recipientInput, setRecipientInput] = useState(slot.occupant ?? "");
   const { address } = useAccount();
 
   const isOccupant =
     !!address &&
     !!slot.occupant &&
     slot.occupant.toLowerCase() === address.toLowerCase();
-
-  const recipientValid = isAddress(recipientInput);
-  const buyAccount: Address | undefined = forMyself
-    ? address
-    : recipientValid
-      ? (recipientInput as Address)
-      : undefined;
 
   const currentPriceRaw = isOccupied ? formatUnits(slot.price, decimals) : "0";
   const currentPriceDisplay = isOccupied
@@ -56,9 +46,7 @@ export function BuySection({
   }
 
   const effectivePrice = buyPrice || currentPriceRaw;
-  const priceForMin = effectivePrice
-    ? toRawUnits(effectivePrice, decimals)
-    : 0n;
+  const priceForMin = effectivePrice ? toRawUnits(effectivePrice, decimals) : 0n;
   const minDep = computeMinDeposit(priceForMin);
   const effectiveDeposit = buyDeposit || (minDep !== "0" ? minDep : "");
 
@@ -73,10 +61,10 @@ export function BuySection({
   }
 
   function handleBuy() {
-    if (!buyAccount || !address) return;
+    if (!address) return;
     const dep = toRawUnits(effectiveDeposit || "0", decimals);
     buy({
-      account: buyAccount,
+      account: address,
       slot: slotAddress as Address,
       depositAmount: dep,
       selfAssessedPrice: toRawUnits(effectivePrice || "0", decimals),
@@ -85,10 +73,7 @@ export function BuySection({
 
   function handleSelfAssess() {
     if (!address || !buyPrice) return;
-    selfAssess(
-      slotAddress as Address,
-      toRawUnits(buyPrice, decimals),
-    );
+    selfAssess(slotAddress as Address, toRawUnits(buyPrice, decimals));
   }
 
   // ── Self-assess view (connected wallet is the current occupant) ──────────
@@ -128,7 +113,7 @@ export function BuySection({
     );
   }
 
-  // ── Buy view (force-buy or vacant slot) ─────────────────────────────────
+  // ── Buy view ─────────────────────────────────────────────────────────────
   return (
     <div className="space-y-3">
       {isOccupied && (
@@ -181,33 +166,6 @@ export function BuySection({
         )}
       </div>
 
-      {/* Recipient */}
-      <div className="space-y-2">
-        <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
-          <Checkbox
-            checked={forMyself}
-            onCheckedChange={(v) => setForMyself(v === true)}
-          />
-          For myself
-        </label>
-        {!forMyself && (
-          <div>
-            <Input
-              type="text"
-              placeholder="0x..."
-              value={recipientInput}
-              onChange={(e) => setRecipientInput(e.target.value)}
-              className={`text-xs font-mono ${recipientInput && !recipientValid ? "border-destructive" : ""}`}
-            />
-            {recipientInput && !recipientValid && (
-              <p className="text-[10px] text-destructive mt-0.5">
-                Invalid address
-              </p>
-            )}
-          </div>
-        )}
-      </div>
-
       {/* Summary */}
       <div className="rounded-md bg-muted/50 p-2.5 space-y-1">
         {isOccupied && (
@@ -235,7 +193,11 @@ export function BuySection({
         </div>
       </div>
 
-      <Button disabled={busy || !buyAccount} onClick={handleBuy} className="w-full">
+      <Button
+        disabled={busy || !address}
+        onClick={handleBuy}
+        className="w-full"
+      >
         {busy ? (
           <>
             <Loader2 className="size-4 animate-spin mr-2" /> Processing...
