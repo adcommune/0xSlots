@@ -2,9 +2,10 @@
 
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
-import { type Address, formatUnits } from "viem";
+import { type Address, formatUnits, isAddress } from "viem";
 import { useAccount } from "wagmi";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { MONTH_SECONDS } from "@/constants";
 import { useSlotAction } from "@/hooks/use-slot-action";
@@ -25,7 +26,16 @@ export function BuySection({
   const { buy, busy } = useSlotAction();
   const [buyPrice, setBuyPrice] = useState("");
   const [buyDeposit, setBuyDeposit] = useState("");
+  const [forMyself, setForMyself] = useState(true);
+  const [recipientInput, setRecipientInput] = useState("");
   const { address } = useAccount();
+
+  const recipientValid = isAddress(recipientInput);
+  const buyAccount: Address | undefined = forMyself
+    ? address
+    : recipientValid
+      ? (recipientInput as Address)
+      : undefined;
 
   // Use formatUnits for values that feed back into toRawUnits (no K/M/B suffixes).
   // Use formatBalance only for pure display.
@@ -60,10 +70,10 @@ export function BuySection({
   }
 
   function handleBuy() {
-    if (!address) return;
+    if (!buyAccount || !address) return;
     const dep = toRawUnits(effectiveDeposit || "0", decimals);
     buy({
-      account: address,
+      account: buyAccount,
       slot: slotAddress as Address,
       depositAmount: dep,
       selfAssessedPrice: toRawUnits(effectivePrice || "0", decimals),
@@ -122,6 +132,33 @@ export function BuySection({
         )}
       </div>
 
+      {/* Recipient */}
+      <div className="space-y-2">
+        <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+          <Checkbox
+            checked={forMyself}
+            onCheckedChange={(v) => setForMyself(v === true)}
+          />
+          For myself
+        </label>
+        {!forMyself && (
+          <div>
+            <Input
+              type="text"
+              placeholder="0x..."
+              value={recipientInput}
+              onChange={(e) => setRecipientInput(e.target.value)}
+              className={`text-xs font-mono ${recipientInput && !recipientValid ? "border-destructive" : ""}`}
+            />
+            {recipientInput && !recipientValid && (
+              <p className="text-[10px] text-destructive mt-0.5">
+                Invalid address
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* Summary */}
       <div className="rounded-md bg-muted/50 p-2.5 space-y-1">
         {isOccupied && (
@@ -149,7 +186,7 @@ export function BuySection({
         </div>
       </div>
 
-      <Button disabled={busy} onClick={handleBuy} className="w-full">
+      <Button disabled={busy || !buyAccount} onClick={handleBuy} className="w-full">
         {busy ? (
           <>
             <Loader2 className="size-4 animate-spin mr-2" /> Processing...
