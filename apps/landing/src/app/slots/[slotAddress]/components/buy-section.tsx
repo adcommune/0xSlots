@@ -23,12 +23,17 @@ export function BuySection({
 }) {
   const decimals = slot.currencyDecimals ?? 6;
   const symbol = slot.currencySymbol ?? "USDC";
-  const { buy, busy } = useSlotAction();
+  const { buy, selfAssess, busy } = useSlotAction();
   const [buyPrice, setBuyPrice] = useState("");
   const [buyDeposit, setBuyDeposit] = useState("");
-  const [forMyself, setForMyself] = useState(true);
-  const [recipientInput, setRecipientInput] = useState("");
+  const [forMyself, setForMyself] = useState(!isOccupied);
+  const [recipientInput, setRecipientInput] = useState(slot.occupant ?? "");
   const { address } = useAccount();
+
+  const isOccupant =
+    !!address &&
+    !!slot.occupant &&
+    slot.occupant.toLowerCase() === address.toLowerCase();
 
   const recipientValid = isAddress(recipientInput);
   const buyAccount: Address | undefined = forMyself
@@ -37,8 +42,6 @@ export function BuySection({
       ? (recipientInput as Address)
       : undefined;
 
-  // Use formatUnits for values that feed back into toRawUnits (no K/M/B suffixes).
-  // Use formatBalance only for pure display.
   const currentPriceRaw = isOccupied ? formatUnits(slot.price, decimals) : "0";
   const currentPriceDisplay = isOccupied
     ? formatBalance(slot.price, decimals)
@@ -80,6 +83,52 @@ export function BuySection({
     });
   }
 
+  function handleSelfAssess() {
+    if (!address || !buyPrice) return;
+    selfAssess(
+      slotAddress as Address,
+      toRawUnits(buyPrice, decimals),
+    );
+  }
+
+  // ── Self-assess view (connected wallet is the current occupant) ──────────
+  if (isOccupant) {
+    return (
+      <div className="space-y-3">
+        <div>
+          <label className="text-xs text-muted-foreground block mb-1">
+            New Price ({symbol})
+          </label>
+          <Input
+            type="text"
+            inputMode="decimal"
+            placeholder={currentPriceDisplay || "1.00"}
+            value={buyPrice}
+            onChange={(e) => setBuyPrice(e.target.value)}
+            className="text-xs"
+          />
+          <p className="text-[10px] text-muted-foreground mt-0.5">
+            Current: {currentPriceDisplay} {symbol}
+          </p>
+        </div>
+        <Button
+          disabled={busy || !buyPrice}
+          onClick={handleSelfAssess}
+          className="w-full"
+        >
+          {busy ? (
+            <>
+              <Loader2 className="size-4 animate-spin mr-2" /> Processing...
+            </>
+          ) : (
+            "Update Price"
+          )}
+        </Button>
+      </div>
+    );
+  }
+
+  // ── Buy view (force-buy or vacant slot) ─────────────────────────────────
   return (
     <div className="space-y-3">
       {isOccupied && (
