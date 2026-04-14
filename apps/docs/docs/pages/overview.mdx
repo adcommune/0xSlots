@@ -40,9 +40,12 @@ Slots hold a minimum deposit of currency (defined at launch by the user, protoco
 
 ### Modules
 
-Slots can hook into a **module** that listens to ownership transfer, price update & release events. Modules grant any rights to the occupant of the slot and can request a portion of the tax collected by the slot owner.
+Modules are what can bring extra value to a slot.
 
----
+They're smart contracts that implement custom logic and are triggered by slot events (ownership transfer, price update, release). 
+
+They can also require a cut of the tax revenue a slot generates through `feePercentage()` & `feeRecipient()`.
+
 
 ## Conclusion: Slots as Fertile Ground
 
