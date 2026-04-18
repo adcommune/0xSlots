@@ -1,5 +1,11 @@
 # @0xslots/sdk
 
+## 0.15.1
+
+### Patch Changes
+
+- ee01045: include the updatedBy proper in the metadata update event
+
 ## 0.15.0
 
 ### Minor Changes
