@@ -1297,6 +1297,19 @@ export class MetadataUpdatedEvent extends Entity {
     this.set("author", Value.fromString(value));
   }
 
+  get updatedBy(): Bytes {
+    let value = this.get("updatedBy");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set updatedBy(value: Bytes) {
+    this.set("updatedBy", Value.fromBytes(value));
+  }
+
   get uri(): string {
     let value = this.get("uri");
     if (!value || value.kind == ValueKind.NULL) {

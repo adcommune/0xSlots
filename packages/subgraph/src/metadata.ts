@@ -106,6 +106,7 @@ export function handleMetadataUpdated(event: MetadataUpdated): void {
   let metadataEvent = new MetadataUpdatedEvent(eventId);
   metadataEvent.slot = slotId;
   metadataEvent.author = author.id;
+  metadataEvent.updatedBy = event.transaction.from;
   metadataEvent.uri = event.params.uri;
   metadataEvent.cid = cid;
   metadataEvent.rawJson = content;
@@ -176,6 +177,7 @@ export function handleMetadataUpdatedV2(event: MetadataUpdatedV2): void {
   let metadataEvent = new MetadataUpdatedEvent(eventId);
   metadataEvent.slot = slotId;
   metadataEvent.author = author.id;
+  metadataEvent.updatedBy = authorAddress;
   metadataEvent.uri = event.params.uri;
   metadataEvent.cid = cid;
   metadataEvent.rawJson = content;

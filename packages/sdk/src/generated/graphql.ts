@@ -1127,6 +1127,7 @@ export type MetadataUpdatedEvent = {
   slot: Slot;
   timestamp: Scalars['BigInt']['output'];
   tx: Scalars['Bytes']['output'];
+  updatedBy: Scalars['Bytes']['output'];
   uri: Scalars['String']['output'];
 };
 
@@ -1271,6 +1272,16 @@ export type MetadataUpdatedEvent_Filter = {
   tx_not?: InputMaybe<Scalars['Bytes']['input']>;
   tx_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
   tx_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  updatedBy?: InputMaybe<Scalars['Bytes']['input']>;
+  updatedBy_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  updatedBy_gt?: InputMaybe<Scalars['Bytes']['input']>;
+  updatedBy_gte?: InputMaybe<Scalars['Bytes']['input']>;
+  updatedBy_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  updatedBy_lt?: InputMaybe<Scalars['Bytes']['input']>;
+  updatedBy_lte?: InputMaybe<Scalars['Bytes']['input']>;
+  updatedBy_not?: InputMaybe<Scalars['Bytes']['input']>;
+  updatedBy_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  updatedBy_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
   uri?: InputMaybe<Scalars['String']['input']>;
   uri_contains?: InputMaybe<Scalars['String']['input']>;
   uri_contains_nocase?: InputMaybe<Scalars['String']['input']>;
@@ -1325,6 +1336,7 @@ export type MetadataUpdatedEvent_OrderBy =
   | 'slot__updatedAt'
   | 'timestamp'
   | 'tx'
+  | 'updatedBy'
   | 'uri';
 
 export type Module = {
@@ -4469,7 +4481,7 @@ export type GetMetadataUpdatedEventsQueryVariables = Exact<{
 }>;
 
 
-export type GetMetadataUpdatedEventsQuery = { __typename?: 'Query', metadataUpdatedEvents: Array<{ __typename?: 'MetadataUpdatedEvent', id: string, uri: string, rawJson?: string | null, adType?: string | null, timestamp: string, blockNumber: string, tx: string, slot: { __typename?: 'Slot', id: string }, author: { __typename?: 'Account', id: string, type: AccountType } }> };
+export type GetMetadataUpdatedEventsQuery = { __typename?: 'Query', metadataUpdatedEvents: Array<{ __typename?: 'MetadataUpdatedEvent', id: string, updatedBy: string, uri: string, rawJson?: string | null, adType?: string | null, timestamp: string, blockNumber: string, tx: string, slot: { __typename?: 'Slot', id: string }, author: { __typename?: 'Account', id: string, type: AccountType } }> };
 
 export type SlotFieldsFragment = { __typename?: 'Slot', id: string, recipient: string, manager: string, mutableTax: boolean, mutableModule: boolean, taxPercentage: string, occupant?: string | null, price: string, deposit: string, collectedTax: string, totalCollected: string, liquidationBountyBps: string, minDepositSeconds: string, createdAt: string, createdTx: string, updatedAt: string, recipientAccount: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number }, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number }, module?: { __typename?: 'Module', id: string, verified: boolean, name: string, version: string, feeBps: string, moduleURI?: string | null, image?: string | null, description?: string | null, totalFeesCollected: string } | null, occupantAccount?: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number } | null };
 
@@ -5378,6 +5390,7 @@ export const GetMetadataUpdatedEventsDocument = gql`
       id
       type
     }
+    updatedBy
     uri
     rawJson
     adType

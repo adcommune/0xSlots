@@ -58,6 +58,7 @@ query GetMetadataUpdatedEvents($first: Int = 50, $skip: Int = 0, $orderBy: Metad
       id
       type
     }
+    updatedBy
     uri
     rawJson
     adType

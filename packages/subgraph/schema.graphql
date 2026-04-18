@@ -128,6 +128,7 @@ type MetadataUpdatedEvent @entity(immutable: true) {
   id: ID!
   slot: Slot!
   author: Account!
+  updatedBy: Bytes! # raw address that set the URI (V1: tx.from, V2: event.updatedBy param)
   uri: String!
   cid: String # IPFS CID extracted from uri (null for inline JSON or non-IPFS URIs)
   rawJson: String # full JSON content (from IPFS or inline), null if fetch failed
