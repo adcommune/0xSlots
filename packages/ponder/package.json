@@ -1,0 +1,23 @@
+{
+  "name": "@0xslots/ponder",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "ponder dev",
+    "start": "ponder start",
+    "codegen": "ponder codegen",
+    "serve": "ponder serve",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@0xslots/contracts": "workspace:*",
+    "hono": "^4.6.13",
+    "ponder": "0.16.6",
+    "viem": "^2.21.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.8",
+    "typescript": "^5.4.4"
+  }
+}

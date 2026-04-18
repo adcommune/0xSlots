@@ -1,0 +1,21 @@
+export const MetadataModuleAbi = [
+  {
+    "type": "event",
+    "name": "MetadataUpdated",
+    "inputs": [
+      {
+        "name": "slot",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "uri",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      }
+    ],
+    "anonymous": false
+  }
+] as const;
