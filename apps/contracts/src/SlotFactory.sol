@@ -24,6 +24,7 @@ contract SlotFactory is UUPSUpgradeable {
     error InvalidCount();
     error NotAdmin();
     error AlreadyInitialized();
+    error InvalidModule_NoCode();
 
     // ═══════════════════════════════════════════════════════════
     // EVENTS
@@ -241,7 +242,7 @@ contract SlotFactory is UUPSUpgradeable {
     function _validateConfig(
         SlotConfig memory config,
         SlotInitParams memory initParams
-    ) internal pure {
+    ) internal view {
         if (config.mutableTax || config.mutableModule) {
             if (config.manager == address(0))
                 revert InvalidConfig_ManagerRequired();
@@ -250,6 +251,11 @@ contract SlotFactory is UUPSUpgradeable {
                 revert InvalidConfig_ManagerMustBeZero();
         }
         if (initParams.taxPercentage == 0) revert InvalidTaxPercentage();
+
+        // Reject non-contract module addresses (e.g. EOA, wrong-chain address).
+        // Without this check, getSlotInfo() will revert on the resulting slot.
+        if (initParams.module != address(0) && initParams.module.code.length == 0)
+            revert InvalidModule_NoCode();
     }
 
     function _deploySlot(

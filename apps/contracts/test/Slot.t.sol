@@ -6,7 +6,9 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {Slot} from "../src/Slot.sol";
 import {SlotFactory} from "../src/SlotFactory.sol";
-import {SlotConfig, SlotInitParams, PendingUpdate} from "../src/interfaces/ISlot.sol";
+import {SlotConfig, SlotInitParams, PendingUpdate, SlotInfo} from "../src/interfaces/ISlot.sol";
+import {ISlotsModule} from "../src/interfaces/ISlotsModule.sol";
+import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 contract MockERC20 is ERC20 {
@@ -15,6 +17,21 @@ contract MockERC20 is ERC20 {
     }
     function mint(address to, uint256 amount) external {
         _mint(to, amount);
+    }
+}
+
+/// @dev Minimal ISlotsModule implementation used to test module wiring.
+contract MockModule is ISlotsModule {
+    function name() external pure returns (string memory) { return "MockModule"; }
+    function version() external pure returns (string memory) { return "1.0.0"; }
+    function feeBps() external pure returns (uint256) { return 0; }
+    function feeRecipient() external view returns (address) { return address(this); }
+    function moduleURI() external pure returns (string memory) { return ""; }
+    function onTransfer(uint256, address, address) external {}
+    function onPriceUpdate(uint256, uint256, uint256) external {}
+    function onRelease(uint256, address) external {}
+    function supportsInterface(bytes4 id) external pure returns (bool) {
+        return id == type(ISlotsModule).interfaceId || id == type(IERC165).interfaceId;
     }
 }
 
@@ -496,5 +513,149 @@ contract SlotV3Test is Test {
     function test_vacantSlotMaxLiquidationTime() public {
         Slot slot = _createDefaultSlot();
         assertEq(slot.secondsUntilLiquidation(), type(uint256).max);
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // MODULE VALIDATION (regression tests for SLOT_NOT_FOUND_BUG_REPORT)
+    // ═══════════════════════════════════════════════════════════
+
+    function _initWithModule(address module) internal pure returns (SlotInitParams memory) {
+        return SlotInitParams({
+            taxPercentage: 100,
+            module: module,
+            liquidationBountyBps: 500,
+            minDepositSeconds: 86400
+        });
+    }
+
+    function test_createSlot_rejectsCodelessModule() public {
+        // EOA-style address with no deployed code (mirrors the Sepolia-on-mainnet bug).
+        address eoa = makeAddr("noCodeModule");
+        assertEq(eoa.code.length, 0);
+
+        vm.expectRevert(SlotFactory.InvalidModule_NoCode.selector);
+        factory.createSlot(
+            recipient,
+            IERC20(address(token)),
+            _defaultConfig(),
+            _initWithModule(eoa)
+        );
+    }
+
+    function test_createSlots_batchRejectsCodelessModule() public {
+        address eoa = makeAddr("noCodeModule");
+        vm.expectRevert(SlotFactory.InvalidModule_NoCode.selector);
+        factory.createSlots(
+            recipient,
+            IERC20(address(token)),
+            _defaultConfig(),
+            _initWithModule(eoa),
+            3
+        );
+    }
+
+    function test_createSlot_acceptsContractModule() public {
+        MockModule mod = new MockModule();
+        address addr = factory.createSlot(
+            recipient,
+            IERC20(address(token)),
+            _defaultConfig(),
+            _initWithModule(address(mod))
+        );
+        Slot slot = Slot(addr);
+        assertEq(slot.module(), address(mod));
+
+        // getSlotInfo should not revert and should return the module metadata.
+        SlotInfo memory info = slot.getSlotInfo();
+        assertEq(info.module, address(mod));
+        assertEq(info.moduleName, "MockModule");
+        assertEq(info.moduleVersion, "1.0.0");
+    }
+
+    function test_createSlot_acceptsZeroModule() public {
+        // Sanity check: address(0) remains valid (means "no module").
+        Slot slot = _createSlot(_defaultConfig());
+        assertEq(slot.module(), address(0));
+
+        SlotInfo memory info = slot.getSlotInfo();
+        assertEq(info.module, address(0));
+        assertEq(info.moduleName, "");
+    }
+
+    function test_proposeModuleUpdate_rejectsCodelessModule() public {
+        SlotConfig memory config = SlotConfig({
+            mutableTax: false,
+            mutableModule: true,
+            manager: manager
+        });
+        Slot slot = _createSlot(config);
+
+        address eoa = makeAddr("noCodeModule");
+        vm.prank(manager);
+        vm.expectRevert(Slot.InvalidModule_NoCode.selector);
+        slot.proposeModuleUpdate(eoa);
+    }
+
+    function test_proposeModuleUpdate_acceptsContractModule() public {
+        SlotConfig memory config = SlotConfig({
+            mutableTax: false,
+            mutableModule: true,
+            manager: manager
+        });
+        Slot slot = _createSlot(config);
+        MockModule mod = new MockModule();
+
+        vm.prank(manager);
+        slot.proposeModuleUpdate(address(mod));
+
+        PendingUpdate memory update = slot.getPendingUpdate();
+        assertTrue(update.hasModuleUpdate);
+        assertEq(update.newModule, address(mod));
+    }
+
+    function test_proposeModuleUpdate_acceptsZeroToClearModule() public {
+        // Clearing the module (newModule = address(0)) must remain allowed,
+        // otherwise managers can't undo a module assignment.
+        SlotConfig memory config = SlotConfig({
+            mutableTax: false,
+            mutableModule: true,
+            manager: manager
+        });
+        Slot slot = _createSlot(config);
+
+        vm.prank(manager);
+        slot.proposeModuleUpdate(address(0));
+
+        PendingUpdate memory update = slot.getPendingUpdate();
+        assertTrue(update.hasModuleUpdate);
+        assertEq(update.newModule, address(0));
+    }
+
+    function test_getSlotInfo_doesNotRevertWhenModuleCodeWiped() public {
+        // Reproduces the production bug: a slot's module address ends up
+        // codeless (e.g. selfdestruct, or wrong-chain address). Before the
+        // extcodesize guard, getSlotInfo() reverted on ABI decode of empty
+        // returndata. After the fix, it must return cleanly with empty
+        // module metadata.
+        MockModule mod = new MockModule();
+        address modAddr = address(mod);
+        address slotAddr = factory.createSlot(
+            recipient,
+            IERC20(address(token)),
+            _defaultConfig(),
+            _initWithModule(modAddr)
+        );
+        Slot slot = Slot(slotAddr);
+
+        // Wipe the module's code to simulate a codeless module post-creation.
+        vm.etch(modAddr, "");
+        assertEq(modAddr.code.length, 0);
+
+        // Must not revert.
+        SlotInfo memory info = slot.getSlotInfo();
+        assertEq(info.module, modAddr);
+        assertEq(info.moduleName, "");
+        assertEq(info.moduleVersion, "");
+        assertEq(info.moduleFeeBps, 0);
     }
 }

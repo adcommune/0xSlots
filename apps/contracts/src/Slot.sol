@@ -37,6 +37,7 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     error InvalidLiquidationBounty();
     error InvalidRecipient();
     error InvalidCurrency();
+    error InvalidModule_NoCode();
 
     // ═══════════════════════════════════════════════════════════
     // STORAGE — KEEP ORDER, APPEND ONLY
@@ -381,6 +382,8 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     /// @notice Propose a new module (applied on next ownership transition)
     function proposeModuleUpdate(address newModule) external onlyManager {
         if (!mutableModule) revert ModuleNotMutable();
+        if (newModule != address(0) && newModule.code.length == 0)
+            revert InvalidModule_NoCode();
 
         pendingUpdate.newModule = newModule;
         pendingUpdate.hasModuleUpdate = true;
@@ -456,8 +459,10 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         info.secondsUntilLiquidation = secondsUntilLiquidation();
         info.insolvent = isInsolvent();
 
-        // Module info
-        if (module != address(0)) {
+        // Module info — guard with code-size check to avoid reverts when
+        // module address has no deployed code (try/catch does not catch
+        // ABI-decode failures from empty returndata).
+        if (module != address(0) && module.code.length > 0) {
             ISlotsModule mod = ISlotsModule(module);
             try mod.name() returns (string memory n) { info.moduleName = n; } catch {}
             try mod.version() returns (string memory v) { info.moduleVersion = v; } catch {}
