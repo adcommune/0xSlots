@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useErc20Check } from "../hooks/use-erc20-check";
+import { useModuleCheck } from "../hooks/use-module-check";
 import {
   Select,
   SelectContent,
@@ -30,9 +31,11 @@ export function StepParameters() {
   const presetCurrency = form.watch("presetCurrency");
   const customCurrency = form.watch("customCurrency");
   const moduleMode = form.watch("moduleMode");
+  const customModule = form.watch("module");
   const chainTokens = getChainTokens(chainId);
   const { data: verifiedModules } = useModules();
   const erc20 = useErc20Check(currencyMode === "custom" ? customCurrency : "");
+  const moduleCheck = useModuleCheck(moduleMode === "custom" ? customModule : "");
 
   return (
     <>
@@ -256,6 +259,26 @@ export function StepParameters() {
                     placeholder="0x… or ENS"
                     error={fieldState.error?.message}
                   />
+                  {moduleCheck.isLoading && (
+                    <p className="flex items-center gap-1.5 text-[10px] text-blue-500 mt-1">
+                      <Loader2 className="size-3 animate-spin" />
+                      Checking module address...
+                    </p>
+                  )}
+                  {moduleCheck.data?.hasCode && (
+                    <p className="flex items-center gap-1.5 text-[10px] text-green-600 mt-1">
+                      <Check className="size-3" />
+                      Contract found at this address
+                    </p>
+                  )}
+                  {moduleCheck.data &&
+                    !moduleCheck.data.hasCode &&
+                    moduleCheck.isValidAddress && (
+                      <p className="flex items-center gap-1.5 text-[10px] text-destructive mt-1">
+                        <AlertCircle className="size-3" />
+                        No contract code at this address on the selected chain
+                      </p>
+                    )}
                 </div>
               )}
               <FormMessage />
