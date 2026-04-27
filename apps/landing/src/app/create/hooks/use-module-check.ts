@@ -1,23 +1,72 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { type Address, getAddress, isAddress } from "viem";
-import { usePublicClient } from "wagmi";
+import { type Abi, type Address, getAddress, isAddress } from "viem";
+import { useReadContracts } from "wagmi";
 
-export interface ModuleInfo {
+/**
+ * ERC-165 interface ID for ISlotsModule = XOR of selectors of:
+ *   name(), version(), onTransfer(uint256,address,address),
+ *   onPriceUpdate(uint256,uint256,uint256), onRelease(uint256,address),
+ *   feeBps(), feeRecipient(), moduleURI()
+ *
+ * Computed from the canonical interface declared in
+ * `apps/contracts/src/interfaces/ISlotsModule.sol`. Matches the value
+ * returned by `type(ISlotsModule).interfaceId` in Solidity.
+ */
+export const ISLOTS_MODULE_INTERFACE_ID =
+  "0x0871cc1c" as `0x${string}`;
+
+const moduleProbeAbi = [
+  {
+    type: "function",
+    name: "supportsInterface",
+    stateMutability: "view",
+    inputs: [{ name: "interfaceId", type: "bytes4" }],
+    outputs: [{ type: "bool" }],
+  },
+  {
+    type: "function",
+    name: "name",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ type: "string" }],
+  },
+  {
+    type: "function",
+    name: "version",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ type: "string" }],
+  },
+] as const satisfies Abi;
+
+export type ModuleCheckStatus =
+  /** ERC-165 confirms ISlotsModule support — definitive valid. */
+  | "verified"
+  /** name()/version() succeed but ERC-165 missing — probable, allow with warning. */
+  | "probable"
+  /** name()/version() revert — not module-shaped. */
+  | "invalid"
+  /** No contract code at this address. */
+  | "no-code";
+
+export interface ModuleCheckData {
   address: Address;
-  hasCode: boolean;
+  status: ModuleCheckStatus;
+  /** Module display name when probe succeeds. */
+  name: string | null;
+  version: string | null;
 }
 
 /**
- * Verify that a custom module address points to a deployed contract on the
- * current chain. Mirrors `SlotFactory._validateConfig` which rejects modules
- * with no code, so this surfaces the same failure at form-fill time instead
- * of at sign time.
+ * Probe a custom module address to check whether it actually implements
+ * ISlotsModule. Surfaces three failure modes that the contract's `extcodesize`
+ * check cannot distinguish at form-fill time:
+ *   - no-code:  empty address (e.g. wrong-chain Sepolia/Base mismatch)
+ *   - invalid:  has code but is not module-shaped (e.g. ERC-20 token)
+ *   - probable: has module functions but does not advertise ERC-165
  */
-export function useModuleCheck(rawAddress: string) {
-  const publicClient = usePublicClient();
-
+export function useModuleCheck(rawAddress: string, chainId?: number) {
   let checksummed: Address | null = null;
   try {
     if (isAddress(rawAddress.trim(), { strict: false })) {
@@ -27,26 +76,76 @@ export function useModuleCheck(rawAddress: string) {
     // invalid
   }
 
-  const query = useQuery<ModuleInfo>({
-    queryKey: ["module-check", publicClient?.chain?.id, checksummed],
-    enabled: !!checksummed && !!publicClient,
-    retry: false,
-    staleTime: Number.POSITIVE_INFINITY,
-    queryFn: async () => {
-      if (!checksummed || !publicClient) throw new Error("No address");
-
-      const code = await publicClient.getCode({ address: checksummed });
-      const hasCode = !!code && code !== "0x";
-
-      return { address: checksummed, hasCode };
+  const { data, isLoading, isError, error } = useReadContracts({
+    contracts: checksummed
+      ? [
+          {
+            address: checksummed,
+            abi: moduleProbeAbi,
+            functionName: "supportsInterface",
+            args: [ISLOTS_MODULE_INTERFACE_ID],
+            chainId,
+          },
+          {
+            address: checksummed,
+            abi: moduleProbeAbi,
+            functionName: "name",
+            chainId,
+          },
+          {
+            address: checksummed,
+            abi: moduleProbeAbi,
+            functionName: "version",
+            chainId,
+          },
+        ]
+      : [],
+    query: {
+      enabled: !!checksummed,
+      retry: false,
+      staleTime: Number.POSITIVE_INFINITY,
     },
   });
 
+  const result: ModuleCheckData | null = (() => {
+    if (!checksummed || !data || data.length < 3) return null;
+
+    const supports = data[0];
+    const nameRes = data[1];
+    const versionRes = data[2];
+    if (!supports || !nameRes || !versionRes) return null;
+
+    const name =
+      nameRes.status === "success" ? (nameRes.result as string) : null;
+    const version =
+      versionRes.status === "success" ? (versionRes.result as string) : null;
+    const isErc165Module =
+      supports.status === "success" && supports.result === true;
+
+    let status: ModuleCheckStatus;
+    if (isErc165Module) {
+      status = "verified";
+    } else if (name !== null && version !== null) {
+      status = "probable";
+    } else if (
+      name === null &&
+      version === null &&
+      supports.status !== "success"
+    ) {
+      // All three reverted → likely no code (or non-contract returning empty data)
+      status = "no-code";
+    } else {
+      status = "invalid";
+    }
+
+    return { address: checksummed, status, name, version };
+  })();
+
   return {
-    data: query.data ?? null,
-    isLoading: query.isLoading && !!checksummed,
-    isError: query.isError,
-    error: query.error,
+    data: result,
+    isLoading: isLoading && !!checksummed,
+    isError,
+    error,
     isValidAddress: !!checksummed,
   };
 }

@@ -35,7 +35,10 @@ export function StepParameters() {
   const chainTokens = getChainTokens(chainId);
   const { data: verifiedModules } = useModules();
   const erc20 = useErc20Check(currencyMode === "custom" ? customCurrency : "");
-  const moduleCheck = useModuleCheck(moduleMode === "custom" ? customModule : "");
+  const moduleCheck = useModuleCheck(
+    moduleMode === "custom" ? customModule : "",
+    chainId,
+  );
 
   return (
     <>
@@ -262,23 +265,40 @@ export function StepParameters() {
                   {moduleCheck.isLoading && (
                     <p className="flex items-center gap-1.5 text-[10px] text-blue-500 mt-1">
                       <Loader2 className="size-3 animate-spin" />
-                      Checking module address...
+                      Checking module...
                     </p>
                   )}
-                  {moduleCheck.data?.hasCode && (
+                  {moduleCheck.data?.status === "verified" && (
                     <p className="flex items-center gap-1.5 text-[10px] text-green-600 mt-1">
                       <Check className="size-3" />
-                      Contract found at this address
+                      {moduleCheck.data.name ?? "Module"}
+                      {moduleCheck.data.version &&
+                        ` v${moduleCheck.data.version}`}
+                      {" · ISlotsModule (ERC-165)"}
                     </p>
                   )}
-                  {moduleCheck.data &&
-                    !moduleCheck.data.hasCode &&
-                    moduleCheck.isValidAddress && (
-                      <p className="flex items-center gap-1.5 text-[10px] text-destructive mt-1">
-                        <AlertCircle className="size-3" />
-                        No contract code at this address on the selected chain
-                      </p>
-                    )}
+                  {moduleCheck.data?.status === "probable" && (
+                    <p className="flex items-center gap-1.5 text-[10px] text-amber-600 mt-1">
+                      <AlertCircle className="size-3" />
+                      Looks like a module ({moduleCheck.data.name}
+                      {moduleCheck.data.version &&
+                        ` v${moduleCheck.data.version}`}
+                      ) but does not advertise ERC-165 support
+                    </p>
+                  )}
+                  {moduleCheck.data?.status === "invalid" && (
+                    <p className="flex items-center gap-1.5 text-[10px] text-destructive mt-1">
+                      <AlertCircle className="size-3" />
+                      Not a slots module — contract is missing the required
+                      interface
+                    </p>
+                  )}
+                  {moduleCheck.data?.status === "no-code" && (
+                    <p className="flex items-center gap-1.5 text-[10px] text-destructive mt-1">
+                      <AlertCircle className="size-3" />
+                      No contract code at this address on the selected chain
+                    </p>
+                  )}
                 </div>
               )}
               <FormMessage />
