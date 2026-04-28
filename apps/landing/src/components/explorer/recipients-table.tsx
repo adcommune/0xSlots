@@ -38,40 +38,42 @@ export function RecipientsTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {paged.map((a) => (
-              <TableRow
-                key={a.id}
-                className="cursor-pointer"
-                onClick={() => {
-                  push(`/recipient/${a.id}`);
-                }}
-              >
-                <TableCell>
-                  <span className="inline-flex items-center gap-1.5">
-                    <AccountTypeIcon
-                      type={a.type}
-                      className="h-3 w-3"
-                    />
-                    <EnsAddress address={a.id} />
-                  </span>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-1.5">
-                    <div className="flex gap-px">
-                      {Array.from({ length: a.slotCount }).map((_, i) => (
-                        <span
-                          key={i}
-                          className={`block w-2 h-2 ${i < a.occupiedCount ? "animate-pulse bg-green-600" : "bg-muted-foreground/25"}`}
-                        />
-                      ))}
-                    </div>
-                    <span className="text-[10px] text-muted-foreground">
-                      {a.occupiedCount}/{a.slotCount} occupied
+            {paged.map((a) => {
+              const recipientOccupied = a.slotsAsRecipient.filter(
+                (s) => s.occupant != null,
+              ).length;
+              return (
+                <TableRow
+                  key={a.id}
+                  className="cursor-pointer"
+                  onClick={() => {
+                    push(`/recipient/${a.id}`);
+                  }}
+                >
+                  <TableCell>
+                    <span className="inline-flex items-center gap-1.5">
+                      <AccountTypeIcon type={a.type} className="h-3 w-3" />
+                      <EnsAddress address={a.id} />
                     </span>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1.5">
+                      <div className="flex gap-px">
+                        {Array.from({ length: a.slotCount }).map((_, i) => (
+                          <span
+                            key={i}
+                            className={`block w-2 h-2 ${i < recipientOccupied ? "animate-pulse bg-green-600" : "bg-muted-foreground/25"}`}
+                          />
+                        ))}
+                      </div>
+                      <span className="text-[10px] text-muted-foreground">
+                        {recipientOccupied}/{a.slotCount} occupied
+                      </span>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
         <TablePagination
