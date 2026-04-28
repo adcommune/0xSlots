@@ -9,8 +9,7 @@
   },
   "scripts": {
     "build": "tsup",
-    "start": "node dist/index.js",
-    "dev": "tsup --watch"
+    "start": "node dist/index.js"
   },
   "dependencies": {
     "@0xslots/contracts": "workspace:*",
