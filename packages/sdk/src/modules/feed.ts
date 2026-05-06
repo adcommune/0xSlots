@@ -339,4 +339,72 @@ export class FeedModuleClient {
       chain: this.chain,
     });
   }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // WRITE — Social Group: slot management (SLOT_MANAGER role)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * Voluntarily release a slot the social group occupies.
+   * Refund (remaining deposit) lands on the social group contract.
+   * Only callable by SLOT_MANAGER.
+   *
+   * @param slot - The slot address to release
+   * @returns Transaction hash
+   */
+  async socialGroupReleaseSlot(slot: Address): Promise<Hash> {
+    return this.wallet.writeContract({
+      address: this.socialGroupAddress,
+      abi: feedSocialGroupAbi,
+      functionName: "releaseSlot",
+      args: [slot],
+      account: this.account,
+      chain: this.chain,
+    });
+  }
+
+  /**
+   * Withdraw excess deposit from a slot the social group occupies.
+   * Withdrawn tokens land on the social group contract.
+   * Only callable by SLOT_MANAGER.
+   *
+   * @param slot - The slot address to withdraw from
+   * @param amount - Amount of currency to withdraw
+   * @returns Transaction hash
+   */
+  async socialGroupWithdrawFromSlot(
+    slot: Address,
+    amount: bigint,
+  ): Promise<Hash> {
+    return this.wallet.writeContract({
+      address: this.socialGroupAddress,
+      abi: feedSocialGroupAbi,
+      functionName: "withdrawFromSlot",
+      args: [slot, amount],
+      account: this.account,
+      chain: this.chain,
+    });
+  }
+
+  /**
+   * Re-self-assess the price of a slot the social group occupies.
+   * Only callable by SLOT_MANAGER.
+   *
+   * @param slot - The slot address to reprice
+   * @param newPrice - New self-assessed price
+   * @returns Transaction hash
+   */
+  async socialGroupSelfAssessSlot(
+    slot: Address,
+    newPrice: bigint,
+  ): Promise<Hash> {
+    return this.wallet.writeContract({
+      address: this.socialGroupAddress,
+      abi: feedSocialGroupAbi,
+      functionName: "selfAssessSlot",
+      args: [slot, newPrice],
+      account: this.account,
+      chain: this.chain,
+    });
+  }
 }
