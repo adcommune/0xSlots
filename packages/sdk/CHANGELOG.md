@@ -1,5 +1,16 @@
 # @0xslots/sdk
 
+## 0.16.0
+
+### Minor Changes
+
+- 6156afc: feat: include slot managing methods to sdk for social groups in feed and isOccupied bool prop for slots
+
+### Patch Changes
+
+- Updated dependencies [6156afc]
+  - @0xslots/contracts@0.12.0
+
 ## 0.15.1
 
 ### Patch Changes
