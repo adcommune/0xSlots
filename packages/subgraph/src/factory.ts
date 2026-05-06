@@ -68,6 +68,7 @@ export function handleSlotDeployed(event: SlotDeployed): void {
 
   // State defaults
   slot.occupant = null;
+  slot.isOccupied = false;
   slot.price = BigInt.zero();
   slot.deposit = BigInt.zero();
   slot.collectedTax = BigInt.zero();

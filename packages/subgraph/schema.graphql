@@ -64,6 +64,7 @@ type Slot @entity(immutable: false) {
   minDepositSeconds: BigInt!
   occupant: Bytes # null = vacant
   occupantAccount: Account # null = vacant
+  isOccupied: Boolean! # mirrors occupant != null; sortable/filterable
   price: BigInt!
   deposit: BigInt!
   collectedTax: BigInt!

@@ -75,6 +75,7 @@ export function handleBought(event: Bought): void {
 
   slot.occupant = event.params.buyer;
   slot.occupantAccount = buyerAccount.id;
+  slot.isOccupied = true;
   slot.price = event.params.selfAssessedPrice;
   slot.deposit = event.params.deposit;
   slot.updatedAt = event.block.timestamp;
@@ -116,6 +117,7 @@ export function handleReleased(event: Released): void {
 
   slot.occupant = null;
   slot.occupantAccount = null;
+  slot.isOccupied = false;
   slot.price = BigInt.zero();
   slot.deposit = BigInt.zero();
   slot.collectedTax = BigInt.zero();
@@ -155,6 +157,7 @@ export function handleLiquidated(event: Liquidated): void {
 
   slot.occupant = null;
   slot.occupantAccount = null;
+  slot.isOccupied = false;
   slot.price = BigInt.zero();
   slot.deposit = BigInt.zero();
   slot.collectedTax = BigInt.zero();

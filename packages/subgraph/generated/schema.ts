@@ -642,6 +642,19 @@ export class Slot extends Entity {
     }
   }
 
+  get isOccupied(): boolean {
+    let value = this.get("isOccupied");
+    if (!value || value.kind == ValueKind.NULL) {
+      return false;
+    } else {
+      return value.toBoolean();
+    }
+  }
+
+  set isOccupied(value: boolean) {
+    this.set("isOccupied", Value.fromBoolean(value));
+  }
+
   get price(): BigInt {
     let value = this.get("price");
     if (!value || value.kind == ValueKind.NULL) {
