@@ -200,6 +200,7 @@ export type AccountSlot_OrderBy =
   | 'slot__createdTx'
   | 'slot__deposit'
   | 'slot__id'
+  | 'slot__isOccupied'
   | 'slot__liquidationBountyBps'
   | 'slot__manager'
   | 'slot__minDepositSeconds'
@@ -466,6 +467,7 @@ export type BoughtEvent_OrderBy =
   | 'slot__createdTx'
   | 'slot__deposit'
   | 'slot__id'
+  | 'slot__isOccupied'
   | 'slot__liquidationBountyBps'
   | 'slot__manager'
   | 'slot__minDepositSeconds'
@@ -686,6 +688,7 @@ export type DepositedEvent_OrderBy =
   | 'slot__createdTx'
   | 'slot__deposit'
   | 'slot__id'
+  | 'slot__isOccupied'
   | 'slot__liquidationBountyBps'
   | 'slot__manager'
   | 'slot__minDepositSeconds'
@@ -886,6 +889,7 @@ export type LiquidatedEvent_OrderBy =
   | 'slot__createdTx'
   | 'slot__deposit'
   | 'slot__id'
+  | 'slot__isOccupied'
   | 'slot__liquidationBountyBps'
   | 'slot__manager'
   | 'slot__minDepositSeconds'
@@ -1115,6 +1119,7 @@ export type MetadataSlot_OrderBy =
   | 'slot__createdTx'
   | 'slot__deposit'
   | 'slot__id'
+  | 'slot__isOccupied'
   | 'slot__liquidationBountyBps'
   | 'slot__manager'
   | 'slot__minDepositSeconds'
@@ -1339,6 +1344,7 @@ export type MetadataUpdatedEvent_OrderBy =
   | 'slot__createdTx'
   | 'slot__deposit'
   | 'slot__id'
+  | 'slot__isOccupied'
   | 'slot__liquidationBountyBps'
   | 'slot__manager'
   | 'slot__minDepositSeconds'
@@ -1538,6 +1544,7 @@ export type ModuleFeePaidEvent_OrderBy =
   | 'slot__createdTx'
   | 'slot__deposit'
   | 'slot__id'
+  | 'slot__isOccupied'
   | 'slot__liquidationBountyBps'
   | 'slot__manager'
   | 'slot__minDepositSeconds'
@@ -1644,6 +1651,7 @@ export type ModuleUpdateProposedEvent_OrderBy =
   | 'slot__createdTx'
   | 'slot__deposit'
   | 'slot__id'
+  | 'slot__isOccupied'
   | 'slot__liquidationBountyBps'
   | 'slot__manager'
   | 'slot__minDepositSeconds'
@@ -2136,6 +2144,7 @@ export type NftToken_OrderBy =
   | 'slot__createdTx'
   | 'slot__deposit'
   | 'slot__id'
+  | 'slot__isOccupied'
   | 'slot__liquidationBountyBps'
   | 'slot__manager'
   | 'slot__minDepositSeconds'
@@ -2235,6 +2244,7 @@ export type PendingUpdateCancelledEvent_OrderBy =
   | 'slot__createdTx'
   | 'slot__deposit'
   | 'slot__id'
+  | 'slot__isOccupied'
   | 'slot__liquidationBountyBps'
   | 'slot__manager'
   | 'slot__minDepositSeconds'
@@ -2376,6 +2386,7 @@ export type PriceUpdatedEvent_OrderBy =
   | 'slot__createdTx'
   | 'slot__deposit'
   | 'slot__id'
+  | 'slot__isOccupied'
   | 'slot__liquidationBountyBps'
   | 'slot__manager'
   | 'slot__minDepositSeconds'
@@ -3003,6 +3014,7 @@ export type ReleasedEvent_OrderBy =
   | 'slot__createdTx'
   | 'slot__deposit'
   | 'slot__id'
+  | 'slot__isOccupied'
   | 'slot__liquidationBountyBps'
   | 'slot__manager'
   | 'slot__minDepositSeconds'
@@ -3152,6 +3164,7 @@ export type SettledEvent_OrderBy =
   | 'slot__createdTx'
   | 'slot__deposit'
   | 'slot__id'
+  | 'slot__isOccupied'
   | 'slot__liquidationBountyBps'
   | 'slot__manager'
   | 'slot__minDepositSeconds'
@@ -3178,6 +3191,7 @@ export type Slot = {
   deposit: Scalars['BigInt']['output'];
   deposits: Array<DepositedEvent>;
   id: Scalars['ID']['output'];
+  isOccupied: Scalars['Boolean']['output'];
   liquidationBountyBps: Scalars['BigInt']['output'];
   liquidations: Array<LiquidatedEvent>;
   manager: Scalars['Bytes']['output'];
@@ -3520,6 +3534,7 @@ export type SlotDeployedEvent_OrderBy =
   | 'slot__createdTx'
   | 'slot__deposit'
   | 'slot__id'
+  | 'slot__isOccupied'
   | 'slot__liquidationBountyBps'
   | 'slot__manager'
   | 'slot__minDepositSeconds'
@@ -3604,6 +3619,10 @@ export type Slot_Filter = {
   id_lte?: InputMaybe<Scalars['ID']['input']>;
   id_not?: InputMaybe<Scalars['ID']['input']>;
   id_not_in?: InputMaybe<Array<Scalars['ID']['input']>>;
+  isOccupied?: InputMaybe<Scalars['Boolean']['input']>;
+  isOccupied_in?: InputMaybe<Array<Scalars['Boolean']['input']>>;
+  isOccupied_not?: InputMaybe<Scalars['Boolean']['input']>;
+  isOccupied_not_in?: InputMaybe<Array<Scalars['Boolean']['input']>>;
   liquidationBountyBps?: InputMaybe<Scalars['BigInt']['input']>;
   liquidationBountyBps_gt?: InputMaybe<Scalars['BigInt']['input']>;
   liquidationBountyBps_gte?: InputMaybe<Scalars['BigInt']['input']>;
@@ -3795,6 +3814,7 @@ export type Slot_OrderBy =
   | 'deposit'
   | 'deposits'
   | 'id'
+  | 'isOccupied'
   | 'liquidationBountyBps'
   | 'liquidations'
   | 'manager'
@@ -3984,6 +4004,7 @@ export type TaxCollectedEvent_OrderBy =
   | 'slot__createdTx'
   | 'slot__deposit'
   | 'slot__id'
+  | 'slot__isOccupied'
   | 'slot__liquidationBountyBps'
   | 'slot__manager'
   | 'slot__minDepositSeconds'
@@ -4088,6 +4109,7 @@ export type TaxUpdateProposedEvent_OrderBy =
   | 'slot__createdTx'
   | 'slot__deposit'
   | 'slot__id'
+  | 'slot__isOccupied'
   | 'slot__liquidationBountyBps'
   | 'slot__manager'
   | 'slot__minDepositSeconds'
@@ -4231,6 +4253,7 @@ export type WithdrawnEvent_OrderBy =
   | 'slot__createdTx'
   | 'slot__deposit'
   | 'slot__id'
+  | 'slot__isOccupied'
   | 'slot__liquidationBountyBps'
   | 'slot__manager'
   | 'slot__minDepositSeconds'
@@ -4560,7 +4583,7 @@ export type GetMetadataUpdatedEventsQueryVariables = Exact<{
 
 export type GetMetadataUpdatedEventsQuery = { __typename?: 'Query', metadataUpdatedEvents: Array<{ __typename?: 'MetadataUpdatedEvent', id: string, updatedBy: string, uri: string, rawJson?: string | null, adType?: string | null, timestamp: string, blockNumber: string, tx: string, slot: { __typename?: 'Slot', id: string }, author: { __typename?: 'Account', id: string, type: AccountType } }> };
 
-export type SlotFieldsFragment = { __typename?: 'Slot', id: string, recipient: string, manager: string, mutableTax: boolean, mutableModule: boolean, taxPercentage: string, occupant?: string | null, price: string, deposit: string, collectedTax: string, totalCollected: string, liquidationBountyBps: string, minDepositSeconds: string, createdAt: string, createdTx: string, updatedAt: string, recipientAccount: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number }, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number }, module?: { __typename?: 'Module', id: string, verified: boolean, name: string, version: string, feeBps: string, moduleURI?: string | null, image?: string | null, description?: string | null, totalFeesCollected: string } | null, occupantAccount?: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number } | null };
+export type SlotFieldsFragment = { __typename?: 'Slot', id: string, recipient: string, manager: string, mutableTax: boolean, mutableModule: boolean, taxPercentage: string, occupant?: string | null, isOccupied: boolean, price: string, deposit: string, collectedTax: string, totalCollected: string, liquidationBountyBps: string, minDepositSeconds: string, createdAt: string, createdTx: string, updatedAt: string, recipientAccount: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number }, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number }, module?: { __typename?: 'Module', id: string, verified: boolean, name: string, version: string, feeBps: string, moduleURI?: string | null, image?: string | null, description?: string | null, totalFeesCollected: string } | null, occupantAccount?: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number } | null };
 
 export type GetSlotsQueryVariables = Exact<{
   first: Scalars['Int']['input'];
@@ -4572,7 +4595,7 @@ export type GetSlotsQueryVariables = Exact<{
 }>;
 
 
-export type GetSlotsQuery = { __typename?: 'Query', slots: Array<{ __typename?: 'Slot', id: string, recipient: string, manager: string, mutableTax: boolean, mutableModule: boolean, taxPercentage: string, occupant?: string | null, price: string, deposit: string, collectedTax: string, totalCollected: string, liquidationBountyBps: string, minDepositSeconds: string, createdAt: string, createdTx: string, updatedAt: string, recipientAccount: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number }, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number }, module?: { __typename?: 'Module', id: string, verified: boolean, name: string, version: string, feeBps: string, moduleURI?: string | null, image?: string | null, description?: string | null, totalFeesCollected: string } | null, occupantAccount?: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number } | null }> };
+export type GetSlotsQuery = { __typename?: 'Query', slots: Array<{ __typename?: 'Slot', id: string, recipient: string, manager: string, mutableTax: boolean, mutableModule: boolean, taxPercentage: string, occupant?: string | null, isOccupied: boolean, price: string, deposit: string, collectedTax: string, totalCollected: string, liquidationBountyBps: string, minDepositSeconds: string, createdAt: string, createdTx: string, updatedAt: string, recipientAccount: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number }, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number }, module?: { __typename?: 'Module', id: string, verified: boolean, name: string, version: string, feeBps: string, moduleURI?: string | null, image?: string | null, description?: string | null, totalFeesCollected: string } | null, occupantAccount?: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number } | null }> };
 
 export type GetSlotQueryVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -4580,7 +4603,7 @@ export type GetSlotQueryVariables = Exact<{
 }>;
 
 
-export type GetSlotQuery = { __typename?: 'Query', slot?: { __typename?: 'Slot', id: string, recipient: string, manager: string, mutableTax: boolean, mutableModule: boolean, taxPercentage: string, occupant?: string | null, price: string, deposit: string, collectedTax: string, totalCollected: string, liquidationBountyBps: string, minDepositSeconds: string, createdAt: string, createdTx: string, updatedAt: string, recipientAccount: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number }, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number }, module?: { __typename?: 'Module', id: string, verified: boolean, name: string, version: string, feeBps: string, moduleURI?: string | null, image?: string | null, description?: string | null, totalFeesCollected: string } | null, occupantAccount?: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number } | null } | null };
+export type GetSlotQuery = { __typename?: 'Query', slot?: { __typename?: 'Slot', id: string, recipient: string, manager: string, mutableTax: boolean, mutableModule: boolean, taxPercentage: string, occupant?: string | null, isOccupied: boolean, price: string, deposit: string, collectedTax: string, totalCollected: string, liquidationBountyBps: string, minDepositSeconds: string, createdAt: string, createdTx: string, updatedAt: string, recipientAccount: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number }, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number }, module?: { __typename?: 'Module', id: string, verified: boolean, name: string, version: string, feeBps: string, moduleURI?: string | null, image?: string | null, description?: string | null, totalFeesCollected: string } | null, occupantAccount?: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number } | null } | null };
 
 export type GetSlotsByRecipientQueryVariables = Exact<{
   recipient: Scalars['Bytes']['input'];
@@ -4592,7 +4615,7 @@ export type GetSlotsByRecipientQueryVariables = Exact<{
 }>;
 
 
-export type GetSlotsByRecipientQuery = { __typename?: 'Query', slots: Array<{ __typename?: 'Slot', id: string, recipient: string, manager: string, mutableTax: boolean, mutableModule: boolean, taxPercentage: string, occupant?: string | null, price: string, deposit: string, collectedTax: string, totalCollected: string, liquidationBountyBps: string, minDepositSeconds: string, createdAt: string, createdTx: string, updatedAt: string, recipientAccount: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number }, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number }, module?: { __typename?: 'Module', id: string, verified: boolean, name: string, version: string, feeBps: string, moduleURI?: string | null, image?: string | null, description?: string | null, totalFeesCollected: string } | null, occupantAccount?: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number } | null }> };
+export type GetSlotsByRecipientQuery = { __typename?: 'Query', slots: Array<{ __typename?: 'Slot', id: string, recipient: string, manager: string, mutableTax: boolean, mutableModule: boolean, taxPercentage: string, occupant?: string | null, isOccupied: boolean, price: string, deposit: string, collectedTax: string, totalCollected: string, liquidationBountyBps: string, minDepositSeconds: string, createdAt: string, createdTx: string, updatedAt: string, recipientAccount: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number }, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number }, module?: { __typename?: 'Module', id: string, verified: boolean, name: string, version: string, feeBps: string, moduleURI?: string | null, image?: string | null, description?: string | null, totalFeesCollected: string } | null, occupantAccount?: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number } | null }> };
 
 export type GetSlotsByOccupantQueryVariables = Exact<{
   occupant: Scalars['Bytes']['input'];
@@ -4604,7 +4627,7 @@ export type GetSlotsByOccupantQueryVariables = Exact<{
 }>;
 
 
-export type GetSlotsByOccupantQuery = { __typename?: 'Query', slots: Array<{ __typename?: 'Slot', id: string, recipient: string, manager: string, mutableTax: boolean, mutableModule: boolean, taxPercentage: string, occupant?: string | null, price: string, deposit: string, collectedTax: string, totalCollected: string, liquidationBountyBps: string, minDepositSeconds: string, createdAt: string, createdTx: string, updatedAt: string, recipientAccount: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number }, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number }, module?: { __typename?: 'Module', id: string, verified: boolean, name: string, version: string, feeBps: string, moduleURI?: string | null, image?: string | null, description?: string | null, totalFeesCollected: string } | null, occupantAccount?: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number } | null }> };
+export type GetSlotsByOccupantQuery = { __typename?: 'Query', slots: Array<{ __typename?: 'Slot', id: string, recipient: string, manager: string, mutableTax: boolean, mutableModule: boolean, taxPercentage: string, occupant?: string | null, isOccupied: boolean, price: string, deposit: string, collectedTax: string, totalCollected: string, liquidationBountyBps: string, minDepositSeconds: string, createdAt: string, createdTx: string, updatedAt: string, recipientAccount: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number }, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number }, module?: { __typename?: 'Module', id: string, verified: boolean, name: string, version: string, feeBps: string, moduleURI?: string | null, image?: string | null, description?: string | null, totalFeesCollected: string } | null, occupantAccount?: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number } | null }> };
 
 export type SlotMetadataFieldsFragment = { __typename?: 'MetadataSlot', id: string, uri: string, rawJson?: string | null, adType?: string | null, updatedBy: string, updateCount: string, createdAt: string, createdTx: string, updatedAt: string, updatedTx: string };
 
@@ -4618,7 +4641,7 @@ export type GetSlotsWithMetadataQueryVariables = Exact<{
 }>;
 
 
-export type GetSlotsWithMetadataQuery = { __typename?: 'Query', slots: Array<{ __typename?: 'Slot', id: string, recipient: string, manager: string, mutableTax: boolean, mutableModule: boolean, taxPercentage: string, occupant?: string | null, price: string, deposit: string, collectedTax: string, totalCollected: string, liquidationBountyBps: string, minDepositSeconds: string, createdAt: string, createdTx: string, updatedAt: string, metadata?: { __typename?: 'MetadataSlot', id: string, uri: string, rawJson?: string | null, adType?: string | null, updatedBy: string, updateCount: string, createdAt: string, createdTx: string, updatedAt: string, updatedTx: string } | null, recipientAccount: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number }, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number }, module?: { __typename?: 'Module', id: string, verified: boolean, name: string, version: string, feeBps: string, moduleURI?: string | null, image?: string | null, description?: string | null, totalFeesCollected: string } | null, occupantAccount?: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number } | null }> };
+export type GetSlotsWithMetadataQuery = { __typename?: 'Query', slots: Array<{ __typename?: 'Slot', id: string, recipient: string, manager: string, mutableTax: boolean, mutableModule: boolean, taxPercentage: string, occupant?: string | null, isOccupied: boolean, price: string, deposit: string, collectedTax: string, totalCollected: string, liquidationBountyBps: string, minDepositSeconds: string, createdAt: string, createdTx: string, updatedAt: string, metadata?: { __typename?: 'MetadataSlot', id: string, uri: string, rawJson?: string | null, adType?: string | null, updatedBy: string, updateCount: string, createdAt: string, createdTx: string, updatedAt: string, updatedTx: string } | null, recipientAccount: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number }, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number }, module?: { __typename?: 'Module', id: string, verified: boolean, name: string, version: string, feeBps: string, moduleURI?: string | null, image?: string | null, description?: string | null, totalFeesCollected: string } | null, occupantAccount?: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number } | null }> };
 
 export const AccountSlotFieldsFragmentDoc = gql`
     fragment AccountSlotFields on AccountSlot {
@@ -4733,6 +4756,7 @@ export const SlotFieldsFragmentDoc = gql`
     slotCount
     occupiedCount
   }
+  isOccupied
   price
   deposit
   collectedTax
