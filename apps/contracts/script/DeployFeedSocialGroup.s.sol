@@ -33,12 +33,11 @@ contract DeployFeedSocialGroup is BaseScript {
         console2.log("Admin:", admin);
         console2.log("FeedModule:", feedModule);
 
-        // Grant POSTING_MANAGER role
-        FeedSocialGroup(address(proxy)).grantRole(
-            keccak256("POSTING_MANAGER"),
-            POSTING_MANAGER_ADDR
-        );
-        console2.log("POSTING_MANAGER granted to:", POSTING_MANAGER_ADDR);
+        // Grant POSTING_MANAGER + SLOT_MANAGER to the same EOA (one-key ops)
+        FeedSocialGroup g = FeedSocialGroup(address(proxy));
+        g.grantRole(keccak256("POSTING_MANAGER"), POSTING_MANAGER_ADDR);
+        g.grantRole(keccak256("SLOT_MANAGER"), POSTING_MANAGER_ADDR);
+        console2.log("POSTING_MANAGER + SLOT_MANAGER granted to:", POSTING_MANAGER_ADDR);
 
         _saveDeployment(address(proxy), "FeedSocialGroup");
     }

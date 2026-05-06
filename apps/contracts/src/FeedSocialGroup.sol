@@ -6,6 +6,8 @@ import {UUPSUpgradeable} from "@openzeppelin-upgradeable/contracts/proxy/utils/U
 import {AccessControlUpgradeable} from "@openzeppelin-upgradeable/contracts/access/AccessControlUpgradeable.sol";
 import {EIP712Upgradeable} from "@openzeppelin-upgradeable/contracts/utils/cryptography/EIP712Upgradeable.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 interface IFeedPostModule {
     function updateMetadataFor(
@@ -13,6 +15,12 @@ interface IFeedPostModule {
         address slot,
         string calldata uri
     ) external;
+}
+
+interface ISlot {
+    function release() external;
+    function withdraw(uint256 amount) external;
+    function selfAssess(uint256 newPrice) external;
 }
 
 /// @title FeedSocialGroup
@@ -26,6 +34,8 @@ contract FeedSocialGroup is
     AccessControlUpgradeable,
     EIP712Upgradeable
 {
+    using SafeERC20 for IERC20;
+
     // ═══════════════════════════════════════════════════════════
     // ERRORS
     // ═══════════════════════════════════════════════════════════
@@ -39,6 +49,10 @@ contract FeedSocialGroup is
 
     bytes32 public constant POSTING_MANAGER =
         keccak256("POSTING_MANAGER");
+
+    /// @notice Manages slot positions held by this contract: release, withdraw, selfAssess
+    bytes32 public constant SLOT_MANAGER =
+        keccak256("SLOT_MANAGER");
 
     // ═══════════════════════════════════════════════════════════
     // STATE
@@ -126,6 +140,32 @@ contract FeedSocialGroup is
         address poster = ECDSA.recover(_hashTypedDataV4(structHash), signature);
 
         feedModule.updateMetadataFor(poster, slot, uri);
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // SLOT MANAGEMENT
+    // ═══════════════════════════════════════════════════════════
+
+    /// @notice Voluntarily exit a slot occupied by this contract.
+    /// @dev Refund (remaining deposit) lands on this contract; use sweep to extract.
+    function releaseSlot(address slot) external onlyRole(SLOT_MANAGER) {
+        ISlot(slot).release();
+    }
+
+    /// @notice Withdraw excess deposit from a slot occupied by this contract.
+    /// @dev Withdrawn tokens land on this contract; use sweep to extract.
+    function withdrawFromSlot(address slot, uint256 amount) external onlyRole(SLOT_MANAGER) {
+        ISlot(slot).withdraw(amount);
+    }
+
+    /// @notice Re-self-assess the price of a slot occupied by this contract.
+    function selfAssessSlot(address slot, uint256 newPrice) external onlyRole(SLOT_MANAGER) {
+        ISlot(slot).selfAssess(newPrice);
+    }
+
+    /// @notice Recover ERC-20 tokens held by this contract (refunds, withdrawals, accidental sends).
+    function sweep(IERC20 token, address to, uint256 amount) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        token.safeTransfer(to, amount);
     }
 
     // ═══════════════════════════════════════════════════════════
