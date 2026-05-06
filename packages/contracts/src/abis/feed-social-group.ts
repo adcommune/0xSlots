@@ -64,6 +64,51 @@ export const feedSocialGroupAbi = [
   },
   {
     type: "function",
+    name: "SLOT_MANAGER",
+    inputs: [],
+    outputs: [{ name: "", type: "bytes32", internalType: "bytes32" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "releaseSlot",
+    inputs: [{ name: "slot", type: "address", internalType: "address" }],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "withdrawFromSlot",
+    inputs: [
+      { name: "slot", type: "address", internalType: "address" },
+      { name: "amount", type: "uint256", internalType: "uint256" },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "selfAssessSlot",
+    inputs: [
+      { name: "slot", type: "address", internalType: "address" },
+      { name: "newPrice", type: "uint256", internalType: "uint256" },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "sweep",
+    inputs: [
+      { name: "token", type: "address", internalType: "contract IERC20" },
+      { name: "to", type: "address", internalType: "address" },
+      { name: "amount", type: "uint256", internalType: "uint256" },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
     name: "POST_TYPEHASH",
     inputs: [],
     outputs: [{ name: "", type: "bytes32", internalType: "bytes32" }],
