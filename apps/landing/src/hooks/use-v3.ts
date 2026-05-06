@@ -19,7 +19,14 @@ export type { SlotFieldsFragment as V3Slot } from "@0xslots/sdk";
 
 export function useSlotsClient() {
   const { chainId } = useChain();
-  return useMemo(() => createSlotsClient({ chainId, subgraphApiKey: process.env.NEXT_PUBLIC_SUBGRAPH_API_KEY }), [chainId]);
+  return useMemo(
+    () =>
+      createSlotsClient({
+        chainId,
+        subgraphApiKey: process.env.NEXT_PUBLIC_SUBGRAPH_API_KEY,
+      }),
+    [chainId],
+  );
 }
 
 export type SlotFilters = {
@@ -28,7 +35,21 @@ export type SlotFilters = {
   occupant?: string;
 };
 
-export function useSlots(filters?: SlotFilters) {
+export type SlotSort = {
+  orderBy: string;
+  orderDirection: "asc" | "desc";
+};
+
+export type SlotPagination = {
+  first?: number;
+  skip?: number;
+};
+
+export function useSlots(
+  filters?: SlotFilters,
+  sort?: SlotSort,
+  pagination?: SlotPagination,
+) {
   const { chainId } = useChain();
   const client = useSlotsClient();
 
@@ -51,13 +72,14 @@ export function useSlots(filters?: SlotFilters) {
         : undefined;
 
   return useQuery({
-    queryKey: ["slots", chainId, filters],
+    queryKey: ["slots", chainId, filters, sort, pagination],
     queryFn: async () => {
       const { slots } = await client.getSlots({
-        first: 100,
+        first: pagination?.first ?? 100,
+        skip: pagination?.skip ?? 0,
         where: where as any,
-        orderBy: "createdAt" as any,
-        orderDirection: "desc" as any,
+        orderBy: (sort?.orderBy ?? "createdAt") as any,
+        orderDirection: (sort?.orderDirection ?? "desc") as any,
       });
       return slots as SlotFieldsFragment[];
     },

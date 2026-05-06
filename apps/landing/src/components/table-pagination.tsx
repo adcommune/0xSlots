@@ -31,30 +31,42 @@ export function usePagination<T>(items: T[], defaultPageSize = 25) {
   return { page: safePage, setPage, pageSize, setPageSize: changePageSize, totalPages, paged };
 }
 
+type TablePaginationProps = {
+  page: number;
+  pageSize: number;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (size: number) => void;
+} & (
+  | { totalPages: number; total: number; hasMore?: never }
+  | { totalPages?: never; total?: never; hasMore: boolean }
+);
+
 export function TablePagination({
   page,
   totalPages,
   pageSize,
   total,
+  hasMore,
   onPageChange,
   onPageSizeChange,
-}: {
-  page: number;
-  totalPages: number;
-  pageSize: number;
-  total: number;
-  onPageChange: (page: number) => void;
-  onPageSizeChange: (size: number) => void;
-}) {
-  if (total === 0) return null;
+}: TablePaginationProps) {
+  const isServerMode = total === undefined;
+
+  if (!isServerMode && total === 0) return null;
 
   const from = page * pageSize + 1;
-  const to = Math.min((page + 1) * pageSize, total);
+  const to = isServerMode
+    ? from + pageSize - 1
+    : Math.min((page + 1) * pageSize, total);
+
+  const nextDisabled = isServerMode
+    ? !hasMore
+    : page >= (totalPages ?? 1) - 1;
 
   return (
     <div className="flex items-center justify-between px-4 py-2 border-t text-xs text-muted-foreground">
       <span>
-        {from}–{to} of {total}
+        {isServerMode ? `${from}–${to}` : `${from}–${to} of ${total}`}
       </span>
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-1.5">
@@ -82,7 +94,7 @@ export function TablePagination({
           </button>
           <button
             type="button"
-            disabled={page >= totalPages - 1}
+            disabled={nextDisabled}
             onClick={() => onPageChange(page + 1)}
             className="inline-flex items-center gap-0.5 px-2 py-1 rounded hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >

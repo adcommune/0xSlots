@@ -1,12 +1,12 @@
 "use client";
 
 import { formatDistanceToNow } from "date-fns";
-import { Check, Filter, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, Filter, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { isAddress } from "viem";
+import { isAddress, stringify } from "viem";
 import { AccountTypeIcon } from "@/components/account-type-icon";
 import { EnsAddress } from "@/components/ens-address";
-import { TablePagination, usePagination } from "@/components/table-pagination";
+import { TablePagination } from "@/components/table-pagination";
 import { TableEmpty, TableSkeleton } from "@/components/table-states";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,7 +30,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useNavigation } from "@/context/navigation";
-import type { SlotFilters } from "@/hooks/use-v3";
+import type { SlotFilters, SlotSort } from "@/hooks/use-v3";
 import { useModules, useSlots } from "@/hooks/use-v3";
 import { loadStorage, saveStorage } from "@/lib/storage";
 import { formatPrice, truncateAddress } from "@/utils";
@@ -40,6 +40,7 @@ const STORAGE_KEY = "0xslots:slot-filters";
 export function SlotsTable() {
   const { push } = useNavigation();
   const [filters, setFilters] = useState<SlotFilters>({});
+  const [sort, setSort] = useState<SlotSort | undefined>(undefined);
   const [addressInput, setAddressInput] = useState("");
   const [addressField, setAddressField] = useState<
     "recipient" | "occupant" | null
@@ -66,9 +67,37 @@ export function SlotsTable() {
     !!filters.recipient ||
     !!filters.occupant;
 
-  const { data: slots, isLoading } = useSlots(hasFilters ? filters : undefined);
-  const { page, setPage, pageSize, setPageSize, totalPages, paged } =
-    usePagination(slots ?? []);
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(25);
+
+  // Reset to page 0 whenever filters or sort change
+  useEffect(() => {
+    setPage(0);
+  }, [filters, sort]);
+
+  const { data: slots, isLoading } = useSlots(
+    hasFilters ? filters : undefined,
+    sort,
+    { first: pageSize + 1, skip: page * pageSize },
+  );
+
+  const hasMore = (slots?.length ?? 0) > pageSize;
+  const paged = (slots ?? []).slice(0, pageSize);
+
+  const changePageSize = (size: number) => {
+    setPageSize(size);
+    setPage(0);
+  };
+
+  const cycleSort = (field: string) => {
+    if (!sort || sort.orderBy !== field) {
+      setSort({ orderBy: field, orderDirection: "desc" });
+    } else if (sort.orderDirection === "desc") {
+      setSort({ orderBy: field, orderDirection: "asc" });
+    } else {
+      setSort(undefined);
+    }
+  };
 
   const toggleModule = (moduleId: string) => {
     const current = filters.moduleIds ?? [];
@@ -274,7 +303,36 @@ export function SlotsTable() {
             <TableHeader>
               <TableRow>
                 <TableHead>Recipient</TableHead>
-                <TableHead>Occupant</TableHead>
+                <TableHead
+                  className={`cursor-pointer select-none hover:text-foreground ${
+                    sort?.orderBy === "isOccupied"
+                      ? "text-foreground font-semibold"
+                      : ""
+                  }`}
+                  onClick={() => cycleSort("isOccupied")}
+                  title={
+                    sort?.orderBy === "isOccupied" &&
+                    sort.orderDirection === "desc"
+                      ? "Occupied first — click to flip"
+                      : sort?.orderBy === "isOccupied" &&
+                          sort.orderDirection === "asc"
+                        ? "Vacant first — click to clear"
+                        : "Click to sort occupied first"
+                  }
+                >
+                  <span className="inline-flex items-center gap-1">
+                    Occupant
+                    {sort?.orderBy === "isOccupied" ? (
+                      sort.orderDirection === "desc" ? (
+                        <ArrowDown className="size-3.5" />
+                      ) : (
+                        <ArrowUp className="size-3.5" />
+                      )
+                    ) : (
+                      <ArrowDown className="size-3 opacity-30" />
+                    )}
+                  </span>
+                </TableHead>
                 <TableHead className="text-right">Price / Tax</TableHead>
                 <TableHead>Module</TableHead>
                 <TableHead>Flags</TableHead>
@@ -319,7 +377,10 @@ export function SlotsTable() {
                     <TableCell className="text-right text-xs whitespace-nowrap">
                       <span className="font-bold">
                         {isOccupied
-                          ? formatPrice(slot.price, slot.currency.decimals ?? 18)
+                          ? formatPrice(
+                              slot.price,
+                              slot.currency.decimals ?? 18,
+                            )
                           : "0"}
                       </span>
                       <span className="text-muted-foreground text-[10px] ml-1">
@@ -361,11 +422,10 @@ export function SlotsTable() {
           </Table>
           <TablePagination
             page={page}
-            totalPages={totalPages}
             pageSize={pageSize}
-            total={slots.length}
+            hasMore={hasMore}
             onPageChange={setPage}
-            onPageSizeChange={setPageSize}
+            onPageSizeChange={changePageSize}
           />
         </div>
       )}

@@ -12,7 +12,6 @@
     "@0xslots/config",
     "@0xslots/subgraph",
     "landing",
-    "api",
-    "www"
+    "api"
   ]
 }

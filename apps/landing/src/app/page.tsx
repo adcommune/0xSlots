@@ -46,6 +46,12 @@ export default function Home() {
         <ExplorerTabs
           tabs={[
             {
+              id: "events",
+              label: "Events",
+              icon: List,
+              content: () => <EventsTable />,
+            },
+            {
               id: "slots",
               label: "Slots",
               icon: LandPlot,
@@ -56,12 +62,6 @@ export default function Home() {
               label: "Recipients",
               icon: User,
               content: () => <RecipientsTable />,
-            },
-            {
-              id: "events",
-              label: "Events",
-              icon: List,
-              content: () => <EventsTable />,
             },
             {
               id: "modules",
