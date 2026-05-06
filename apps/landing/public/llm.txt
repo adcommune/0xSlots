@@ -4,7 +4,17 @@
 
 ## Overview
 
-0xSlots implements Harberger taxation onchain. Each **Slot** is an independently deployed smart contract where:
+0xSlots is a **property primitive** for scarce onchain assets, based on a Harberger-tax-style model. It introduces slots: onchain positions that are **always priced** and **always contestable**.
+
+Each holder sets their own price and pays an ongoing fee based on that self-assessed value. But that price is not just informational, it is a standing sell offer. Anyone can buy the slot at that declared price, at any time.
+
+- Set the price too high, and the ongoing cost becomes expensive.
+- Set it too low, and someone takes it.
+- Set it fairly, and you keep control.
+
+This creates continuous pressure toward **fair** pricing and **productive** ownership. Passive property becomes costly to hold, while valuable positions tend to flow toward the people who value them most. Revenue can be directed to a creator, community, protocol, or public good — turning scarce digital property into an ongoing source of aligned revenue instead of idle control.
+
+In contract terms, each **Slot** is an independently deployed smart contract where:
 
 - An **occupant** self-assesses a price and pays continuous tax on it
 - A **recipient** receives the tax revenue
@@ -12,6 +22,75 @@
 - Insolvent occupants (deposit depleted) can be liquidated by anyone for a bounty
 
 Packages: `@0xslots/contracts` (ABIs + addresses), `@0xslots/sdk` (reads + writes)
+
+---
+
+## Vision — Why Harberger Slots
+
+### Private Ownership Broke NFTs
+
+The NFT experiment revealed a fundamental flaw in how we handle digital property: **private ownership of scarce onchain assets creates toxic incentives**.
+
+- **Speculation replaced utility.** Prices inflated massively, driven by floor-sweeping and artificial scarcity, not by what the asset actually did.
+- **Crypto looked like a scam.** The bubble and its collapse drowned genuinely valuable projects in a sea of rugs and hype.
+- **Builders optimized for extraction.** Developers competed for attention instead of utility. Why build something useful when you can mint something scarce and pump it?
+
+The root cause wasn't the technology. It was the ownership model. When you own something absolutely — no cost to hold, no pressure to use — you're incentivized to hoard, speculate, and extract. The asset's *price* matters more than what it *produces*.
+
+### A Middle Ground
+
+There is a real need for collectively owned assets that **stay in the market**. Not communal property. Not private property. Something in between: assets where ownership is continuous, contestable, and tied to productive use.
+
+0xSlots implements this through Harberger taxation: you set your price, you pay a tax on it, and anyone can buy at that price. This shifts the focus:
+
+- **From what it's worth → to what it produces.** Holding idle property is expensive. Making it productive is how you justify the cost.
+- **From speculation → to fair valuation.** Self-assessed pricing with real cost creates continuous pressure toward honest pricing.
+- **From extraction → to alignment.** Tax revenue flows to creators, communities, or public goods.
+
+### Slots as Fertile Ground
+
+A slot starts empty. It's a position — nothing more. What makes it valuable is what developers do with it. Modules attached to a slot define the rights it grants: ad space, access, governance weight, revenue share, anything. **The slot is the plot; the module is the crop.**
+
+Each slot becomes a small, bounded space of productive ownership. Not a walled garden you lock people out of — a public garden you tend. The market decides if you're tending it well enough to keep it.
+
+---
+
+## How It Works — Mental Model
+
+Think of it like [Splits](https://splits.org) but for collective ownership.
+
+### Slots
+
+Slots are smart contracts that are single-use & immutable by default.
+
+- They fund **one recipient**
+- Use a **single currency**
+- At a **tax percentage** *(optionally mutable)*
+- Implement a **single module** *(optionally mutable)*
+
+If you want a different configuration, just deploy another. Slots hold a minimum deposit of currency (defined at launch by the user, protocol minimum: 1 day) that is the source of tax collections (which can be triggered by anyone). At creation you can also define a bounty % of the tax being collected to incentivize liquidations.
+
+### Modules
+
+Modules bring extra value to a slot. They are smart contracts that implement custom logic and are triggered by slot events (ownership transfer, price update, release). They can also require a cut of the tax revenue a slot generates through `feePercentage()` & `feeRecipient()`.
+
+### Roles
+
+| Role | Revenue | Config | Slot state |
+|---|---|---|---|
+| **Recipient** | Receives tax + sale proceeds | No control | No control |
+| **Manager** | No revenue | Proposes tax/module changes | No control |
+| **Occupant** | Pays tax | No control | Sets price, manages deposit |
+
+If `mutableTax` or `mutableModule` is true, the manager can propose changes. **Updates only apply on the next ownership transition** — the current occupant's terms never change under them.
+
+### Tax Math
+
+Tax accrues linearly: `taxOwed = price * taxPercentage * elapsed / (30 days * 10000)`
+
+The occupant maintains a deposit that covers future tax. When depleted, anyone can `liquidate()` and earn a bounty.
+
+---
 
 ## Deployed Addresses
 
@@ -969,4 +1048,447 @@ import {
 // Subpath imports
 import { slotAbi } from "@0xslots/contracts/abis";
 import { getSlotsHubAddress } from "@0xslots/contracts/addresses";
+```
+
+---
+
+## Getting Started — Quick Recipes
+
+### Install
+
+```bash
+pnpm add @0xslots/sdk
+# or: npm install @0xslots/sdk
+```
+
+### Create a Client
+
+```ts
+import { SlotsClient, SlotsChain } from "@0xslots/sdk";
+import { createPublicClient, createWalletClient, http } from "viem";
+import { base } from "viem/chains";
+import { privateKeyToAccount } from "viem/accounts";
+
+const publicClient = createPublicClient({ chain: base, transport: http() });
+
+// Read-only
+const reader = new SlotsClient({ chainId: SlotsChain.BASE, publicClient });
+
+// Read + write
+const walletClient = createWalletClient({
+  account: privateKeyToAccount("0x..."),
+  chain: base,
+  transport: http(),
+});
+const client = new SlotsClient({ chainId: SlotsChain.BASE, publicClient, walletClient });
+```
+
+### Read Slots
+
+```ts
+const { slots } = await client.getSlots({ first: 10 });
+const { slot } = await client.getSlot({ id: "0x..." });
+const info = await client.getSlotInfo("0x...");           // direct RPC read
+const activity = await client.getSlotActivity({ slot: "0x..." });
+const events = await client.getRecentEvents({ first: 20 });
+```
+
+### Write Actions
+
+```ts
+import { parseEther } from "viem";
+
+// Buy a slot (ERC-20 approval handled automatically; EIP-5792 atomic batch when supported)
+await client.buy({
+  slot: "0x...",
+  depositAmount: parseEther("1"),
+  selfAssessedPrice: parseEther("10"),
+});
+
+await client.selfAssess("0xSlot", parseEther("20"));
+await client.topUp("0xSlot", parseEther("0.5"));
+await client.withdraw("0xSlot", parseEther("0.1"));
+await client.release("0xSlot");
+await client.collect("0xSlot");       // permissionless
+await client.liquidate("0xSlot");     // permissionless, earns bounty
+```
+
+### Multicall
+
+```ts
+await client.multicall(slot, [
+  { functionName: "selfAssess", args: [newPrice] },
+  { functionName: "topUp", args: [amount] },
+]);
+```
+
+---
+
+## React Hooks (`@0xslots/sdk/react`)
+
+Wagmi-wired hooks. Requires `wagmi`, `viem`, and `@tanstack/react-query` as peer dependencies.
+
+### `useSlotsClient`
+
+Creates a memoized `SlotsClient` from wagmi's public and wallet clients.
+
+```tsx
+import { useSlotsClient, SlotsChain } from "@0xslots/sdk/react";
+
+const client = useSlotsClient();                            // connected chain
+const client = useSlotsClient(SlotsChain.BASE);             // override chain
+const client = useSlotsClient(SlotsChain.BASE, "api-key");  // with subgraph key
+```
+
+### `useSlotAction`
+
+Unified write executor with transaction lifecycle tracking.
+
+```tsx
+import { useSlotAction } from "@0xslots/sdk/react";
+
+const {
+  buy, selfAssess, topUp, withdraw, release, collect, liquidate,
+  createSlot, proposeTaxUpdate, proposeModuleUpdate, updateMetadata,
+  exec,          // generic executor
+  busy,          // isPending || isConfirming
+  isPending,     // wallet interaction in progress
+  isConfirming,  // waiting for on-chain confirmation
+  isSuccess,
+  activeAction,  // label of current action
+} = useSlotAction({
+  onSuccess: (label, hash) => console.log(`${label}: ${hash}`),
+  onError: (label, error) => console.error(`${label}: ${error}`),
+});
+```
+
+### `useSlotOnChain` / `useSlotsOnChain`
+
+Fetches slot state directly via RPC. Auto-invalidates on new blocks. The plural form uses multicall and deduplicates currency metadata requests.
+
+```tsx
+import { useSlotOnChain, useSlotsOnChain } from "@0xslots/sdk/react";
+
+const { data: slot, isLoading, refetch } = useSlotOnChain(address, 8453);
+// slot: { occupant, price, deposit, taxPercentage, insolvent, currencySymbol, ... }
+
+const { data: slots } = useSlotsOnChain(addresses, 8453);
+```
+
+### Full React Example
+
+```tsx
+import { useSlotAction, useSlotOnChain } from "@0xslots/sdk/react";
+
+function SlotView({ address }: { address: `0x${string}` }) {
+  const { data: slot, isLoading } = useSlotOnChain(address, 8453);
+  const { buy, busy } = useSlotAction({
+    onSuccess: (label, hash) => console.log(`${label}: ${hash}`),
+  });
+
+  if (isLoading) return <div>Loading...</div>;
+  if (!slot) return <div>Not found</div>;
+
+  return (
+    <div>
+      <p>Price: {slot.price.toString()}</p>
+      <p>Occupant: {slot.occupant ?? "Vacant"}</p>
+      <button
+        disabled={busy}
+        onClick={() => buy({
+          slot: address,
+          depositAmount: 1000000n,
+          selfAssessedPrice: 5000000n,
+        })}
+      >
+        Buy
+      </button>
+    </div>
+  );
+}
+```
+
+---
+
+## Subgraph
+
+The subgraph indexes all slot deployments, ownership transitions, and tax events.
+
+### Endpoints
+
+| Network | Endpoint |
+|---|---|
+| Base Mainnet | `https://gateway.thegraph.com/api/subgraphs/id/4sZrdv1SFzN4KzE9jiWDRuUyM4CnCrmvQ54Rv1s65qUq` |
+| Base Sepolia | `https://gateway.thegraph.com/api/subgraphs/id/Z361DLoMdPh9WAopH7shJP8WoXYAB9XeKrLUCTYjdZR` |
+
+### Key Entities
+
+| Entity | Key Fields |
+|---|---|
+| `Slot` | `id`, `recipient`, `currency`, `occupant`, `price`, `deposit`, `taxPercentage`, `collectedTax`, `totalCollected`, `createdAt`, `metadata` |
+| `Account` | `id`, `type` (EOA/CONTRACT/DELEGATED/SPLIT), `slotCount`, `occupiedCount`, `slotsAsRecipient`, `slotsAsOccupant` |
+| `Currency` | `id`, `name`, `symbol`, `decimals` |
+| `Module` | `id`, `name`, `version`, `verified` |
+| `MetadataSlot` | `id`, `uri`, `rawJson`, `adType`, `updatedBy`, `updateCount` |
+
+### Event Entities
+
+All events include `slot`, `timestamp`, `blockNumber`, and `tx`.
+
+| Entity | Key Fields |
+|---|---|
+| `BoughtEvent` | `buyer`, `previousOccupant`, `price`, `selfAssessedPrice` |
+| `ReleasedEvent` | `occupant`, `refund` |
+| `LiquidatedEvent` | `liquidator`, `occupant`, `bounty` |
+| `SettledEvent` | `taxOwed`, `taxPaid`, `depositRemaining` |
+| `TaxCollectedEvent` | `recipient`, `amount` |
+| `PriceUpdatedEvent` | `oldPrice`, `newPrice` |
+| `MetadataUpdatedEvent` | `author`, `uri`, `rawJson`, `adType` |
+
+### Example Queries
+
+#### List Slots
+
+```graphql
+{
+  slots(first: 10, orderBy: createdAt, orderDirection: desc) {
+    id
+    recipient
+    occupant
+    price
+    deposit
+    taxPercentage
+    currency { symbol decimals }
+    module { name verified }
+    createdAt
+  }
+}
+```
+
+#### Slot Activity
+
+```graphql
+query GetSlotActivity($slot: String!) {
+  boughtEvents(where: { slot: $slot }, orderBy: timestamp, orderDirection: desc) {
+    buyer
+    price
+    selfAssessedPrice
+    timestamp
+  }
+  releasedEvents(where: { slot: $slot }, orderBy: timestamp, orderDirection: desc) {
+    occupant
+    refund
+    timestamp
+  }
+  liquidatedEvents(where: { slot: $slot }, orderBy: timestamp, orderDirection: desc) {
+    liquidator
+    bounty
+    timestamp
+  }
+}
+```
+
+SDK equivalent: `await client.getSlotActivity({ slot: "0x..." })`
+
+#### Account Lookup
+
+```graphql
+query GetAccount($id: ID!) {
+  account(id: $id) {
+    id
+    type
+    slotCount
+    occupiedCount
+    slotsAsRecipient { id price totalCollected }
+    slotsAsOccupant { id price deposit }
+  }
+}
+```
+
+---
+
+## Modules — Adland
+
+Adland is an app built on top of slots that allows the current occupant of a slot to have write rights on a module's metadata IPFS URI string property. A specific open source registry (`@adland/data`) handles standardization of data being uploaded & consumed by specialized components (`@adland/react`).
+
+### MetadataModule (onchain)
+
+`MetadataModule` is the smart contract that powers Adland. It hooks into slot ownership events and stores a metadata URI (typically IPFS) per slot.
+
+```solidity
+/// Set metadata for a slot (occupant only)
+function updateMetadata(address slot, string calldata uri) external onlyOccupant(slot);
+```
+
+When the occupant calls `updateMetadata`, the ad content (validated and enriched via `@adland/data`) is uploaded to IPFS and the resulting URI is stored on-chain. The module also listens to `onTransfer` and `onRelease` — when ownership changes, the previous occupant's metadata is cleared.
+
+> Modules execute arbitrary code during slot transitions. Only use verified modules.
+
+### Ad Type Registry (`@adland/data`)
+
+Each ad type defines a **data** schema (what the occupant provides) and a **metadata** schema (what gets auto-enriched). The pipeline runs: **parse** → **verify** → **enrich**.
+
+#### `link`
+```ts
+data:     { url: string }
+metadata: { title?, description?, image?, icon? }
+// Verified: URL format — Enriched: Open Graph tags
+```
+
+#### `cast`
+```ts
+data:     { hash: string }
+metadata: { username?, pfpUrl?, text?, timestamp? }
+// Verified: cast exists on Neynar — Enriched: cast details
+```
+
+#### `miniapp`
+```ts
+data:     { url: string }
+metadata: { icon?, title?, description?, imageUrl? }
+// Verified: .well-known/farcaster.json manifest — Enriched: manifest metadata
+```
+
+#### `token`
+```ts
+data:     { address: string, chainId: number }
+metadata: { name?, symbol?, decimals?, logoURI? }
+// Verified: ERC-20 contract call — Enriched: token list / CoinGecko
+```
+
+#### `farcasterProfile`
+```ts
+data:     { fid: string }
+metadata: { pfpUrl?, bio?, username?, displayName?, followers?, following?, pro? }
+// Verified: FID exists on Neynar — Enriched: profile data
+```
+
+#### API
+
+```ts
+import { getAd, validateAdData, defineAd } from "@adland/data";
+import { z } from "zod";
+
+// Get a definition
+const link = getAd("link");
+
+// Validate
+link.data.safeParse({ url: "https://example.com" });
+
+// Full pipeline: parse → verify → enrich
+const { data, metadata } = await link.process({ url: "https://example.com" });
+
+// Safe version (no throw)
+const result = await link.safeProcess({ url: "https://example.com" });
+// { success, data?, metadata?, error? }
+
+// Validate unknown ad data
+validateAdData({ type: "link", data: { url: "https://example.com" } });
+
+// Custom ad types
+const myAd = defineAd({
+  type: "custom",
+  data: z.object({ value: z.string() }),
+  metadata: z.object({ enriched: z.string().optional() }),
+  async verify({ value }) { /* throw if invalid */ },
+  async getMetadata({ value }) { return { enriched: "..." }; },
+});
+```
+
+### React Components (`@adland/react`)
+
+Compound components for rendering ads. Fetches data from chain (RPC + IPFS) — no API keys required.
+
+#### Quick Start
+
+```tsx
+import { Ad, AdImage, AdTitle, AdLoaded, AdEmpty, AdLoading } from "@adland/react";
+
+<Ad slot="0xabc...123" chainId={8453}>
+  <AdLoading>Loading...</AdLoading>
+  <AdEmpty>Your ad here</AdEmpty>
+  <AdLoaded>
+    <AdImage className="size-12 rounded-md" />
+    <AdTitle className="text-sm font-medium" />
+  </AdLoaded>
+</Ad>
+```
+
+#### `<Ad>` Props
+
+Two modes: **on-chain** (provide `slot` + `chainId`) or **static** (provide `data`).
+
+| Prop | Required | Type | Default | Description |
+|------|----------|------|---------|-------------|
+| `slot` | yes (on-chain) | `string` | — | Slot contract address. Triggers on-chain fetch: metadata URI → IPFS content. |
+| `chainId` | yes (on-chain) | `SlotsChain` | — | Chain the slot is deployed on. |
+| `data` | yes (static) | `AdData` | — | Static ad data. Skips on-chain fetch entirely. |
+| `rpcUrl` | no | `string` | public RPC | Custom RPC endpoint. |
+| `baseLinkUrl` | no | `string` | `https://app.0xslots.org` | Base URL for the empty-state CTA. Clicking opens `{baseLinkUrl}/slots/{slot}`. |
+| `auth` | no | `"farcaster" \| "none"` | `"none"` | Auth method for analytics. `"farcaster"` uses Quick Auth to attach a verified FID. |
+| `context` | no | `string` | — | Placement label sent with analytics events (e.g. `"sidebar"`, `"carousel"`, `"frame"`). |
+
+Provide either `slot` + `chainId` **or** `data` — not both. If `data` is provided alongside `slot`, the static data is used and no fetch occurs.
+
+#### Content & State Components
+
+Render content components inside `<AdLoaded>`. Each accepts standard HTML props.
+
+| Component | Renders | Extra props |
+|-----------|---------|-------------|
+| `<AdImage>` | Ad image (`<img>`) | `fallback` |
+| `<AdTitle>` | Ad title (`<p>`) | `fallback` |
+| `<AdDescription>` | Ad description (`<p>`) | `fallback` |
+| `<AdBadge>` | Type icon + label (`<span>`) | — |
+| `<AdLabel>` | Static "AD" label (`<span>`) | — |
+
+| State Component | Renders when |
+|-----------|-------------|
+| `<AdLoaded>` | Ad data available |
+| `<AdEmpty>` | Slot has no ad |
+| `<AdLoading>` | Fetch in progress |
+| `<AdError>` | Fetch failed |
+
+#### `useAd()` Hook
+
+```tsx
+import { useAd } from "@adland/react";
+
+const { data, cid, isLoading, error, isEmpty, slot, chainId } = useAd();
+```
+
+#### Click Behavior
+
+| State | Action |
+|-------|--------|
+| **Loaded** | Performs ad action (open link, view cast, etc.) |
+| **Empty** | Opens `${baseLinkUrl}/slots/${slot}?chain=${chainId}` |
+
+In a Farcaster miniapp, actions use the native SDK. On web, falls back to `window.open`.
+
+#### Full Example
+
+```tsx
+<Ad
+  slot="0xb6a6d14bb374b6aa6d52b2b982547031fddfeed5"
+  chainId={8453}
+  auth="farcaster"
+  context="sidebar"
+  className="flex items-center gap-3 p-3 border rounded-lg"
+>
+  <AdLoading className="animate-pulse">
+    <div className="size-12 rounded-md bg-muted" />
+  </AdLoading>
+  <AdEmpty className="text-center text-muted-foreground">
+    Your ad here
+  </AdEmpty>
+  <AdLoaded className="flex items-center gap-3 w-full">
+    <AdImage className="size-12 rounded-md object-cover" />
+    <div>
+      <AdTitle className="text-sm font-medium" />
+      <AdDescription className="text-xs text-muted-foreground" />
+    </div>
+    <AdBadge className="text-xs ml-auto" />
+  </AdLoaded>
+</Ad>
 ```
