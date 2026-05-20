@@ -45,7 +45,7 @@
   "dependencies": {
     "wagmi": "3.5.0",
     "@wagmi/core": "3.4.0",
-    "viem": "2.47.4",
+    "viem": "2.50.4",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "@tanstack/react-query": "5.90.21",

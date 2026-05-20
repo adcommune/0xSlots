@@ -9,6 +9,6 @@
     "./transports": "./src/transports.ts"
   },
   "peerDependencies": {
-    "viem": "2.47.4"
+    "viem": "2.50.4"
   }
 }
