@@ -43,12 +43,20 @@ contract DeployFeedHub is BaseScript {
         console2.log("FeedHub:", address(hub));
         console2.log("Beacon:", address(hub.beacon()));
 
-        // 3) Feed #0, owned by the deployer, metadataURI empty for now.
-        //    The hub mints each tier's slots via the SlotFactory with the
-        //    FeedPostModule attached, verifies the module, then registers
-        //    the feed. Default tier ladder totals 10 slots.
-        (address feed0,) = hub.createFeed(owner, feedName, "", recipient, _defaultTiers());
+        // 3) Feed #0, owned by the deployer, metadataURI empty for now. The hub
+        //    only deploys + initializes the (empty) feed; slots are minted
+        //    afterward via separate, gas-bounded Feed.createSlots(...) calls so
+        //    each tier is its own broadcast tx. Tier ladder totals 41 slots.
+        (address feed0,) = hub.createFeed(owner, feedName, "", recipient);
         console2.log("Feed #0:", feed0);
+
+        Feed(feed0).createSlots(_tier(100, 100, 86400, 2));
+        Feed(feed0).createSlots(_tier(300, 200, 43200, 5));
+        Feed(feed0).createSlots(_tier(500, 500, 21600, 12));
+        Feed(feed0).createSlots(_tier(1000, 500, 10800, 10));
+        Feed(feed0).createSlots(_tier(2000, 1000, 3600, 8));
+        Feed(feed0).createSlots(_tier(5000, 1000, 1800, 4));
+
         console2.log("Feed #0 slotCount:", Feed(feed0).slotCount());
 
         // 4) Persist deployment records (deployments/<chainid>/*.json) so the
@@ -57,14 +65,21 @@ contract DeployFeedHub is BaseScript {
         _saveDeployment(address(feedImpl), "FeedImplementation");
     }
 
-    /// @dev Default tier ladder: (taxPercentage bps, count), totalling 10 slots.
-    function _defaultTiers() internal pure returns (FeedHub.SlotTier[] memory tiers) {
-        tiers = new FeedHub.SlotTier[](6);
-        tiers[0] = FeedHub.SlotTier({taxPercentage: 100, count: 2});
-        tiers[1] = FeedHub.SlotTier({taxPercentage: 300, count: 2});
-        tiers[2] = FeedHub.SlotTier({taxPercentage: 500, count: 2});
-        tiers[3] = FeedHub.SlotTier({taxPercentage: 1000, count: 2});
-        tiers[4] = FeedHub.SlotTier({taxPercentage: 2000, count: 1});
-        tiers[5] = FeedHub.SlotTier({taxPercentage: 5000, count: 1});
+    /// @dev One-tier helper: mints `count` slots at (taxBps, bountyBps,
+    ///      minDepositSeconds). Each call to Feed.createSlots is its own
+    ///      gas-bounded batch, so callers issue one per tier.
+    function _tier(
+        uint256 taxPercentage,
+        uint256 liquidationBountyBps,
+        uint256 minDepositSeconds,
+        uint256 count
+    ) internal pure returns (Feed.SlotTier[] memory tiers) {
+        tiers = new Feed.SlotTier[](1);
+        tiers[0] = Feed.SlotTier({
+            taxPercentage: taxPercentage,
+            liquidationBountyBps: liquidationBountyBps,
+            minDepositSeconds: minDepositSeconds,
+            count: count
+        });
     }
 }
