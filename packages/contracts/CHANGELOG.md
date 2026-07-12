@@ -1,5 +1,12 @@
 # @0xslots/contracts
 
+## 0.13.0
+
+### Minor Changes
+
+- 95c954c: Add `feedHubAddress` export for the new FeedHub/Feed on-chain feed registry. FeedHub is deployed on Base Sepolia (`0x3B5eC015339b654F1220C32a5D29679C527Fb3B7`) with feed #0 ("The Testnet Feed") seeded from the curated 42-slot list. Base (mainnet) deploy is pending.
+- bc91033: update
+
 ## 0.12.0
 
 ### Minor Changes

@@ -1,5 +1,17 @@
 # @0xslots/sdk
 
+## 0.17.0
+
+### Minor Changes
+
+- bc91033: update
+
+### Patch Changes
+
+- Updated dependencies [95c954c]
+- Updated dependencies [bc91033]
+  - @0xslots/contracts@0.13.0
+
 ## 0.16.0
 
 ### Minor Changes
