@@ -37,7 +37,7 @@ export const feedSocialGroupAddress = {
  * feed is `feeds(0)`. base (mainnet) is pending its deploy.
  */
 export const feedHubAddress = {
-  [baseSepolia.id]: "0x3B5eC015339b654F1220C32a5D29679C527Fb3B7",
+  [baseSepolia.id]: "0x36a5aedd3256CA750c44D71A0aFB663453Bb62B7",
 } as const;
 
 /**
