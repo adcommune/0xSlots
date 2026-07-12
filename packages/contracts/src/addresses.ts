@@ -33,6 +33,14 @@ export const feedSocialGroupAddress = {
 } as const;
 
 /**
+ * FeedHub — beacon factory + registry for on-chain Feed contracts. The default
+ * feed is `feeds(0)`. base (mainnet) is pending its deploy.
+ */
+export const feedHubAddress = {
+  [baseSepolia.id]: "0x3B5eC015339b654F1220C32a5D29679C527Fb3B7",
+} as const;
+
+/**
  * Supported chain IDs for 0xSlots protocol
  */
 export type SupportedChainId = keyof typeof slotFactoryAddress;
