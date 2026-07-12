@@ -47,9 +47,10 @@ contract DeployFeedHub is BaseScript {
         Feed(feed0).addSlots(seedSlots);
         console2.log("Seeded slots:", seedSlots.length);
 
-        // Record for later stages (SDK addresses.ts). BaseScript has no
-        // _writeDeployment helper (only _saveDeployment for post-hoc use);
-        // addresses are logged above and recorded manually from the run log.
+        // 5) Persist deployment records (deployments/<chainid>/*.json) so the
+        //    SDK's addresses/_readDeployment can pick them up.
+        _saveDeployment(address(hub), "FeedHub");
+        _saveDeployment(address(feedImpl), "FeedImplementation");
     }
 
     // --- Seed data: pasted verbatim (checksummed) from thefeed apps/web/src/lib/feed.ts ---

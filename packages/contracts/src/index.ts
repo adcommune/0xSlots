@@ -31,6 +31,7 @@ export {
   feedModuleAddress,
   feedRouterAddress,
   feedSocialGroupAddress,
+  feedHubAddress,
 } from "./addresses";
 
 /** Viem chain objects for known 0xSlots networks — add here when deploying to new chains */
