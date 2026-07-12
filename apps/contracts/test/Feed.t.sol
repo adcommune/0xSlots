@@ -8,16 +8,9 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Feed} from "../src/feed/Feed.sol";
 import {IFeed} from "../src/interfaces/IFeed.sol";
 
-// Minimal stand-in for SlotFactory's `isSlot` membership check.
-contract MockSlotFactory {
-    mapping(address => bool) public isSlot;
-    function setSlot(address a, bool v) external { isSlot[a] = v; }
-}
-
 contract FeedTest is Test {
     UpgradeableBeacon beacon;
     Feed feed;
-    MockSlotFactory factory;
 
     address owner = makeAddr("owner");
     address stranger = makeAddr("stranger");
@@ -27,17 +20,17 @@ contract FeedTest is Test {
     address slotC = makeAddr("slotC");
 
     function setUp() public {
-        factory = new MockSlotFactory();
-        factory.setSlot(slotA, true);
-        factory.setSlot(slotB, true);
-        factory.setSlot(slotC, true);
-
         Feed impl = new Feed();
         beacon = new UpgradeableBeacon(address(impl), address(this));
 
+        address[] memory slots = new address[](3);
+        slots[0] = slotA;
+        slots[1] = slotB;
+        slots[2] = slotC;
+
         bytes memory init = abi.encodeCall(
             Feed.initialize,
-            (owner, "The Testnet Feed", "", recipient, address(factory))
+            (owner, "The Testnet Feed", "", recipient, slots)
         );
         feed = Feed(address(new BeaconProxy(address(beacon), init)));
     }
@@ -47,12 +40,19 @@ contract FeedTest is Test {
         assertEq(feed.name(), "The Testnet Feed");
         assertEq(feed.metadataURI(), "");
         assertEq(feed.feedRecipient(), recipient);
-        assertEq(feed.slotCount(), 0);
+        assertEq(feed.slotCount(), 3);
+
+        address[] memory s = feed.getSlots();
+        assertEq(s.length, 3);
+        assertEq(s[0], slotA);
+        assertEq(s[1], slotB);
+        assertEq(s[2], slotC);
     }
 
     function test_cannotInitializeTwice() public {
+        address[] memory slots = new address[](0);
         vm.expectRevert();
-        feed.initialize(owner, "x", "", recipient, address(factory));
+        feed.initialize(owner, "x", "", recipient, slots);
     }
 
     function test_ownerCanSetNameAndUri() public {
@@ -70,78 +70,45 @@ contract FeedTest is Test {
         feed.setName("nope");
     }
 
+    function test_strangerCannotSetMetadataURI() public {
+        vm.prank(stranger);
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, stranger));
+        feed.setMetadataURI("nope");
+    }
+
+    function test_strangerCannotSetRecipient() public {
+        vm.prank(stranger);
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, stranger));
+        feed.setFeedRecipient(stranger);
+    }
+
+    function test_ownerCanSetRecipient() public {
+        address newRecipient = makeAddr("newRecipient");
+        vm.prank(owner);
+        feed.setFeedRecipient(newRecipient);
+        assertEq(feed.feedRecipient(), newRecipient);
+    }
+
     function test_setRecipient_rejectsZero() public {
         vm.prank(owner);
         vm.expectRevert(Feed.ZeroRecipient.selector);
         feed.setFeedRecipient(address(0));
     }
 
-    function test_addSlot_appendsInOrder() public {
-        vm.startPrank(owner);
-        feed.addSlot(slotA);
-        feed.addSlot(slotB);
-        vm.stopPrank();
-
-        address[] memory s = feed.getSlots();
-        assertEq(s.length, 2);
-        assertEq(s[0], slotA);
-        assertEq(s[1], slotB);
-        assertTrue(feed.containsSlot(slotA));
-        assertTrue(feed.containsSlot(slotB));
-        assertFalse(feed.containsSlot(slotC));
+    function test_initialize_rejectsZeroRecipient() public {
+        Feed impl = new Feed();
+        UpgradeableBeacon b = new UpgradeableBeacon(address(impl), address(this));
+        address[] memory slots = new address[](0);
+        bytes memory init = abi.encodeCall(
+            Feed.initialize,
+            (owner, "x", "", address(0), slots)
+        );
+        vm.expectRevert(Feed.ZeroRecipient.selector);
+        new BeaconProxy(address(b), init);
     }
 
-    function test_addSlots_batch() public {
-        address[] memory batch = new address[](3);
-        batch[0] = slotA;
-        batch[1] = slotB;
-        batch[2] = slotC;
-        vm.prank(owner);
-        feed.addSlots(batch);
+    function test_getSlots_and_slotCount() public view {
         assertEq(feed.slotCount(), 3);
-        assertEq(feed.getSlots()[2], slotC);
-    }
-
-    function test_addSlot_rejectsNonSlot() public {
-        address notASlot = makeAddr("notASlot"); // factory.isSlot == false
-        vm.prank(owner);
-        vm.expectRevert(abi.encodeWithSelector(Feed.NotASlot.selector, notASlot));
-        feed.addSlot(notASlot);
-    }
-
-    function test_addSlot_rejectsDuplicate() public {
-        vm.startPrank(owner);
-        feed.addSlot(slotA);
-        vm.expectRevert(abi.encodeWithSelector(Feed.SlotAlreadyAdded.selector, slotA));
-        feed.addSlot(slotA);
-        vm.stopPrank();
-    }
-
-    function test_addSlot_onlyOwner() public {
-        vm.prank(stranger);
-        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, stranger));
-        feed.addSlot(slotA);
-    }
-
-    function test_removeSlot_swapPop() public {
-        vm.startPrank(owner);
-        feed.addSlot(slotA);
-        feed.addSlot(slotB);
-        feed.addSlot(slotC);
-        feed.removeSlot(slotB); // middle: last (slotC) swaps into its place
-        vm.stopPrank();
-
-        address[] memory s = feed.getSlots();
-        assertEq(s.length, 2);
-        assertEq(s[0], slotA);
-        assertEq(s[1], slotC);
-        assertFalse(feed.containsSlot(slotB));
-        assertTrue(feed.containsSlot(slotC));
-    }
-
-    function test_removeSlot_revertsIfAbsent() public {
-        vm.prank(owner);
-        vm.expectRevert(abi.encodeWithSelector(Feed.SlotNotInFeed.selector, slotA));
-        feed.removeSlot(slotA);
+        assertEq(feed.getSlots().length, 3);
     }
 }
