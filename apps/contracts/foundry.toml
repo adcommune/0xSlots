@@ -8,6 +8,10 @@ fs_permissions = [
 ]
 optimizer = true
 optimizer_runs = 200
+# via_ir needed for Feed.initialize's wide param list (legacy codegen hits
+# stack-too-deep). NOTE: this compiles the whole repo through the IR pipeline,
+# so re-verifying any already-deployed contract now requires `--via-ir`.
+via_ir = true
 
 [rpc_endpoints]
 local = "http://localhost:8545"

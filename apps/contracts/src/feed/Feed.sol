@@ -23,10 +23,12 @@ interface ISlotView {
 
 /// @title Feed
 /// @notice Feed identity (name, updateable metadataURI, declared non-custodial
-///         recipient) plus its slot set. The owner mints slots incrementally via
-///         `createSlots` — each minted slot carries the feed module (injected by
-///         the hub, immutable) and is module-verified; arbitrary addresses can
-///         never be added. Batching keeps each tx under RPC gas caps.
+///         recipient) plus its slot set. Initial tiers are minted at
+///         `initialize` time; further slots are minted only by the hub (via
+///         the paid `mintSlots` path) — never directly by the feed owner —
+///         each minted slot carries the feed module (injected by the hub,
+///         immutable) and is module-verified; arbitrary addresses can never
+///         be added. Batching keeps each tx under RPC gas caps.
 contract Feed is Initializable, OwnableUpgradeable, IFeed {
     struct SlotTier {
         uint256 taxPercentage;
@@ -42,6 +44,7 @@ contract Feed is Initializable, OwnableUpgradeable, IFeed {
     address public feedModule;
     address public currency;
     address[] private _slots;
+    address public hub;
 
     event NameUpdated(string name);
     event MetadataURIUpdated(string uri);
@@ -53,6 +56,7 @@ contract Feed is Initializable, OwnableUpgradeable, IFeed {
     error NoTiers();
     error ModuleMismatch(address slot, address got, address expected);
     error SlotNotInFeed(address slot);
+    error NotHub();
 
     constructor() {
         _disableInitializers();
@@ -65,7 +69,9 @@ contract Feed is Initializable, OwnableUpgradeable, IFeed {
         address recipient_,
         address slotFactory_,
         address feedModule_,
-        address currency_
+        address currency_,
+        address hub_,
+        SlotTier[] calldata initialTiers
     ) external initializer {
         __Ownable_init(owner_);
         if (recipient_ == address(0)) revert ZeroRecipient();
@@ -75,11 +81,23 @@ contract Feed is Initializable, OwnableUpgradeable, IFeed {
         slotFactory = slotFactory_;
         feedModule = feedModule_;
         currency = currency_;
+        hub = hub_;
+        if (initialTiers.length > 0) {
+            _mintSlots(initialTiers);
+        }
     }
 
-    /// @notice Mint slots (with the feed module) and append them. Owner may call
-    ///         repeatedly to grow the feed in gas-bounded batches.
-    function createSlots(SlotTier[] calldata tiers) external onlyOwner {
+    /// @notice Mint slots (with the feed module) and append them. Gated to
+    ///         the hub — the hub collects payment (feedCreationPrice /
+    ///         slotPrice) before invoking this.
+    function mintSlots(SlotTier[] calldata tiers) external {
+        if (msg.sender != hub) revert NotHub();
+        _mintSlots(tiers);
+    }
+
+    /// @dev Shared mint+verify loop used by both `initialize` (initial tiers)
+    ///      and `mintSlots` (hub-gated paid additions).
+    function _mintSlots(SlotTier[] calldata tiers) internal {
         if (tiers.length == 0) revert NoTiers();
         for (uint256 t = 0; t < tiers.length; t++) {
             if (tiers[t].count == 0) continue;

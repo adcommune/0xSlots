@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {BaseScript, console2} from "./Base.s.sol";
+import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import {FeedHub} from "../src/feed/FeedHub.sol";
 import {Feed} from "../src/feed/Feed.sol";
 
@@ -34,40 +35,68 @@ contract DeployFeedHub is BaseScript {
         address feedModule = _readDeployment("FeedPostModule");
         address owner = vm.addr(deployerPrivateKey);
 
-        // 1) Feed implementation
+        // 1) Feed implementation (beacon-proxy logic, injected into every Feed).
         Feed feedImpl = new Feed();
         console2.log("Feed impl:", address(feedImpl));
 
-        // 2) FeedHub (constructor deploys the beacon it owns)
-        FeedHub hub = new FeedHub(address(feedImpl), slotFactory, feedModule, currency, owner);
-        console2.log("FeedHub:", address(hub));
+        // 2) FeedHub implementation + UUPS proxy. Prices start at 0 so Feed #0
+        //    (created below) is free; the admin raises feedCreationPrice /
+        //    slotPrice afterward via separate txs. feeRecipient = deployer for now.
+        FeedHub feedHubImpl = new FeedHub();
+        console2.log("FeedHub impl:", address(feedHubImpl));
+
+        ERC1967Proxy hubProxy = new ERC1967Proxy(
+            address(feedHubImpl),
+            abi.encodeCall(
+                FeedHub.initialize,
+                (
+                    owner,
+                    address(feedImpl),
+                    slotFactory,
+                    feedModule,
+                    currency,
+                    /* feeRecipient */ owner,
+                    /* feedCreationPrice */ 0,
+                    /* slotPrice */ 0
+                )
+            )
+        );
+        FeedHub hub = FeedHub(address(hubProxy));
+        console2.log("FeedHub (proxy):", address(hub));
         console2.log("Beacon:", address(hub.beacon()));
 
-        // 3) Feed #0, owned by the deployer, metadataURI empty for now. The hub
-        //    only deploys + initializes the (empty) feed; slots are minted
-        //    afterward via separate, gas-bounded Feed.createSlots(...) calls so
-        //    each tier is its own broadcast tx. Tier ladder totals 41 slots.
-        (address feed0,) = hub.createFeed(owner, feedName, "", recipient);
+        // 3) Feed #0, owned by the deployer, metadataURI empty for now. The
+        //    hub deploys + initializes the Feed with its first tiers (<=10
+        //    INCLUDED_SLOTS, so feedCreationPrice covers it), then further
+        //    tiers are minted via separate, gas-bounded hub.addSlots(...)
+        //    calls so each tier is its own broadcast tx. Prices are 0 at
+        //    deploy time, so every call is {value: 0}. Tier ladder totals 41
+        //    slots: 7 (initial, <=10) + 12 + 10 + 8 + 4 = 41.
+        Feed.SlotTier[] memory firstTiers = new Feed.SlotTier[](2);
+        firstTiers[0] = _tierStruct(100, 100, 86400, 2);
+        firstTiers[1] = _tierStruct(300, 200, 43200, 5);
+
+        (address feed0, ) = hub.createFeed{value: 0}(owner, feedName, "", recipient, firstTiers);
         console2.log("Feed #0:", feed0);
 
-        Feed(feed0).createSlots(_tier(100, 100, 86400, 2));
-        Feed(feed0).createSlots(_tier(300, 200, 43200, 5));
-        Feed(feed0).createSlots(_tier(500, 500, 21600, 12));
-        Feed(feed0).createSlots(_tier(1000, 500, 10800, 10));
-        Feed(feed0).createSlots(_tier(2000, 1000, 3600, 8));
-        Feed(feed0).createSlots(_tier(5000, 1000, 1800, 4));
+        hub.addSlots{value: 0}(feed0, _tier(500, 500, 21600, 12));
+        hub.addSlots{value: 0}(feed0, _tier(1000, 500, 10800, 10));
+        hub.addSlots{value: 0}(feed0, _tier(2000, 1000, 3600, 8));
+        hub.addSlots{value: 0}(feed0, _tier(5000, 1000, 1800, 4));
 
         console2.log("Feed #0 slotCount:", Feed(feed0).slotCount());
 
         // 4) Persist deployment records (deployments/<chainid>/*.json) so the
-        //    SDK's addresses/_readDeployment can pick them up.
+        //    SDK's addresses/_readDeployment can pick them up. FeedHub record
+        //    points at the PROXY (the address callers should use).
         _saveDeployment(address(hub), "FeedHub");
         _saveDeployment(address(feedImpl), "FeedImplementation");
+        _saveDeployment(address(feedHubImpl), "FeedHubImplementation");
     }
 
     /// @dev One-tier helper: mints `count` slots at (taxBps, bountyBps,
-    ///      minDepositSeconds). Each call to Feed.createSlots is its own
-    ///      gas-bounded batch, so callers issue one per tier.
+    ///      minDepositSeconds). Each call to hub.addSlots/createFeed is its
+    ///      own gas-bounded batch, so callers issue one per tier.
     function _tier(
         uint256 taxPercentage,
         uint256 liquidationBountyBps,
@@ -75,7 +104,16 @@ contract DeployFeedHub is BaseScript {
         uint256 count
     ) internal pure returns (Feed.SlotTier[] memory tiers) {
         tiers = new Feed.SlotTier[](1);
-        tiers[0] = Feed.SlotTier({
+        tiers[0] = _tierStruct(taxPercentage, liquidationBountyBps, minDepositSeconds, count);
+    }
+
+    function _tierStruct(
+        uint256 taxPercentage,
+        uint256 liquidationBountyBps,
+        uint256 minDepositSeconds,
+        uint256 count
+    ) internal pure returns (Feed.SlotTier memory) {
+        return Feed.SlotTier({
             taxPercentage: taxPercentage,
             liquidationBountyBps: liquidationBountyBps,
             minDepositSeconds: minDepositSeconds,
