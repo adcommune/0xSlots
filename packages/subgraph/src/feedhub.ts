@@ -40,10 +40,11 @@ export function handleFeedCreated(event: FeedCreated): void {
     ? Address.zero()
     : recipientResult.value;
 
-  let slotCountResult = contract.try_slotCount();
-  feed.slotCount = slotCountResult.reverted
-    ? BigInt.zero()
-    : slotCountResult.value;
+  // slotCount is driven solely by SlotAdded events (each +1). Do NOT seed it
+  // from contract.slotCount() here: createFeed + createSlots land in the same
+  // block, so an eth_call returns the end-of-block value (all slots already
+  // minted) and the subsequent SlotAdded events would double-count it.
+  feed.slotCount = BigInt.zero();
 
   feed.createdAt = event.block.timestamp;
   feed.createdTx = event.transaction.hash;
