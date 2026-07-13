@@ -92,6 +92,30 @@ dataSources:
         - event: CollectionDeployed(indexed address,indexed address,indexed address,string,string,address)
           handler: handleCollectionDeployed
       file: ./src/erc721slots-factory.ts
+  - kind: ethereum
+    name: FeedHub
+    network: {{network}}
+    source:
+      address: "{{feedHubAddress}}"
+      abi: FeedHub
+      startBlock: {{feedHubStartBlock}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - FeedHub
+        - Feed
+        - FeedCreatedEvent
+      abis:
+        - name: FeedHub
+          file: ./abis/FeedHub.json
+        - name: Feed
+          file: ./abis/Feed.json
+      eventHandlers:
+        - event: FeedCreated(indexed uint256,indexed address,indexed address)
+          handler: handleFeedCreated
+      file: ./src/feedhub.ts
 templates:
   - kind: ethereum
     name: Slot
@@ -207,3 +231,32 @@ templates:
         - event: TokenMinted(indexed uint256,indexed address,string)
           handler: handleTokenMinted
       file: ./src/erc721slots.ts
+  - kind: ethereum
+    name: Feed
+    network: {{network}}
+    source:
+      abi: Feed
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - Feed
+        - Slot
+        - FeedNameUpdatedEvent
+        - FeedMetadataURIUpdatedEvent
+        - FeedRecipientUpdatedEvent
+        - FeedSlotAddedEvent
+      abis:
+        - name: Feed
+          file: ./abis/Feed.json
+      eventHandlers:
+        - event: NameUpdated(string)
+          handler: handleNameUpdated
+        - event: MetadataURIUpdated(string)
+          handler: handleMetadataURIUpdated
+        - event: RecipientUpdated(indexed address)
+          handler: handleRecipientUpdated
+        - event: SlotAdded(indexed address)
+          handler: handleSlotAdded
+      file: ./src/feed.ts

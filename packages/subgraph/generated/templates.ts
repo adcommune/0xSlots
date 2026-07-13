@@ -57,3 +57,13 @@ export class ERC721Slots extends DataSourceTemplate {
     );
   }
 }
+
+export class Feed extends DataSourceTemplate {
+  static create(address: Address): void {
+    DataSourceTemplate.create("Feed", [address.toHex()]);
+  }
+
+  static createWithContext(address: Address, context: DataSourceContext): void {
+    DataSourceTemplate.createWithContext("Feed", [address.toHex()], context);
+  }
+}

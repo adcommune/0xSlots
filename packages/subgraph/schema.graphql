@@ -65,6 +65,7 @@ type Slot @entity(immutable: false) {
   occupant: Bytes # null = vacant
   occupantAccount: Account # null = vacant
   isOccupied: Boolean! # mirrors occupant != null; sortable/filterable
+  feed: Feed # null if this slot does not belong to a Feed
   price: BigInt!
   deposit: BigInt!
   collectedTax: BigInt!
@@ -290,6 +291,87 @@ type PendingUpdateCancelledEvent @entity(immutable: true) {
   timestamp: BigInt!
   blockNumber: BigInt!
   tx: Bytes!
+}
+
+# ──────────────────────────────────────────
+# FeedHub / Feed (beacon-proxy feeds, each with its own slots)
+# ──────────────────────────────────────────
+
+type FeedHub @entity(immutable: false) {
+  id: ID! # hub address
+  feedCount: BigInt!
+  feeds: [Feed!]! @derivedFrom(field: "hub")
+}
+
+type Feed @entity(immutable: false) {
+  id: ID! # feed proxy address
+  hub: FeedHub!
+  index: BigInt!
+  owner: Bytes!
+  onchainName: String! # Feed.name()
+  metadataURI: String!
+  recipient: Bytes!
+  slotCount: BigInt!
+  # resolved from metadataURI JSON:
+  metadataName: String
+  description: String
+  image: String
+  banner: String
+  externalLink: String
+  metadataRaw: String
+  metadataCid: String
+  displayName: String! # metadataName ?? onchainName
+  createdAt: BigInt!
+  createdTx: Bytes!
+  updatedAt: BigInt!
+  slots: [Slot!]! @derivedFrom(field: "feed")
+}
+
+type FeedCreatedEvent @entity(immutable: true) {
+  id: ID!
+  feed: Feed!
+  hub: Bytes!
+  owner: Bytes!
+  index: BigInt!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type FeedNameUpdatedEvent @entity(immutable: true) {
+  id: ID!
+  feed: Feed!
+  name: String!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type FeedMetadataURIUpdatedEvent @entity(immutable: true) {
+  id: ID!
+  feed: Feed!
+  uri: String!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type FeedRecipientUpdatedEvent @entity(immutable: true) {
+  id: ID!
+  feed: Feed!
+  recipient: Bytes!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type FeedSlotAddedEvent @entity(immutable: true) {
+  id: ID!
+  feed: Feed!
+  slot: Bytes!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
 }
 
 # ──────────────────────────────────────────

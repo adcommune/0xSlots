@@ -10,7 +10,7 @@ import { getOrCreateAccount, getOrCreateAccountSlot } from "./helpers";
  * - IPFS hash or ipfs:// URI → fetch via ipfs.cat
  * - Anything else → null (client-side fallback)
  */
-function resolveContent(uri: string): string | null {
+export function resolveContent(uri: string): string | null {
   if (uri.startsWith("{")) return uri;
 
   let hash: string | null = null;
@@ -32,7 +32,7 @@ function resolveContent(uri: string): string | null {
  * Extract the IPFS CID from a URI string.
  * Returns null for inline JSON or non-IPFS URIs.
  */
-function extractCid(uri: string): string | null {
+export function extractCid(uri: string): string | null {
   if (uri.startsWith("Qm") || uri.startsWith("bafy")) return uri;
   if (uri.startsWith("ipfs://")) return uri.slice(7);
   return null;
