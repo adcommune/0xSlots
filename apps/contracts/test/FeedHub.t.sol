@@ -50,10 +50,13 @@ contract FeedHubTest is Test {
         assertTrue(address(hub.beacon()) != address(0));
     }
 
-    function test_createFeed_ownerOnly() public {
+    function test_createFeed_permissionless() public {
+        // anyone can create a feed and becomes its owner
         vm.prank(stranger);
-        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, stranger));
-        hub.createFeed(feedOwner, "F0", "", recipient);
+        (address feedAddr, uint256 index) = hub.createFeed(stranger, "F0", "", recipient);
+        assertEq(index, 0);
+        assertEq(hub.feeds(0), feedAddr);
+        assertEq(Feed(feedAddr).owner(), stranger);
     }
 
     function test_createFeed_deploysEmptyFeed_andRegisters() public {

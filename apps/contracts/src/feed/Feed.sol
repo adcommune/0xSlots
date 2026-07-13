@@ -47,10 +47,12 @@ contract Feed is Initializable, OwnableUpgradeable, IFeed {
     event MetadataURIUpdated(string uri);
     event RecipientUpdated(address indexed recipient);
     event SlotAdded(address indexed slot);
+    event SlotRemoved(address indexed slot);
 
     error ZeroRecipient();
     error NoTiers();
     error ModuleMismatch(address slot, address got, address expected);
+    error SlotNotInFeed(address slot);
 
     constructor() {
         _disableInitializers();
@@ -100,6 +102,23 @@ contract Feed is Initializable, OwnableUpgradeable, IFeed {
                 emit SlotAdded(created[j]);
             }
         }
+    }
+
+    /// @notice Delist a slot from this feed (order-preserving). The Slot contract
+    ///         itself is untouched — this only removes it from the feed's list.
+    function removeSlot(address slot) external onlyOwner {
+        uint256 len = _slots.length;
+        for (uint256 i = 0; i < len; i++) {
+            if (_slots[i] == slot) {
+                for (uint256 j = i; j < len - 1; j++) {
+                    _slots[j] = _slots[j + 1];
+                }
+                _slots.pop();
+                emit SlotRemoved(slot);
+                return;
+            }
+        }
+        revert SlotNotInFeed(slot);
     }
 
     function name() external view returns (string memory) { return _name; }

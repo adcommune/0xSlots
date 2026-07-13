@@ -33,12 +33,15 @@ contract FeedHub is Ownable {
         currency = currency_;
     }
 
+    /// @notice Permissionless: anyone can deploy a Feed and becomes its owner
+    ///         (`owner_`). Slots are minted afterward via Feed.createSlots by the
+    ///         feed owner. The hub owner only controls the beacon (upgrades).
     function createFeed(
         address owner_,
         string calldata name_,
         string calldata metadataURI_,
         address recipient_
-    ) external onlyOwner returns (address feed, uint256 index) {
+    ) external returns (address feed, uint256 index) {
         bytes memory initData = abi.encodeCall(
             Feed.initialize,
             (owner_, name_, metadataURI_, recipient_, slotFactory, feedModule, currency)

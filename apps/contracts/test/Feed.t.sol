@@ -287,4 +287,39 @@ contract FeedTest is Test {
         assertEq(feed.slotCount(), 3);
         assertEq(feed.getSlots().length, 3);
     }
+
+    // removeSlot
+
+    function test_removeSlot_ownerOnly() public {
+        vm.prank(owner);
+        feed.createSlots(_oneTier(100, 2));
+        address[] memory s = feed.getSlots();
+        vm.prank(stranger);
+        vm.expectRevert(
+            abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, stranger)
+        );
+        feed.removeSlot(s[0]);
+    }
+
+    function test_removeSlot_preservesOrder() public {
+        vm.startPrank(owner);
+        feed.createSlots(_oneTier(100, 3));
+        address[] memory before = feed.getSlots();
+        feed.removeSlot(before[1]); // remove the middle element
+        vm.stopPrank();
+
+        address[] memory remaining = feed.getSlots();
+        assertEq(remaining.length, 2);
+        assertEq(feed.slotCount(), 2);
+        assertEq(remaining[0], before[0]);
+        assertEq(remaining[1], before[2]); // order preserved (not swap-pop)
+    }
+
+    function test_removeSlot_revertsIfAbsent() public {
+        vm.prank(owner);
+        vm.expectRevert(
+            abi.encodeWithSelector(Feed.SlotNotInFeed.selector, address(0xdead))
+        );
+        feed.removeSlot(address(0xdead));
+    }
 }
