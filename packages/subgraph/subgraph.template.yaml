@@ -247,6 +247,7 @@ templates:
         - FeedMetadataURIUpdatedEvent
         - FeedRecipientUpdatedEvent
         - FeedSlotAddedEvent
+        - FeedSlotRemovedEvent
       abis:
         - name: Feed
           file: ./abis/Feed.json
@@ -259,4 +260,6 @@ templates:
           handler: handleRecipientUpdated
         - event: SlotAdded(indexed address)
           handler: handleSlotAdded
+        - event: SlotRemoved(indexed address)
+          handler: handleSlotRemoved
       file: ./src/feed.ts

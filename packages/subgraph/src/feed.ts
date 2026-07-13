@@ -4,6 +4,7 @@ import {
   MetadataURIUpdated,
   RecipientUpdated,
   SlotAdded,
+  SlotRemoved,
 } from "../generated/templates/Feed/Feed";
 import {
   Feed,
@@ -12,6 +13,7 @@ import {
   FeedMetadataURIUpdatedEvent,
   FeedRecipientUpdatedEvent,
   FeedSlotAddedEvent,
+  FeedSlotRemovedEvent,
 } from "../generated/schema";
 import { resolveContent, extractCid } from "./metadata";
 import { getOrCreateAccount, getOrCreateCurrency } from "./helpers";
@@ -186,6 +188,34 @@ export function handleSlotAdded(event: SlotAdded): void {
   let evId =
     event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
   let ev = new FeedSlotAddedEvent(evId);
+  ev.feed = feed.id;
+  ev.slot = event.params.slot;
+  ev.blockNumber = event.block.number;
+  ev.blockTimestamp = event.block.timestamp;
+  ev.transactionHash = event.transaction.hash;
+  ev.save();
+}
+
+export function handleSlotRemoved(event: SlotRemoved): void {
+  let feed = Feed.load(event.address.toHexString());
+  if (feed == null) return;
+
+  let slot = Slot.load(event.params.slot.toHexString());
+  if (slot != null) {
+    slot.feed = null;
+    slot.updatedAt = event.block.timestamp;
+    slot.save();
+  }
+
+  if (feed.slotCount.gt(BigInt.zero())) {
+    feed.slotCount = feed.slotCount.minus(BigInt.fromI32(1));
+  }
+  feed.updatedAt = event.block.timestamp;
+  feed.save();
+
+  let evId =
+    event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
+  let ev = new FeedSlotRemovedEvent(evId);
   ev.feed = feed.id;
   ev.slot = event.params.slot;
   ev.blockNumber = event.block.number;
