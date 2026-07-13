@@ -1,5 +1,11 @@
 # @adland/react
 
+## 0.16.27
+
+### Patch Changes
+
+- @0xslots/sdk@0.17.4
+
 ## 0.16.26
 
 ### Patch Changes
