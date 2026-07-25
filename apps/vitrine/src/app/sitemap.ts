@@ -2,7 +2,8 @@ import type { MetadataRoute } from "next";
 import { getPosts } from "@/lib/blog";
 import { siteUrl } from "@/lib/site";
 
-export const revalidate = 3600;
+// Keep in step with REVALIDATE in lib/blog.ts.
+export const revalidate = 60;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const posts = await getPosts();

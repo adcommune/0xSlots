@@ -5,7 +5,8 @@ import { SiteHeader } from "@/components/site-header";
 import { clampDescription, getPosts } from "@/lib/blog";
 import { title as siteTitle, siteUrl, studio } from "@/lib/site";
 
-export const revalidate = 3600;
+// Keep in step with REVALIDATE in lib/blog.ts.
+export const revalidate = 60;
 
 const description =
   "Writing on Harberger-taxed property, collective ownership and what gets built on 0xSlots.";

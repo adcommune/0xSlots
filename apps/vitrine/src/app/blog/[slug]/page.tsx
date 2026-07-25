@@ -16,7 +16,8 @@ import type { Author } from "@/lib/cms-types";
 import { populatedList } from "@/lib/cms-types";
 import { title as siteTitle, siteUrl, studio } from "@/lib/site";
 
-export const revalidate = 3600;
+// Keep in step with REVALIDATE in lib/blog.ts.
+export const revalidate = 60;
 
 export async function generateStaticParams() {
   const slugs = await getPostSlugs();

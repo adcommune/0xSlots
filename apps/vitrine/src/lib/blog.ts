@@ -19,8 +19,16 @@ const CMS_URL = (
  */
 const CATEGORY = process.env.NEXT_PUBLIC_CMS_CATEGORY ?? "0xslots";
 
-/** Re-check the CMS hourly; publishing there reaches the site without a deploy. */
-const REVALIDATE = 3600;
+/**
+ * How long a CMS read stays cached. Kept short because publishing in the
+ * studio should show up here on its own: at an hour, a new article sat behind
+ * a stale /blog and sitemap long after it went live. ISR is lazy — this only
+ * costs a request when someone actually loads the page after the window.
+ *
+ * Must stay in step with the `revalidate` each page exports; the shorter of
+ * the two does nothing if the fetch underneath is still serving old data.
+ */
+const REVALIDATE = 60;
 
 // The build container has no route to the CMS in most deploys (Dokploy builds
 // on a different network than the running service). Rather than fail the
