@@ -146,10 +146,6 @@ export function useSlotAction(opts?: SlotActionCallbacks) {
     (slot: Address) => exec("Collect tax", () => client.collect(slot)),
     [exec, client],
   );
-  const payTax = useCallback(
-    (slot: Address) => exec("Pay tax", () => client.collect(slot)),
-    [exec, client],
-  );
   const liquidate = useCallback(
     (slot: Address) => exec("Liquidate", () => client.liquidate(slot)),
     [exec, client],
@@ -196,7 +192,6 @@ export function useSlotAction(opts?: SlotActionCallbacks) {
     withdraw,
     release,
     collect,
-    payTax,
     liquidate,
     proposeTaxUpdate,
     proposeModuleUpdate,

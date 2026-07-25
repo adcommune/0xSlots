@@ -107,7 +107,6 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
     selfAssess,
     release,
     collect,
-    payTax,
     liquidate,
     proposeTaxUpdate,
     proposeModuleUpdate,
@@ -1035,47 +1034,10 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
                 </div>
               )}
 
-              {isRecipient && (
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  disabled={busy || collectable === 0n}
-                  onClick={() => collect(slotAddress as Address)}
-                >
-                  {busy && activeAction === "Collect tax" ? (
-                    <Loader2 className="size-4 animate-spin" />
-                  ) : collectable === 0n ? (
-                    "Nothing to Collect"
-                  ) : (
-                    <>
-                      <HandCoins className="size-4 mr-1" /> Collect Tax (
-                      {formatBalance(collectable, decimals)} {symbol})
-                    </>
-                  )}
-                </Button>
-              )}
-
-              {isOccupant && !isRecipient && (
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  disabled={busy || slot.taxOwed === 0n}
-                  onClick={() => payTax(slotAddress as Address)}
-                >
-                  {busy && activeAction === "Pay tax" ? (
-                    <Loader2 className="size-4 animate-spin" />
-                  ) : slot.taxOwed === 0n ? (
-                    "No Tax Due"
-                  ) : (
-                    <>
-                      <HandCoins className="size-4 mr-1" /> Pay Tax (
-                      {formatBalance(slot.taxOwed, decimals)} {symbol})
-                    </>
-                  )}
-                </Button>
-              )}
-
-              {!isRecipient && !isOccupant && collectable > 0n && (
+              {/* collect() is permissionless — anyone can flush settled tax to
+                  the recipient. The label only reflects whether the caller is
+                  the one getting paid. */}
+              {collectable > 0n && (
                 <Button
                   variant="outline"
                   className="w-full"
@@ -1086,7 +1048,8 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
                     <Loader2 className="size-4 animate-spin" />
                   ) : (
                     <>
-                      <HandCoins className="size-4 mr-1" /> Distribute Tax (
+                      <HandCoins className="size-4 mr-1" />{" "}
+                      {isRecipient ? "Collect Tax" : "Distribute Tax"} (
                       {formatBalance(collectable, decimals)} {symbol})
                     </>
                   )}
