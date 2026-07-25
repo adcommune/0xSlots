@@ -24,7 +24,7 @@ export interface SlotDomainAnalytics {
   domains: DomainBreakdown[];
 }
 
-export function useSlotAnalytics(slotAddress: string, period: Period = "7d") {
+export function useSlotAnalytics(slotAddress: string, period: Period = "30d") {
   return useQuery<SlotAnalytics>({
     queryKey: ["slot-analytics", slotAddress, period],
     queryFn: async () => {
@@ -41,7 +41,7 @@ export function useSlotAnalytics(slotAddress: string, period: Period = "7d") {
 
 export function useSlotDomainAnalytics(
   slotAddress: string,
-  period: Period = "7d",
+  period: Period = "30d",
 ) {
   return useQuery<SlotDomainAnalytics>({
     queryKey: ["slot-domain-analytics", slotAddress, period],

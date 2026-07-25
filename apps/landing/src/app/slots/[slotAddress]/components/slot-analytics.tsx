@@ -34,7 +34,7 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export function SlotAnalytics({ slotAddress }: { slotAddress: string }) {
-  const [period, setPeriod] = useState<Period>("7d");
+  const [period, setPeriod] = useState<Period>("30d");
   const { data, isLoading, isError } = useSlotAnalytics(slotAddress, period);
   const { data: domainData } = useSlotDomainAnalytics(slotAddress, period);
 
