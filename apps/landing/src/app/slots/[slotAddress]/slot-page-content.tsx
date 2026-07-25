@@ -107,7 +107,6 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
     selfAssess,
     release,
     collect,
-    payTax,
     liquidate,
     proposeTaxUpdate,
     proposeModuleUpdate,
@@ -181,6 +180,14 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
   const isManager = address?.toLowerCase() === slot.manager.toLowerCase();
   const remaining =
     slot.deposit > slot.taxOwed ? slot.deposit - slot.taxOwed : 0n;
+  // collect() settles before flushing, so the amount it actually pays out is
+  // the already-settled bucket plus whatever _settle() can still take from the
+  // deposit. Gating on collectedTax alone hides the button on any slot that
+  // hasn't been touched since occupancy; gating on taxOwed alone hides tax
+  // stranded on a vacated slot.
+  const collectable =
+    slot.collectedTax +
+    (slot.taxOwed < slot.deposit ? slot.taxOwed : slot.deposit);
 
   const hasModule =
     slot.module != null && slot.module.toLowerCase() !== zeroAddress;
@@ -1027,47 +1034,10 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
                 </div>
               )}
 
-              {isRecipient && (
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  disabled={busy || slot.taxOwed === 0n}
-                  onClick={() => collect(slotAddress as Address)}
-                >
-                  {busy && activeAction === "Collect tax" ? (
-                    <Loader2 className="size-4 animate-spin" />
-                  ) : slot.taxOwed === 0n ? (
-                    "Nothing to Collect"
-                  ) : (
-                    <>
-                      <HandCoins className="size-4 mr-1" /> Collect Tax (
-                      {formatBalance(slot.taxOwed, decimals)} {symbol})
-                    </>
-                  )}
-                </Button>
-              )}
-
-              {isOccupant && !isRecipient && (
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  disabled={busy || slot.taxOwed === 0n}
-                  onClick={() => payTax(slotAddress as Address)}
-                >
-                  {busy && activeAction === "Pay tax" ? (
-                    <Loader2 className="size-4 animate-spin" />
-                  ) : slot.taxOwed === 0n ? (
-                    "No Tax Due"
-                  ) : (
-                    <>
-                      <HandCoins className="size-4 mr-1" /> Pay Tax (
-                      {formatBalance(slot.taxOwed, decimals)} {symbol})
-                    </>
-                  )}
-                </Button>
-              )}
-
-              {!isRecipient && !isOccupant && slot.collectedTax > 0n && (
+              {/* collect() is permissionless — anyone can flush settled tax to
+                  the recipient. The label only reflects whether the caller is
+                  the one getting paid. */}
+              {collectable > 0n && (
                 <Button
                   variant="outline"
                   className="w-full"
@@ -1078,8 +1048,9 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
                     <Loader2 className="size-4 animate-spin" />
                   ) : (
                     <>
-                      <HandCoins className="size-4 mr-1" /> Distribute Tax (
-                      {formatBalance(slot.collectedTax, decimals)} {symbol})
+                      <HandCoins className="size-4 mr-1" />{" "}
+                      {isRecipient ? "Collect Tax" : "Distribute Tax"} (
+                      {formatBalance(collectable, decimals)} {symbol})
                     </>
                   )}
                 </Button>
