@@ -181,6 +181,14 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
   const isManager = address?.toLowerCase() === slot.manager.toLowerCase();
   const remaining =
     slot.deposit > slot.taxOwed ? slot.deposit - slot.taxOwed : 0n;
+  // collect() settles before flushing, so the amount it actually pays out is
+  // the already-settled bucket plus whatever _settle() can still take from the
+  // deposit. Gating on collectedTax alone hides the button on any slot that
+  // hasn't been touched since occupancy; gating on taxOwed alone hides tax
+  // stranded on a vacated slot.
+  const collectable =
+    slot.collectedTax +
+    (slot.taxOwed < slot.deposit ? slot.taxOwed : slot.deposit);
 
   const hasModule =
     slot.module != null && slot.module.toLowerCase() !== zeroAddress;
@@ -1031,17 +1039,17 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
                 <Button
                   variant="outline"
                   className="w-full"
-                  disabled={busy || slot.taxOwed === 0n}
+                  disabled={busy || collectable === 0n}
                   onClick={() => collect(slotAddress as Address)}
                 >
                   {busy && activeAction === "Collect tax" ? (
                     <Loader2 className="size-4 animate-spin" />
-                  ) : slot.taxOwed === 0n ? (
+                  ) : collectable === 0n ? (
                     "Nothing to Collect"
                   ) : (
                     <>
                       <HandCoins className="size-4 mr-1" /> Collect Tax (
-                      {formatBalance(slot.taxOwed, decimals)} {symbol})
+                      {formatBalance(collectable, decimals)} {symbol})
                     </>
                   )}
                 </Button>
@@ -1067,7 +1075,7 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
                 </Button>
               )}
 
-              {!isRecipient && !isOccupant && slot.collectedTax > 0n && (
+              {!isRecipient && !isOccupant && collectable > 0n && (
                 <Button
                   variant="outline"
                   className="w-full"
@@ -1079,7 +1087,7 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
                   ) : (
                     <>
                       <HandCoins className="size-4 mr-1" /> Distribute Tax (
-                      {formatBalance(slot.collectedTax, decimals)} {symbol})
+                      {formatBalance(collectable, decimals)} {symbol})
                     </>
                   )}
                 </Button>
