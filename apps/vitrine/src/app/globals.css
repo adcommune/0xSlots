@@ -27,9 +27,11 @@
   --color-flow: #1b4de4;
   --color-flow-soft: #d6ddfa;
 
-  --font-display: "Archivo", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: "Public Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  /* Supplied by next/font in app/layout.tsx — self-hosted, so the
+     Google Fonts <link> and its two preconnects are gone. */
+  --font-display: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-public-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
 
   /* Poster geometry: near-square corners throughout */
   --radius: 2px;

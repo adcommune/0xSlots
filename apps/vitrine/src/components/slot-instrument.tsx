@@ -1,3 +1,5 @@
+"use client";
+
 import { type CSSProperties, useState } from "react";
 
 import { Cell } from "@/components/mark";

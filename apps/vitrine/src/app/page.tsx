@@ -7,7 +7,7 @@ import { TheLoop } from "@/components/the-loop";
 import { Uses } from "@/components/uses";
 import { WhatIsASlot } from "@/components/what-is-a-slot";
 
-export function App() {
+export default function HomePage() {
   return (
     <>
       <SiteHeader />

@@ -1,5 +1,7 @@
+import Link from "next/link";
 import { Wordmark } from "@/components/mark";
 import { links } from "@/lib/links";
+import { studio } from "@/lib/site";
 
 const columns = [
   {
@@ -13,6 +15,7 @@ const columns = [
   {
     heading: "Project",
     items: [
+      { label: "Writing", href: "/blog" },
       { label: "Source", href: links.github },
       { label: "Telegram", href: links.telegram },
     ],
@@ -40,14 +43,25 @@ export function SiteFooter() {
               <ul className="mt-4 space-y-2.5">
                 {column.items.map((item) => (
                   <li key={item.label}>
-                    <a
-                      href={item.href}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-sm text-ink transition-colors hover:text-claim"
-                    >
-                      {item.label}
-                    </a>
+                    {/* /blog is ours — route it through Link so it prefetches
+                        and stays a client transition, unlike the off-site ones. */}
+                    {item.href.startsWith("http") ? (
+                      <a
+                        href={item.href}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-sm text-ink transition-colors hover:text-claim"
+                      >
+                        {item.label}
+                      </a>
+                    ) : (
+                      <Link
+                        href={item.href}
+                        className="text-sm text-ink transition-colors hover:text-claim"
+                      >
+                        {item.label}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -59,6 +73,19 @@ export function SiteFooter() {
       <div className="mt-12 flex flex-col gap-2 border-t-2 border-ink pt-5 sm:flex-row sm:items-center sm:justify-between">
         <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-slate">
           0xSlots · Base
+        </p>
+        {/* The studio that builds this and writes the articles pulled into
+            /blog — same source, so the credit sits with the content. */}
+        <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-slate">
+          Made by{" "}
+          <a
+            href={studio.url}
+            target="_blank"
+            rel="noreferrer"
+            className="text-ink transition-colors hover:text-claim"
+          >
+            {studio.name}
+          </a>
         </p>
         <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-slate">
           Nothing here is permanent
