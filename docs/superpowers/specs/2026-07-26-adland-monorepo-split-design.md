@@ -270,32 +270,39 @@ analytics dashboards.
 
 ## Data and infrastructure
 
-### Database
+### Database — stays on Railway
 
-The new API points at the **existing** `DATABASE_URL`. No dump, no restore, no
-downtime, and analytics history stays intact. The database simply stops being
+The database **does not move in this cycle**. It stays on Railway, and the new
+API takes the existing `DATABASE_URL` unchanged. No dump, no restore, no
+downtime, and all analytics history is retained. The database simply stops being
 owned by the `0xSlots` repo.
 
-### Migration-chain repair (blocking, must precede first deploy)
+Migrating the data onto a Dokploy-hosted Postgres is deliberately deferred to a
+later cycle, so this split changes exactly one thing about the database: which
+repo deploys against it.
 
-`apps/api/drizzle/meta/_journal.json` lists two migrations, but
-`meta/0000_snapshot.json` **is missing** — only `0001_snapshot.json` exists.
-`drizzle-kit generate` diffs against the snapshot chain, so the chain is already
-inconsistent with the journal. Running the migrator from a fresh checkout against
-the live database is genuinely risky.
-
-Procedure:
-
-1. `pg_dump` production to a scratch database.
-2. Introspect the scratch database with `drizzle-kit pull`.
-3. Squash to a single `0000_init` migration reflecting the current schema, with a
-   matching `meta/0000_snapshot.json` and a rewritten `_journal.json`.
-4. Seed drizzle's `__drizzle_migrations` table so `0000_init` is marked applied.
-5. Verify `pnpm db:migrate` is a no-op against the scratch database.
-6. Only then repoint at production.
-
-The schema itself is unchanged: enums `event_type` / `auth_type`, tables `events`
+The schema is unchanged: enums `event_type` / `auth_type`, tables `events`
 (6 indexes) and `domains`, and the `events.domain → domains.domain` FK.
+
+### Migration state — no action needed at cutover
+
+`db:migrate` is `drizzle-kit migrate`, which applies only journal entries whose
+hash is absent from the database's `__drizzle_migrations` table. Both
+`0000_jazzy_betty_ross` and `0001_rename_domains_add_miniapp` are already applied
+on Railway, so running it from a fresh checkout of the new repo is a **no-op**.
+Nothing needs repairing before the move.
+
+There is a latent defect worth recording, but it is not a cutover blocker:
+`drizzle/meta/_journal.json` lists two migrations while `meta/0000_snapshot.json`
+is missing (only `0001_snapshot.json` exists). This affects `drizzle-kit
+**generate**`, not `migrate` — the next time a migration is authored, it diffs
+against an incomplete snapshot chain and may emit wrong SQL.
+
+Handling: before authoring the first new migration in the adland repo, run
+`drizzle-kit generate` against the unchanged schema and confirm it emits an empty
+diff. If it instead tries to recreate existing objects, squash the folder to a
+single `0000_init` with a matching snapshot and reconcile
+`__drizzle_migrations`. Verify, rather than performing that surgery preemptively.
 
 Note `domains.owner` is typed with `ParsedAccountAssociation` imported from
 `@adland/data` (`src/db/schema.ts:12`) — that import survives the move.
@@ -304,7 +311,11 @@ Note `domains.owner` is typed with `ParsedAccountAssociation` imported from
 
 Both `apps/api` and `apps/web` deploy to Dokploy, alongside econome-ipfs. Each
 needs a Dockerfile (neither exists today; only `apps/graph-node` has one) and a
-Dokploy domain. Postgres remains where it is.
+Dokploy domain.
+
+**Postgres stays on Railway** and is reached over its public connection string.
+Compute moves to Dokploy; storage does not. A later cycle migrates the data onto
+a Dokploy Postgres.
 
 ### CI
 
@@ -357,14 +368,13 @@ These cannot be automated and block parts of the cutover:
 
 ## Sequencing
 
-1. Repair the drizzle migration chain (verified against a restored dump).
-2. Scaffold `nezz0746/adland`; move `apps/api` and both packages; vendor
+1. Scaffold `nezz0746/adland`; move `apps/api` and both packages; vendor
    `@adland/chains`; apply package fixes.
-3. Swap IPFS write and read paths to econome.
-4. Scaffold `apps/web` with the landing page and miniapp shell.
-5. Wire CI; publish the first `@adland/data` + `@adland/react` release.
-6. Deploy api and web to Dokploy.
-7. Only then: apply the `0xSlots` changes and delete the moved directories.
+2. Swap IPFS write and read paths to econome.
+3. Scaffold `apps/web` with the landing page and miniapp shell.
+4. Wire CI; publish the first `@adland/data` + `@adland/react` release.
+5. Deploy api and web to Dokploy, pointed at the existing Railway database.
+6. Only then: apply the `0xSlots` changes and delete the moved directories.
 
 ## Testing
 
@@ -385,7 +395,8 @@ These cannot be automated and block parts of the cutover:
 | Risk | Mitigation |
 | --- | --- |
 | Duplicate `@0xslots/sdk` in landing's tree | peerDependency (above) |
-| Migrator damages the live database | Repair and verify against a restored dump first |
+| Dokploy-hosted API cannot reach Railway Postgres | Confirm the public connection string and egress before cutover; keep the old deployment running until the new one answers |
+| Incomplete snapshot chain emits wrong SQL on the next `generate` | Dry-run `generate` and inspect the diff before authoring any new migration |
 | CIDs not yet replicated to econome render as ad errors | Verify replication before cutover; no fallback by design |
 | `0xSlots` breaks when adland packages disappear | Publish first, switch landing second, delete last |
 | Farcaster manifest invalid on the new domain | Ships stubbed; miniapp is not announced until re-signed |
