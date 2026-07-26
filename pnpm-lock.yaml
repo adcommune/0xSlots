@@ -128,7 +128,7 @@ importers:
         specifier: ^0.16.1
         version: 0.16.1(bufferutil@4.1.0)(encoding@0.1.13)(typescript@5.9.3)(utf-8-validate@6.0.6)
       '@adland/react':
-        specifier: ^0.17.0
+        specifier: ^0.17.1
         version: 0.17.1(@0xslots/sdk@packages+sdk)(bufferutil@4.1.0)(encoding@0.1.13)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@3.25.76)
       '@farcaster/miniapp-sdk':
         specifier: ^0.2.3
