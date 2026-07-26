@@ -5,7 +5,7 @@
     "build": {
       "dependsOn": ["^build"],
       "outputs": [".next/**", "!.next/cache/**", "out/**", "dist/**"],
-      "passThroughEnv": ["ALCHEMY_KEY"]
+      "passThroughEnv": ["ALCHEMY_KEY", "CHAIN_ID"]
     },
     "dev": {
       "dependsOn": ["^build"],
@@ -16,7 +16,7 @@
       "dependsOn": ["^build"],
       "cache": false,
       "persistent": true,
-      "passThroughEnv": ["ALCHEMY_KEY"]
+      "passThroughEnv": ["ALCHEMY_KEY", "CHAIN_ID"]
     },
     "lint": {}
   }

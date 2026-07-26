@@ -1,5 +1,12 @@
 # Adland monorepo split — design
 
+> **Implemented 2026-07-26.** This document is a historical planning artifact
+> and is kept as-is; the following since diverged from what's below:
+> `GET /ad/slot/:slotAddress` was **kept**, not deleted — it's the only route
+> the retained `apps/api` serves. The database moved to a **Dokploy
+> Postgres**, not Railway. `apps/api/` was **kept and reduced** to slots
+> concerns, not deleted.
+
 **Date:** 2026-07-26
 **Status:** Approved, pending implementation plan
 **Source repo:** `0xSlots` (`pco-protocol` workspace)

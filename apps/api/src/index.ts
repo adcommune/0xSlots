@@ -20,7 +20,7 @@ const app = new Hono();
 app.use("*", cors());
 
 app.get("/", (c) => {
-  return c.json({ message: "Hello AdLand API!" });
+  return c.json({ message: "0xSlots API" });
 });
 
 app.get("/ad/slot/:slotAddress", async (c) => {

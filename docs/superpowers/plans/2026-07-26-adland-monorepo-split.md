@@ -1,5 +1,14 @@
 # Adland Monorepo Split Implementation Plan
 
+> **Implemented 2026-07-26.** This document is a historical planning artifact
+> and is kept as-is; the following since diverged from what's below:
+> `GET /ad/slot/:slotAddress` was **kept**, not deleted — it's the only route
+> the retained `apps/api` serves. The database moved to a **Dokploy
+> Postgres**, not Railway. `apps/api/` was **kept and reduced** to slots
+> concerns, not deleted. The real production domain is
+> **`https://api.adland.space`**, not the `api.adland.xyz` placeholder used
+> throughout.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Extract the adland API and `@adland/*` packages from `0xSlots` into a private `nezz0746/adland` monorepo, swap Pinata for econome-ipfs, and add a web app with a landing page and a Farcaster miniapp route group.

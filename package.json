@@ -12,6 +12,7 @@
     "build:landing": "turbo build --filter=landing",
     "build:vitrine": "turbo build --filter=vitrine",
     "start:landing": "turbo start --filter=landing",
+    "dev:api": "turbo dev --filter=api",
     "build:api": "turbo build --filter=api",
     "start:api": "turbo start --filter=api",
     "lint": "turbo lint",
