@@ -6,15 +6,12 @@
     "dev": "turbo dev",
     "dev:landing": "turbo dev --filter=landing",
     "dev:vitrine": "turbo dev --filter=vitrine",
-    "dev:api": "turbo dev --filter=api",
     "dev:mcp": "turbo dev --filter=@0xslots/mcp",
     "dev:nft": "turbo dev --filter=nft",
     "dev:all": "turbo dev --filter=landing --filter=@0xslots/mcp",
     "build:landing": "turbo build --filter=landing",
     "build:vitrine": "turbo build --filter=vitrine",
     "start:landing": "turbo start --filter=landing",
-    "build:adland": "turbo build --filter=adland",
-    "start:adland": "turbo start --filter=adland",
     "build:api": "turbo build --filter=api",
     "start:api": "turbo start --filter=api",
     "lint": "turbo lint",
@@ -23,7 +20,7 @@
     "format": "biome format --fix .",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "release": "turbo build --filter=@0xslots/contracts --filter=@0xslots/sdk --filter=@adland/data --filter=@adland/react && changeset publish"
+    "release": "turbo build --filter=@0xslots/contracts --filter=@0xslots/sdk && changeset publish"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.14",

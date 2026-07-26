@@ -1,12 +1,12 @@
 import { unstable_cache } from "next/cache";
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 
-const PINATA_GATEWAY = "https://gateway.pinata.cloud/ipfs/";
-const CACHE_VERSION = "v1";
+const IPFS_GATEWAY = "https://ipfs-gateway.econome.studio";
+const CACHE_VERSION = "v2";
 
 function resolveIpfsUri(uri: string): string {
   if (uri.startsWith("ipfs://")) {
-    return uri.replace("ipfs://", PINATA_GATEWAY);
+    return uri.replace("ipfs://", `${IPFS_GATEWAY}/ipfs/`);
   }
   return uri;
 }
@@ -27,13 +27,19 @@ export async function GET(request: NextRequest) {
   const uri = request.nextUrl.searchParams.get("uri");
 
   if (!uri) {
-    return NextResponse.json({ error: "uri parameter is required" }, { status: 400 });
+    return NextResponse.json(
+      { error: "uri parameter is required" },
+      { status: 400 },
+    );
   }
 
   try {
     const data = await fetchIpfsContent(uri);
     return NextResponse.json(data);
   } catch {
-    return NextResponse.json({ error: "Failed to fetch IPFS content" }, { status: 502 });
+    return NextResponse.json(
+      { error: "Failed to fetch IPFS content" },
+      { status: 502 },
+    );
   }
 }
