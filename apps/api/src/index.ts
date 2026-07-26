@@ -7,6 +7,8 @@ import { slotsClient } from "./services/subgraph";
 // import { startEventListener } from "./services/events";
 // const alchemyKey = process.env.ALCHEMY_KEY as string;
 
+const IPFS_GATEWAY = "https://ipfs-gateway.econome.studio";
+
 const AdDataQueryError = {
   NO_AD: "NO_AD",
   ERROR: "ERROR",
@@ -35,10 +37,7 @@ app.get("/ad/slot/:slotAddress", async (c) => {
 
     // Fetch ad content from URI (ipfs://, https://, etc.)
     const uri = metadataSlot.uri.startsWith("ipfs://")
-      ? metadataSlot.uri.replace(
-          "ipfs://",
-          "https://gateway.pinata.cloud/ipfs/",
-        )
+      ? metadataSlot.uri.replace("ipfs://", `${IPFS_GATEWAY}/ipfs/`)
       : metadataSlot.uri;
 
     const ad = await fetch(uri).then((res) => res.json());
