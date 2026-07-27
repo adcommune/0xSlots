@@ -2,11 +2,16 @@ import { Address } from "viem";
 import { base, baseSepolia } from "viem/chains";
 
 /**
- * SlotsHub contract addresses by chain ID
+ * SlotsHub contract addresses by chain ID.
+ *
+ * These MUST match `apps/contracts/deployments/<chainId>/SlotFactoryV3.json`
+ * and the factory datasources in `packages/subgraph/config/<network>.json`.
+ * A slot created through a factory the subgraph does not index is invisible to
+ * every consumer of this SDK, and fails silently — the transaction succeeds.
  */
 export const slotFactoryAddress = {
   [base.id]: "0xbf2F890E8F5CCCB3A1D7c5030dBC1843B9E36B0e",
-  [baseSepolia.id]: "0xc44De86e2A5f0C47f1Ba87C36DaBf54275814DEb",
+  [baseSepolia.id]: "0x6D87C1647f228Baf8DE0374FCd7FdEBF6900fdFF",
 } as const;
 
 export const batchCollectorAddress = {
