@@ -60,8 +60,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/config
       '@0xslots/sdk':
-        specifier: latest
-        version: 0.11.0(@tanstack/react-query@5.90.21(react@19.2.4))(bufferutil@4.1.0)(react@19.2.4)(typescript@5.9.3)(utf-8-validate@6.0.6)(viem@2.50.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@4.1.12))(wagmi@3.5.0(@safe-global/safe-apps-provider@0.18.6(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@4.1.12))(@safe-global/safe-apps-sdk@9.1.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@4.1.12))(@tanstack/query-core@5.90.20)(@tanstack/react-query@5.90.21(react@19.2.4))(@types/react@19.2.14)(@walletconnect/ethereum-provider@2.23.8(@types/react@19.2.14)(bufferutil@4.1.0)(encoding@0.1.13)(immer@11.1.4)(react@19.2.4)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.4))(utf-8-validate@6.0.6)(zod@4.1.12))(immer@11.1.4)(ox@0.14.22(typescript@5.9.3)(zod@4.1.12))(react@19.2.4)(typescript@5.9.3)(viem@2.50.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@4.1.12)))(zod@4.1.12)
+        specifier: workspace:*
+        version: link:../../packages/sdk
       '@hono/node-server':
         specifier: ^1.19.11
         version: 1.19.11(hono@4.12.8)
@@ -416,24 +416,6 @@ packages:
       graphql: 16.11.0
     peerDependenciesMeta:
       graphql:
-        optional: true
-
-  '@0xslots/contracts@0.8.0':
-    resolution: {integrity: sha512-UCcgbXM8t1dbML4GAxe0nv739/n0C5wP1SHV3Bnry2zCXRf8HSaddJtyqyitCNpSsaJ95vGE2Z4o5+yYwKXwFQ==}
-
-  '@0xslots/sdk@0.11.0':
-    resolution: {integrity: sha512-B0OAVq5nKaTTMFH2U9I7fqqeVm7acZ1ARYAftK3HV6EQ+U1rn5AYBLYioOJ+SQF/jtleUsnaOU+NXpI4702Z7A==}
-    peerDependencies:
-      '@tanstack/react-query': 5.90.21
-      react: 19.2.4
-      viem: 2.50.4
-      wagmi: 3.5.0
-    peerDependenciesMeta:
-      '@tanstack/react-query':
-        optional: true
-      react:
-        optional: true
-      wagmi:
         optional: true
 
   '@0xsplits/splits-sdk-react@4.4.0':
@@ -10073,32 +10055,6 @@ snapshots:
   '@0no-co/graphql.web@1.2.0(graphql@16.11.0)':
     optionalDependencies:
       graphql: 16.11.0
-
-  '@0xslots/contracts@0.8.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@4.1.12)':
-    dependencies:
-      viem: 2.50.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@4.1.12)
-    transitivePeerDependencies:
-      - bufferutil
-      - typescript
-      - utf-8-validate
-      - zod
-
-  '@0xslots/sdk@0.11.0(@tanstack/react-query@5.90.21(react@19.2.4))(bufferutil@4.1.0)(react@19.2.4)(typescript@5.9.3)(utf-8-validate@6.0.6)(viem@2.50.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@4.1.12))(wagmi@3.5.0(@safe-global/safe-apps-provider@0.18.6(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@4.1.12))(@safe-global/safe-apps-sdk@9.1.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@4.1.12))(@tanstack/query-core@5.90.20)(@tanstack/react-query@5.90.21(react@19.2.4))(@types/react@19.2.14)(@walletconnect/ethereum-provider@2.23.8(@types/react@19.2.14)(bufferutil@4.1.0)(encoding@0.1.13)(immer@11.1.4)(react@19.2.4)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.4))(utf-8-validate@6.0.6)(zod@4.1.12))(immer@11.1.4)(ox@0.14.22(typescript@5.9.3)(zod@4.1.12))(react@19.2.4)(typescript@5.9.3)(viem@2.50.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@4.1.12)))(zod@4.1.12)':
-    dependencies:
-      '@0xslots/contracts': 0.8.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@4.1.12)
-      graphql: 16.11.0
-      graphql-request: 7.4.0(graphql@16.11.0)
-      graphql-tag: 2.12.6(graphql@16.11.0)
-      viem: 2.50.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@4.1.12)
-    optionalDependencies:
-      '@tanstack/react-query': 5.90.21(react@19.2.4)
-      react: 19.2.4
-      wagmi: 3.5.0(@safe-global/safe-apps-provider@0.18.6(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@4.1.12))(@safe-global/safe-apps-sdk@9.1.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@4.1.12))(@tanstack/query-core@5.90.20)(@tanstack/react-query@5.90.21(react@19.2.4))(@types/react@19.2.14)(@walletconnect/ethereum-provider@2.23.8(@types/react@19.2.14)(bufferutil@4.1.0)(encoding@0.1.13)(immer@11.1.4)(react@19.2.4)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.4))(utf-8-validate@6.0.6)(zod@4.1.12))(immer@11.1.4)(ox@0.14.22(typescript@5.9.3)(zod@4.1.12))(react@19.2.4)(typescript@5.9.3)(viem@2.50.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@4.1.12))
-    transitivePeerDependencies:
-      - bufferutil
-      - typescript
-      - utf-8-validate
-      - zod
 
   '@0xsplits/splits-sdk-react@4.4.0(react@19.2.4)(viem@2.50.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@3.25.76))':
     dependencies:

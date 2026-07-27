@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@0xslots/config": "workspace:*",
-    "@0xslots/sdk": "latest",
+    "@0xslots/sdk": "workspace:*",
     "@hono/node-server": "^1.19.11",
     "dotenv": "^16.4.5",
     "hono": "^4.12.8",
