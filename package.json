@@ -50,6 +50,7 @@
     "react-dom": "19.2.4",
     "@tanstack/react-query": "5.90.21",
     "graphql-request": "7.4.0",
-    "graphql": "16.11.0"
+    "graphql": "16.11.0",
+    "@0xslots/sdk": "workspace:*"
   }
 }
