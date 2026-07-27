@@ -12,7 +12,6 @@
     "@0xslots/sdk": "workspace:*",
     "@hono/node-server": "^1.19.11",
     "dotenv": "^16.4.5",
-    "graphql-request": "^6.1.0",
     "hono": "^4.12.8",
     "viem": "2.50.4"
   },
