@@ -15,7 +15,7 @@ const columns = [
   {
     heading: "Project",
     items: [
-      { label: "Writing", href: "/blog" },
+      { label: "Blog", href: "/blog" },
       { label: "Source", href: links.github },
       { label: "Telegram", href: links.telegram },
     ],
@@ -44,15 +44,22 @@ export function SiteFooter() {
                 {column.items.map((item) => (
                   <li key={item.label}>
                     {/* /blog is ours — route it through Link so it prefetches
-                        and stays a client transition, unlike the off-site ones. */}
+                        and stays a client transition, unlike the off-site ones,
+                        which carry the same ↗ the header uses for leaving. */}
                     {item.href.startsWith("http") ? (
                       <a
                         href={item.href}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-sm text-ink transition-colors hover:text-claim"
+                        className="inline-flex items-center gap-1 text-sm text-ink transition-colors hover:text-claim"
                       >
                         {item.label}
+                        <span
+                          aria-hidden="true"
+                          className="font-mono text-[9px] leading-none text-vacant"
+                        >
+                          ↗
+                        </span>
                       </a>
                     ) : (
                       <Link

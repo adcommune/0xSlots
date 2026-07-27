@@ -12,19 +12,19 @@ const description =
   "Writing on Harberger-taxed property, collective ownership and what gets built on 0xSlots.";
 
 export const metadata: Metadata = {
-  title: "Writing",
+  title: "Blog",
   description,
   alternates: { canonical: "/blog" },
   openGraph: {
     type: "website",
     siteName: siteTitle,
     url: "/blog",
-    title: `Writing — ${siteTitle}`,
+    title: `Blog — ${siteTitle}`,
     description,
   },
   twitter: {
     card: "summary_large_image",
-    title: `Writing — ${siteTitle}`,
+    title: `Blog — ${siteTitle}`,
     description,
   },
 };
@@ -44,7 +44,7 @@ export default async function BlogIndexPage() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Blog",
-    name: `${siteTitle} — Writing`,
+    name: `${siteTitle} — Blog`,
     description,
     url: `${siteUrl}/blog`,
     publisher: { "@type": "Organization", name: siteTitle, url: siteUrl },
@@ -68,7 +68,7 @@ export default async function BlogIndexPage() {
         }}
       />
       <main className="mx-auto max-w-6xl px-4 py-16 md:px-6 md:py-24">
-        <p className="eyebrow">Writing</p>
+        <p className="eyebrow">Blog</p>
         <h1 className="display mt-4 text-4xl md:text-6xl">
           Notes on property
           <br />
