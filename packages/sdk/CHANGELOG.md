@@ -1,5 +1,12 @@
 # @0xslots/sdk
 
+## 0.17.5
+
+### Patch Changes
+
+- Updated dependencies [fb5b9db]
+  - @0xslots/contracts@0.14.0
+
 ## 0.17.4
 
 ### Patch Changes
@@ -183,10 +190,12 @@
 - Add Base mainnet support and export React hooks from SDK
 
   **@0xslots/contracts:**
+
   - Add Base mainnet factory address (`0xbf2F890E8F5CCCB3A1D7c5030dBC1843B9E36B0e`)
   - Add Base chain to CHAINS array
 
   **@0xslots/sdk:**
+
   - Add `SlotsChain.BASE` (8453) with subgraph URL
   - New `@0xslots/sdk/react` entrypoint with wagmi-wired hooks:
     - `useSlotAction(callbacks?)` — unified write executor with pending/confirming/success state tracking

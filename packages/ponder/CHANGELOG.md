@@ -1,5 +1,12 @@
 # @0xslots/ponder
 
+## 0.0.8
+
+### Patch Changes
+
+- Updated dependencies [fb5b9db]
+  - @0xslots/contracts@0.14.0
+
 ## 0.0.7
 
 ### Patch Changes
