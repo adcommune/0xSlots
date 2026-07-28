@@ -1,11 +1,10 @@
 "use client";
 
 import { CHAINS } from "@0xslots/contracts";
-import sdk from "@farcaster/miniapp-sdk";
-import { BookOpen, Check, ChevronDown, Github, Menu, Send, User } from "lucide-react";
+import { Check, ChevronDown, Menu, User } from "lucide-react";
 import Image from "next/image";
-import { NavLink } from "@/context/navigation";
 import type { ReactNode } from "react";
+import { AppSidebar } from "@/components/app-sidebar";
 import { SubgraphStatus } from "@/components/subgraph-status";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,10 +14,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { UserMenu } from "@/components/user-menu";
 import { useChain } from "@/context/chain";
+import { ExplorerSectionProvider } from "@/context/explorer-section";
 import { useFarcaster } from "@/context/farcaster";
-import { useNavigation } from "@/context/navigation";
+import { NavLink, useNavigation } from "@/context/navigation";
+import { EXTERNAL_LINKS, openExternal } from "@/lib/external-links";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { isMiniApp, user, miniappContext } = useFarcaster();
@@ -88,42 +90,15 @@ export function AppShell({ children }: { children: ReactNode }) {
           My Slots
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onClick={() => {
-            if (isMiniApp) {
-              sdk.actions.openUrl("https://docs.0xslots.org");
-            } else {
-              window.open("https://docs.0xslots.org", "_blank");
-            }
-          }}
-        >
-          <BookOpen className="size-4" />
-          Docs
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => {
-            if (isMiniApp) {
-              sdk.actions.openUrl("https://github.com/adcommune/0xSlots");
-            } else {
-              window.open("https://github.com/adcommune/0xSlots", "_blank");
-            }
-          }}
-        >
-          <Github className="size-4" />
-          GitHub
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => {
-            if (isMiniApp) {
-              sdk.actions.openUrl("https://t.me/+AQ3SdkC0SCM4NTdk");
-            } else {
-              window.open("https://t.me/+AQ3SdkC0SCM4NTdk", "_blank");
-            }
-          }}
-        >
-          <Send className="size-4" />
-          Telegram
-        </DropdownMenuItem>
+        {EXTERNAL_LINKS.map(({ label, href, icon: Icon }) => (
+          <DropdownMenuItem
+            key={label}
+            onClick={() => openExternal(href, isMiniApp)}
+          >
+            <Icon className="size-4" />
+            {label}
+          </DropdownMenuItem>
+        ))}
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -147,64 +122,41 @@ export function AppShell({ children }: { children: ReactNode }) {
   );
 
   return (
-    <div
-      className="min-h-screen flex flex-col"
-      style={
-        { "--bottom-bar-h": `${bottomBarHeight}px` } as React.CSSProperties
-      }
-    >
-      {/* Nav — fixed on all viewports */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-background flex items-center justify-between p-2 md:px-6 md:py-4 border-b">
-        <div className="flex flex-row items-center gap-6">
-          {logo}
-          {/* Desktop: inline indicators */}
-          <div className="hidden md:flex flex-row items-center gap-2">
-            <SubgraphStatus />
-          </div>
-        </div>
-
-        {/* Miniapp: compact dropdown, Web: full user menu (connect + dropdown) */}
-        {isMiniApp ? mobileMenu : <UserMenu />}
-      </nav>
-
-      {/* Spacer for fixed nav */}
-      <div className="h-11 md:h-15 shrink-0" />
-
-      {/* Main Content */}
-      <main
-        className="flex-1 flex flex-col md:pb-0"
-        style={{ paddingBottom: `var(--bottom-bar-h, 0px)` }}
+    <ExplorerSectionProvider>
+      <SidebarProvider
+        style={
+          { "--bottom-bar-h": `${bottomBarHeight}px` } as React.CSSProperties
+        }
       >
-        {children}
-      </main>
+        {/* Desktop navigation. Renders nothing below md — mobile keeps the
+            top nav + bottom bar it already had. */}
+        <AppSidebar />
 
-      {/* Mobile bottom bar */}
-      {bottomBar}
+        <SidebarInset className="min-h-svh flex flex-col">
+          {/* Sticky rather than fixed, so it spans the content column beside
+              the sidebar instead of overlapping it. */}
+          <nav className="sticky top-0 z-50 bg-background flex items-center justify-between p-2 md:px-6 md:py-3 border-b">
+            {/* The sidebar carries the logo on desktop. */}
+            <div className="flex flex-row items-center gap-6 md:hidden">
+              {logo}
+            </div>
 
-      {/* Desktop footer */}
-      <footer className="hidden md:block px-6 py-6 border-t">
-        <div className="max-w-5xl mx-auto flex justify-between items-center text-sm text-muted-foreground">
-          <span>0xSlots</span>
-          <div className="flex items-center gap-3">
-            <a
-              href="https://github.com/adcommune/0xSlots"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-foreground transition-colors"
-            >
-              <Github className="size-4" />
-            </a>
-            <a
-              href="https://t.me/+AQ3SdkC0SCM4NTdk"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-foreground transition-colors"
-            >
-              <Send className="size-4" />
-            </a>
-          </div>
-        </div>
-      </footer>
-    </div>
+            <div className="flex items-center justify-end flex-1">
+              {/* Miniapp: compact dropdown, Web: full user menu */}
+              {isMiniApp ? mobileMenu : <UserMenu />}
+            </div>
+          </nav>
+
+          <main
+            className="flex-1 flex flex-col md:pb-0"
+            style={{ paddingBottom: `var(--bottom-bar-h, 0px)` }}
+          >
+            {children}
+          </main>
+
+          {bottomBar}
+        </SidebarInset>
+      </SidebarProvider>
+    </ExplorerSectionProvider>
   );
 }

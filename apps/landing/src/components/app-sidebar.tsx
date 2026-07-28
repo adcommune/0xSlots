@@ -1,0 +1,160 @@
+"use client";
+
+import { CHAINS } from "@0xslots/contracts";
+import { Check, ChevronDown, PlusIcon, User } from "lucide-react";
+import Image from "next/image";
+import { usePathname } from "next/navigation";
+
+import { SubgraphStatus } from "@/components/subgraph-status";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarSeparator,
+} from "@/components/ui/sidebar";
+import { useChain } from "@/context/chain";
+import {
+  EXPLORER_SECTIONS,
+  useExplorerSection,
+} from "@/context/explorer-section";
+import { NavLink, useNavigation } from "@/context/navigation";
+import { EXTERNAL_LINKS } from "@/lib/external-links";
+
+export function AppSidebar() {
+  const pathname = usePathname();
+  const { push, isPending } = useNavigation();
+  const { chainId, setChain } = useChain();
+  const { section, setSection } = useExplorerSection();
+
+  const onExplorer = pathname === "/";
+
+  const selectSection = (id: string) => {
+    setSection(id);
+    // Sections live on the explorer, so jump back there when selected from
+    // elsewhere in the app.
+    if (!onExplorer) push("/");
+  };
+
+  return (
+    <Sidebar
+      collapsible="none"
+      className="hidden md:flex sticky top-0 h-svh border-r"
+    >
+      <SidebarHeader className="p-4 gap-4">
+        <NavLink
+          href="/"
+          className="text-xl flex flex-row gap-1.5 items-center font-black tracking-tighter"
+        >
+          <Image
+            src="/logo.png"
+            width={100}
+            height={100}
+            alt=""
+            className={`w-6 aspect-square h-6 transition-transform ${isPending ? "animate-spin" : ""}`}
+          />
+          0xSlots
+        </NavLink>
+
+        <Button size="sm" className="w-full" onClick={() => push("/create")}>
+          <PlusIcon className="size-4" />
+          Create Slot
+        </Button>
+      </SidebarHeader>
+
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>Explore</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {EXPLORER_SECTIONS.map(({ id, label, icon: Icon }) => (
+                <SidebarMenuItem key={id}>
+                  <SidebarMenuButton
+                    isActive={onExplorer && section === id}
+                    onClick={() => selectSection(id)}
+                  >
+                    <Icon className="size-4" />
+                    <span>{label}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarSeparator />
+
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={pathname === "/profile"}
+                  onClick={() => push("/profile")}
+                >
+                  <User className="size-4" />
+                  <span>My Slots</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+
+      <SidebarFooter className="gap-3">
+        <SidebarMenu>
+          {EXTERNAL_LINKS.map(({ label, href, icon: Icon }) => (
+            <SidebarMenuItem key={label}>
+              <SidebarMenuButton asChild size="sm">
+                <a href={href} target="_blank" rel="noopener noreferrer">
+                  <Icon className="size-4" />
+                  <span>{label}</span>
+                </a>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+
+        <SidebarSeparator />
+
+        <div className="flex items-center justify-between px-2 pb-1">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-1 text-xs h-7 px-2"
+              >
+                {CHAINS.find((c) => c.id === chainId)?.name ??
+                  `Chain ${chainId}`}
+                <ChevronDown className="size-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              {CHAINS.map((c) => (
+                <DropdownMenuItem key={c.id} onClick={() => setChain(c.id)}>
+                  {c.name}
+                  {c.id === chainId && <Check className="ml-auto size-3.5" />}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <SubgraphStatus />
+        </div>
+      </SidebarFooter>
+    </Sidebar>
+  );
+}

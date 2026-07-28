@@ -1,6 +1,7 @@
 "use client";
 
-import { FileBox, LandPlot, List, PlusIcon, User } from "lucide-react";
+import { PlusIcon } from "lucide-react";
+import type { ReactNode } from "react";
 import { useAccount } from "wagmi";
 
 import { AdBar } from "@/components/ad-bar";
@@ -9,13 +10,28 @@ import { ModulesTable } from "@/components/explorer/modules-table";
 import { RecipientsTable } from "@/components/explorer/recipients-table";
 import { SlotsTable } from "@/components/explorer/slots-table";
 import { StatsBar } from "@/components/explorer/stats-bar";
-import { ExplorerTabs } from "@/components/explorer-tabs";
+import { TabStrip } from "@/components/explorer-tabs";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
+import {
+  EXPLORER_SECTIONS,
+  useExplorerSection,
+} from "@/context/explorer-section";
 import { NavLink } from "@/context/navigation";
+
+/** Section id → table. Section metadata lives in the context so the sidebar
+ *  and the mobile strip share one definition. */
+const SECTION_CONTENT: Record<string, () => ReactNode> = {
+  events: () => <EventsTable />,
+  slots: () => <SlotsTable />,
+  recipients: () => <RecipientsTable />,
+  modules: () => <ModulesTable />,
+};
 
 export default function Home() {
   const { chain } = useAccount();
+  const { section, setSection } = useExplorerSection();
+
   return (
     <div className="min-h-screen">
       <PageHeader>
@@ -43,34 +59,15 @@ export default function Home() {
 
       <div className="max-w-6xl mx-auto px-2 md:px-6 py-1 md:py-4">
         <AdBar />
-        <ExplorerTabs
-          tabs={[
-            {
-              id: "events",
-              label: "Events",
-              icon: List,
-              content: () => <EventsTable />,
-            },
-            {
-              id: "slots",
-              label: "Slots",
-              icon: LandPlot,
-              content: () => <SlotsTable />,
-            },
-            {
-              id: "recipients",
-              label: "Recipients",
-              icon: User,
-              content: () => <RecipientsTable />,
-            },
-            {
-              id: "modules",
-              label: "Modules",
-              icon: FileBox,
-              content: () => <ModulesTable />,
-            },
-          ]}
+        {/* Desktop navigates sections from the sidebar; below md the strip
+            stays, driving the same selection. */}
+        <TabStrip
+          className="md:hidden"
+          tabs={EXPLORER_SECTIONS}
+          active={section}
+          onSelect={setSection}
         />
+        {SECTION_CONTENT[section]?.()}
 
         <div className="mt-8 text-center text-xs text-muted-foreground">
           Powered by 0xSlots · The Graph

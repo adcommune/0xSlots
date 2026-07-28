@@ -6,14 +6,21 @@ import { useCallback } from "react";
 import { toast } from "sonner";
 import type { Address } from "viem";
 import { useChain } from "@/context/chain";
+import { usePostTxRefresh } from "./use-post-tx-refresh";
 import useIPFSUpload from "./use-upload";
 import { useSlotsClient } from "./use-slots-client";
 
 export function useSlotAction() {
   const { chainId } = useChain();
+  const refreshAfterTx = usePostTxRefresh();
   const action = useSlotActionBase({
     chainId: chainId as SlotsChain,
-    onSuccess: (label) => toast.success(`${label} confirmed`),
+    onSuccess: (label, hash) => {
+      toast.success(`${label} confirmed`);
+      // Every slot action goes through here, so refreshing centrally keeps
+      // callers from having to remember to invalidate their own data.
+      void refreshAfterTx(hash);
+    },
     onError: (label, error) => toast.error(`${label}: ${error}`),
   });
 

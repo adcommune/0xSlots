@@ -12,7 +12,6 @@ import {
   AdLoading,
   AdTitle,
 } from "@adland/react";
-import { useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import {
   Check,
@@ -76,22 +75,12 @@ export function MetadataForm({
     null,
   );
 
-  const queryClient = useQueryClient();
   const { chainId } = useChain();
   const { updateMetadataWithUpload, busy, activeAction } = useSlotAction();
 
   const ad = selectedType ? getAd(selectedType as AdType) : null;
 
   const { data: updateHistory } = useMetadataHistory(slotAddress);
-
-  const invalidateMetadata = () => {
-    queryClient.invalidateQueries({
-      queryKey: ["metadata-uri", chainId, slotAddress],
-    });
-    queryClient.invalidateQueries({
-      queryKey: ["metadata-history", chainId, slotAddress],
-    });
-  };
 
   const onVerify = async (formData: Record<string, unknown>) => {
     if (!ad) return;
@@ -133,7 +122,6 @@ export function MetadataForm({
         processedResult,
       );
       setPhase("done");
-      setTimeout(() => invalidateMetadata(), 3000);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Publishing failed");
       setPhase("preview");

@@ -1,5 +1,3 @@
-import { DEFAULT_CHAIN } from "@0xslots/contracts";
-import type { SlotsChain } from "@0xslots/sdk";
 import {
   dehydrate,
   HydrationBoundary,
@@ -7,16 +5,19 @@ import {
 } from "@tanstack/react-query";
 import { Suspense } from "react";
 import { slotsByRecipientQueryOptions } from "@/hooks/slot-queries";
+import { getChainFromSearchParams } from "@/lib/config";
 
 import { RecipientPageContent } from "./recipient-page-content";
 
 export default async function RecipientPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ address: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { address } = await params;
-  const chainId = DEFAULT_CHAIN.id as SlotsChain;
+  const chainId = getChainFromSearchParams(await searchParams);
 
   const queryClient = new QueryClient();
 

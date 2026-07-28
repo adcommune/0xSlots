@@ -1,5 +1,3 @@
-import { DEFAULT_CHAIN } from "@0xslots/contracts";
-import type { SlotsChain } from "@0xslots/sdk";
 import {
   dehydrate,
   HydrationBoundary,
@@ -11,6 +9,7 @@ import {
   slotQueryOptions,
   slotActivityQueryOptions,
 } from "@/hooks/slot-queries";
+import { getChainFromSearchParams } from "@/lib/config";
 import { getFrameMetadata } from "@/lib/frame-metadata";
 import { truncateAddress } from "@/utils";
 import { SlotPageContent } from "./slot-page-content";
@@ -39,11 +38,13 @@ export async function generateMetadata({
 
 export default async function SlotPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slotAddress: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { slotAddress } = await params;
-  const chainId = DEFAULT_CHAIN.id as SlotsChain;
+  const chainId = getChainFromSearchParams(await searchParams);
 
   const queryClient = new QueryClient();
 

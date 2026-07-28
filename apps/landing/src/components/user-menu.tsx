@@ -1,19 +1,8 @@
 "use client";
 
 import { CHAINS } from "@0xslots/contracts";
-import sdk from "@farcaster/miniapp-sdk";
 import { ConnectButton as RainbowConnectButton } from "@rainbow-me/rainbowkit";
-import {
-  BookOpen,
-  Check,
-  Copy,
-  Github,
-  LogOut,
-  Network,
-  Send,
-  User,
-  Wallet,
-} from "lucide-react";
+import { Check, Copy, LogOut, Network, User, Wallet } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -37,6 +26,7 @@ import { useChain } from "@/context/chain";
 import { useFarcaster } from "@/context/farcaster";
 import { useNavigation } from "@/context/navigation";
 import { useEnsAvatar, useEnsName } from "@/lib/ens";
+import { EXTERNAL_LINKS, openExternal } from "@/lib/external-links";
 import { truncateAddress } from "@/utils";
 
 export function UserMenu() {
@@ -56,12 +46,7 @@ export function UserMenu() {
 
   return (
     <RainbowConnectButton.Custom>
-      {({
-        account,
-        chain,
-        openConnectModal,
-        mounted,
-      }) => {
+      {({ account, chain, openConnectModal, mounted }) => {
         const connected = mounted && account && chain;
 
         return connected ? (
@@ -110,84 +95,70 @@ function DisconnectedMenu({
         style: { opacity: 0, pointerEvents: "none", userSelect: "none" },
       })}
     >
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="sm" className="gap-2">
-            <Wallet className="size-4" />
-            No Wallet
-          </Button>
-        </DropdownMenuTrigger>
+      {/* Desktop: network and links live in the sidebar, so there's nothing
+          left to put in a menu — connect directly. */}
+      <Button
+        variant="outline"
+        size="sm"
+        className="gap-2 hidden md:flex"
+        onClick={openConnectModal}
+      >
+        <Wallet className="size-4" />
+        Connect Wallet
+      </Button>
 
-        <DropdownMenuContent align="end" className="w-56">
-          <DropdownMenuGroup>
-            <DropdownMenuItem onClick={openConnectModal}>
+      {/* Mobile web has no sidebar — keep the full menu. */}
+      <div className="md:hidden">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="gap-2">
               <Wallet className="size-4" />
-              Connect Wallet
-            </DropdownMenuItem>
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger>
-                <Network className="size-4" />
-                Network
-                <span className="ml-auto text-xs text-muted-foreground">
-                  {CHAINS.find((c) => c.id === chainId)?.name ?? `Chain ${chainId}`}
-                </span>
-              </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent>
-                {CHAINS.map((c) => (
-                  <DropdownMenuItem
-                    key={c.id}
-                    onClick={() => setChain(c.id)}
-                  >
-                    {c.name}
-                    {c.id === chainId && (
-                      <Check className="ml-auto size-3.5" />
-                    )}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
-          </DropdownMenuGroup>
-          <DropdownMenuSeparator />
-          <DropdownMenuGroup>
-            <DropdownMenuItem
-              onClick={() => {
-                if (isMiniApp) {
-                  sdk.actions.openUrl("https://docs.0xslots.org");
-                } else {
-                  window.open("https://docs.0xslots.org", "_blank");
-                }
-              }}
-            >
-              <BookOpen className="size-4" />
-              Docs
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => {
-                if (isMiniApp) {
-                  sdk.actions.openUrl("https://github.com/adcommune/0xSlots");
-                } else {
-                  window.open("https://github.com/adcommune/0xSlots", "_blank");
-                }
-              }}
-            >
-              <Github className="size-4" />
-              GitHub
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => {
-                if (isMiniApp) {
-                  sdk.actions.openUrl("https://t.me/+AQ3SdkC0SCM4NTdk");
-                } else {
-                  window.open("https://t.me/+AQ3SdkC0SCM4NTdk", "_blank");
-                }
-              }}
-            >
-              <Send className="size-4" />
-              Telegram
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
+              No Wallet
+            </Button>
+          </DropdownMenuTrigger>
+
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuGroup>
+              <DropdownMenuItem onClick={openConnectModal}>
+                <Wallet className="size-4" />
+                Connect Wallet
+              </DropdownMenuItem>
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <Network className="size-4" />
+                  Network
+                  <span className="ml-auto text-xs text-muted-foreground">
+                    {CHAINS.find((c) => c.id === chainId)?.name ??
+                      `Chain ${chainId}`}
+                  </span>
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  {CHAINS.map((c) => (
+                    <DropdownMenuItem key={c.id} onClick={() => setChain(c.id)}>
+                      {c.name}
+                      {c.id === chainId && (
+                        <Check className="ml-auto size-3.5" />
+                      )}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              {EXTERNAL_LINKS.map(({ label, href, icon: Icon }) => (
+                <DropdownMenuItem
+                  key={label}
+                  onClick={() => openExternal(href, isMiniApp)}
+                >
+                  <Icon className="size-4" />
+                  {label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </div>
   );
 }
@@ -261,9 +232,7 @@ function ConnectedMenu({
             )}
             <div className="flex-1 min-w-0">
               {ensName && (
-                <p className="text-sm font-medium truncate">
-                  {ensName}
-                </p>
+                <p className="text-sm font-medium truncate">{ensName}</p>
               )}
               <p className="text-xs text-muted-foreground font-mono">
                 {truncateAddress(account.address)}
@@ -294,82 +263,52 @@ function ConnectedMenu({
 
         <DropdownMenuSeparator />
 
-        <DropdownMenuGroup>
-          <DropdownMenuItem onClick={() => push("/profile")}>
-            <User className="size-4" />
-            My Slots
-          </DropdownMenuItem>
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger>
-              <Network className="size-4" />
-              Network
-              <span className="ml-auto text-xs text-muted-foreground">
-                {CHAINS.find((c) => c.id === chainId)?.name ?? `Chain ${chainId}`}
-              </span>
-            </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent>
-              {CHAINS.map((c) => (
-                <DropdownMenuItem
-                  key={c.id}
-                  onClick={() => setChain(c.id)}
-                >
-                  {c.name}
-                  {c.id === chainId && (
-                    <Check className="ml-auto size-3.5" />
-                  )}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuSubContent>
-          </DropdownMenuSub>
-        </DropdownMenuGroup>
+        {/* Desktop reaches all of this from the sidebar. Mobile web has no
+            sidebar, so it keeps the full menu. */}
+        <div className="md:hidden">
+          <DropdownMenuGroup>
+            <DropdownMenuItem onClick={() => push("/profile")}>
+              <User className="size-4" />
+              My Slots
+            </DropdownMenuItem>
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>
+                <Network className="size-4" />
+                Network
+                <span className="ml-auto text-xs text-muted-foreground">
+                  {CHAINS.find((c) => c.id === chainId)?.name ??
+                    `Chain ${chainId}`}
+                </span>
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                {CHAINS.map((c) => (
+                  <DropdownMenuItem key={c.id} onClick={() => setChain(c.id)}>
+                    {c.name}
+                    {c.id === chainId && <Check className="ml-auto size-3.5" />}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+          </DropdownMenuGroup>
 
-        <DropdownMenuSeparator />
+          <DropdownMenuSeparator />
 
-        <DropdownMenuGroup>
-          <DropdownMenuItem
-            onClick={() => {
-              if (isMiniApp) {
-                sdk.actions.openUrl("https://docs.0xslots.org");
-              } else {
-                window.open("https://docs.0xslots.org", "_blank");
-              }
-            }}
-          >
-            <BookOpen className="size-4" />
-            Docs
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => {
-              if (isMiniApp) {
-                sdk.actions.openUrl("https://github.com/adcommune/0xSlots");
-              } else {
-                window.open("https://github.com/adcommune/0xSlots", "_blank");
-              }
-            }}
-          >
-            <Github className="size-4" />
-            GitHub
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => {
-              if (isMiniApp) {
-                sdk.actions.openUrl("https://t.me/+AQ3SdkC0SCM4NTdk");
-              } else {
-                window.open("https://t.me/+AQ3SdkC0SCM4NTdk", "_blank");
-              }
-            }}
-          >
-            <Send className="size-4" />
-            Telegram
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
+          <DropdownMenuGroup>
+            {EXTERNAL_LINKS.map(({ label, href, icon: Icon }) => (
+              <DropdownMenuItem
+                key={label}
+                onClick={() => openExternal(href, isMiniApp)}
+              >
+                <Icon className="size-4" />
+                {label}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuGroup>
 
-        <DropdownMenuSeparator />
+          <DropdownMenuSeparator />
+        </div>
 
-        <DropdownMenuItem
-          variant="destructive"
-          onClick={() => disconnect()}
-        >
+        <DropdownMenuItem variant="destructive" onClick={() => disconnect()}>
           <LogOut className="size-4" />
           Disconnect
         </DropdownMenuItem>
