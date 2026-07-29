@@ -41,6 +41,7 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     error InvalidModule_NoCode();
     error PolicyNotMutable();
     error TransferPending();
+    error NotFactory();
 
     // ═══════════════════════════════════════════════════════════
     // STORAGE — KEEP ORDER, APPEND ONLY
@@ -148,16 +149,43 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     }
 
     /// @notice v2 upgrade — sets factory for protocol event emission
+    /// @dev DELIBERATELY LEFT UNAUTHENTICATED. A slot still at version 1 holds
+    ///      no root of trust that identifies the legitimate factory: the only
+    ///      unforgeable datum inside a BeaconProxy is its beacon address, and
+    ///      the beacon's owner is the protocol admin, not the factory — while
+    ///      `_deploySlot`/`migrateSlots` both call in AS the factory. Every
+    ///      candidate guard is therefore self-attested and forgeable:
+    ///      `msg.sender == _factory` is satisfied by any EOA passing its own
+    ///      address, and any "ask the caller about itself" check
+    ///      (`beacon()`, `admin()`, `isSlot()`) is trivially faked by a
+    ///      contract. Adding one would be theatre, not a control.
+    ///
+    ///      The residual exposure is confined to slots deployed BEFORE the v2
+    ///      beacon upgrade that were never migrated, and it predates this
+    ///      branch. `initializeV3` refuses to run while `factory` is
+    ///      address(0), so the mitigation is operational: run
+    ///      `migrateSlots`/`migrateSlotsV3` in the same admin transaction as
+    ///      the beacon upgrade, leaving no front-run window.
     function initializeV2(address _factory) external reinitializer(2) {
         factory = _factory;
     }
 
     /// @notice v3 upgrade — sets epoch length and occupancy policy.
     /// @dev Both default to zero, which is exactly pre-v3 behaviour.
+    /// @dev AUTHENTICATED. `reinitializer(3)` alone only checks the version is
+    ///      below 3 — every slot created by `createSlot`/`createSlots` (and
+    ///      every already-deployed slot after the v2 beacon upgrade) sits at
+    ///      version 2, so without this gate anyone could install a deny-all
+    ///      policy and/or an absurd `epochSeconds`, permanently ending forced
+    ///      sale and stranding the next buyer's escrow. `factory == address(0)`
+    ///      (a slot that never ran `initializeV2`) is rejected outright rather
+    ///      than left open — use `SlotFactory.migrateSlotsV3`.
     function initializeV3(
         uint64 _epochSeconds,
         address _occupancyPolicy
     ) external reinitializer(3) {
+        address f = factory;
+        if (f == address(0) || msg.sender != f) revert NotFactory();
         if (_occupancyPolicy != address(0) && _occupancyPolicy.code.length == 0)
             revert InvalidModule_NoCode();
         epochSeconds = _epochSeconds;

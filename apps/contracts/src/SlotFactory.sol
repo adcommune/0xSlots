@@ -274,6 +274,27 @@ contract SlotFactory is UUPSUpgradeable {
         }
     }
 
+    /// @notice Migrate pre-existing slots to v3: register, ensure `factory` is
+    ///         set, then set epoch length + occupancy policy (admin only).
+    /// @dev `Slot.initializeV3` is authenticated on `msg.sender == factory`, so
+    ///      this is the ONLY way a legacy slot can reach v3. The `initializeV2`
+    ///      call is wrapped in try/catch because a slot already migrated to v2
+    ///      reverts there (`reinitializer(2)`), while one still at v1 needs it
+    ///      so that `factory` is populated before the v3 gate reads it.
+    function migrateSlotsV3(
+        address[] calldata slots,
+        uint64 epochSeconds,
+        address occupancyPolicy
+    ) external onlyAdmin {
+        if (occupancyPolicy != address(0) && occupancyPolicy.code.length == 0)
+            revert InvalidModule_NoCode();
+        for (uint256 i = 0; i < slots.length; i++) {
+            isSlot[slots[i]] = true;
+            try Slot(slots[i]).initializeV2(address(this)) {} catch {}
+            Slot(slots[i]).initializeV3(epochSeconds, occupancyPolicy);
+        }
+    }
+
     // ═══════════════════════════════════════════════════════════
     // UUPS
     // ═══════════════════════════════════════════════════════════
