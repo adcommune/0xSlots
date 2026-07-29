@@ -5,6 +5,7 @@ import {Test} from "forge-std/Test.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 import {Slot} from "../src/Slot.sol";
 import {SlotFactory} from "../src/SlotFactory.sol";
 import {SlotConfig, SlotInitParams, SlotInfo} from "../src/interfaces/ISlot.sol";
@@ -428,5 +429,33 @@ contract EpochsTest is Test {
         // would compute exactly one — tolerance covers the accumulated
         // floor-division loss, not a masked bug.
         assertApproxEqAbs(token.balanceOf(recipient), expected, 4);
+    }
+
+    /// Occupied slot must survive a beacon upgrade with state intact.
+    function test_BeaconUpgrade_PreservesOccupiedState() public {
+        Slot s = _epochSlot(0);
+        _buy(s, alice, 100 ether, 250 ether);
+        vm.warp(block.timestamp + 1 days);
+
+        address occBefore = s.occupant();
+        uint256 priceBefore = s.price();
+        uint256 depBefore = s.deposit();
+        uint256 sinceBefore = s.occupiedSince();
+        uint256 owedBefore = s.taxOwed();
+
+        // Upgrade every slot at once.
+        Slot newImpl = new Slot();
+        UpgradeableBeacon(address(factory.beacon())).upgradeTo(address(newImpl));
+
+        assertEq(s.occupant(), occBefore, "occupant survived");
+        assertEq(s.price(), priceBefore, "price survived");
+        assertEq(s.deposit(), depBefore, "deposit survived");
+        assertEq(s.occupiedSince(), sinceBefore, "occupiedSince survived");
+        assertEq(s.taxOwed(), owedBefore, "accrual survived");
+
+        // And the slot still works afterwards.
+        vm.prank(alice);
+        s.selfAssess(300 ether);
+        assertEq(s.price(), 300 ether);
     }
 }
