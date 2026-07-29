@@ -398,6 +398,64 @@ New coverage:
 - **Upgrade** — deploy a slot on the current implementation, occupy it, upgrade the
   beacon, assert state is intact and behaviour unchanged.
 
+## Documentation
+
+Target: [`apps/docs/docs/pages/protocol.mdx`](../../../apps/docs/docs/pages/protocol.mdx)
+(https://docs.0xslots.org/protocol).
+
+**Keep the page's existing register** — it is a scannable reference (signature,
+one-line explanation, small table), not a tutorial. New material goes in as short
+additions in that same shape. The conceptual argument for epochs belongs in this
+spec, not on that page.
+
+### Restructure
+
+The page currently has one "Modules" section. There are now two distinct kinds,
+and conflating them is exactly the confusion this work exists to remove:
+
+- **Utility modules** (`ISlotsModule`) — advisory, fail-open, gas-capped. A broken
+  one must not break the slot.
+- **Occupancy policies** (`IOccupancyPolicy`) — authoritative, fail-closed. If it
+  cannot be evaluated, the action does not happen.
+
+Split them into sibling sections and state that contrast explicitly — it is the
+single most load-bearing fact for anyone writing either kind.
+
+### Additions
+
+- **Epochs** — under `Slot`, next to `Tax`. Explain commit-vs-effective with the
+  concrete timeline (buy at 14:14 → occupancy and tax begin 15:00 UTC), note
+  `epochSeconds = 0` is instant buy, and note first-commit-wins.
+- **Occupancy policies** — the interface, the two hooks, and the invariants users
+  can rely on: `liquidate()` is never blockable, policies never touch funds,
+  `release()` is never blocked.
+- **Operator approval** — under `Roles`. Add an Operator row to the roles table:
+  may `selfAssess`/`topUp`, may not `withdraw`/`release`.
+- **`createSlotV3`** — alongside the existing factory signatures, noting
+  `createSlot` still works and defaults the new params to zero.
+- **Harberger-impact note per policy.** Each shipped policy gets a one-line
+  honesty label: instant buy is pure Harberger; epochs are near-pure; a long
+  minimum tenure meaningfully softens forced sale. This is the user-facing half of
+  the "safety enforced, purity labelled" split, and it pairs with the factory's
+  verification registry.
+
+### Pre-existing inaccuracies to fix in the same pass
+
+Both are wrong today, independent of this work:
+
+- **CREATE2 claim.** The page says each slot "gets a deterministic address based on
+  `keccak256(recipient, currency, config)`". `_deploySlot` uses
+  `new BeaconProxy(...)` — plain CREATE, no salt. Addresses are nonce-dependent.
+  `createSlots(..., count)` deploying N identical-param slots on the same page is
+  proof it cannot be CREATE2 with that salt. The V3 spec described CREATE2 as the
+  intent; the implementation never adopted it. Correct the docs to match the code.
+- **`minDepositSeconds` "(protocol min: 1 day)".** No such validation exists in
+  `Slot.sol` or `SlotFactory.sol`. The only `7 days` in the tree is
+  `SlotNameRegistry`'s default for slots *it* creates — a caller-level choice, not
+  a protocol floor. Drop the claim.
+
+Docs ship with the stage that introduces the feature, not as a trailing pass.
+
 ## Suggested sequencing
 
 This decomposes into three independently landable stages, each shippable on its
