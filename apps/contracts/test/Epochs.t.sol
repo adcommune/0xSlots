@@ -157,19 +157,35 @@ contract EpochsTest is Test {
         assertEq(s.occupant(), alice);
 
         vm.warp(aliceStart + 1800);    // 30 min into alice's tenure
-        _buy(s, bob, 100 ether, 100 ether);
+        // Bob prices differently from alice (250 ether vs 100 ether) so a
+        // bug where leg 1 keeps accruing past `effectiveAt` at the OLD price
+        // (instead of stopping there and switching to the new price) would
+        // change the total and be caught — with matching prices the totals
+        // would coincide regardless of exactly where the price switches.
+        _buy(s, bob, 100 ether, 250 ether);
 
         uint256 boundary = 3 * uint256(HOUR);
         uint256 endTime = boundary + 1800;
         vm.warp(endTime);              // 30 min past the switch
         s.collect();
 
-        // Alice paid from aliceStart → boundary; bob from boundary → now.
-        // Total collected must equal one continuous 1h stream at 100 ether.
-        uint256 expected = (100 ether * 100 * (endTime - aliceStart))
+        // Alice's price applies for her whole tenure [aliceStart, boundary);
+        // bob's (different) price applies from the boundary to now. Computed
+        // as two explicit legs — NOT derived from a single blended rate —
+        // so a leg-boundary bug shows up as a real mismatch.
+        uint256 aliceLeg = (100 ether * 100 * (boundary - aliceStart))
             / (30 days * 10_000);
-        assertApproxEqAbs(token.balanceOf(recipient), expected, 2);
+        uint256 bobLeg = (250 ether * 100 * (endTime - boundary))
+            / (30 days * 10_000);
+        uint256 expected = aliceLeg + bobLeg;
+        // Tolerance 4: the contract itself further splits alice's leg into
+        // three sub-accruals (the poke-collect second, bob's buy() settling
+        // up to its own call time, and materialisation's leg 1 up to the
+        // boundary) — each floor-divides independently, so up to a few wei
+        // of rounding slack versus this two-leg reference calc is expected.
+        assertApproxEqAbs(token.balanceOf(recipient), expected, 4);
         assertEq(s.occupant(), bob);
+        assertEq(s.price(), 250 ether);
     }
 
     function test_OutgoingOccupantRefundedAtMaterialisation() public {
@@ -188,5 +204,61 @@ contract EpochsTest is Test {
 
         // Alice gets her remaining deposit plus bob's 100 ether purchase price.
         assertGt(token.balanceOf(alice), aliceBefore + 100 ether - 1 ether);
+    }
+
+    /// @notice Regression for the stale-occupant privilege-escalation hole:
+    ///         `onlyOccupant` used to compare against raw storage, which is
+    ///         still the OUTGOING occupant between a boundary maturing and the
+    ///         next state-changing call. That let the outgoing occupant
+    ///         withdraw from / release / re-price a slot that, economically,
+    ///         already belongs to the incoming buyer (who has already been
+    ///         charged and, in the release/liquidate case, already refunded
+    ///         by `_materialize`). `occupant()` must resolve the matured
+    ///         transfer so `onlyOccupant` gates on the right address even
+    ///         before anything is written to storage.
+    function test_OnlyOccupant_ResolvesMaturedTransfer_BeforeMaterialisation() public {
+        Slot s = _epochSlot(HOUR);
+
+        // Alice buys and materialises as the genuine occupant.
+        vm.warp(HOUR);
+        _buy(s, alice, 10 ether, 100 ether);
+        vm.warp(2 * uint256(HOUR) + 1); // nudge past the boundary, see note
+                                         // in test_OutgoingOccupantPaysUntilBoundary_ThenIncomingPays
+        s.collect();
+        assertEq(s.occupant(), alice);
+
+        // Bob commits a purchase from alice; effectiveAt = 3 * HOUR.
+        _buy(s, bob, 10 ether, 150 ether);
+
+        // Warp to EXACTLY the boundary — matured, but nothing has written to
+        // storage yet (no collect()/buy()/etc. has run at this timestamp).
+        vm.warp(3 * uint256(HOUR));
+
+        // The view resolves bob as occupant even though raw storage still
+        // says alice.
+        assertEq(s.occupant(), bob);
+
+        // Alice (the stale, outgoing occupant) must be rejected everywhere
+        // onlyOccupant gates, even though she'd still pass a check against
+        // raw storage.
+        vm.prank(alice);
+        vm.expectRevert(Slot.NotOccupant.selector);
+        s.withdraw(1);
+
+        vm.prank(alice);
+        vm.expectRevert(Slot.NotOccupant.selector);
+        s.release();
+
+        vm.prank(alice);
+        vm.expectRevert(Slot.NotOccupant.selector);
+        s.selfAssess(123 ether);
+
+        // Bob (the resolved, incoming occupant) must be accepted — this also
+        // exercises materialisation as a side effect of passing the modifier.
+        vm.prank(bob);
+        s.selfAssess(200 ether);
+
+        assertEq(s.occupant(), bob);
+        assertEq(s.price(), 200 ether);
     }
 }

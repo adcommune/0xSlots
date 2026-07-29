@@ -170,7 +170,7 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     }
 
     modifier onlyOccupant() {
-        if (msg.sender != _occupant) revert NotOccupant();
+        if (msg.sender != occupant()) revert NotOccupant();
         _;
     }
 
@@ -475,6 +475,7 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     /// @notice Current occupant. Hand-written rather than an auto-getter so that
     ///         Stage 2 can resolve a matured-but-unmaterialised transfer here.
     function occupant() public view returns (address) {
+        if (_transferMatured()) return pendingTransfer.buyer;
         return _occupant;
     }
 
@@ -589,14 +590,22 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         });
     }
 
+    /// @dev True once a scheduled transfer's boundary has passed, whether or not
+    ///      it has been written to storage yet.
+    function _transferMatured() internal view returns (bool) {
+        uint96 at = pendingTransfer.effectiveAt;
+        return at != 0 && block.timestamp >= at;
+    }
+
     /// @dev Accrue tax for the current occupant up to `upTo`. Never crosses a
     ///      transfer boundary — `_materialize` splits the legs.
     function _accrue(uint256 upTo) internal {
+        if (upTo <= lastSettled) return;
+
         if (_occupant == address(0)) {
             lastSettled = upTo;
             return;
         }
-        if (upTo <= lastSettled) return;
 
         uint256 elapsed = upTo - lastSettled;
         uint256 owed = (_price * taxPercentage * elapsed) / (MONTH * BASIS_POINTS);
