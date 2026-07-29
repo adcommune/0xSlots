@@ -279,6 +279,12 @@ contract OccupancyPolicyTest is Test {
     }
 
     /// Insolvency must always end tenure — this is the safety invariant.
+    /// @dev The deposit is sized to exactly cover the tenure, so it cannot run
+    ///      out before the window closes on its own. Alice therefore RAISES her
+    ///      price mid-window (permitted by checkPriceUpdate), which burns the
+    ///      escrow ~100x faster and makes her insolvent while still deep inside
+    ///      the protection window. Warping past the tenure instead would prove
+    ///      nothing — liquidation is trivially allowed once protection lapses.
     function test_Tenure_LiquidationWorksInsideWindow() public {
         MinimumTenurePolicy p = new MinimumTenurePolicy(365 days);
         address s = _tenureSlot(p);
@@ -287,9 +293,16 @@ contract OccupancyPolicyTest is Test {
         vm.startPrank(alice);
         token.approve(s, type(uint256).max);
         Slot(s).buy(alice, need, 100 ether);
+        uint256 start = block.timestamp;
+
+        vm.warp(start + 1 days);
+        Slot(s).selfAssess(10_000 ether);
         vm.stopPrank();
 
-        vm.warp(block.timestamp + 400 days);
+        vm.warp(start + 30 days);
+        assertLt(block.timestamp, start + 365 days, "must still be inside tenure");
+        assertTrue(Slot(s).isInsolvent(), "escrow must be exhausted");
+
         Slot(s).liquidate();
         assertEq(Slot(s).occupant(), address(0));
     }
