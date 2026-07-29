@@ -171,6 +171,40 @@ while protected.
 **Harberger impact: soft.** Forced sale is delayed, not removed — a dishonestly
 low price is still punished, just later.
 
+### SlotQueue + QueueExclusivityPolicy
+
+A queue of funded bids waiting for the slot to become vacant. Each bidder
+escrows a deposit (and an optional keeper tip) in the **queue contract** —
+never in the slot — and self-assesses their own price. `joinQueue` validates
+the slot against the factory, rejects a zero price or zero deposit, and caps
+`expiry` at `MAX_BID_DURATION` (30 days) so every bid is guaranteed to
+eventually become sweepable.
+
+When the slot frees up, anyone may permissionlessly call `fill()`. If the
+head bid still meets the slot's current requirements, the head bidder becomes
+the occupant at their own self-assessed price. If it would revert instead
+(e.g. underfunded against a since-raised minimum deposit, or a rejection from
+another policy), `fill()` refunds and skips that one bid rather than blocking
+the queue — the next `fill()` call resolves the following bid.
+
+The paired policy grants the queue priority: while the queue holds a live bid
+for a slot, only the queue contract may claim it — a direct `buy()` from
+anyone else reverts `QueueHasPriority`. Once no live bid remains, the slot
+reopens to everyone. "Live" is tracked by an O(1) counter that decrements on
+cancel and on fill; a bid that has expired but not yet been swept still
+counts as live, so exclusivity persists until someone calls the
+permissionless `sweepExpired()` (or `fill()`, which sweeps internally as it
+goes) — a one-transaction inconvenience, never a permanent freeze.
+
+This turns `release()` into an effective sale once `fill()` is called — the
+departing occupant's alternative was releasing for nothing.
+
+**Ordering is FIFO.** Ranking bids by price would make it an auction, which
+the protocol does not do.
+
+**Harberger impact: near-pure.** It orders who may exercise forced sale; it
+does not change who sets the price.
+
 ## Utility modules
 
 Modules are optional hook contracts attached to a slot. They implement `ISlotsModule` (which extends `IERC165`):
