@@ -53,14 +53,14 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     address public manager; // slot 2
 
     // --- Slot 3+: mutable state ---
-    address public occupant; // slot 3
-    uint256 public price; // slot 4
+    address private _occupant; // slot 3
+    uint256 private _price; // slot 4
     uint256 public taxPercentage; // slot 5
     address public module; // slot 6
     uint256 public liquidationBountyBps; // slot 7
     uint256 public minDepositSeconds; // slot 8
 
-    uint256 public deposit; // slot 9
+    uint256 private _deposit; // slot 9
     uint256 public lastSettled; // slot 10
     uint256 public collectedTax; // slot 11
 
@@ -155,7 +155,7 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     }
 
     modifier onlyOccupant() {
-        if (msg.sender != occupant) revert NotOccupant();
+        if (msg.sender != _occupant) revert NotOccupant();
         _;
     }
 
@@ -179,7 +179,7 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         // Stage 2 relies on this ordering too — see Task 6.
         _settle();
 
-        if (account == occupant) revert CannotBuyFromYourself();
+        if (account == _occupant) revert CannotBuyFromYourself();
 
         if (occupancyPolicy != address(0)) {
             IOccupancyPolicy(occupancyPolicy).checkBuy(
@@ -187,8 +187,8 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
             );
         }
 
-        uint256 currentPrice = price;
-        address prev = occupant;
+        uint256 currentPrice = _price;
+        address prev = _occupant;
 
         // Apply pending updates (ownership is transitioning)
         _applyPendingUpdates();
@@ -217,17 +217,17 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
             }
 
             // Refund previous occupant: their remaining deposit + purchase price
-            uint256 refund = deposit + currentPrice;
-            deposit = 0;
+            uint256 refund = _deposit + currentPrice;
+            _deposit = 0;
             if (refund > 0) {
                 currency.safeTransfer(prev, refund);
             }
         }
 
         // Update state — account is the occupant, not msg.sender
-        occupant = account;
-        price = selfAssessedPrice;
-        deposit = depositAmount;
+        _occupant = account;
+        _price = selfAssessedPrice;
+        _deposit = depositAmount;
         lastSettled = block.timestamp;
         occupiedSince = block.timestamp;
 
@@ -259,8 +259,8 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     function release() external nonReentrant onlyOccupant {
         _settle();
 
-        address prev = occupant;
-        uint256 refund = deposit;
+        address prev = _occupant;
+        uint256 refund = _deposit;
 
         // Flush collected tax to recipient
         uint256 pendingTax = collectedTax;
@@ -270,10 +270,10 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         }
 
         // Clear slot
-        occupant = address(0);
-        price = 0;
+        _occupant = address(0);
+        _price = 0;
         occupiedSince = 0;
-        deposit = 0;
+        _deposit = 0;
         lastSettled = block.timestamp;
 
         // Apply pending updates (slot is now vacant)
@@ -298,14 +298,14 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
 
         if (occupancyPolicy != address(0)) {
             IOccupancyPolicy(occupancyPolicy).checkPriceUpdate(
-                _occupancyCtx(occupant, newPrice, deposit)
+                _occupancyCtx(_occupant, newPrice, _deposit)
             );
         }
 
         _settle();
 
-        uint256 oldPrice = price;
-        price = newPrice;
+        uint256 oldPrice = _price;
+        _price = newPrice;
 
         // Ensure remaining deposit still meets minimum after price change
         _enforceMinDepositExisting(newPrice);
@@ -325,10 +325,10 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
 
     /// @notice Top up the occupant's deposit. Anyone can pay.
     function topUp(uint256 amount) external nonReentrant {
-        if (occupant == address(0)) revert NotOccupant();
+        if (_occupant == address(0)) revert NotOccupant();
         _settle();
         currency.safeTransferFrom(msg.sender, address(this), amount);
-        deposit += amount;
+        _deposit += amount;
         emit Deposited(msg.sender, amount);
         _emitProtocolEvent(EVT_DEPOSITED, abi.encode(msg.sender, amount));
     }
@@ -336,13 +336,13 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     /// @notice Occupant withdraws excess deposit
     function withdraw(uint256 amount) external nonReentrant onlyOccupant {
         _settle();
-        if (amount > deposit) revert InsufficientDeposit();
+        if (amount > _deposit) revert InsufficientDeposit();
 
-        uint256 remaining = deposit - amount;
-        uint256 minDep = _minDepositFor(price);
+        uint256 remaining = _deposit - amount;
+        uint256 minDep = _minDepositFor(_price);
         if (remaining < minDep) revert InsufficientDeposit();
 
-        deposit = remaining;
+        _deposit = remaining;
         currency.safeTransfer(msg.sender, amount);
         emit Withdrawn(msg.sender, amount);
         _emitProtocolEvent(EVT_WITHDRAWN, abi.encode(msg.sender, amount));
@@ -350,11 +350,11 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
 
     /// @notice Liquidate an insolvent occupant
     function liquidate() external nonReentrant {
-        if (occupant == address(0)) revert NotInsolvent();
+        if (_occupant == address(0)) revert NotInsolvent();
         _settle();
-        if (deposit > 0) revert NotInsolvent();
+        if (_deposit > 0) revert NotInsolvent();
 
-        address prev = occupant;
+        address prev = _occupant;
 
         // Calculate bounty from collected tax
         uint256 bounty = 0;
@@ -371,8 +371,8 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         }
 
         // Clear slot
-        occupant = address(0);
-        price = 0;
+        _occupant = address(0);
+        _price = 0;
         occupiedSince = 0;
         lastSettled = block.timestamp;
 
@@ -467,28 +467,42 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     // VIEW
     // ═══════════════════════════════════════════════════════════
 
+    /// @notice Current occupant. Hand-written rather than an auto-getter so that
+    ///         Stage 2 can resolve a matured-but-unmaterialised transfer here.
+    function occupant() public view returns (address) {
+        return _occupant;
+    }
+
+    function price() public view returns (uint256) {
+        return _price;
+    }
+
+    function deposit() public view returns (uint256) {
+        return _deposit;
+    }
+
     function taxOwed() public view returns (uint256) {
-        if (occupant == address(0)) return 0;
+        if (_occupant == address(0)) return 0;
         uint256 elapsed = block.timestamp - lastSettled;
-        return (price * taxPercentage * elapsed) / (MONTH * BASIS_POINTS);
+        return (_price * taxPercentage * elapsed) / (MONTH * BASIS_POINTS);
     }
 
     function secondsUntilLiquidation() public view returns (uint256) {
-        if (occupant == address(0)) return type(uint256).max;
+        if (_occupant == address(0)) return type(uint256).max;
         uint256 owed = taxOwed();
-        uint256 remaining = deposit > owed ? deposit - owed : 0;
-        uint256 taxNumerator = price * taxPercentage;
+        uint256 remaining = _deposit > owed ? _deposit - owed : 0;
+        uint256 taxNumerator = _price * taxPercentage;
         if (taxNumerator == 0) return type(uint256).max;
         return (remaining * MONTH * BASIS_POINTS) / taxNumerator;
     }
 
     function isInsolvent() public view returns (bool) {
-        if (occupant == address(0)) return false;
-        return taxOwed() >= deposit;
+        if (_occupant == address(0)) return false;
+        return taxOwed() >= _deposit;
     }
 
     function isVacant() public view returns (bool) {
-        return occupant == address(0);
+        return _occupant == address(0);
     }
 
     function getPendingUpdate() external view returns (PendingUpdate memory) {
@@ -503,14 +517,14 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         info.mutableTax = mutableTax;
         info.mutableModule = mutableModule;
 
-        info.occupant = occupant;
-        info.price = price;
+        info.occupant = _occupant;
+        info.price = _price;
         info.taxPercentage = taxPercentage;
         info.module = module;
         info.liquidationBountyBps = liquidationBountyBps;
         info.minDepositSeconds = minDepositSeconds;
 
-        info.deposit = deposit;
+        info.deposit = _deposit;
         info.collectedTax = collectedTax;
         info.taxOwed = taxOwed();
         info.secondsUntilLiquidation = secondsUntilLiquidation();
@@ -553,39 +567,39 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
             slot: address(this),
             caller: msg.sender,
             account: account,
-            occupant: occupant,
+            occupant: _occupant,
             occupiedSince: occupiedSince,
             taxPercentage: taxPercentage,
-            currentPrice: price,
+            currentPrice: _price,
             newPrice: newPrice,
             depositAmount: depositAmount
         });
     }
 
     function _settle() internal {
-        if (occupant == address(0)) {
+        if (_occupant == address(0)) {
             lastSettled = block.timestamp;
             return;
         }
         uint256 elapsed = block.timestamp - lastSettled;
         if (elapsed == 0) return;
 
-        uint256 owed = (price * taxPercentage * elapsed) /
+        uint256 owed = (_price * taxPercentage * elapsed) /
             (MONTH * BASIS_POINTS);
 
         uint256 paid;
-        if (owed >= deposit) {
-            paid = deposit;
-            collectedTax += deposit;
-            deposit = 0;
+        if (owed >= _deposit) {
+            paid = _deposit;
+            collectedTax += _deposit;
+            _deposit = 0;
         } else {
             paid = owed;
-            deposit -= owed;
+            _deposit -= owed;
             collectedTax += owed;
         }
         lastSettled = block.timestamp;
 
-        emit Settled(owed, paid, deposit);
+        emit Settled(owed, paid, _deposit);
     }
 
     function _applyPendingUpdates() internal {
@@ -615,24 +629,24 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         emit PendingUpdateApplied(newTax, newMod);
     }
 
-    function _minDepositFor(uint256 _price) internal view returns (uint256) {
+    function _minDepositFor(uint256 price_) internal view returns (uint256) {
         if (minDepositSeconds == 0) return 0;
         return
-            (_price * taxPercentage * minDepositSeconds) /
+            (price_ * taxPercentage * minDepositSeconds) /
             (MONTH * BASIS_POINTS);
     }
 
     function _enforceMinDeposit(
         uint256 depositAmount,
-        uint256 _price
+        uint256 price_
     ) internal view {
-        uint256 minDep = _minDepositFor(_price);
+        uint256 minDep = _minDepositFor(price_);
         if (depositAmount < minDep) revert InsufficientDeposit();
     }
 
-    function _enforceMinDepositExisting(uint256 _price) internal view {
-        uint256 minDep = _minDepositFor(_price);
-        if (deposit < minDep) revert InsufficientDeposit();
+    function _enforceMinDepositExisting(uint256 price_) internal view {
+        uint256 minDep = _minDepositFor(price_);
+        if (_deposit < minDep) revert InsufficientDeposit();
     }
 
     /// @dev Query module fee and split tax between module and recipient
