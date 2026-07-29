@@ -157,4 +157,36 @@ contract OccupancyPolicyTest is Test {
         vm.stopPrank();
         assertEq(Slot(s).occupiedSince(), 1_000_000);
     }
+
+    function test_ProposePolicyUpdate_AppliesOnTransition() public {
+        SlotConfig memory cfg = SlotConfig({mutableTax: false, mutableModule: true, manager: manager});
+        address s = factory.createSlot(recipient, IERC20(address(token)), cfg, _init());
+
+        vm.startPrank(alice);
+        token.approve(s, type(uint256).max);
+        Slot(s).buy(alice, 10 ether, 100 ether);
+        vm.stopPrank();
+
+        DenyAllPolicy policy = new DenyAllPolicy();
+        vm.prank(manager);
+        Slot(s).proposePolicyUpdate(address(policy));
+
+        // Not applied yet — still no policy
+        assertEq(Slot(s).occupancyPolicy(), address(0));
+
+        // Transition applies it
+        vm.startPrank(bob);
+        token.approve(s, type(uint256).max);
+        Slot(s).buy(bob, 10 ether, 100 ether);
+        vm.stopPrank();
+
+        assertEq(Slot(s).occupancyPolicy(), address(policy));
+    }
+
+    function test_ProposePolicyUpdate_RevertsWhenNotMutable() public {
+        address s = factory.createSlot(recipient, IERC20(address(token)), _immutableConfig(), _init());
+        DenyAllPolicy policy = new DenyAllPolicy();
+        vm.expectRevert(Slot.NotManager.selector);
+        Slot(s).proposePolicyUpdate(address(policy));
+    }
 }

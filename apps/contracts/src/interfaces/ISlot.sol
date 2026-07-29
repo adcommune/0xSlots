@@ -67,6 +67,12 @@ struct SlotInfo {
     uint256 pendingTaxPercentage;
     bool hasPendingModule;
     address pendingModule;
+    // v3
+    address occupancyPolicy;
+    uint256 epochSeconds;
+    uint256 occupiedSince;
+    bool hasPendingPolicy;
+    address pendingPolicy;
 }
 
 /// @notice Pending update for tax or module (applied on next ownership transition)
@@ -129,4 +135,8 @@ interface ISlotEvents {
     event LiquidationBountyUpdated(uint256 newBps);
 
     event ModuleCallFailed(string callbackName);
+
+    event PolicyUpdateProposed(address newPolicy);
+
+    event PolicyUpdateApplied(address newPolicy);
 }

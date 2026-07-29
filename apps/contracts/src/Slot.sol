@@ -80,6 +80,12 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     uint64 public epochSeconds;     // slot 15, offset 20 — reserved, used in Stage 2
     uint256 public occupiedSince;   // slot 16
 
+    struct PendingPolicyUpdate {
+        address newPolicy;
+        bool hasPolicyUpdate;
+    }
+    PendingPolicyUpdate public pendingPolicyUpdate; // slot 17
+
     // ═══════════════════════════════════════════════════════════
     // INITIALIZATION
     // ═══════════════════════════════════════════════════════════
@@ -428,11 +434,25 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         emit ModuleUpdateProposed(newModule);
     }
 
+    /// @notice Propose a new occupancy policy (applied on next ownership transition)
+    function proposePolicyUpdate(address newPolicy) external onlyManager {
+        if (!mutableModule) revert ModuleNotMutable();
+        if (newPolicy != address(0) && newPolicy.code.length == 0)
+            revert InvalidModule_NoCode();
+        pendingPolicyUpdate.newPolicy = newPolicy;
+        pendingPolicyUpdate.hasPolicyUpdate = true;
+        emit PolicyUpdateProposed(newPolicy);
+    }
+
     /// @notice Cancel all pending updates
     function cancelPendingUpdates() external onlyManager {
-        if (!pendingUpdate.hasTaxUpdate && !pendingUpdate.hasModuleUpdate)
-            revert NoPendingUpdate();
+        if (
+            !pendingUpdate.hasTaxUpdate &&
+            !pendingUpdate.hasModuleUpdate &&
+            !pendingPolicyUpdate.hasPolicyUpdate
+        ) revert NoPendingUpdate();
         delete pendingUpdate;
+        delete pendingPolicyUpdate;
         emit PendingUpdateCancelled();
     }
 
@@ -512,6 +532,12 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         info.pendingTaxPercentage = pendingUpdate.newTaxPercentage;
         info.hasPendingModule = pendingUpdate.hasModuleUpdate;
         info.pendingModule = pendingUpdate.newModule;
+
+        info.occupancyPolicy = occupancyPolicy;
+        info.epochSeconds = epochSeconds;
+        info.occupiedSince = occupiedSince;
+        info.hasPendingPolicy = pendingPolicyUpdate.hasPolicyUpdate;
+        info.pendingPolicy = pendingPolicyUpdate.newPolicy;
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -563,6 +589,12 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     }
 
     function _applyPendingUpdates() internal {
+        if (pendingPolicyUpdate.hasPolicyUpdate) {
+            occupancyPolicy = pendingPolicyUpdate.newPolicy;
+            emit PolicyUpdateApplied(pendingPolicyUpdate.newPolicy);
+            delete pendingPolicyUpdate;
+        }
+
         if (!pendingUpdate.hasTaxUpdate && !pendingUpdate.hasModuleUpdate)
             return;
 
