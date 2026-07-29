@@ -118,4 +118,75 @@ contract EpochsTest is Test {
         s.buy(bob, 10 ether, 120 ether);
         vm.stopPrank();
     }
+
+    function test_Materializes_LazilyOnNextInteraction() public {
+        Slot s = _epochSlot(HOUR);
+        vm.warp(10_000);
+        _buy(s, alice, 10 ether, 100 ether);
+
+        vm.warp(3 * uint256(HOUR) + 500); // past the boundary
+        s.collect();                       // any state-changing call
+
+        assertEq(s.occupant(), alice);
+        assertEq(s.price(), 100 ether);
+        (address buyer,,,,) = s.pendingTransfer();
+        assertEq(buyer, address(0), "pending should be cleared");
+    }
+
+    function test_OutgoingOccupantPaysUntilBoundary_ThenIncomingPays() public {
+        Slot s = _epochSlot(HOUR);
+        vm.warp(HOUR);                 // exactly on a boundary
+        _buy(s, alice, 100 ether, 100 ether);
+
+        // NOTE: timestamps below are derived from `HOUR` (a compile-time
+        // constant), not from a local variable assigned `= block.timestamp`.
+        // Under this repo's via_ir pipeline, a local initialized from
+        // block.timestamp and later re-read after an intervening vm.warp()
+        // gets value-numbered against the *current* block.timestamp instead
+        // of keeping its stored copy — verified in isolation: capturing
+        // `t = block.timestamp`, then `vm.warp(t + 1)`, then reading `t`
+        // again yields the post-warp value, not the original. Sticking to
+        // literal/constant arithmetic for all warp targets sidesteps it.
+        uint256 aliceStart = 2 * uint256(HOUR); // alice materialises here
+        vm.warp(aliceStart + 1);       // nudge past the exact boundary so
+                                        // there is something to collect —
+                                        // at the boundary itself, elapsed
+                                        // since materialisation is 0 and
+                                        // collect() reverts NothingToCollect
+        s.collect();
+        assertEq(s.occupant(), alice);
+
+        vm.warp(aliceStart + 1800);    // 30 min into alice's tenure
+        _buy(s, bob, 100 ether, 100 ether);
+
+        uint256 boundary = 3 * uint256(HOUR);
+        uint256 endTime = boundary + 1800;
+        vm.warp(endTime);              // 30 min past the switch
+        s.collect();
+
+        // Alice paid from aliceStart → boundary; bob from boundary → now.
+        // Total collected must equal one continuous 1h stream at 100 ether.
+        uint256 expected = (100 ether * 100 * (endTime - aliceStart))
+            / (30 days * 10_000);
+        assertApproxEqAbs(token.balanceOf(recipient), expected, 2);
+        assertEq(s.occupant(), bob);
+    }
+
+    function test_OutgoingOccupantRefundedAtMaterialisation() public {
+        Slot s = _epochSlot(HOUR);
+        vm.warp(HOUR);
+        _buy(s, alice, 100 ether, 100 ether);
+        vm.warp(2 * uint256(HOUR) + 1); // nudge past the exact boundary, see
+                                         // note in the test above
+        s.collect();
+
+        uint256 aliceBefore = token.balanceOf(alice);
+        _buy(s, bob, 100 ether, 100 ether);
+
+        vm.warp(3 * uint256(HOUR) + 1);
+        s.collect();
+
+        // Alice gets her remaining deposit plus bob's 100 ether purchase price.
+        assertGt(token.balanceOf(alice), aliceBefore + 100 ether - 1 ether);
+    }
 }

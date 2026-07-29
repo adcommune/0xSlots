@@ -589,16 +589,17 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         });
     }
 
-    function _settle() internal {
+    /// @dev Accrue tax for the current occupant up to `upTo`. Never crosses a
+    ///      transfer boundary — `_materialize` splits the legs.
+    function _accrue(uint256 upTo) internal {
         if (_occupant == address(0)) {
-            lastSettled = block.timestamp;
+            lastSettled = upTo;
             return;
         }
-        uint256 elapsed = block.timestamp - lastSettled;
-        if (elapsed == 0) return;
+        if (upTo <= lastSettled) return;
 
-        uint256 owed = (_price * taxPercentage * elapsed) /
-            (MONTH * BASIS_POINTS);
+        uint256 elapsed = upTo - lastSettled;
+        uint256 owed = (_price * taxPercentage * elapsed) / (MONTH * BASIS_POINTS);
 
         uint256 paid;
         if (owed >= _deposit) {
@@ -610,9 +611,54 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
             _deposit -= owed;
             collectedTax += owed;
         }
-        lastSettled = block.timestamp;
+        lastSettled = upTo;
 
         emit Settled(owed, paid, _deposit);
+    }
+
+    /// @dev Apply a matured transfer. Passive — nothing runs on a timer, state
+    ///      catches up on the next interaction.
+    function _materialize() internal {
+        PendingTransfer memory p = pendingTransfer;
+        if (p.effectiveAt == 0 || block.timestamp < p.effectiveAt) return;
+
+        // Leg 1 — the outgoing occupant pays right up to the boundary.
+        _accrue(p.effectiveAt);
+
+        address prev = _occupant;
+        if (prev != address(0)) {
+            uint256 refund = _deposit + p.pricePaid;
+            if (refund > 0) currency.safeTransfer(prev, refund);
+        } else if (p.pricePaid > 0) {
+            // The slot went vacant (release/liquidation) before the boundary, so
+            // the buyer paid a price for a slot nobody holds. Give it back.
+            currency.safeTransfer(p.buyer, p.pricePaid);
+        }
+
+        _occupant = p.buyer;
+        _price = p.newPrice;
+        _deposit = p.deposit;
+        occupiedSince = p.effectiveAt;
+        lastSettled = p.effectiveAt;
+        delete pendingTransfer;
+
+        _applyPendingUpdates();
+
+        _notifyModule(
+            "onTransfer",
+            abi.encodeCall(ISlotsModule.onTransfer, (0, prev, p.buyer))
+        );
+
+        emit Bought(p.buyer, prev, p.pricePaid, p.deposit, p.newPrice);
+        _emitProtocolEvent(
+            EVT_BOUGHT,
+            abi.encode(p.buyer, prev, p.pricePaid, p.deposit, p.newPrice)
+        );
+    }
+
+    function _settle() internal {
+        _materialize();
+        _accrue(block.timestamp);
     }
 
     function _applyPendingUpdates() internal {
