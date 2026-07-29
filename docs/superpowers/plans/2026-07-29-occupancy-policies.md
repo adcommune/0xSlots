@@ -1673,12 +1673,16 @@ Replace `taxOwed()`, `secondsUntilLiquidation()`, `isInsolvent()`, and `isVacant
     }
 ```
 
-And in `getSlotInfo()`, switch the three assignments to the resolving getters:
+And in `getSlotInfo()`, switch to the resolving getters. `occupiedSince` must
+resolve too — otherwise the struct reports the *new* occupant alongside the *old*
+occupant's tenure start, and off-chain consumers compute tenure against the wrong
+base:
 
 ```solidity
         info.occupant = occupant();
         info.price = price();
         info.deposit = deposit();
+        info.occupiedSince = _effectiveOccupiedSince();
 ```
 
 - [ ] **Step 5: Verify `onlyOccupant` resolves (already pulled forward)**
