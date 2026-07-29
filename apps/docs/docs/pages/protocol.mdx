@@ -102,7 +102,44 @@ The occupant maintains a deposit that covers future tax. When depleted, anyone c
 
 ---
 
-## Modules
+## Occupancy policies
+
+A slot may attach an **occupancy policy** — a contract that vetoes occupancy
+transitions. Policies are the opposite of utility modules:
+
+| | Utility module (`ISlotsModule`) | Occupancy policy (`IOccupancyPolicy`) |
+|---|---|---|
+| Authority | Advisory | Authoritative |
+| On failure | Fail-open (slot continues) | Fail-closed (action reverts) |
+| Can move funds | No | No |
+| Purpose | What the slot *does* | Who may take it, and when |
+
+```solidity
+interface IOccupancyPolicy is IERC165 {
+    function checkBuy(OccupancyContext calldata ctx) external view;
+    function checkPriceUpdate(OccupancyContext calldata ctx) external view;
+    function name() external view returns (string memory);
+    function version() external view returns (string memory);
+    function policyURI() external view returns (string memory);
+}
+```
+
+Guarantees that hold under **every** policy:
+
+- `liquidate()` can never be blocked — insolvency always ends occupancy
+- `release()` can never be blocked — you can always leave
+- a policy can never move your deposit, change your price, or redirect a buyer
+
+### MinimumTenurePolicy
+
+You cannot be bought out for a configured window after acquiring the slot. The
+buyer must escrow the full window's tax up front, and cannot cut their price
+while protected.
+
+**Harberger impact: soft.** Forced sale is delayed, not removed — a dishonestly
+low price is still punished, just later.
+
+## Utility modules
 
 Modules are optional hook contracts attached to a slot. They implement `ISlotsModule` (which extends `IERC165`):
 

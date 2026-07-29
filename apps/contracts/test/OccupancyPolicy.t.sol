@@ -10,6 +10,7 @@ import {Slot} from "../src/Slot.sol";
 import {SlotFactory} from "../src/SlotFactory.sol";
 import {SlotConfig, SlotInitParams} from "../src/interfaces/ISlot.sol";
 import {IOccupancyPolicy, OccupancyContext} from "../src/interfaces/IOccupancyPolicy.sol";
+import {MinimumTenurePolicy} from "../src/policies/MinimumTenurePolicy.sol";
 
 contract MockERC20 is ERC20 {
     constructor() ERC20("Mock", "MCK") { _mint(msg.sender, 1_000_000 ether); }
@@ -188,5 +189,120 @@ contract OccupancyPolicyTest is Test {
         DenyAllPolicy policy = new DenyAllPolicy();
         vm.expectRevert(Slot.NotManager.selector);
         Slot(s).proposePolicyUpdate(address(policy));
+    }
+
+    function _tenureSlot(MinimumTenurePolicy p) internal returns (address) {
+        return factory.createSlotV3(
+            recipient, IERC20(address(token)), _immutableConfig(), _init(), 0, address(p)
+        );
+    }
+
+    /// 1% monthly on 100 ether over 7 days = 100e18 * 100 * 604800 / (2592000 * 10000)
+    function _tenureCost(uint256 price_, uint256 tenure) internal pure returns (uint256) {
+        return (price_ * 100 * tenure) / (30 days * 10_000);
+    }
+
+    function test_Tenure_BlocksBuyInsideWindow() public {
+        MinimumTenurePolicy p = new MinimumTenurePolicy(7 days);
+        address s = _tenureSlot(p);
+        uint256 need = _tenureCost(100 ether, 7 days);
+
+        vm.startPrank(alice);
+        token.approve(s, type(uint256).max);
+        Slot(s).buy(alice, need, 100 ether);
+        vm.stopPrank();
+
+        vm.warp(block.timestamp + 3 days);
+        vm.startPrank(bob);
+        token.approve(s, type(uint256).max);
+        vm.expectRevert();
+        Slot(s).buy(bob, need, 100 ether);
+        vm.stopPrank();
+    }
+
+    function test_Tenure_AllowsBuyAfterWindow() public {
+        MinimumTenurePolicy p = new MinimumTenurePolicy(7 days);
+        address s = _tenureSlot(p);
+        uint256 need = _tenureCost(100 ether, 7 days);
+
+        vm.startPrank(alice);
+        token.approve(s, type(uint256).max);
+        Slot(s).buy(alice, need * 4, 100 ether);
+        vm.stopPrank();
+
+        vm.warp(block.timestamp + 7 days + 1);
+        vm.startPrank(bob);
+        token.approve(s, type(uint256).max);
+        Slot(s).buy(bob, need, 100 ether);
+        vm.stopPrank();
+        assertEq(Slot(s).occupant(), bob);
+    }
+
+    function test_Tenure_RejectsUnderfundedBuy() public {
+        MinimumTenurePolicy p = new MinimumTenurePolicy(7 days);
+        address s = _tenureSlot(p);
+        uint256 need = _tenureCost(100 ether, 7 days);
+
+        vm.startPrank(alice);
+        token.approve(s, type(uint256).max);
+        vm.expectRevert();
+        Slot(s).buy(alice, need - 1, 100 ether);
+        vm.stopPrank();
+    }
+
+    function test_Tenure_RejectsPriceCutInsideWindow() public {
+        MinimumTenurePolicy p = new MinimumTenurePolicy(7 days);
+        address s = _tenureSlot(p);
+        uint256 need = _tenureCost(100 ether, 7 days);
+
+        vm.startPrank(alice);
+        token.approve(s, type(uint256).max);
+        Slot(s).buy(alice, need * 4, 100 ether);
+        vm.warp(block.timestamp + 1 days);
+        vm.expectRevert(MinimumTenurePolicy.PriceCutDuringTenure.selector);
+        Slot(s).selfAssess(1 ether);
+        vm.stopPrank();
+    }
+
+    function test_Tenure_AllowsPriceRaiseInsideWindow() public {
+        MinimumTenurePolicy p = new MinimumTenurePolicy(7 days);
+        address s = _tenureSlot(p);
+        uint256 need = _tenureCost(100 ether, 7 days);
+
+        vm.startPrank(alice);
+        token.approve(s, type(uint256).max);
+        Slot(s).buy(alice, need * 8, 100 ether);
+        vm.warp(block.timestamp + 1 days);
+        Slot(s).selfAssess(200 ether);
+        vm.stopPrank();
+        assertEq(Slot(s).price(), 200 ether);
+    }
+
+    /// Insolvency must always end tenure — this is the safety invariant.
+    function test_Tenure_LiquidationWorksInsideWindow() public {
+        MinimumTenurePolicy p = new MinimumTenurePolicy(365 days);
+        address s = _tenureSlot(p);
+        uint256 need = _tenureCost(100 ether, 365 days);
+
+        vm.startPrank(alice);
+        token.approve(s, type(uint256).max);
+        Slot(s).buy(alice, need, 100 ether);
+        vm.stopPrank();
+
+        vm.warp(block.timestamp + 400 days);
+        Slot(s).liquidate();
+        assertEq(Slot(s).occupant(), address(0));
+    }
+
+    /// Vacant slots are always claimable.
+    function test_Tenure_VacantAlwaysClaimable() public {
+        MinimumTenurePolicy p = new MinimumTenurePolicy(7 days);
+        address s = _tenureSlot(p);
+        uint256 need = _tenureCost(100 ether, 7 days);
+        vm.startPrank(alice);
+        token.approve(s, type(uint256).max);
+        Slot(s).buy(alice, need, 100 ether);
+        vm.stopPrank();
+        assertEq(Slot(s).occupant(), alice);
     }
 }
