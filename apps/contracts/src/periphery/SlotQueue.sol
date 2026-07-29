@@ -38,6 +38,15 @@ contract SlotQueue is ReentrancyGuard {
     ///         triggers — bounded per call regardless of queue backlog size.
     uint256 public constant MAX_SWEEP = 32;
 
+    /// @notice Bound on how far in the future a bid's `expiry` may be set.
+    ///         Without this, `expiry` could be `type(uint96).max`, so a bid
+    ///         that turns out to be unfillable-but-not-caught (or simply
+    ///         never gets swept) could sit in the queue effectively forever.
+    ///         Capping duration guarantees every bid eventually becomes
+    ///         expired and thus eligible for the bounded sweep as a backstop,
+    ///         regardless of what else about it goes wrong.
+    uint256 public constant MAX_BID_DURATION = 30 days;
+
     /// @notice The SlotFactory used to validate that `slot` is a real,
     ///         factory-deployed Slot before this contract trusts anything it
     ///         reports (in particular its `currency()`).
@@ -75,8 +84,10 @@ contract SlotQueue is ReentrancyGuard {
     error AlreadyCancelled();
     error AlreadyProcessed();
     error InvalidExpiry();
+    error ExpiryTooFar();
     error InvalidBid();
     error NotASlot();
+    error SlotTransferPending();
 
     constructor(address _factory) {
         factory = SlotFactory(_factory);
@@ -96,6 +107,10 @@ contract SlotQueue is ReentrancyGuard {
     ) external nonReentrant {
         if (!factory.isSlot(slot)) revert NotASlot();
         if (expiry <= block.timestamp) revert InvalidExpiry();
+        // Bound every bid's lifetime so it is guaranteed to eventually reach
+        // the expiry sweep — a backstop no matter what else about it is
+        // wrong. See MAX_BID_DURATION.
+        if (expiry > block.timestamp + MAX_BID_DURATION) revert ExpiryTooFar();
         // Slot.buy() reverts unconditionally on a zero price, and a zero
         // deposit is either useless or unfundable. Reject both up front so
         // `fill()` can never be permanently blocked by a bid engineered to
@@ -185,6 +200,22 @@ contract SlotQueue is ReentrancyGuard {
         // (e.g. paying a stale price it was never funded for).
         if (Slot(slot).occupant() != address(0)) revert SlotOccupied();
 
+        // Reject a transient condition instead of letting it reach the catch
+        // below: on an `epochSeconds > 0` slot, filling one bid *schedules*
+        // a transfer rather than executing it, so `occupant()` above still
+        // read `address(0)` even though the slot is no longer really free.
+        // Without this check, a second `fill()` would reach `Slot.buy()`,
+        // hit `TransferPending`, and the catch below would treat that as a
+        // deterministic failure — permanently evicting and refunding the
+        // (perfectly fine, just temporarily blocked) head bid. That breaks
+        // the FIFO guarantee: anyone could evict the head by calling `fill`
+        // at the right moment and then fill their own bid next. A revert
+        // here instead leaves the head bid's position, funds, and queue
+        // index completely untouched; the caller (or anyone) simply retries
+        // `fill()` after the scheduled boundary passes.
+        (, uint96 effectiveAt, , , ) = Slot(slot).pendingTransfer();
+        if (effectiveAt != 0) revert SlotTransferPending();
+
         address bidder = b.bidder;
         uint256 dep = b.deposit;
         uint256 tip = b.tip;
@@ -200,6 +231,15 @@ contract SlotQueue is ReentrancyGuard {
         liveBidCount[slot]--;
 
         currency.forceApprove(slot, dep);
+        // Everything transient (occupied, a scheduled transfer) has already
+        // been pre-checked and reverted above without touching this bid's
+        // state. What reaches this try/catch is only what's deterministic
+        // for THIS bid on the slot's CURRENT terms — e.g. a manager having
+        // since raised `taxPercentage`/`minDepositSeconds` so the escrowed
+        // deposit is now insufficient, or a third-party occupancy policy
+        // rejecting this bidder outright. Those can never resolve themselves
+        // by retrying later with the same bid, so eviction-with-refund is
+        // the correct behaviour rather than blocking the queue forever.
         try Slot(slot).buy(bidder, dep, px) {
             currency.forceApprove(slot, 0);
             if (tip > 0) currency.safeTransfer(msg.sender, tip);

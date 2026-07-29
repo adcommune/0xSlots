@@ -105,6 +105,26 @@ contract SlotQueueTest is Test {
         ));
     }
 
+    /// @dev A slot with epoch scheduling turned on: `Slot.buy()` only
+    ///      *schedules* a transfer (via `pendingTransfer`) instead of
+    ///      executing it immediately, so `occupant()` keeps reading
+    ///      `address(0)` until the boundary matures.
+    function _epochSlot(uint64 epochSeconds_) internal returns (Slot) {
+        return Slot(factory.createSlotV3(
+            recipient,
+            IERC20(address(token)),
+            SlotConfig({mutableTax: false, mutableModule: false, manager: address(0)}),
+            SlotInitParams({
+                taxPercentage: 100,
+                module: address(0),
+                liquidationBountyBps: 500,
+                minDepositSeconds: 0
+            }),
+            epochSeconds_,
+            address(0)
+        ));
+    }
+
     function test_Fill_AfterRelease() public {
         Slot s = _slot();
         vm.startPrank(alice);
@@ -300,5 +320,77 @@ contract SlotQueueTest is Test {
         vm.prank(bob);
         vm.expectRevert(SlotQueue.AlreadyProcessed.selector);
         queue.cancel(address(s), 0);
+    }
+
+    /// @dev Security fix round 2, Important: closes the "eviction jumping"
+    ///      hole the C2 `try/catch` introduced. On an `epochSeconds > 0`
+    ///      slot, filling bid #1 only *schedules* a transfer — `occupant()`
+    ///      still reads `address(0)` afterward. Without the pre-check, an
+    ///      unguarded second `fill()` would pass the vacancy check, reach
+    ///      `Slot.buy()`, hit `TransferPending`, and the C2 catch would
+    ///      wrongly treat that transient condition as a deterministic
+    ///      failure — permanently evicting and refunding bid #2 even though
+    ///      it did nothing wrong, defeating FIFO. `fill()` must instead
+    ///      revert `SlotTransferPending`, leaving bid #2's position, escrow,
+    ///      and queue bookkeeping completely untouched.
+    function test_Fill_RevertsOnPendingTransfer_DoesNotEvictNextBid() public {
+        Slot s = _epochSlot(1 hours);
+
+        vm.startPrank(bob);
+        token.approve(address(queue), type(uint256).max);
+        queue.joinQueue(address(s), 80 ether, 10 ether, 1 ether, uint96(block.timestamp + 30 days));
+        vm.stopPrank();
+
+        uint256 carolBefore = token.balanceOf(carol);
+        vm.startPrank(carol);
+        token.approve(address(queue), type(uint256).max);
+        queue.joinQueue(address(s), 90 ether, 10 ether, 1 ether, uint96(block.timestamp + 30 days));
+        vm.stopPrank();
+
+        // First fill(): bob's bid schedules a transfer; the slot is not yet
+        // vacated of its "pending" state, but occupant() still reads address(0).
+        queue.fill(address(s));
+        assertEq(s.occupant(), address(0), "transfer only scheduled, not yet materialised");
+        assertEq(queue.liveBidCount(address(s)), 1, "carol's bid is still live");
+        assertEq(queue.headIndex(address(s)), 1, "head sits at carol's bid");
+
+        // Second fill(): must revert SlotTransferPending, not evict carol.
+        vm.expectRevert(SlotQueue.SlotTransferPending.selector);
+        queue.fill(address(s));
+
+        // Carol's bid is completely untouched by the failed attempt.
+        assertEq(queue.liveBidCount(address(s)), 1, "liveBidCount unchanged");
+        assertEq(queue.headIndex(address(s)), 1, "headIndex unchanged");
+        assertEq(token.balanceOf(carol), carolBefore - 11 ether, "carol not refunded, still escrowed");
+    }
+
+    /// @dev Security fix round 2, Important: `joinQueue` must bound how far
+    ///      in the future `expiry` may be set, so every bid is guaranteed to
+    ///      eventually reach the expiry sweep as a backstop.
+    function test_JoinQueue_RevertsForExpiryBeyondMaxDuration() public {
+        Slot s = _slot();
+        // Computed BEFORE vm.expectRevert: expectRevert only guards the very
+        // next call, and an inline `queue.MAX_BID_DURATION()` call used as an
+        // argument expression would itself be "the next call" — it succeeds
+        // (it's just a view getter), silently consuming the expectation
+        // before joinQueue ever runs.
+        uint96 tooFar = uint96(block.timestamp + queue.MAX_BID_DURATION() + 1);
+
+        vm.startPrank(bob);
+        token.approve(address(queue), type(uint256).max);
+        vm.expectRevert(SlotQueue.ExpiryTooFar.selector);
+        queue.joinQueue(address(s), 80 ether, 10 ether, 1 ether, tooFar);
+        vm.stopPrank();
+    }
+
+    function test_JoinQueue_AcceptsExpiryAtMaxDuration() public {
+        Slot s = _slot();
+        uint96 atCap = uint96(block.timestamp + queue.MAX_BID_DURATION());
+
+        vm.startPrank(bob);
+        token.approve(address(queue), type(uint256).max);
+        queue.joinQueue(address(s), 80 ether, 10 ether, 1 ether, atCap);
+        vm.stopPrank();
+        assertEq(queue.liveBidCount(address(s)), 1);
     }
 }
