@@ -88,6 +88,7 @@ contract SlotQueue is ReentrancyGuard {
     error InvalidBid();
     error NotASlot();
     error SlotTransferPending();
+    error EpochExceedsMaxBidDuration();
 
     constructor(address _factory) {
         factory = SlotFactory(_factory);
@@ -116,6 +117,15 @@ contract SlotQueue is ReentrancyGuard {
         // `fill()` can never be permanently blocked by a bid engineered to
         // always revert `Slot.buy()`.
         if (price == 0 || deposit == 0) revert InvalidBid();
+
+        // A slot whose epoch is longer than the maximum bid lifetime can never
+        // be queued usefully: `fill()` only SCHEDULES a transfer maturing at
+        // the next boundary, so every bid on such a slot expires before it
+        // could ever take effect. Funds were never at risk — they are swept
+        // back on expiry — but the queue was silently non-functional. Surface
+        // the misconfiguration at join time instead.
+        if (Slot(slot).epochSeconds() > MAX_BID_DURATION)
+            revert EpochExceedsMaxBidDuration();
 
         IERC20 currency = Slot(slot).currency();
         currency.safeTransferFrom(msg.sender, address(this), deposit + tip);

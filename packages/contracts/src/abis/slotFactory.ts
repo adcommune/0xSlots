@@ -398,6 +398,29 @@ export const slotFactoryAbi = [
   },
   {
     "type": "function",
+    "name": "migrateSlotsV3",
+    "inputs": [
+      {
+        "name": "slots",
+        "type": "address[]",
+        "internalType": "address[]"
+      },
+      {
+        "name": "epochSeconds",
+        "type": "uint64",
+        "internalType": "uint64"
+      },
+      {
+        "name": "occupancyPolicy",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "proxiableUUID",
     "inputs": [],
     "outputs": [

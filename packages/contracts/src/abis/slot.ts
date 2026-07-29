@@ -62,6 +62,19 @@ export const slotAbi = [
   },
   {
     "type": "function",
+    "name": "claim",
+    "inputs": [
+      {
+        "name": "account",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "collect",
     "inputs": [],
     "outputs": [],
@@ -910,6 +923,25 @@ export const slotAbi = [
     "stateMutability": "nonpayable"
   },
   {
+    "type": "function",
+    "name": "withdrawableOf",
+    "inputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
     "type": "event",
     "name": "Bought",
     "inputs": [
@@ -1155,6 +1187,44 @@ export const slotAbi = [
       },
       {
         "name": "newPrice",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "RefundClaimed",
+    "inputs": [
+      {
+        "name": "account",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "RefundCredited",
+    "inputs": [
+      {
+        "name": "account",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "amount",
         "type": "uint256",
         "indexed": false,
         "internalType": "uint256"
@@ -1437,6 +1507,11 @@ export const slotAbi = [
   },
   {
     "type": "error",
+    "name": "NotFactory",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "NotInitializing",
     "inputs": []
   },
@@ -1453,6 +1528,11 @@ export const slotAbi = [
   {
     "type": "error",
     "name": "NotOccupant",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NothingToClaim",
     "inputs": []
   },
   {
