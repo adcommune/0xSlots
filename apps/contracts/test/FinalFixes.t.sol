@@ -11,6 +11,8 @@ import {Slot} from "../src/Slot.sol";
 import {SlotFactory} from "../src/SlotFactory.sol";
 import {SlotConfig, SlotInitParams} from "../src/interfaces/ISlot.sol";
 import {IOccupancyPolicy, OccupancyContext} from "../src/interfaces/IOccupancyPolicy.sol";
+import {SlotQueue} from "../src/periphery/SlotQueue.sol";
+import {QueueExclusivityPolicy} from "../src/policies/QueueExclusivityPolicy.sol";
 
 contract FFMockERC20 is ERC20 {
     constructor() ERC20("Mock", "MCK") { _mint(msg.sender, 1_000_000 ether); }
@@ -421,5 +423,79 @@ contract FinalFixesTest is Test {
 
         assertGt(token.balanceOf(alice), aliceBefore + 100 ether - 1 ether, "pushed, not credited");
         assertEq(s.withdrawableOf(alice), 0, "nothing left pending");
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // FINDING 4 — queue exclusivity must not suspend forced sale
+    // ═══════════════════════════════════════════════════════════
+
+    function _queueSlot(QueueExclusivityPolicy p) internal returns (Slot) {
+        return Slot(factory.createSlotV3(
+            recipient,
+            IERC20(address(token)),
+            SlotConfig({mutableTax: false, mutableModule: false, manager: address(0)}),
+            _init(),
+            0,
+            address(p)
+        ));
+    }
+
+    /// @dev The self-bid squat. `checkBuy` rejected every non-queue caller
+    ///      while the queue was non-empty, and `SlotQueue.fill()` requires
+    ///      `occupant() == address(0)` — so while the slot was occupied NOBODY
+    ///      could buy: third parties vetoed by the policy, the queue blocked by
+    ///      the occupancy check. Alice only had to place a 1-wei-deposit bid in
+    ///      her own queue to become permanently unbuyable at any price;
+    ///      `MAX_BID_DURATION` caps a bid at 30 days but re-bidding is
+    ///      permissionless and costs gas plus 1 wei.
+    function test_Exclusivity_DoesNotBlockBuyoutOfOccupiedSlot() public {
+        SlotQueue queue = new SlotQueue(address(factory));
+        QueueExclusivityPolicy p = new QueueExclusivityPolicy(queue);
+        Slot s = _queueSlot(p);
+
+        // Alice occupies.
+        _buy(s, alice, 10 ether, 100 ether);
+        assertEq(s.occupant(), alice);
+
+        // ...then squats her own queue with a dust bid.
+        vm.startPrank(alice);
+        token.approve(address(queue), type(uint256).max);
+        queue.joinQueue(address(s), 1, 1, 0, uint96(block.timestamp + 30 days));
+        vm.stopPrank();
+        assertFalse(queue.isEmpty(address(s)), "queue is non-empty");
+
+        // The queue itself cannot take an occupied slot...
+        vm.expectRevert(SlotQueue.SlotOccupied.selector);
+        queue.fill(address(s));
+
+        // ...so if the policy also vetoed bob, the slot would be unbuyable at
+        // any price. Bob offers 2x alice's declared price and must succeed.
+        _buy(s, bob, 10 ether, 200 ether);
+        assertEq(s.occupant(), bob, "forced sale survived the squat");
+        assertEq(s.price(), 200 ether);
+    }
+
+    /// @dev Exclusivity must still do its actual job: once the slot is VACANT,
+    ///      the queue's head bidder is not front-run.
+    function test_Exclusivity_StillHoldsWhileVacant() public {
+        SlotQueue queue = new SlotQueue(address(factory));
+        QueueExclusivityPolicy p = new QueueExclusivityPolicy(queue);
+        Slot s = _queueSlot(p);
+
+        vm.startPrank(bob);
+        token.approve(address(queue), type(uint256).max);
+        queue.joinQueue(address(s), 80 ether, 10 ether, 0, uint96(block.timestamp + 30 days));
+        vm.stopPrank();
+
+        // Slot is vacant and the queue is non-empty: a third party is vetoed.
+        vm.startPrank(alice);
+        token.approve(address(s), type(uint256).max);
+        vm.expectRevert(QueueExclusivityPolicy.QueueHasPriority.selector);
+        s.buy(alice, 10 ether, 100 ether);
+        vm.stopPrank();
+
+        // The queue can take it.
+        queue.fill(address(s));
+        assertEq(s.occupant(), bob);
     }
 }
