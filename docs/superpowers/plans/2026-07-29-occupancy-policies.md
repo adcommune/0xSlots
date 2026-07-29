@@ -2449,11 +2449,11 @@ git commit -m "feat(contracts): SlotQueue peripheral with FIFO bids and permissi
 
 - [ ] **Step 1: Write the failing test**
 
-Append to `SlotQueueTest`, and add the imports:
+Append to `SlotQueueTest`, and add the import (`SlotConfig` and
+`SlotInitParams` are already imported by Task 12):
 
 ```solidity
 import {QueueExclusivityPolicy} from "../src/policies/QueueExclusivityPolicy.sol";
-import {SlotConfig as Cfg} from "../src/interfaces/ISlot.sol";
 ```
 
 ```solidity
