@@ -384,8 +384,13 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     // ═══════════════════════════════════════════════════════════
 
     /// @notice Top up the occupant's deposit. Anyone can pay.
+    /// @dev Gates on the RESOLVING `occupant()`, not raw `_occupant`. On an
+    ///      epoch slot a matured-but-unmaterialised transfer leaves
+    ///      `_occupant` stale (possibly address(0), when the slot was bought
+    ///      out of vacancy), so a raw read would refuse to fund an occupancy
+    ///      that every getter already reports as live.
     function topUp(uint256 amount) external nonReentrant {
-        if (_occupant == address(0)) revert NotOccupant();
+        if (occupant() == address(0)) revert NotOccupant();
         _settle();
         currency.safeTransferFrom(msg.sender, address(this), amount);
         _deposit += amount;
@@ -409,11 +414,21 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     }
 
     /// @notice Liquidate an insolvent occupant
+    /// @dev Gates on the RESOLVING `occupant()`. Reading raw `_occupant` here
+    ///      made a whole class of occupancy unliquidatable: buying a VACANT
+    ///      epoch slot with `minDepositSeconds == 0` and a zero deposit leaves
+    ///      `_occupant == address(0)` behind a pending transfer, so past the
+    ///      boundary `isInsolvent()` was true while `liquidate()` still
+    ///      reverted NotInsolvent — a free, unremovable occupancy. The spec's
+    ///      first invariant is that liquidation is never vetoable: insolvency
+    ///      always ends occupancy.
     function liquidate() external nonReentrant {
-        if (_occupant == address(0)) revert NotInsolvent();
+        if (occupant() == address(0)) revert NotInsolvent();
         _settle();
         if (_deposit > 0) revert NotInsolvent();
 
+        // Read AFTER _settle(): materialisation has by now written the
+        // incoming buyer into `_occupant`, which is who is being liquidated.
         address prev = _occupant;
 
         // Calculate bounty from collected tax

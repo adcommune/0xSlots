@@ -192,4 +192,60 @@ contract FinalFixesTest is Test {
         live.initializeV2(attacker);
         assertEq(live.factory(), address(factory));
     }
+
+    // ═══════════════════════════════════════════════════════════
+    // FINDING 2 — liquidate()/topUp() must gate on occupant(), not _occupant
+    // ═══════════════════════════════════════════════════════════
+
+    /// @dev The zero-deposit-from-vacant path. `minDepositSeconds == 0` lets
+    ///      alice buy a VACANT epoch slot with a zero deposit; because the slot
+    ///      was vacant, `_occupant` stays address(0) behind the pending
+    ///      transfer. Past the boundary every getter reports alice as occupant
+    ///      and `isInsolvent()` is true — yet the old raw-storage gates made
+    ///      her unremovable: `liquidate()` reverted NotInsolvent, `topUp()`
+    ///      reverted NotOccupant, and `collect()` reverted NothingToCollect
+    ///      (rolling back the materialisation it had just performed). Alice
+    ///      occupied indefinitely having paid zero tax.
+    function test_Liquidate_ZeroDepositFromVacant_OnEpochSlot() public {
+        Slot s = _epochSlot(3600);
+
+        vm.warp(3600);
+        _buy(s, alice, 0, 100 ether); // zero deposit, slot was vacant
+
+        // Raw storage is still vacant; the transfer is only scheduled.
+        assertEq(s.occupant(), address(0), "not yet effective");
+
+        vm.warp(2 * uint256(3600) + 1); // past the boundary
+        assertEq(s.occupant(), alice, "alice resolves as occupant");
+        assertTrue(s.isInsolvent(), "zero deposit => insolvent");
+
+        // The whole point: liquidation must succeed.
+        s.liquidate();
+        assertEq(s.occupant(), address(0), "occupancy ended");
+        assertEq(s.price(), 0);
+
+        // And the slot is immediately reusable.
+        _buy(s, bob, 10 ether, 50 ether);
+        vm.warp(4 * uint256(3600) + 1);
+        assertEq(s.occupant(), bob);
+    }
+
+    /// @dev Same window, the `topUp` half: anyone must be able to fund an
+    ///      occupancy that has matured but not yet been written to storage.
+    function test_TopUp_ResolvesMaturedTransfer() public {
+        Slot s = _epochSlot(3600);
+
+        vm.warp(3600);
+        _buy(s, alice, 0, 100 ether);
+        vm.warp(2 * uint256(3600) + 1);
+
+        vm.startPrank(bob);
+        token.approve(address(s), type(uint256).max);
+        s.topUp(5 ether); // would revert NotOccupant against raw _occupant
+        vm.stopPrank();
+
+        assertEq(s.occupant(), alice);
+        assertFalse(s.isInsolvent(), "funded, so no longer insolvent");
+        assertGe(s.deposit(), 4 ether);
+    }
 }
