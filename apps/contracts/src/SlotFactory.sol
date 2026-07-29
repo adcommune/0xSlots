@@ -9,6 +9,7 @@ import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.s
 import {Slot} from "./Slot.sol";
 import {SlotConfig, SlotInitParams, ISlotEvents} from "./interfaces/ISlot.sol";
 import {ISlotsModule} from "./interfaces/ISlotsModule.sol";
+import {IOccupancyPolicy} from "./interfaces/IOccupancyPolicy.sol";
 
 /// @title SlotFactory — Deploy Harberger-taxed slots via Beacon Proxy
 /// @notice UUPS-upgradeable factory. All slots delegate to a shared beacon.
@@ -141,6 +142,25 @@ contract SlotFactory is UUPSUpgradeable {
         }
     }
 
+    /// @notice Deploy a Slot with v3 params (epoch length + occupancy policy).
+    /// @dev `createSlot` is retained unchanged — extending SlotInitParams would
+    ///      change the tuple signature and therefore the selector, breaking
+    ///      every published ABI.
+    function createSlotV3(
+        address recipient,
+        IERC20 currency,
+        SlotConfig memory config,
+        SlotInitParams memory initParams,
+        uint64 epochSeconds,
+        address occupancyPolicy
+    ) external returns (address slot) {
+        _validateConfig(config, initParams);
+        if (occupancyPolicy != address(0) && occupancyPolicy.code.length == 0)
+            revert InvalidModule_NoCode();
+        slot = _deploySlot(recipient, currency, config, initParams);
+        Slot(slot).initializeV3(epochSeconds, occupancyPolicy);
+    }
+
     // ═══════════════════════════════════════════════════════════
     // VIEWS
     // ═══════════════════════════════════════════════════════════
@@ -179,6 +199,32 @@ contract SlotFactory is UUPSUpgradeable {
     /// @notice Check if a module is verified
     function isModuleVerified(address module) external view returns (bool) {
         return verifiedModules[module];
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // OCCUPANCY POLICY REGISTRY (informational, non-blocking)
+    // ═══════════════════════════════════════════════════════════
+
+    /// @notice Verified occupancy policies (informational, non-blocking)
+    mapping(address => bool) public verifiedPolicies;
+
+    event PolicyVerified(
+        address indexed policy,
+        bool verified,
+        string name,
+        string version,
+        string policyURI
+    );
+
+    /// @notice Mark an occupancy policy verified/unverified (admin only)
+    function setPolicyVerified(address _policy, bool verified) external onlyAdmin {
+        IOccupancyPolicy p = IOccupancyPolicy(_policy);
+        require(
+            p.supportsInterface(type(IOccupancyPolicy).interfaceId),
+            "not IOccupancyPolicy"
+        );
+        verifiedPolicies[_policy] = verified;
+        emit PolicyVerified(_policy, verified, p.name(), p.version(), p.policyURI());
     }
 
     // ═══════════════════════════════════════════════════════════

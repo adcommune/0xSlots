@@ -7,6 +7,7 @@ import {Multicall} from "@openzeppelin/contracts/utils/Multicall.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ISlotsModule} from "./interfaces/ISlotsModule.sol";
+import {IOccupancyPolicy, OccupancyContext} from "./interfaces/IOccupancyPolicy.sol";
 import {SlotConfig, SlotInitParams, PendingUpdate, SlotInfo, ISlotEvents, EVT_BOUGHT, EVT_RELEASED, EVT_LIQUIDATED, EVT_PRICE_UPDATED, EVT_DEPOSITED, EVT_WITHDRAWN, EVT_TAX_COLLECTED, EVT_SETTLED} from "./interfaces/ISlot.sol";
 import {SlotFactory} from "./SlotFactory.sol";
 
@@ -38,6 +39,7 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     error InvalidRecipient();
     error InvalidCurrency();
     error InvalidModule_NoCode();
+    error PolicyNotMutable();
 
     // ═══════════════════════════════════════════════════════════
     // STORAGE — KEEP ORDER, APPEND ONLY
@@ -65,10 +67,18 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     PendingUpdate public pendingUpdate; // slots 12-13
 
     /// @dev Legacy manual init flag — DO NOT REMOVE (preserves storage layout)
-    bool private _legacyInitialized; // slot 14
+    bool private _legacyInitialized; // slot 14, offset 0
 
     // --- v2 storage (appended after beacon upgrade) ---
-    address public factory; // slot 15
+    address public factory; // slot 14, offset 1
+
+    /// @dev NOTE: `_legacyInitialized` (slot 14 offset 0) and `factory`
+    ///      (slot 14 offset 1) are PACKED into one slot. First free slot is 15.
+
+    // --- v3 storage (appended after beacon upgrade) ---
+    address public occupancyPolicy; // slot 15, offset 0
+    uint64 public epochSeconds;     // slot 15, offset 20 — reserved, used in Stage 2
+    uint256 public occupiedSince;   // slot 16
 
     // ═══════════════════════════════════════════════════════════
     // INITIALIZATION
@@ -117,6 +127,18 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         factory = _factory;
     }
 
+    /// @notice v3 upgrade — sets epoch length and occupancy policy.
+    /// @dev Both default to zero, which is exactly pre-v3 behaviour.
+    function initializeV3(
+        uint64 _epochSeconds,
+        address _occupancyPolicy
+    ) external reinitializer(3) {
+        if (_occupancyPolicy != address(0) && _occupancyPolicy.code.length == 0)
+            revert InvalidModule_NoCode();
+        epochSeconds = _epochSeconds;
+        occupancyPolicy = _occupancyPolicy;
+    }
+
     // ═══════════════════════════════════════════════════════════
     // MODIFIERS
     // ═══════════════════════════════════════════════════════════
@@ -146,15 +168,21 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     ) external nonReentrant {
         if (selfAssessedPrice == 0) revert InvalidPrice();
         if (account == address(0)) revert InvalidRecipient();
+
+        // Settle first so the policy is asked about current, not stale, state.
+        // Stage 2 relies on this ordering too — see Task 6.
+        _settle();
+
         if (account == occupant) revert CannotBuyFromYourself();
+
+        if (occupancyPolicy != address(0)) {
+            IOccupancyPolicy(occupancyPolicy).checkBuy(
+                _occupancyCtx(account, selfAssessedPrice, depositAmount)
+            );
+        }
 
         uint256 currentPrice = price;
         address prev = occupant;
-
-        // Settle outstanding tax
-        if (prev != address(0)) {
-            _settle();
-        }
 
         // Apply pending updates (ownership is transitioning)
         _applyPendingUpdates();
@@ -195,6 +223,7 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         price = selfAssessedPrice;
         deposit = depositAmount;
         lastSettled = block.timestamp;
+        occupiedSince = block.timestamp;
 
         _notifyModule(
             "onTransfer",
@@ -237,6 +266,7 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         // Clear slot
         occupant = address(0);
         price = 0;
+        occupiedSince = 0;
         deposit = 0;
         lastSettled = block.timestamp;
 
@@ -259,6 +289,12 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     /// @notice Occupant self-assesses a new price
     function selfAssess(uint256 newPrice) external nonReentrant onlyOccupant {
         if (newPrice == 0) revert InvalidPrice();
+
+        if (occupancyPolicy != address(0)) {
+            IOccupancyPolicy(occupancyPolicy).checkPriceUpdate(
+                _occupancyCtx(occupant, newPrice, deposit)
+            );
+        }
 
         _settle();
 
@@ -331,6 +367,7 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         // Clear slot
         occupant = address(0);
         price = 0;
+        occupiedSince = 0;
         lastSettled = block.timestamp;
 
         // Apply pending updates
@@ -480,6 +517,24 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     // ═══════════════════════════════════════════════════════════
     // INTERNAL
     // ═══════════════════════════════════════════════════════════
+
+    function _occupancyCtx(
+        address account,
+        uint256 newPrice,
+        uint256 depositAmount
+    ) internal view returns (OccupancyContext memory) {
+        return OccupancyContext({
+            slot: address(this),
+            caller: msg.sender,
+            account: account,
+            occupant: occupant,
+            occupiedSince: occupiedSince,
+            taxPercentage: taxPercentage,
+            currentPrice: price,
+            newPrice: newPrice,
+            depositAmount: depositAmount
+        });
+    }
 
     function _settle() internal {
         if (occupant == address(0)) {
