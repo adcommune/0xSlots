@@ -1833,13 +1833,42 @@ Append to `EpochsTest`:
 Run: `cd apps/contracts && forge test --match-test "test_SelfAssess_Blocked|test_VacantAtMaterialisation" -vv`
 Expected: FAIL — `selfAssess` succeeds; bob is not refunded.
 
-- [ ] **Step 3: Guard `selfAssess`**
+- [ ] **Step 3: Guard `selfAssess` — and fix its call ordering**
 
-In `selfAssess()`, immediately after the `InvalidPrice` check and **before** the policy call:
+Task 2 left `selfAssess()` calling the policy *before* `_settle()`. That was
+harmless while transfers were instant, but now `_settle()` materialises a matured
+transfer, so a pre-settle guard would reject the new occupant's first reprice
+after every boundary — the same defect that was fixed in `buy()`.
+
+Restructure the head of `selfAssess()` to mirror `buy()`: settle, then guard,
+then policy.
 
 ```solidity
+        if (newPrice == 0) revert InvalidPrice();
+
+        // Settle first: materialises any matured transfer, so the guard below
+        // only rejects a genuinely still-pending one and the policy sees
+        // current state.
+        _settle();
+
         if (pendingTransfer.effectiveAt != 0) revert TransferPending();
+
+        if (occupancyPolicy != address(0)) {
+            IOccupancyPolicy(occupancyPolicy).checkPriceUpdate(
+                _occupancyCtx(occupant(), newPrice, deposit())
+            );
+        }
+
+        uint256 oldPrice = _price;
+        _price = newPrice;
 ```
+
+Then delete the now-redundant `_settle();` that previously sat after the policy
+call — leaving it would settle twice.
+
+Note `onlyOccupant` already resolves via `occupant()` (Task 8), so the incoming
+occupant passes the modifier the moment the boundary is crossed; this ordering is
+what lets them actually act.
 
 - [ ] **Step 4: Stop `release()` and `liquidate()` from clobbering the pending transfer**
 
