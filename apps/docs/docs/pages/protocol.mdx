@@ -2,7 +2,7 @@
 
 ## SlotFactory
 
-The factory deploys slots via BeaconProxy (UUPS-upgradeable). Each slot gets a deterministic address based on `keccak256(recipient, currency, config)`.
+The factory deploys slots via BeaconProxy (UUPS-upgradeable). Addresses are assigned at deploy time — `createSlots` can deploy many slots that share identical parameters, so a slot is identified by its address, not derived from its config.
 
 ```solidity
 function createSlot(
@@ -38,7 +38,7 @@ struct SlotInitParams {
     uint256 taxPercentage;         // Tax rate in bps per month (100 = 1%)
     address module;                // Hook contract (address(0) = none)
     uint256 liquidationBountyBps;  // Bounty for liquidators in bps
-    uint256 minDepositSeconds;     // Minimum deposit to cover (protocol min: 1 day)
+    uint256 minDepositSeconds;     // Deposit must cover this many seconds of tax (0 = no minimum)
 }
 ```
 
