@@ -572,7 +572,7 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
 
         info.occupancyPolicy = occupancyPolicy;
         info.epochSeconds = epochSeconds;
-        info.occupiedSince = occupiedSince;
+        info.occupiedSince = _effectiveOccupiedSince();
         info.hasPendingPolicy = pendingPolicyUpdate.hasPolicyUpdate;
         info.pendingPolicy = pendingPolicyUpdate.newPolicy;
     }

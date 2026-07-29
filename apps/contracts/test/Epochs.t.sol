@@ -7,7 +7,7 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import {Slot} from "../src/Slot.sol";
 import {SlotFactory} from "../src/SlotFactory.sol";
-import {SlotConfig, SlotInitParams} from "../src/interfaces/ISlot.sol";
+import {SlotConfig, SlotInitParams, SlotInfo} from "../src/interfaces/ISlot.sol";
 
 contract MockERC20 is ERC20 {
     constructor() ERC20("Mock", "MCK") { _mint(msg.sender, 1_000_000 ether); }
@@ -278,6 +278,16 @@ contract EpochsTest is Test {
         assertEq(s.occupant(), bob, "occupant must resolve to bob");
         assertEq(s.price(), 80 ether, "price must resolve to bob's");
         assertEq(s.deposit(), 50 ether, "deposit must resolve to bob's");
+
+        // getSlotInfo() must agree with the standalone getters in this same
+        // matured-but-unmaterialised window — including occupiedSince, which
+        // must resolve to the transfer's effectiveAt (3 * HOUR), not alice's
+        // stale occupiedSince from her own materialisation.
+        SlotInfo memory info = s.getSlotInfo();
+        assertEq(info.occupant, s.occupant(), "getSlotInfo occupant must match occupant()");
+        assertEq(info.price, s.price(), "getSlotInfo price must match price()");
+        assertEq(info.deposit, s.deposit(), "getSlotInfo deposit must match deposit()");
+        assertEq(info.occupiedSince, 3 * uint256(HOUR), "getSlotInfo occupiedSince must resolve to bob's effectiveAt");
     }
 
     function test_TaxOwedResolvesFromBoundary() public {
