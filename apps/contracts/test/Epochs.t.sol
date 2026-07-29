@@ -261,4 +261,40 @@ contract EpochsTest is Test {
         assertEq(s.occupant(), bob);
         assertEq(s.price(), 200 ether);
     }
+
+    function test_GettersResolveBeforeMaterialisation() public {
+        Slot s = _epochSlot(HOUR);
+        vm.warp(HOUR);
+        _buy(s, alice, 100 ether, 100 ether);
+        vm.warp(2 * uint256(HOUR) + 1); // nudge past the exact boundary, see
+                                         // note in test_OutgoingOccupantPaysUntilBoundary_ThenIncomingPays
+        s.collect();
+
+        _buy(s, bob, 50 ether, 80 ether);
+
+        // Past the boundary, but NOTHING has written to storage since.
+        vm.warp(3 * uint256(HOUR) + 1);
+
+        assertEq(s.occupant(), bob, "occupant must resolve to bob");
+        assertEq(s.price(), 80 ether, "price must resolve to bob's");
+        assertEq(s.deposit(), 50 ether, "deposit must resolve to bob's");
+    }
+
+    function test_TaxOwedResolvesFromBoundary() public {
+        Slot s = _epochSlot(HOUR);
+        vm.warp(HOUR);
+        _buy(s, alice, 100 ether, 100 ether);
+        vm.warp(2 * uint256(HOUR) + 1); // nudge past the exact boundary, see
+                                         // note in test_OutgoingOccupantPaysUntilBoundary_ThenIncomingPays
+        s.collect();
+
+        _buy(s, bob, 100 ether, 100 ether);
+        vm.warp(3 * uint256(HOUR) + 600); // 10 min past the switch
+
+        // Bob owes for 600 seconds, not for the whole hour.
+        uint256 numerator = 100 ether * uint256(100) * uint256(600);
+        uint256 denominator = uint256(30 days) * uint256(10_000);
+        uint256 expected = numerator / denominator;
+        assertApproxEqAbs(s.taxOwed(), expected, 2);
+    }
 }

@@ -303,7 +303,7 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
 
         if (occupancyPolicy != address(0)) {
             IOccupancyPolicy(occupancyPolicy).checkPriceUpdate(
-                _occupancyCtx(_occupant, newPrice, _deposit)
+                _occupancyCtx(occupant(), newPrice, deposit())
             );
         }
 
@@ -480,35 +480,44 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     }
 
     function price() public view returns (uint256) {
+        if (_transferMatured()) return pendingTransfer.newPrice;
         return _price;
     }
 
     function deposit() public view returns (uint256) {
+        if (_transferMatured()) return pendingTransfer.deposit;
         return _deposit;
     }
 
+    function _effectiveLastSettled() internal view returns (uint256) {
+        if (_transferMatured()) return pendingTransfer.effectiveAt;
+        return lastSettled;
+    }
+
     function taxOwed() public view returns (uint256) {
-        if (_occupant == address(0)) return 0;
-        uint256 elapsed = block.timestamp - lastSettled;
-        return (_price * taxPercentage * elapsed) / (MONTH * BASIS_POINTS);
+        address occ = occupant();
+        if (occ == address(0)) return 0;
+        uint256 elapsed = block.timestamp - _effectiveLastSettled();
+        return (price() * taxPercentage * elapsed) / (MONTH * BASIS_POINTS);
     }
 
     function secondsUntilLiquidation() public view returns (uint256) {
-        if (_occupant == address(0)) return type(uint256).max;
+        if (occupant() == address(0)) return type(uint256).max;
         uint256 owed = taxOwed();
-        uint256 remaining = _deposit > owed ? _deposit - owed : 0;
-        uint256 taxNumerator = _price * taxPercentage;
+        uint256 dep = deposit();
+        uint256 remaining = dep > owed ? dep - owed : 0;
+        uint256 taxNumerator = price() * taxPercentage;
         if (taxNumerator == 0) return type(uint256).max;
         return (remaining * MONTH * BASIS_POINTS) / taxNumerator;
     }
 
     function isInsolvent() public view returns (bool) {
-        if (_occupant == address(0)) return false;
-        return taxOwed() >= _deposit;
+        if (occupant() == address(0)) return false;
+        return taxOwed() >= deposit();
     }
 
     function isVacant() public view returns (bool) {
-        return _occupant == address(0);
+        return occupant() == address(0);
     }
 
     /// @notice The next epoch boundary. Returns `block.timestamp` when epochs
@@ -531,14 +540,14 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         info.mutableTax = mutableTax;
         info.mutableModule = mutableModule;
 
-        info.occupant = _occupant;
-        info.price = _price;
+        info.occupant = occupant();
+        info.price = price();
         info.taxPercentage = taxPercentage;
         info.module = module;
         info.liquidationBountyBps = liquidationBountyBps;
         info.minDepositSeconds = minDepositSeconds;
 
-        info.deposit = _deposit;
+        info.deposit = deposit();
         info.collectedTax = collectedTax;
         info.taxOwed = taxOwed();
         info.secondsUntilLiquidation = secondsUntilLiquidation();
@@ -572,6 +581,11 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     // INTERNAL
     // ═══════════════════════════════════════════════════════════
 
+    function _effectiveOccupiedSince() internal view returns (uint256) {
+        if (_transferMatured()) return pendingTransfer.effectiveAt;
+        return occupiedSince;
+    }
+
     function _occupancyCtx(
         address account,
         uint256 newPrice,
@@ -581,10 +595,10 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
             slot: address(this),
             caller: msg.sender,
             account: account,
-            occupant: _occupant,
-            occupiedSince: occupiedSince,
+            occupant: occupant(),
+            occupiedSince: _effectiveOccupiedSince(),
             taxPercentage: taxPercentage,
-            currentPrice: _price,
+            currentPrice: price(),
             newPrice: newPrice,
             depositAmount: depositAmount
         });
