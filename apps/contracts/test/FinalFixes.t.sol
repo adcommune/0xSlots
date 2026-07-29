@@ -31,6 +31,24 @@ contract FFDenyAllPolicy is IOccupancyPolicy {
     }
 }
 
+/// @dev USDC-shaped: transfers TO a blocked address revert. This repo already
+///      ships a USDC deploy script, so this is a live-token behaviour, not a
+///      hypothetical.
+contract FFBlocklistERC20 is ERC20 {
+    mapping(address => bool) public blocked;
+    error Blocklisted(address account);
+
+    constructor() ERC20("Block", "BLK") { _mint(msg.sender, 1_000_000 ether); }
+
+    function mint(address to, uint256 amount) external { _mint(to, amount); }
+    function setBlocked(address who, bool v) external { blocked[who] = v; }
+
+    function _update(address from, address to, uint256 value) internal override {
+        if (blocked[to]) revert Blocklisted(to);
+        super._update(from, to, value);
+    }
+}
+
 /// @notice Regression tests for the whole-branch security review findings.
 contract FinalFixesTest is Test {
     SlotFactory factory;
@@ -247,5 +265,161 @@ contract FinalFixesTest is Test {
         assertEq(s.occupant(), alice);
         assertFalse(s.isInsolvent(), "funded, so no longer insolvent");
         assertGe(s.deposit(), 4 ether);
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // FINDING 3 — a blocked refund recipient must not brick the slot
+    // ═══════════════════════════════════════════════════════════
+
+    FFBlocklistERC20 blk;
+
+    function _blockSlot(uint64 epoch) internal returns (Slot) {
+        blk = new FFBlocklistERC20();
+        blk.mint(alice, 10_000 ether);
+        blk.mint(bob, 10_000 ether);
+        return Slot(factory.createSlotV3(
+            recipient,
+            IERC20(address(blk)),
+            SlotConfig({mutableTax: false, mutableModule: false, manager: address(0)}),
+            _init(),
+            epoch,
+            address(0)
+        ));
+    }
+
+    function _buyBlk(Slot s, address who, uint256 dep, uint256 px) internal {
+        vm.startPrank(who);
+        blk.approve(address(s), type(uint256).max);
+        s.buy(who, dep, px);
+        vm.stopPrank();
+    }
+
+    /// @dev The escalation this branch introduced: `_materialize` pays the
+    ///      outgoing occupant, and it runs inside `_settle()`, which is the
+    ///      first statement of every mutating entry point. Before this branch
+    ///      only `buy()` was exposed to a reverting refund; afterwards a
+    ///      blocked outgoing occupant made `buy`, `release`, `selfAssess`,
+    ///      `topUp`, `withdraw`, `liquidate` AND `collect` revert permanently —
+    ///      locking the outgoing deposit, the incoming buyer's escrow and all
+    ///      accrued tax with no way out.
+    function test_BlockedOutgoingOccupant_DoesNotBrickSlot() public {
+        Slot s = _blockSlot(3600);
+
+        // Alice occupies for real.
+        vm.warp(3600);
+        _buyBlk(s, alice, 100 ether, 100 ether);
+        vm.warp(2 * uint256(3600) + 1);
+        s.collect();
+        assertEq(s.occupant(), alice);
+
+        // Bob buys her out; the transfer matures at 3 * 3600.
+        _buyBlk(s, bob, 100 ether, 100 ether);
+
+        // Alice is blocklisted before the boundary lands.
+        blk.setBlocked(alice, true);
+
+        vm.warp(3 * uint256(3600) + 1);
+
+        // Materialisation must succeed and the slot must stay fully usable.
+        s.collect();
+        assertEq(s.occupant(), bob, "transfer landed despite the blocked refund");
+
+        uint256 credited = s.withdrawableOf(alice);
+        assertGt(credited, 100 ether, "alice's deposit + bob's price credited, not lost");
+
+        // Every entry point still works.
+        vm.prank(bob);
+        s.selfAssess(150 ether);
+        assertEq(s.price(), 150 ether);
+
+        vm.startPrank(alice);
+        blk.approve(address(s), type(uint256).max);
+        s.topUp(1 ether);
+        vm.stopPrank();
+
+        vm.prank(bob);
+        s.withdraw(1);
+
+        vm.prank(bob);
+        s.release();
+        assertEq(s.occupant(), address(0), "slot released cleanly");
+
+        // Alice was never able to claim while blocked...
+        vm.expectRevert(
+            abi.encodeWithSelector(FFBlocklistERC20.Blocklisted.selector, alice)
+        );
+        s.claim(alice);
+
+        // ...and is made whole the moment she is unblocked.
+        blk.setBlocked(alice, false);
+        uint256 before = blk.balanceOf(alice);
+        s.claim(alice); // permissionless caller, funds go to alice
+        assertEq(blk.balanceOf(alice), before + credited, "blocked party paid in full");
+        assertEq(s.withdrawableOf(alice), 0);
+
+        vm.expectRevert(Slot.NothingToClaim.selector);
+        s.claim(alice);
+    }
+
+    /// @dev The vacant branch of the same refund: the slot went vacant before
+    ///      the boundary, so the incoming buyer gets their purchase price back.
+    ///      A blocked BUYER must not brick the slot either.
+    function test_BlockedBuyerRefund_OnVacantMaterialisation_DoesNotBrickSlot() public {
+        Slot s = _blockSlot(3600);
+
+        vm.warp(3600);
+        _buyBlk(s, alice, 100 ether, 100 ether);
+        vm.warp(2 * uint256(3600) + 1);
+        s.collect();
+
+        _buyBlk(s, bob, 50 ether, 80 ether); // pays 100 price + 50 deposit
+
+        vm.prank(alice);
+        s.release(); // slot goes vacant before the boundary
+
+        blk.setBlocked(bob, true);
+
+        vm.warp(3 * uint256(3600) + 1);
+        s.collect();
+
+        assertEq(s.occupant(), bob, "bob still lands as occupant");
+        assertEq(s.withdrawableOf(bob), 100 ether, "his price came back as a credit");
+
+        blk.setBlocked(bob, false);
+        uint256 before = blk.balanceOf(bob);
+        s.claim(bob);
+        assertEq(blk.balanceOf(bob), before + 100 ether);
+    }
+
+    /// @dev Non-epoch path: a blocked outgoing occupant must not be able to
+    ///      veto their own forced sale by being unpayable.
+    function test_BlockedOutgoingOccupant_ImmediateBuyStillSucceeds() public {
+        Slot s = _blockSlot(0);
+
+        _buyBlk(s, alice, 100 ether, 100 ether);
+        blk.setBlocked(alice, true);
+
+        _buyBlk(s, bob, 100 ether, 120 ether);
+        assertEq(s.occupant(), bob, "forced sale completed");
+        assertGt(s.withdrawableOf(alice), 0, "alice credited rather than paid");
+    }
+
+    /// @dev The happy path must be unchanged — a well-behaved token still
+    ///      pushes atomically and nothing lands in `withdrawableOf`.
+    function test_UnblockedRefund_StillPushedAtomically() public {
+        Slot s = _epochSlot(3600);
+
+        vm.warp(3600);
+        _buy(s, alice, 100 ether, 100 ether);
+        vm.warp(2 * uint256(3600) + 1);
+        s.collect();
+
+        uint256 aliceBefore = token.balanceOf(alice);
+        _buy(s, bob, 100 ether, 100 ether);
+        vm.warp(3 * uint256(3600) + 1);
+        s.collect();
+
+        assertGt(token.balanceOf(alice), aliceBefore + 100 ether - 1 ether, "pushed, not credited");
+        assertEq(s.withdrawableOf(alice), 0, "nothing left pending");
     }
 }

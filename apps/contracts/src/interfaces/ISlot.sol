@@ -148,4 +148,10 @@ interface ISlotEvents {
     );
 
     event OperatorSet(address indexed occupant, address indexed operator, bool approved);
+
+    /// @notice A refund could not be pushed and was credited for later `claim()`.
+    event RefundCredited(address indexed account, uint256 amount);
+
+    /// @notice A previously credited refund was claimed.
+    event RefundClaimed(address indexed account, uint256 amount);
 }

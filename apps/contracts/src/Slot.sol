@@ -42,6 +42,7 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     error PolicyNotMutable();
     error TransferPending();
     error NotFactory();
+    error NothingToClaim();
 
     // ═══════════════════════════════════════════════════════════
     // STORAGE — KEEP ORDER, APPEND ONLY
@@ -105,6 +106,18 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     /// @notice occupant => operator => approved. Keyed by occupant so approvals
     ///         survive leaving and re-entering, matching setApprovalForAll.
     mapping(address => mapping(address => bool)) public isOperator; // slot 22
+
+    /// @notice Refunds that could not be pushed, claimable with `claim()`.
+    /// @dev Escape hatch for a refund recipient the currency refuses to pay —
+    ///      a USDC-style blocklist, a contract that reverts on receipt, a token
+    ///      returning false. `_materialize` runs inside `_settle()`, which is
+    ///      the first statement of EVERY mutating entry point, so a refund that
+    ///      reverts would otherwise brick `buy`, `release`, `selfAssess`,
+    ///      `topUp`, `withdraw`, `liquidate` AND `collect` permanently —
+    ///      locking the outgoing deposit, the incoming buyer's escrow and all
+    ///      accrued tax. Crediting instead keeps the slot fully functional and
+    ///      the blocked party whole once they can receive again.
+    mapping(address => uint256) public withdrawableOf; // slot 23
 
     // ═══════════════════════════════════════════════════════════
     // INITIALIZATION
@@ -276,18 +289,19 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
             return;
         }
 
-        // Immediate path — refund the outgoing occupant now.
-        if (prev != address(0)) {
-            uint256 refund = _deposit + currentPrice;
-            _deposit = 0;
-            if (refund > 0) currency.safeTransfer(prev, refund);
-        }
+        // Immediate path — refund the outgoing occupant. Computed here, paid
+        // after the state writes, and never allowed to revert: an outgoing
+        // occupant the currency refuses to pay must not be able to veto their
+        // own forced sale.
+        uint256 refund = prev == address(0) ? 0 : _deposit + currentPrice;
 
         _occupant = account;
         _price = selfAssessedPrice;
         _deposit = depositAmount;
         occupiedSince = block.timestamp;
         lastSettled = block.timestamp;
+
+        if (refund > 0) _payOrCredit(prev, refund);
 
         _notifyModule(
             "onTransfer",
@@ -469,6 +483,18 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
             EVT_LIQUIDATED,
             abi.encode(msg.sender, prev, bounty)
         );
+    }
+
+    /// @notice Withdraw a refund that could not be pushed at the time.
+    /// @dev Permissionless in who may CALL it, but the funds always go to
+    ///      `account` — a keeper or the account itself can trigger it, nobody
+    ///      can redirect it.
+    function claim(address account) external nonReentrant {
+        uint256 amount = withdrawableOf[account];
+        if (amount == 0) revert NothingToClaim();
+        withdrawableOf[account] = 0;
+        currency.safeTransfer(account, amount);
+        emit RefundClaimed(account, amount);
     }
 
     /// @notice Flush accumulated tax to recipient (minus module fee if any)
@@ -719,13 +745,16 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         _accrue(p.effectiveAt);
 
         address prev = _occupant;
+        address payee;
+        uint256 refund;
         if (prev != address(0)) {
-            uint256 refund = _deposit + p.pricePaid;
-            if (refund > 0) currency.safeTransfer(prev, refund);
+            payee = prev;
+            refund = _deposit + p.pricePaid;
         } else if (p.pricePaid > 0) {
             // The slot went vacant (release/liquidation) before the boundary, so
             // the buyer paid a price for a slot nobody holds. Give it back.
-            currency.safeTransfer(p.buyer, p.pricePaid);
+            payee = p.buyer;
+            refund = p.pricePaid;
         }
 
         _occupant = p.buyer;
@@ -734,6 +763,12 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         occupiedSince = p.effectiveAt;
         lastSettled = p.effectiveAt;
         delete pendingTransfer;
+
+        // Interactions last, and never in a way that can revert: a refund the
+        // currency refuses becomes a claimable credit. `_materialize` runs
+        // inside `_settle()`, so a hard revert here would brick every mutating
+        // entry point on the slot, not just this one transfer.
+        _payOrCredit(payee, refund);
 
         _applyPendingUpdates();
 
@@ -799,6 +834,40 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     function _enforceMinDepositExisting(uint256 price_) internal view {
         uint256 minDep = _minDepositFor(price_);
         if (_deposit < minDep) revert InsufficientDeposit();
+    }
+
+    /// @dev Pay `to`, and if the currency refuses, credit them instead so the
+    ///      slot itself never becomes unusable.
+    ///
+    ///      This is a try-push-then-credit, not a bare pull payment: the happy
+    ///      path (any well-behaved token, any unblocked recipient) still
+    ///      settles atomically, which is what every caller and integrator
+    ///      already expects, while a blocklisting token or a reverting
+    ///      recipient degrades to a claimable credit instead of bricking every
+    ///      entry point through `_settle()`.
+    ///
+    ///      Deliberately a raw `call` rather than `safeTransfer`: SafeERC20
+    ///      reverts internally and an internal library call cannot be
+    ///      try/caught. The success condition mirrors SafeERC20's — the call
+    ///      must succeed AND either return nothing or return true — with the
+    ///      extra requirement that the currency actually has code, so a
+    ///      codeless address can never be mistaken for a successful payment.
+    function _payOrCredit(address to, uint256 amount) internal {
+        if (amount == 0) return;
+
+        address token = address(currency);
+        bool paid;
+        if (token.code.length > 0) {
+            (bool ok, bytes memory data) = token.call(
+                abi.encodeCall(IERC20.transfer, (to, amount))
+            );
+            paid = ok && (data.length == 0 || abi.decode(data, (bool)));
+        }
+
+        if (!paid) {
+            withdrawableOf[to] += amount;
+            emit RefundCredited(to, amount);
+        }
     }
 
     /// @dev Query module fee and split tax between module and recipient
