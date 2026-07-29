@@ -1681,9 +1681,14 @@ And in `getSlotInfo()`, switch the three assignments to the resolving getters:
         info.deposit = deposit();
 ```
 
-- [ ] **Step 5: Make `onlyOccupant` use the resolving getter**
+- [ ] **Step 5: Verify `onlyOccupant` resolves (already pulled forward)**
 
-Critical — otherwise the outgoing occupant can still act past the boundary:
+This was moved into Task 7 as a Critical fix — leaving it until Task 8 left a
+window where the outgoing occupant passed the modifier, `_settle()` then swapped
+in the incoming occupant's escrow, and `withdraw()` paid the *old* occupant out
+of the *new* one's deposit. Deterministic theft, not a race.
+
+Confirm the modifier already reads:
 
 ```solidity
     modifier onlyOccupant() {
@@ -1691,6 +1696,10 @@ Critical — otherwise the outgoing occupant can still act past the boundary:
         _;
     }
 ```
+
+If Task 7 introduced its own `_transferMatured()` helper, keep that one — do not
+declare a second. If the modifier still compares against `_occupant`, apply the
+change here.
 
 - [ ] **Step 6: Make the policy context resolve too**
 
