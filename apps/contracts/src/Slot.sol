@@ -40,6 +40,7 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     error InvalidCurrency();
     error InvalidModule_NoCode();
     error PolicyNotMutable();
+    error TransferPending();
 
     // ═══════════════════════════════════════════════════════════
     // STORAGE — KEEP ORDER, APPEND ONLY
@@ -85,6 +86,20 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         bool hasPolicyUpdate;
     }
     PendingPolicyUpdate public pendingPolicyUpdate; // slot 17
+
+    /// @notice A committed-but-not-yet-effective occupancy transfer.
+    /// @dev `pricePaid` is stored explicitly rather than re-read from `_price`
+    ///      at materialisation. Redundant today (selfAssess is blocked while a
+    ///      transfer is pending) but it keeps the refund correct if that
+    ///      ordering ever changes.
+    struct PendingTransfer {
+        address buyer;       // slot 18, offset 0
+        uint96 effectiveAt;  // slot 18, offset 20
+        uint256 deposit;     // slot 19
+        uint256 newPrice;    // slot 20
+        uint256 pricePaid;   // slot 21
+    }
+    PendingTransfer public pendingTransfer;
 
     // ═══════════════════════════════════════════════════════════
     // INITIALIZATION
@@ -179,6 +194,8 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         // Stage 2 relies on this ordering too — see Task 6.
         _settle();
 
+        if (pendingTransfer.effectiveAt != 0) revert TransferPending();
+
         if (account == _occupant) revert CannotBuyFromYourself();
 
         if (occupancyPolicy != address(0)) {
@@ -190,68 +207,56 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         uint256 currentPrice = _price;
         address prev = _occupant;
 
-        // Apply pending updates (ownership is transitioning)
-        _applyPendingUpdates();
-
-        // Enforce minimum deposit (using potentially updated tax rate)
-        _enforceMinDeposit(depositAmount, selfAssessedPrice);
-
-        if (prev == address(0)) {
-            // Vacant: payer just deposits, no payment to anyone
-            if (depositAmount > 0) {
-                currency.safeTransferFrom(
-                    msg.sender,
-                    address(this),
-                    depositAmount
-                );
-            }
-        } else {
-            // Occupied: payer pays price + deposit in one transfer
-            uint256 totalFromBuyer = currentPrice + depositAmount;
-            if (totalFromBuyer > 0) {
-                currency.safeTransferFrom(
-                    msg.sender,
-                    address(this),
-                    totalFromBuyer
-                );
-            }
-
-            // Refund previous occupant: their remaining deposit + purchase price
-            uint256 refund = _deposit + currentPrice;
-            _deposit = 0;
-            if (refund > 0) {
-                currency.safeTransfer(prev, refund);
-            }
+        // Epochs off — apply pending updates now, as before.
+        if (epochSeconds == 0) {
+            _applyPendingUpdates();
         }
 
-        // Update state — account is the occupant, not msg.sender
+        _enforceMinDeposit(depositAmount, selfAssessedPrice);
+
+        // Pull what the buyer owes. Vacant slots cost only the deposit.
+        uint256 owedByBuyer = prev == address(0)
+            ? depositAmount
+            : currentPrice + depositAmount;
+        if (owedByBuyer > 0) {
+            currency.safeTransferFrom(msg.sender, address(this), owedByBuyer);
+        }
+
+        if (epochSeconds > 0) {
+            uint256 effectiveAt = nextBoundary();
+            pendingTransfer = PendingTransfer({
+                buyer: account,
+                effectiveAt: uint96(effectiveAt),
+                deposit: depositAmount,
+                newPrice: selfAssessedPrice,
+                pricePaid: prev == address(0) ? 0 : currentPrice
+            });
+            emit TransferScheduled(account, effectiveAt, selfAssessedPrice, depositAmount);
+            return;
+        }
+
+        // Immediate path — refund the outgoing occupant now.
+        if (prev != address(0)) {
+            uint256 refund = _deposit + currentPrice;
+            _deposit = 0;
+            if (refund > 0) currency.safeTransfer(prev, refund);
+        }
+
         _occupant = account;
         _price = selfAssessedPrice;
         _deposit = depositAmount;
-        lastSettled = block.timestamp;
         occupiedSince = block.timestamp;
+        lastSettled = block.timestamp;
 
         _notifyModule(
             "onTransfer",
             abi.encodeCall(ISlotsModule.onTransfer, (0, prev, account))
         );
 
-        emit Bought(
-            account,
-            prev,
-            currentPrice,
-            depositAmount,
-            selfAssessedPrice
-        );
+        emit Bought(account, prev, currentPrice, depositAmount, selfAssessedPrice);
         _emitProtocolEvent(
             EVT_BOUGHT,
-            abi.encode(
-                account,
-                prev,
-                currentPrice,
-                depositAmount,
-                selfAssessedPrice
-            )
+            abi.encode(account, prev, currentPrice, depositAmount, selfAssessedPrice)
         );
     }
 
@@ -503,6 +508,14 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
 
     function isVacant() public view returns (bool) {
         return _occupant == address(0);
+    }
+
+    /// @notice The next epoch boundary. Returns `block.timestamp` when epochs
+    ///         are off, so callers can treat both modes uniformly.
+    function nextBoundary() public view returns (uint256) {
+        uint256 e = epochSeconds;
+        if (e == 0) return block.timestamp;
+        return ((block.timestamp / e) + 1) * e;
     }
 
     function getPendingUpdate() external view returns (PendingUpdate memory) {

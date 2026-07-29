@@ -139,4 +139,11 @@ interface ISlotEvents {
     event PolicyUpdateProposed(address newPolicy);
 
     event PolicyUpdateApplied(address newPolicy);
+
+    event TransferScheduled(
+        address indexed buyer,
+        uint256 effectiveAt,
+        uint256 price,
+        uint256 deposit
+    );
 }
