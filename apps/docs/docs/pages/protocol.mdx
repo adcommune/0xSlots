@@ -68,6 +68,9 @@ function topUp(uint256 amount) external;
 /// Withdraw excess deposit
 function withdraw(uint256 amount) external;
 
+/// Delegate management to an operator (occupant only)
+function setOperator(address operator, bool approved) external;
+
 /// Liquidate an insolvent slot (anyone can call, earns bounty)
 function liquidate() external;
 
@@ -127,6 +130,7 @@ advantage without weakening forced sale.
 | **Recipient** | Receives tax + sale proceeds | No control | No control |
 | **Manager** | No revenue | Proposes tax/module changes | No control |
 | **Occupant** | Pays tax | No control | Sets price, manages deposit |
+| **Operator** | No revenue | No control | Delegated by occupant: may `selfAssess` and `topUp`, may **not** `withdraw` or `release` |
 
 ---
 

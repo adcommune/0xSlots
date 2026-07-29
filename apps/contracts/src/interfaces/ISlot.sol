@@ -146,4 +146,6 @@ interface ISlotEvents {
         uint256 price,
         uint256 deposit
     );
+
+    event OperatorSet(address indexed occupant, address indexed operator, bool approved);
 }

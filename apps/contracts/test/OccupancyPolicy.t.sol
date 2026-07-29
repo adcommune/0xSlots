@@ -318,4 +318,65 @@ contract OccupancyPolicyTest is Test {
         vm.stopPrank();
         assertEq(Slot(s).occupant(), alice);
     }
+
+    function test_Operator_CanSelfAssess() public {
+        address agent = makeAddr("agent");
+        address s = factory.createSlot(recipient, IERC20(address(token)), _immutableConfig(), _init());
+
+        vm.startPrank(alice);
+        token.approve(s, type(uint256).max);
+        Slot(s).buy(alice, 10 ether, 100 ether);
+        Slot(s).setOperator(agent, true);
+        vm.stopPrank();
+
+        vm.prank(agent);
+        Slot(s).selfAssess(150 ether);
+        assertEq(Slot(s).price(), 150 ether);
+    }
+
+    function test_Operator_CannotWithdraw() public {
+        address agent = makeAddr("agent");
+        address s = factory.createSlot(recipient, IERC20(address(token)), _immutableConfig(), _init());
+
+        vm.startPrank(alice);
+        token.approve(s, type(uint256).max);
+        Slot(s).buy(alice, 10 ether, 100 ether);
+        Slot(s).setOperator(agent, true);
+        vm.stopPrank();
+
+        vm.prank(agent);
+        vm.expectRevert(Slot.NotOccupant.selector);
+        Slot(s).withdraw(1 ether);
+    }
+
+    function test_Operator_CannotRelease() public {
+        address agent = makeAddr("agent");
+        address s = factory.createSlot(recipient, IERC20(address(token)), _immutableConfig(), _init());
+
+        vm.startPrank(alice);
+        token.approve(s, type(uint256).max);
+        Slot(s).buy(alice, 10 ether, 100 ether);
+        Slot(s).setOperator(agent, true);
+        vm.stopPrank();
+
+        vm.prank(agent);
+        vm.expectRevert(Slot.NotOccupant.selector);
+        Slot(s).release();
+    }
+
+    function test_Operator_RevokedCannotAct() public {
+        address agent = makeAddr("agent");
+        address s = factory.createSlot(recipient, IERC20(address(token)), _immutableConfig(), _init());
+
+        vm.startPrank(alice);
+        token.approve(s, type(uint256).max);
+        Slot(s).buy(alice, 10 ether, 100 ether);
+        Slot(s).setOperator(agent, true);
+        Slot(s).setOperator(agent, false);
+        vm.stopPrank();
+
+        vm.prank(agent);
+        vm.expectRevert(Slot.NotOccupant.selector);
+        Slot(s).selfAssess(150 ether);
+    }
 }

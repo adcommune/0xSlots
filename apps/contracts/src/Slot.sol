@@ -101,6 +101,10 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     }
     PendingTransfer public pendingTransfer;
 
+    /// @notice occupant => operator => approved. Keyed by occupant so approvals
+    ///         survive leaving and re-entering, matching setApprovalForAll.
+    mapping(address => mapping(address => bool)) public isOperator; // slot 22
+
     // ═══════════════════════════════════════════════════════════
     // INITIALIZATION
     // ═══════════════════════════════════════════════════════════
@@ -171,6 +175,15 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
 
     modifier onlyOccupant() {
         if (msg.sender != occupant()) revert NotOccupant();
+        _;
+    }
+
+    /// @dev Uses occupant(), not raw _occupant, so an epoch boundary that has
+    ///      passed but not yet been materialised still resolves approvals
+    ///      against the correct (incoming) occupant.
+    modifier onlyOccupantOrOperator() {
+        address occ = occupant();
+        if (msg.sender != occ && !isOperator[occ][msg.sender]) revert NotOccupant();
         _;
     }
 
@@ -297,8 +310,17 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         _emitProtocolEvent(EVT_RELEASED, abi.encode(prev, refund));
     }
 
-    /// @notice Occupant self-assesses a new price
-    function selfAssess(uint256 newPrice) external nonReentrant onlyOccupant {
+    /// @notice Delegate slot management to an operator (e.g. an agent).
+    /// @dev Operators may selfAssess and topUp. They may NOT withdraw or
+    ///      release — those move the position's principal and stay
+    ///      occupant-only. Bounded authority is the point.
+    function setOperator(address operator, bool approved) external {
+        isOperator[msg.sender][operator] = approved;
+        emit OperatorSet(msg.sender, operator, approved);
+    }
+
+    /// @notice Occupant (or an approved operator) self-assesses a new price
+    function selfAssess(uint256 newPrice) external nonReentrant onlyOccupantOrOperator {
         if (newPrice == 0) revert InvalidPrice();
 
         // Settle first: materialises any matured transfer, so the guard below
