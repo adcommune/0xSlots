@@ -301,13 +301,18 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     function selfAssess(uint256 newPrice) external nonReentrant onlyOccupant {
         if (newPrice == 0) revert InvalidPrice();
 
+        // Settle first: materialises any matured transfer, so the guard below
+        // only rejects a genuinely still-pending one and the policy sees
+        // current state.
+        _settle();
+
+        if (pendingTransfer.effectiveAt != 0) revert TransferPending();
+
         if (occupancyPolicy != address(0)) {
             IOccupancyPolicy(occupancyPolicy).checkPriceUpdate(
                 _occupancyCtx(occupant(), newPrice, deposit())
             );
         }
-
-        _settle();
 
         uint256 oldPrice = _price;
         _price = newPrice;

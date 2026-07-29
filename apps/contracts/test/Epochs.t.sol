@@ -307,4 +307,80 @@ contract EpochsTest is Test {
         uint256 expected = numerator / denominator;
         assertApproxEqAbs(s.taxOwed(), expected, 2);
     }
+
+    /// Without this, the outgoing occupant raises their price after seeing a
+    /// commit and dodges the sale.
+    function test_SelfAssess_BlockedWhileTransferPending() public {
+        Slot s = _epochSlot(HOUR);
+        vm.warp(HOUR);
+        _buy(s, alice, 100 ether, 100 ether);
+        vm.warp(2 * uint256(HOUR) + 1); // nudge past the exact boundary, see
+                                         // note in test_OutgoingOccupantPaysUntilBoundary_ThenIncomingPays
+        s.collect();
+
+        _buy(s, bob, 50 ether, 80 ether);
+
+        vm.prank(alice);
+        vm.expectRevert(Slot.TransferPending.selector);
+        s.selfAssess(500 ether);
+    }
+
+    function test_ReleaseBeforeBoundary_TransferStillLands() public {
+        Slot s = _epochSlot(HOUR);
+        vm.warp(HOUR);
+        _buy(s, alice, 100 ether, 100 ether);
+        vm.warp(2 * uint256(HOUR) + 1); // nudge past the exact boundary, see
+                                         // note in test_OutgoingOccupantPaysUntilBoundary_ThenIncomingPays
+        s.collect();
+
+        _buy(s, bob, 50 ether, 80 ether);
+
+        vm.prank(alice);
+        s.release();
+        assertEq(s.occupant(), address(0), "vacant until the boundary");
+
+        vm.warp(3 * uint256(HOUR) + 1);
+        assertEq(s.occupant(), bob, "transfer still lands");
+    }
+
+    /// Bob paid alice's price for a slot that went vacant — he must get it back.
+    function test_VacantAtMaterialisation_RefundsBuyersPrice() public {
+        Slot s = _epochSlot(HOUR);
+        vm.warp(HOUR);
+        _buy(s, alice, 100 ether, 100 ether);
+        vm.warp(2 * uint256(HOUR) + 1); // nudge past the exact boundary, see
+                                         // note in test_OutgoingOccupantPaysUntilBoundary_ThenIncomingPays
+        s.collect();
+
+        uint256 bobBefore = token.balanceOf(bob);
+        _buy(s, bob, 50 ether, 80 ether); // pays 100 price + 50 deposit
+
+        vm.prank(alice);
+        s.release();
+
+        vm.warp(3 * uint256(HOUR) + 1);
+        s.collect();
+
+        // Bob is out only his deposit; the 100 ether price came back.
+        assertEq(token.balanceOf(bob), bobBefore - 50 ether);
+        assertEq(s.occupant(), bob);
+    }
+
+    function test_LiquidateBeforeBoundary_TransferStillLands() public {
+        Slot s = _epochSlot(HOUR);
+        vm.warp(HOUR);
+        _buy(s, alice, 1, 100 ether); // dust deposit — insolvent almost at once
+        vm.warp(2 * uint256(HOUR) + 1); // nudge past the exact boundary, see
+                                         // note in test_OutgoingOccupantPaysUntilBoundary_ThenIncomingPays
+        s.collect();
+
+        _buy(s, bob, 100 ether, 80 ether);
+
+        vm.warp(2 * uint256(HOUR) + 60);
+        s.liquidate();
+        assertEq(s.occupant(), address(0));
+
+        vm.warp(3 * uint256(HOUR) + 1);
+        assertEq(s.occupant(), bob);
+    }
 }
