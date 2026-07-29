@@ -383,4 +383,50 @@ contract EpochsTest is Test {
         vm.warp(3 * uint256(HOUR) + 1);
         assertEq(s.occupant(), bob);
     }
+
+    /// The core Stage 2 invariant: splitting accrual across a boundary must
+    /// charge exactly what one continuous stream would have. No gap, no
+    /// double-charge. Alice and bob are given the SAME price on purpose so
+    /// the whole [start, end) window is one continuous-rate stream and the
+    /// two-leg sum is directly comparable to a single-leg calculation — the
+    /// differing-price case is already covered explicitly, leg by leg, in
+    /// test_OutgoingOccupantPaysUntilBoundary_ThenIncomingPays.
+    function testFuzz_TaxConservedAcrossBoundary(uint32 offset, uint32 tail) public {
+        offset = uint32(bound(offset, 1, HOUR - 1));
+        tail = uint32(bound(tail, 1, 10 * HOUR));
+
+        Slot s = _epochSlot(HOUR);
+        vm.warp(HOUR);
+        _buy(s, alice, 1000 ether, 100 ether);
+
+        // Nudge past the exact boundary before collecting — see the note in
+        // test_OutgoingOccupantPaysUntilBoundary_ThenIncomingPays: warping to
+        // exactly the boundary and calling collect() there reverts
+        // NothingToCollect() (materialisation itself accrues nothing, and
+        // zero time has elapsed since for the newly-materialised occupant).
+        vm.warp(2 * uint256(HOUR) + 1);
+        s.collect();
+
+        // `start`/`end` are literal constant-derived expressions, never a
+        // local captured from `block.timestamp` and re-read after an
+        // intervening vm.warp() — see the via_ir note in
+        // test_OutgoingOccupantPaysUntilBoundary_ThenIncomingPays. `start` is
+        // the instant alice's occupancy materialised (the first boundary),
+        // which is exactly where the recipient's balance starts climbing.
+        uint256 start = 2 * uint256(HOUR);
+        vm.warp(start + offset);
+        _buy(s, bob, 1000 ether, 100 ether); // same price — stream is continuous
+
+        uint256 end = 3 * uint256(HOUR) + tail;
+        vm.warp(end);
+        s.collect();
+
+        uint256 expected = (100 ether * 100 * (end - start)) / (30 days * 10_000);
+        // Four integer divisions happen across this test (the nudge-collect,
+        // the implicit settle inside bob's buy(), the outgoing leg at
+        // materialisation, and the incoming leg) where a continuous stream
+        // would compute exactly one — tolerance covers the accumulated
+        // floor-division loss, not a masked bug.
+        assertApproxEqAbs(token.balanceOf(recipient), expected, 4);
+    }
 }

@@ -92,6 +92,34 @@ Tax accrues linearly: `taxOwed = price * taxPercentage * elapsed / (30 days * 10
 
 The occupant maintains a deposit that covers future tax. When depleted, anyone can `liquidate()` and earn a bounty.
 
+### Epochs
+
+A slot can be configured with `epochSeconds` so occupancy changes only take
+effect on a clock boundary. `epochSeconds = 0` (the default) means instant buy.
+
+With `epochSeconds = 3600`:
+
+```
+14:14  buyer calls buy()   — funds are escrowed, current occupant keeps occupying
+15:00  boundary            — occupancy AND tax liability transfer to the buyer
+```
+
+Nothing runs on a timer. The transfer is applied lazily on the next interaction
+with the contract, and `occupant()`, `price()`, `deposit()`, and `taxOwed()` all
+report the post-boundary state as soon as the boundary passes.
+
+- **First commit wins.** A second `buy()` while a transfer is pending reverts.
+- **Commits cannot be cancelled** — otherwise a slot could be locked every epoch.
+- **`selfAssess()` is blocked while a transfer is pending**, so the outgoing
+  occupant cannot raise their price to dodge a sale they have already seen.
+- If the occupant releases or is liquidated before the boundary, the slot goes
+  vacant and the scheduled transfer still lands. The buyer's purchase price is
+  refunded, since a vacant slot costs only the deposit.
+
+**Harberger impact: near-pure.** Everyone gets the same sub-epoch delay and
+nobody chooses theirs, so there is nothing to game — it removes the latency
+advantage without weakening forced sale.
+
 ### Roles
 
 | Role | Revenue | Config | Slot state |
