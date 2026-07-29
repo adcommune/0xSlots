@@ -15,6 +15,36 @@ contract MockERC20 is ERC20 {
     function mint(address to, uint256 amount) external { _mint(to, amount); }
 }
 
+/// @dev Mimics just enough of Slot's external surface to probe SlotQueue's
+///      trust boundary. NOT registered with any SlotFactory — that is the
+///      whole point: `factory.isSlot(address(this))` must be false, and
+///      `joinQueue` must reject it before ever calling `currency()`. If it
+///      weren't rejected, `flipToReal` demonstrates the attack C1 closes: a
+///      slot that reports a worthless token at join time (cheap escrow) and
+///      the real pooled currency later (draining other slots' bidders).
+contract EvilSlot {
+    IERC20 public fakeCurrency;
+    IERC20 public realCurrency;
+    bool public useReal;
+
+    constructor(IERC20 _fake, IERC20 _real) {
+        fakeCurrency = _fake;
+        realCurrency = _real;
+    }
+
+    function currency() external view returns (IERC20) {
+        return useReal ? realCurrency : fakeCurrency;
+    }
+
+    function occupant() external pure returns (address) {
+        return address(0);
+    }
+
+    function flipToReal() external {
+        useReal = true;
+    }
+}
+
 contract SlotQueueTest is Test {
     SlotFactory factory;
     MockERC20 token;
@@ -23,6 +53,7 @@ contract SlotQueueTest is Test {
     address recipient = makeAddr("recipient");
     address alice = makeAddr("alice");
     address bob = makeAddr("bob");
+    address carol = makeAddr("carol");
     address keeper = makeAddr("keeper");
 
     function setUp() public {
@@ -34,9 +65,10 @@ contract SlotQueueTest is Test {
         );
         factory = SlotFactory(address(proxy));
         token = new MockERC20();
-        queue = new SlotQueue();
+        queue = new SlotQueue(address(factory));
         token.mint(alice, 1000 ether);
         token.mint(bob, 1000 ether);
+        token.mint(carol, 1000 ether);
         vm.warp(1_000_000);
     }
 
@@ -50,6 +82,25 @@ contract SlotQueueTest is Test {
                 module: address(0),
                 liquidationBountyBps: 500,
                 minDepositSeconds: 0
+            })
+        ));
+    }
+
+    /// @dev A slot whose minimum deposit is a real, nonzero function of the
+    ///      buyer's self-assessed price: minDep = price * taxPercentage *
+    ///      minDepositSeconds / (MONTH * BASIS_POINTS). With taxPercentage =
+    ///      1000 (10%) and minDepositSeconds = 30 days = MONTH, that reduces
+    ///      to minDep = price / 10 — e.g. 8 ether for an 80 ether bid.
+    function _slotWithMinDeposit() internal returns (Slot) {
+        return Slot(factory.createSlot(
+            recipient,
+            IERC20(address(token)),
+            SlotConfig({mutableTax: false, mutableModule: false, manager: address(0)}),
+            SlotInitParams({
+                taxPercentage: 1000,
+                module: address(0),
+                liquidationBountyBps: 500,
+                minDepositSeconds: 30 days
             })
         ));
     }
@@ -94,17 +145,30 @@ contract SlotQueueTest is Test {
         queue.fill(address(s));
     }
 
+    /// @dev Rewritten per security fix-round I2: the original assertion was
+    ///      trivially true because `fill()` reverted, so nothing had run.
+    ///      This now drives the refund through the permissionless
+    ///      `sweepExpired` (its own transaction, so its effects commit
+    ///      instead of being unwound by a later revert — see I1), asserts
+    ///      the bidder actually got their money back, and only then checks
+    ///      that a subsequent `fill()` correctly reports the queue empty.
     function test_Fill_SkipsExpiredBid() public {
         Slot s = _slot();
+        uint256 before = token.balanceOf(bob);
         vm.startPrank(bob);
         token.approve(address(queue), type(uint256).max);
         queue.joinQueue(address(s), 80 ether, 10 ether, 1 ether, uint96(block.timestamp + 1 days));
         vm.stopPrank();
 
         vm.warp(block.timestamp + 2 days);
+
+        queue.sweepExpired(address(s), 10);
+        assertEq(token.balanceOf(bob), before, "expired bid refunded by sweep");
+        assertTrue(queue.isEmpty(address(s)));
+        assertEq(queue.liveBidCount(address(s)), 0);
+
         vm.expectRevert(SlotQueue.QueueEmpty.selector);
         queue.fill(address(s));
-        assertTrue(queue.isEmpty(address(s)));
     }
 
     function test_Cancel_RefundsBidder() public {
@@ -122,5 +186,119 @@ contract SlotQueueTest is Test {
     function test_IsEmpty_TrueWhenNoBids() public {
         Slot s = _slot();
         assertTrue(queue.isEmpty(address(s)));
+    }
+
+    /// @dev Security fix C1: `slot` is attacker-controllable input into a
+    ///      contract holding ONE pooled escrow balance across every slot's
+    ///      bidders. An unregistered "slot" must be rejected before
+    ///      `joinQueue` ever calls `currency()` on it — otherwise a fake
+    ///      slot could report a worthless token at join time and the real
+    ///      pooled currency later, via `cancel`/`fill`, draining other
+    ///      slots' bidders. `factory.isSlot` is the gate.
+    function test_JoinQueue_RevertsForUnregisteredSlot() public {
+        MockERC20 fakeToken = new MockERC20();
+        EvilSlot evil = new EvilSlot(IERC20(address(fakeToken)), IERC20(address(token)));
+        assertFalse(factory.isSlot(address(evil)), "sanity: evil slot is not factory-registered");
+
+        vm.startPrank(bob);
+        token.approve(address(queue), type(uint256).max);
+        vm.expectRevert(SlotQueue.NotASlot.selector);
+        queue.joinQueue(address(evil), 80 ether, 10 ether, 1 ether, uint96(block.timestamp + 30 days));
+        vm.stopPrank();
+
+        // Even the switch itself is inert: without ever accepting the join,
+        // there is no cached currency and no escrow for EvilSlot to reach.
+        evil.flipToReal();
+        assertTrue(evil.useReal());
+    }
+
+    /// @dev Security fix C2: a bid that will always revert `Slot.buy()`
+    ///      (here, an underfunded deposit for the slot's minimum-deposit
+    ///      policy) must not block the queue forever. `fill()` catches the
+    ///      revert, refunds and skips exactly that one bid, and returns
+    ///      normally — a follow-up `fill()` call then reaches and fills the
+    ///      next, properly-funded bid.
+    function test_Fill_SkipsUnfillableBid_ThenFillsNext() public {
+        Slot s = _slotWithMinDeposit();
+
+        uint256 bobBefore = token.balanceOf(bob);
+        vm.startPrank(bob);
+        token.approve(address(queue), type(uint256).max);
+        // 80 ether price needs an 8 ether minimum deposit on this slot; 1
+        // ether is deliberately insufficient, so Slot.buy() will revert
+        // InsufficientDeposit for this bid specifically.
+        queue.joinQueue(address(s), 80 ether, 1 ether, 1 ether, uint96(block.timestamp + 30 days));
+        vm.stopPrank();
+
+        vm.startPrank(carol);
+        token.approve(address(queue), type(uint256).max);
+        queue.joinQueue(address(s), 80 ether, 10 ether, 1 ether, uint96(block.timestamp + 30 days));
+        vm.stopPrank();
+
+        // First fill(): bob's bid is skipped and refunded, not filled.
+        queue.fill(address(s));
+        assertEq(s.occupant(), address(0), "slot still vacant after a skip");
+        assertEq(token.balanceOf(bob), bobBefore, "bob refunded deposit + tip in full");
+        assertEq(queue.headIndex(address(s)), 1, "head advanced past the skipped bid");
+
+        // Second fill(): carol's properly-funded bid, now at the head, succeeds.
+        uint256 keeperBefore = token.balanceOf(keeper);
+        vm.prank(keeper);
+        queue.fill(address(s));
+        assertEq(s.occupant(), carol);
+        assertEq(s.price(), 80 ether);
+        assertEq(token.balanceOf(keeper), keeperBefore + 1 ether, "keeper tipped for the successful fill");
+        assertTrue(queue.isEmpty(address(s)));
+    }
+
+    /// @dev Security fix C3: `isEmpty`/`liveBidCount` must track join,
+    ///      cancel and fill in O(1) without ever rescanning the bid array.
+    function test_LiveBidCount_JoinThenCancel() public {
+        Slot s = _slot();
+        assertTrue(queue.isEmpty(address(s)));
+        assertEq(queue.liveBidCount(address(s)), 0);
+
+        vm.startPrank(bob);
+        token.approve(address(queue), type(uint256).max);
+        queue.joinQueue(address(s), 80 ether, 10 ether, 1 ether, uint96(block.timestamp + 30 days));
+        vm.stopPrank();
+        assertFalse(queue.isEmpty(address(s)));
+        assertEq(queue.liveBidCount(address(s)), 1);
+
+        vm.prank(bob);
+        queue.cancel(address(s), 0);
+        assertTrue(queue.isEmpty(address(s)));
+        assertEq(queue.liveBidCount(address(s)), 0);
+    }
+
+    function test_LiveBidCount_JoinThenFill() public {
+        Slot s = _slot();
+        vm.startPrank(bob);
+        token.approve(address(queue), type(uint256).max);
+        queue.joinQueue(address(s), 80 ether, 10 ether, 1 ether, uint96(block.timestamp + 30 days));
+        vm.stopPrank();
+        assertEq(queue.liveBidCount(address(s)), 1);
+        assertFalse(queue.isEmpty(address(s)));
+
+        queue.fill(address(s));
+        assertEq(queue.liveBidCount(address(s)), 0);
+        assertTrue(queue.isEmpty(address(s)));
+    }
+
+    /// @dev Security fix M1: an already-resolved bid (here, filled) cannot
+    ///      be "cancelled" afterward — that would emit a misleading
+    ///      BidCancelled with no funds left to move.
+    function test_Cancel_RevertsForAlreadyProcessedBid() public {
+        Slot s = _slot();
+        vm.startPrank(bob);
+        token.approve(address(queue), type(uint256).max);
+        queue.joinQueue(address(s), 80 ether, 10 ether, 1 ether, uint96(block.timestamp + 30 days));
+        vm.stopPrank();
+
+        queue.fill(address(s));
+
+        vm.prank(bob);
+        vm.expectRevert(SlotQueue.AlreadyProcessed.selector);
+        queue.cancel(address(s), 0);
     }
 }
