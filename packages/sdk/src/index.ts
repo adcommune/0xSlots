@@ -25,6 +25,22 @@ export {
   getDefaultToken,
 } from "./tokens";
 
+// Occupancy resolution (v3 epochs)
+//
+// REQUIRED for any UI reading occupancy from the subgraph: between an epoch
+// boundary and the transaction that materialises the transfer, indexed
+// `occupant` names the OLD occupant while the chain already names the new one.
+// resolveEffectiveOccupancy closes that gap; the subgraph cannot, because
+// GraphQL has no "now" at query time.
+export {
+  resolveEffectiveOccupancy,
+  nextBoundary,
+  secondsUntilEffective,
+  canAttemptBuy,
+  type OccupancyFields,
+  type EffectiveOccupancy,
+} from "./occupancy";
+
 // Errors
 export { SlotsError } from "./errors";
 

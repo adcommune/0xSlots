@@ -14,6 +14,13 @@ import {
   PendingUpdateCancelled,
   LiquidationBountyUpdated,
   ModuleFeePaid,
+  TransferScheduled,
+  SlotConfiguredV3,
+  OperatorSet,
+  PolicyUpdateProposed,
+  PolicyUpdateApplied,
+  RefundCredited,
+  RefundClaimed,
 } from "../generated/templates/Slot/Slot";
 import {
   Slot,
@@ -30,6 +37,14 @@ import {
   PendingUpdateCancelledEvent,
   ModuleFeePaidEvent,
   Module,
+  TransferScheduledEvent,
+  OperatorSetEvent,
+  SlotOperator,
+  PolicyUpdateProposedEvent,
+  PolicyUpdateAppliedEvent,
+  RefundCreditedEvent,
+  RefundClaimedEvent,
+  SlotRefund,
 } from "../generated/schema";
 import { getOrCreateAccount, getOrCreateAccountSlot, getOrCreateModule } from "./helpers";
 
@@ -63,7 +78,11 @@ export function handleBought(event: Bought): void {
     prevAccount.save();
   }
 
-  // Set new occupant — buyer is always the tx sender
+  // Set new occupant. NOTE: `buyer` is the `account` argument to buy(), not
+  // necessarily the tx sender — buy(account, ...) lets one address pay while
+  // another occupies, which is how SlotQueue fills on a bidder's behalf. On an
+  // epoch slot this event also fires in a LATER transaction than the buy, sent
+  // by whoever happened to materialise the transfer. Never read tx.from here.
   let buyerAccount = getOrCreateAccount(event.params.buyer, true);
   buyerAccount.occupiedCount += 1;
   buyerAccount.save();
@@ -78,6 +97,26 @@ export function handleBought(event: Bought): void {
   slot.isOccupied = true;
   slot.price = event.params.selfAssessedPrice;
   slot.deposit = event.params.deposit;
+
+  // On an epoch slot the tenure began at the BOUNDARY, not at the transaction
+  // that happened to materialise it — `_materialize` sets
+  // `occupiedSince = p.effectiveAt`, and MinimumTenurePolicy measures from
+  // exactly that. Using the block timestamp here would overstate protection by
+  // however long the slot sat unpoked.
+  if (slot.pendingEffectiveAt !== null) {
+    slot.occupiedSince = slot.pendingEffectiveAt as BigInt;
+  } else {
+    slot.occupiedSince = event.block.timestamp;
+  }
+
+  // This event IS the materialisation, so the scheduled transfer is now spent.
+  // Leaving it set would make clients keep resolving to a "pending" buyer who
+  // has already become the occupant.
+  slot.pendingBuyer = null;
+  slot.pendingEffectiveAt = null;
+  slot.pendingPrice = null;
+  slot.pendingDeposit = null;
+
   slot.updatedAt = event.block.timestamp;
   slot.save();
 
@@ -121,6 +160,11 @@ export function handleReleased(event: Released): void {
   slot.price = BigInt.zero();
   slot.deposit = BigInt.zero();
   slot.collectedTax = BigInt.zero();
+  slot.occupiedSince = BigInt.zero();
+  // A scheduled transfer deliberately SURVIVES vacancy: release/liquidate
+  // before the boundary leave the slot empty, and the transfer still lands at
+  // its boundary (the buyer's purchase price is refunded then). Do not clear
+  // pendingBuyer here.
   slot.updatedAt = event.block.timestamp;
   slot.save();
 
@@ -161,6 +205,11 @@ export function handleLiquidated(event: Liquidated): void {
   slot.price = BigInt.zero();
   slot.deposit = BigInt.zero();
   slot.collectedTax = BigInt.zero();
+  slot.occupiedSince = BigInt.zero();
+  // A scheduled transfer deliberately SURVIVES vacancy: release/liquidate
+  // before the boundary leave the slot empty, and the transfer still lands at
+  // its boundary (the buyer's purchase price is refunded then). Do not clear
+  // pendingBuyer here.
   slot.updatedAt = event.block.timestamp;
   slot.save();
 
@@ -338,6 +387,204 @@ export function handleModuleFeePaid(event: ModuleFeePaid): void {
   ev.module = moduleId;
   ev.amount = event.params.amount;
   ev.feeBps = event.params.feeBps;
+  ev.timestamp = event.block.timestamp;
+  ev.blockNumber = event.block.number;
+  ev.tx = event.transaction.hash;
+  ev.save();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// v3 OCCUPANCY LAYER
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * A slot's epoch length and occupancy policy, emitted by initializeV3 and
+ * migrateSlotsV3. This is the ONLY on-chain source for either field —
+ * SlotDeployed predates both and carries neither — so without this handler the
+ * subgraph can never tell an hourly slot from an instant-buy one.
+ */
+export function handleSlotConfiguredV3(event: SlotConfiguredV3): void {
+  let slot = getSlot(event.address);
+  slot.epochSeconds = event.params.epochSeconds;
+  if (event.params.occupancyPolicy.equals(Address.zero())) {
+    slot.occupancyPolicy = null;
+  } else {
+    slot.occupancyPolicy = event.params.occupancyPolicy;
+  }
+  slot.updatedAt = event.block.timestamp;
+  slot.save();
+}
+
+/**
+ * A committed-but-not-yet-effective transfer.
+ *
+ * The occupant does NOT change here — the outgoing occupant keeps occupying and
+ * keeps paying tax until the boundary. The matching Bought fires later, in
+ * whatever transaction happens to materialise the transfer.
+ *
+ * Between `effectiveAt` and that transaction, the chain already treats
+ * `buyer` as the occupant while `slot.occupant` still names the old one. The
+ * subgraph cannot close that gap on its own (no "now" at query time), which is
+ * exactly why these fields are exposed for clients to resolve against.
+ */
+export function handleTransferScheduled(event: TransferScheduled): void {
+  let slot = getSlot(event.address);
+  slot.pendingBuyer = event.params.buyer;
+  slot.pendingEffectiveAt = event.params.effectiveAt;
+  slot.pendingPrice = event.params.price;
+  slot.pendingDeposit = event.params.deposit;
+  slot.updatedAt = event.block.timestamp;
+  slot.save();
+
+  let ev = new TransferScheduledEvent(
+    evtId(event.transaction.hash, event.logIndex)
+  );
+  ev.slot = slot.id;
+  ev.currency = slot.currency;
+  ev.buyer = event.params.buyer;
+  ev.effectiveAt = event.params.effectiveAt;
+  ev.price = event.params.price;
+  ev.deposit = event.params.deposit;
+  ev.timestamp = event.block.timestamp;
+  ev.blockNumber = event.block.number;
+  ev.tx = event.transaction.hash;
+  ev.save();
+}
+
+export function handleOperatorSet(event: OperatorSet): void {
+  let slot = getSlot(event.address);
+
+  let id =
+    slot.id +
+    "-" +
+    event.params.occupant.toHexString() +
+    "-" +
+    event.params.operator.toHexString();
+
+  let op = SlotOperator.load(id);
+  if (op == null) {
+    op = new SlotOperator(id);
+    op.slot = slot.id;
+    op.occupant = event.params.occupant;
+    op.operator = event.params.operator;
+  }
+  op.approved = event.params.approved;
+  op.updatedAt = event.block.timestamp;
+  op.save();
+
+  let ev = new OperatorSetEvent(evtId(event.transaction.hash, event.logIndex));
+  ev.slot = slot.id;
+  ev.occupant = event.params.occupant;
+  ev.operator = event.params.operator;
+  ev.approved = event.params.approved;
+  ev.timestamp = event.block.timestamp;
+  ev.blockNumber = event.block.number;
+  ev.tx = event.transaction.hash;
+  ev.save();
+}
+
+export function handlePolicyUpdateProposed(
+  event: PolicyUpdateProposed
+): void {
+  let slot = getSlot(event.address);
+  slot.pendingPolicy = event.params.newPolicy;
+  slot.hasPendingPolicy = true;
+  slot.updatedAt = event.block.timestamp;
+  slot.save();
+
+  let ev = new PolicyUpdateProposedEvent(
+    evtId(event.transaction.hash, event.logIndex)
+  );
+  ev.slot = slot.id;
+  ev.newPolicy = event.params.newPolicy;
+  ev.timestamp = event.block.timestamp;
+  ev.blockNumber = event.block.number;
+  ev.tx = event.transaction.hash;
+  ev.save();
+}
+
+export function handlePolicyUpdateApplied(event: PolicyUpdateApplied): void {
+  let slot = getSlot(event.address);
+  if (event.params.newPolicy.equals(Address.zero())) {
+    slot.occupancyPolicy = null;
+  } else {
+    slot.occupancyPolicy = event.params.newPolicy;
+  }
+  slot.pendingPolicy = null;
+  slot.hasPendingPolicy = false;
+  slot.updatedAt = event.block.timestamp;
+  slot.save();
+
+  let ev = new PolicyUpdateAppliedEvent(
+    evtId(event.transaction.hash, event.logIndex)
+  );
+  ev.slot = slot.id;
+  ev.newPolicy = event.params.newPolicy;
+  ev.timestamp = event.block.timestamp;
+  ev.blockNumber = event.block.number;
+  ev.tx = event.transaction.hash;
+  ev.save();
+}
+
+function getSlotRefund(
+  slotId: string,
+  account: Bytes,
+  timestamp: BigInt
+): SlotRefund {
+  let id = slotId + "-" + account.toHexString();
+  let r = SlotRefund.load(id);
+  if (r == null) {
+    r = new SlotRefund(id);
+    r.slot = slotId;
+    r.account = account;
+    r.credited = BigInt.zero();
+    r.claimed = BigInt.zero();
+    r.outstanding = BigInt.zero();
+  }
+  r.updatedAt = timestamp;
+  return r as SlotRefund;
+}
+
+/**
+ * A refund the slot could not push (blocklisting currency, reverting receiver)
+ * and credited for later claim. A non-zero `outstanding` means the slot owes
+ * this account money — worth surfacing in the UI, since nothing will move it
+ * until they call `claim`.
+ */
+export function handleRefundCredited(event: RefundCredited): void {
+  let slot = getSlot(event.address);
+  let r = getSlotRefund(slot.id, event.params.account, event.block.timestamp);
+  r.credited = r.credited.plus(event.params.amount);
+  r.outstanding = r.outstanding.plus(event.params.amount);
+  r.save();
+
+  let ev = new RefundCreditedEvent(
+    evtId(event.transaction.hash, event.logIndex)
+  );
+  ev.slot = slot.id;
+  ev.currency = slot.currency;
+  ev.account = event.params.account;
+  ev.amount = event.params.amount;
+  ev.timestamp = event.block.timestamp;
+  ev.blockNumber = event.block.number;
+  ev.tx = event.transaction.hash;
+  ev.save();
+}
+
+export function handleRefundClaimed(event: RefundClaimed): void {
+  let slot = getSlot(event.address);
+  let r = getSlotRefund(slot.id, event.params.account, event.block.timestamp);
+  r.claimed = r.claimed.plus(event.params.amount);
+  r.outstanding = r.outstanding.minus(event.params.amount);
+  r.save();
+
+  let ev = new RefundClaimedEvent(
+    evtId(event.transaction.hash, event.logIndex)
+  );
+  ev.slot = slot.id;
+  ev.currency = slot.currency;
+  ev.account = event.params.account;
+  ev.amount = event.params.amount;
   ev.timestamp = event.block.timestamp;
   ev.blockNumber = event.block.number;
   ev.tx = event.transaction.hash;

@@ -169,6 +169,21 @@ templates:
           handler: handleLiquidationBountyUpdated
         - event: ModuleFeePaid(indexed address,uint256,uint256)
           handler: handleModuleFeePaid
+        # ── v3 occupancy layer ──
+        - event: SlotConfiguredV3(uint64,address)
+          handler: handleSlotConfiguredV3
+        - event: TransferScheduled(indexed address,uint256,uint256,uint256)
+          handler: handleTransferScheduled
+        - event: OperatorSet(indexed address,indexed address,bool)
+          handler: handleOperatorSet
+        - event: PolicyUpdateProposed(address)
+          handler: handlePolicyUpdateProposed
+        - event: PolicyUpdateApplied(address)
+          handler: handlePolicyUpdateApplied
+        - event: RefundCredited(indexed address,uint256)
+          handler: handleRefundCredited
+        - event: RefundClaimed(indexed address,uint256)
+          handler: handleRefundClaimed
       file: ./src/slot.ts
   - kind: ethereum
     name: MetadataModule

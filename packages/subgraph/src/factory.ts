@@ -74,6 +74,22 @@ export function handleSlotDeployed(event: SlotDeployed): void {
   slot.collectedTax = BigInt.zero();
   slot.totalCollected = BigInt.zero();
 
+  // v3 occupancy defaults. SlotDeployed carries neither epochSeconds nor
+  // occupancyPolicy — SlotInitParams was deliberately not extended, to keep the
+  // factory's ABI and selector stable. A slot created via createSlotV3 emits
+  // SlotConfiguredV3 immediately after this, which overwrites these; one
+  // created via the legacy createSlot keeps them, and they are the correct
+  // values for it (instant buy, no policy).
+  slot.epochSeconds = BigInt.zero();
+  slot.occupancyPolicy = null;
+  slot.occupiedSince = BigInt.zero();
+  slot.pendingBuyer = null;
+  slot.pendingEffectiveAt = null;
+  slot.pendingPrice = null;
+  slot.pendingDeposit = null;
+  slot.pendingPolicy = null;
+  slot.hasPendingPolicy = false;
+
   slot.createdAt = event.block.timestamp;
   slot.createdTx = event.transaction.hash;
   slot.updatedAt = event.block.timestamp;
