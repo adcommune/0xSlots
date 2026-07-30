@@ -31,8 +31,8 @@ If this feels compelling and the mechanics hold together, it's worth going deepe
 2. **Memory belongs to the NFT, not the occupant.** One evolving mind per NFT. Occupancy gates *who may talk to it right now*; it does not reset or partition memory. The next occupant inherits everything.
 3. **Gate = SIWE-style signature per message.** Caller signs the outgoing message with wagmi; the API recovers the signer and checks it equals `ERC721Slots.ownerOf(tokenId)`. Stateless, no sessions, no JWT.
 4. **Onchain proof = EAS attestation; full record offchain.** When a memory is committed: full content → econome IPFS ingest endpoint (CID); EAS attestation on Base Sepolia references the CID; recipient of the attestation = the occupant at the time of the memory (occupant attribution).
-5. **Target chain = Base Sepolia. Agent model = Claude.**
-6. **[OPEN — flagged for review] Agent runtime = Vercel AI SDK** (`ai` + `@ai-sdk/anthropic`) with a small custom `FacetStore`, rather than Mastra. Rationale: the parts we must keep open (facet types, IPFS+EAS persistence, occupant attribution) live in our own `FacetStore` and tool definitions, not in the framework; the AI SDK keeps the POC minimal and provider-swappable; **Mastra is a clean drop-in later** if we want richer agent-evolution primitives (working memory, multi-step planning). Reviewer: veto here if you'd rather start on Mastra.
+5. **Target chain = Base Sepolia. Agent model = OpenAI** (user-provided `OPENAI_API_KEY`, e.g. `gpt-4o` / `gpt-4.1`). Not Claude.
+6. **Agent runtime = Mastra.** A Mastra `Agent` with one tool (`saveFacet`) and the NFT's facets injected as context. The model is wired through Mastra's provider layer (`@ai-sdk/openai`) and kept intentionally minimal — we are **not** building on the Vercel AI SDK directly and **not** deploying to Vercel; the `@ai-sdk/openai` package is only the model adapter Mastra consumes. Mastra's own agent/memory primitives give room to grow into future facet types (values, beliefs) without re-architecting.
 
 ## Architecture
 
@@ -69,8 +69,9 @@ A small helper. Input: `collection`, `tokenId`, `message`, `signature`, and a si
 
 Replay protection for the POC is a freshness window only; a proper nonce store is a documented follow-up.
 
-### 2. The agent (`ai` + `@ai-sdk/anthropic`)
-- System prompt assembled from the NFT's facets (see FacetStore). Facets are grouped by `type`; today only `memory` exists, injected as "Things you remember."
+### 2. The agent (Mastra `Agent`, OpenAI model)
+- Model: OpenAI via Mastra's provider layer (`@ai-sdk/openai`), configured minimally.
+- Instructions assembled from the NFT's facets (see FacetStore). Facets are grouped by `type`; today only `memory` exists, injected as "Things you remember."
 - One tool exposed to the model: **`saveFacet({ type, content, summary })`**. The model is instructed to call it *only when something genuinely worth remembering emerges*. For the POC the prompt restricts `type` to `"memory"`, but the tool signature already accepts other types so no door is closed.
 - The agent is a persona bound to the NFT ("you are the mind of NFT #<id>"), aware it is talking to whoever currently occupies it.
 
@@ -105,8 +106,8 @@ Storage: SQLite (via `better-sqlite3`) or a JSON file for the POC — an impleme
 Each step is best-effort and logged; a failure downstream degrades gracefully (the memory still exists offchain, and can be re-anchored via the secure endpoint).
 
 **EAS schema (registered once, UID in env):**
-`address collection, uint256 tokenId, string facetType, string cid, string summary`
-Attester = a server-held wallet with Base Sepolia ETH (`EAS_ATTESTER_PRIVATE_KEY`). Recipient = occupant-at-time.
+`address collection, uint256 tokenId, address occupant, string facetType, string cid, string summary`
+Attester = a server-held wallet with Base Sepolia ETH (`EAS_ATTESTER_PRIVATE_KEY`). The EAS `recipient` is set to the occupant, **and** the occupant address is stored explicitly in the `occupant` schema field so the account the agent formed the memory with is easily queryable.
 
 ### 5. Endpoints
 - `POST /agent/:collection/:tokenId/message` — occupant-gated. Body: `{ message, signature, signedPayload }`. Runs the agent, returns `{ reply, savedFacets: Facet[] }`.
@@ -131,7 +132,7 @@ One minimal panel where the existing wallet/takeover flow already lives (wagmi).
 
 ## Config / env (new)
 
-- `ANTHROPIC_API_KEY` — agent model.
+- `OPENAI_API_KEY` — agent model (user-provided).
 - `ECONOME_IPFS_INGEST_URL` — econome pinning ingest endpoint.
 - `EAS_ATTESTER_PRIVATE_KEY` — server attester wallet (Base Sepolia, funded).
 - `EAS_SCHEMA_UID` — pre-registered schema UID.
@@ -141,11 +142,10 @@ One minimal panel where the existing wallet/takeover flow already lives (wagmi).
 ## Build vs. reuse
 
 **Reuse:** `ERC721Slots` / `Slot` contracts, subgraph + `@0xslots/sdk`, IPFS gateway, existing wallet + takeover UI.
-**New:** `verifyOccupant` helper, agent module (AI SDK + `saveFacet` tool), `FacetStore`, IPFS-ingest + EAS clients, 3 Hono routes, one UI chat/memory panel, one-time EAS schema registration script.
+**New:** `verifyOccupant` helper, Mastra agent (`saveFacet` tool), `FacetStore`, IPFS-ingest + EAS clients, 3 Hono routes, one UI chat/memory panel, one-time EAS schema registration script.
 
 ## Open questions / follow-ups (documented, not blocking the POC)
 
-- Agent runtime: AI SDK now vs Mastra (decision #6 — reviewer's call).
 - Replay protection beyond a freshness window (nonce store) — deferred.
 - Who pays EAS gas long-term (server attester is fine for POC).
 - Whether "vacant" NFTs should still be chattable read-only (POC: no chat when vacant).
@@ -153,7 +153,7 @@ One minimal panel where the existing wallet/takeover flow already lives (wagmi).
 
 ## Rough milestones
 
-1. `verifyOccupant` + `/message` returning a plain Claude reply (gate proven).
+1. `verifyOccupant` + `/message` returning a plain OpenAI reply through Mastra (gate proven).
 2. `FacetStore` + `saveFacet` tool (agent remembers, offchain only).
 3. IPFS ingest + EAS attestation wired into the pipeline (onchain proof).
 4. `/memory` + `/secure-pinset` + UI panel (visible loop).
