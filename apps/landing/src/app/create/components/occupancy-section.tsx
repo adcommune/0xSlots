@@ -127,7 +127,10 @@ export function OccupancySection() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">None</SelectItem>
-                <SelectItem value="known">Verified policy</SelectItem>
+                <SelectItem value="known" disabled={knownForChain.length === 0}>
+                  Verified policy
+                  {knownForChain.length === 0 && " — none on this chain"}
+                </SelectItem>
                 <SelectItem value="custom">Custom address</SelectItem>
               </SelectContent>
             </Select>
@@ -140,7 +143,22 @@ export function OccupancySection() {
         )}
       />
 
-      {policyMode === "known" && (
+      {policyMode === "known" && knownForChain.length === 0 && (
+        <p className="text-sm text-muted-foreground rounded-md border border-dashed p-3">
+          No verified policies are deployed on this chain yet. Switch to a chain
+          that has them, or use{" "}
+          <button
+            type="button"
+            className="underline underline-offset-2"
+            onClick={() => form.setValue("occupancyPolicyMode", "custom")}
+          >
+            a custom address
+          </button>
+          .
+        </p>
+      )}
+
+      {policyMode === "known" && knownForChain.length > 0 && (
         <FormField
           control={form.control}
           name="occupancyPolicy"
