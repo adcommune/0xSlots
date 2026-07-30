@@ -33,6 +33,12 @@ import { useEffect, useState } from "react";
 import { type Address, zeroAddress } from "viem";
 import { useAccount, useSwitchChain } from "wagmi";
 import { AccountTypeIcon } from "@/components/account-type-icon";
+import { OccupancyBadge } from "@/components/occupancy-badge";
+import { OccupancyPolicyBadge } from "@/components/occupancy-policy-badge";
+import {
+  formatDuration as formatShortDuration,
+  useEffectiveOccupancy,
+} from "@/hooks/use-effective-occupancy";
 import { PageHeader } from "@/components/page-header";
 import { SplitRecipientsBar } from "@/components/split-recipients-bar";
 import {
@@ -73,7 +79,6 @@ import {
   toRawUnits,
   truncateAddress,
 } from "@/utils";
-
 import { BuySection } from "./components/buy-section";
 import { DepositSlider } from "./components/deposit-slider";
 import {
@@ -97,6 +102,12 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
   const { data: subgraphSlot } = useSuspenseQuery(
     slotQueryOptions(selectedChainId, slotAddress),
   );
+  // On-chain occupant is authoritative (getSlotInfo resolves it against a
+  // matured transfer), but only the subgraph knows about one that has not
+  // taken effect yet. Must sit above the isLoading/!slot early returns —
+  // hooks cannot be conditional.
+  const effectiveOccupancy = useEffectiveOccupancy(subgraphSlot);
+
   const { data: activityData } = useSuspenseQuery(
     slotActivityQueryOptions(selectedChainId, slotAddress),
   );
@@ -276,6 +287,25 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
               <Badge variant="outline" className={role.badge}>
                 {role.label}
               </Badge>
+            )}
+            {/* On-chain occupancy terms. getSlotInfo() resolves occupant/price
+                against a matured transfer, so the header above is already
+                truthful; this says how easily the slot can be taken at all. */}
+            <OccupancyPolicyBadge
+              epochSeconds={slot.epochSeconds}
+              occupancyPolicy={slot.occupancyPolicy}
+              className="text-[10px]"
+            />
+            {/* getSlotInfo() does not expose pendingTransfer, so a committed
+                but not-yet-effective buy is only visible via the subgraph.
+                Without this the page reads "Vacant" while the slot is in fact
+                already spoken for. */}
+            {(effectiveOccupancy?.hasPendingTransfer ||
+              effectiveOccupancy?.isResolvedAhead) && (
+              <OccupancyBadge
+                occupancy={effectiveOccupancy}
+                className="text-[10px]"
+              />
             )}
           </div>
         </div>
@@ -917,9 +947,25 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
 
         {!isOccupied && (
           <div className="p-4 border-b">
-            <p className="text-sm text-muted-foreground">
-              Vacant — No escrow data
-            </p>
+            {effectiveOccupancy?.hasPendingTransfer ? (
+              <>
+                <p className="text-sm font-medium">Already claimed</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  A buy is committed and takes effect at the next epoch
+                  boundary, in{" "}
+                  {formatShortDuration(
+                    Number(effectiveOccupancy.pendingEffectiveAt ?? 0n) -
+                      Math.floor(Date.now() / 1000),
+                  )}
+                  . First commit wins and commits cannot be cancelled, so
+                  buying now would revert.
+                </p>
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Vacant — No escrow data
+              </p>
+            )}
           </div>
         )}
 

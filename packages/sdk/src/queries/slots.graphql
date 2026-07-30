@@ -17,6 +17,22 @@ fragment SlotFields on Slot {
   totalCollected
   liquidationBountyBps
   minDepositSeconds
+
+  # v3 occupancy layer.
+  # `occupant` above is the last MATERIALISED occupant — do not render it
+  # directly. Pass this fragment to resolveEffectiveOccupancy(), which accounts
+  # for a transfer whose boundary has passed but which no transaction has
+  # applied yet. See src/occupancy.ts.
+  epochSeconds
+  occupancyPolicy
+  occupiedSince
+  pendingBuyer
+  pendingEffectiveAt
+  pendingPrice
+  pendingDeposit
+  pendingPolicy
+  hasPendingPolicy
+
   createdAt
   createdTx
   updatedAt

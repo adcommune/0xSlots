@@ -199,6 +199,8 @@ export type AccountSlot_OrderBy =
   | 'slot__createdAt'
   | 'slot__createdTx'
   | 'slot__deposit'
+  | 'slot__epochSeconds'
+  | 'slot__hasPendingPolicy'
   | 'slot__id'
   | 'slot__isOccupied'
   | 'slot__liquidationBountyBps'
@@ -206,7 +208,14 @@ export type AccountSlot_OrderBy =
   | 'slot__minDepositSeconds'
   | 'slot__mutableModule'
   | 'slot__mutableTax'
+  | 'slot__occupancyPolicy'
   | 'slot__occupant'
+  | 'slot__occupiedSince'
+  | 'slot__pendingBuyer'
+  | 'slot__pendingDeposit'
+  | 'slot__pendingEffectiveAt'
+  | 'slot__pendingPolicy'
+  | 'slot__pendingPrice'
   | 'slot__price'
   | 'slot__recipient'
   | 'slot__taxPercentage'
@@ -466,6 +475,8 @@ export type BoughtEvent_OrderBy =
   | 'slot__createdAt'
   | 'slot__createdTx'
   | 'slot__deposit'
+  | 'slot__epochSeconds'
+  | 'slot__hasPendingPolicy'
   | 'slot__id'
   | 'slot__isOccupied'
   | 'slot__liquidationBountyBps'
@@ -473,7 +484,14 @@ export type BoughtEvent_OrderBy =
   | 'slot__minDepositSeconds'
   | 'slot__mutableModule'
   | 'slot__mutableTax'
+  | 'slot__occupancyPolicy'
   | 'slot__occupant'
+  | 'slot__occupiedSince'
+  | 'slot__pendingBuyer'
+  | 'slot__pendingDeposit'
+  | 'slot__pendingEffectiveAt'
+  | 'slot__pendingPolicy'
+  | 'slot__pendingPrice'
   | 'slot__price'
   | 'slot__recipient'
   | 'slot__taxPercentage'
@@ -687,6 +705,8 @@ export type DepositedEvent_OrderBy =
   | 'slot__createdAt'
   | 'slot__createdTx'
   | 'slot__deposit'
+  | 'slot__epochSeconds'
+  | 'slot__hasPendingPolicy'
   | 'slot__id'
   | 'slot__isOccupied'
   | 'slot__liquidationBountyBps'
@@ -694,7 +714,14 @@ export type DepositedEvent_OrderBy =
   | 'slot__minDepositSeconds'
   | 'slot__mutableModule'
   | 'slot__mutableTax'
+  | 'slot__occupancyPolicy'
   | 'slot__occupant'
+  | 'slot__occupiedSince'
+  | 'slot__pendingBuyer'
+  | 'slot__pendingDeposit'
+  | 'slot__pendingEffectiveAt'
+  | 'slot__pendingPolicy'
+  | 'slot__pendingPrice'
   | 'slot__price'
   | 'slot__recipient'
   | 'slot__taxPercentage'
@@ -747,6 +774,1097 @@ export type Factory_OrderBy =
   | 'id'
   | 'modules'
   | 'slotCount';
+
+export type Feed = {
+  __typename?: 'Feed';
+  banner?: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['BigInt']['output'];
+  createdTx: Scalars['Bytes']['output'];
+  description?: Maybe<Scalars['String']['output']>;
+  displayName: Scalars['String']['output'];
+  externalLink?: Maybe<Scalars['String']['output']>;
+  hub: FeedHub;
+  id: Scalars['ID']['output'];
+  image?: Maybe<Scalars['String']['output']>;
+  index: Scalars['BigInt']['output'];
+  metadataCid?: Maybe<Scalars['String']['output']>;
+  metadataName?: Maybe<Scalars['String']['output']>;
+  metadataRaw?: Maybe<Scalars['String']['output']>;
+  metadataURI: Scalars['String']['output'];
+  onchainName: Scalars['String']['output'];
+  owner: Scalars['Bytes']['output'];
+  recipient: Scalars['Bytes']['output'];
+  slotCount: Scalars['BigInt']['output'];
+  slots: Array<Slot>;
+  updatedAt: Scalars['BigInt']['output'];
+};
+
+
+export type FeedSlotsArgs = {
+  first?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Slot_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  where?: InputMaybe<Slot_Filter>;
+};
+
+export type FeedCreatedEvent = {
+  __typename?: 'FeedCreatedEvent';
+  blockNumber: Scalars['BigInt']['output'];
+  blockTimestamp: Scalars['BigInt']['output'];
+  feed: Feed;
+  hub: Scalars['Bytes']['output'];
+  id: Scalars['ID']['output'];
+  index: Scalars['BigInt']['output'];
+  owner: Scalars['Bytes']['output'];
+  transactionHash: Scalars['Bytes']['output'];
+};
+
+export type FeedCreatedEvent_Filter = {
+  /** Filter for the block changed event. */
+  _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<FeedCreatedEvent_Filter>>>;
+  blockNumber?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  blockNumber_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_not?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  blockTimestamp?: InputMaybe<Scalars['BigInt']['input']>;
+  blockTimestamp_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  blockTimestamp_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  blockTimestamp_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  blockTimestamp_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  blockTimestamp_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  blockTimestamp_not?: InputMaybe<Scalars['BigInt']['input']>;
+  blockTimestamp_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  feed?: InputMaybe<Scalars['String']['input']>;
+  feed_?: InputMaybe<Feed_Filter>;
+  feed_contains?: InputMaybe<Scalars['String']['input']>;
+  feed_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  feed_ends_with?: InputMaybe<Scalars['String']['input']>;
+  feed_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  feed_gt?: InputMaybe<Scalars['String']['input']>;
+  feed_gte?: InputMaybe<Scalars['String']['input']>;
+  feed_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  feed_lt?: InputMaybe<Scalars['String']['input']>;
+  feed_lte?: InputMaybe<Scalars['String']['input']>;
+  feed_not?: InputMaybe<Scalars['String']['input']>;
+  feed_not_contains?: InputMaybe<Scalars['String']['input']>;
+  feed_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  feed_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  feed_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  feed_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  feed_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  feed_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  feed_starts_with?: InputMaybe<Scalars['String']['input']>;
+  feed_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  hub?: InputMaybe<Scalars['Bytes']['input']>;
+  hub_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  hub_gt?: InputMaybe<Scalars['Bytes']['input']>;
+  hub_gte?: InputMaybe<Scalars['Bytes']['input']>;
+  hub_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  hub_lt?: InputMaybe<Scalars['Bytes']['input']>;
+  hub_lte?: InputMaybe<Scalars['Bytes']['input']>;
+  hub_not?: InputMaybe<Scalars['Bytes']['input']>;
+  hub_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  hub_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  id?: InputMaybe<Scalars['ID']['input']>;
+  id_gt?: InputMaybe<Scalars['ID']['input']>;
+  id_gte?: InputMaybe<Scalars['ID']['input']>;
+  id_in?: InputMaybe<Array<Scalars['ID']['input']>>;
+  id_lt?: InputMaybe<Scalars['ID']['input']>;
+  id_lte?: InputMaybe<Scalars['ID']['input']>;
+  id_not?: InputMaybe<Scalars['ID']['input']>;
+  id_not_in?: InputMaybe<Array<Scalars['ID']['input']>>;
+  index?: InputMaybe<Scalars['BigInt']['input']>;
+  index_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  index_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  index_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  index_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  index_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  index_not?: InputMaybe<Scalars['BigInt']['input']>;
+  index_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  or?: InputMaybe<Array<InputMaybe<FeedCreatedEvent_Filter>>>;
+  owner?: InputMaybe<Scalars['Bytes']['input']>;
+  owner_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  owner_gt?: InputMaybe<Scalars['Bytes']['input']>;
+  owner_gte?: InputMaybe<Scalars['Bytes']['input']>;
+  owner_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  owner_lt?: InputMaybe<Scalars['Bytes']['input']>;
+  owner_lte?: InputMaybe<Scalars['Bytes']['input']>;
+  owner_not?: InputMaybe<Scalars['Bytes']['input']>;
+  owner_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  owner_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  transactionHash?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_gt?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_gte?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  transactionHash_lt?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_lte?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_not?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+};
+
+export type FeedCreatedEvent_OrderBy =
+  | 'blockNumber'
+  | 'blockTimestamp'
+  | 'feed'
+  | 'feed__banner'
+  | 'feed__createdAt'
+  | 'feed__createdTx'
+  | 'feed__description'
+  | 'feed__displayName'
+  | 'feed__externalLink'
+  | 'feed__id'
+  | 'feed__image'
+  | 'feed__index'
+  | 'feed__metadataCid'
+  | 'feed__metadataName'
+  | 'feed__metadataRaw'
+  | 'feed__metadataURI'
+  | 'feed__onchainName'
+  | 'feed__owner'
+  | 'feed__recipient'
+  | 'feed__slotCount'
+  | 'feed__updatedAt'
+  | 'hub'
+  | 'id'
+  | 'index'
+  | 'owner'
+  | 'transactionHash';
+
+export type FeedHub = {
+  __typename?: 'FeedHub';
+  feedCount: Scalars['BigInt']['output'];
+  feeds: Array<Feed>;
+  id: Scalars['ID']['output'];
+};
+
+
+export type FeedHubFeedsArgs = {
+  first?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Feed_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  where?: InputMaybe<Feed_Filter>;
+};
+
+export type FeedHub_Filter = {
+  /** Filter for the block changed event. */
+  _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<FeedHub_Filter>>>;
+  feedCount?: InputMaybe<Scalars['BigInt']['input']>;
+  feedCount_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  feedCount_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  feedCount_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  feedCount_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  feedCount_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  feedCount_not?: InputMaybe<Scalars['BigInt']['input']>;
+  feedCount_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  feeds_?: InputMaybe<Feed_Filter>;
+  id?: InputMaybe<Scalars['ID']['input']>;
+  id_gt?: InputMaybe<Scalars['ID']['input']>;
+  id_gte?: InputMaybe<Scalars['ID']['input']>;
+  id_in?: InputMaybe<Array<Scalars['ID']['input']>>;
+  id_lt?: InputMaybe<Scalars['ID']['input']>;
+  id_lte?: InputMaybe<Scalars['ID']['input']>;
+  id_not?: InputMaybe<Scalars['ID']['input']>;
+  id_not_in?: InputMaybe<Array<Scalars['ID']['input']>>;
+  or?: InputMaybe<Array<InputMaybe<FeedHub_Filter>>>;
+};
+
+export type FeedHub_OrderBy =
+  | 'feedCount'
+  | 'feeds'
+  | 'id';
+
+export type FeedMetadataUriUpdatedEvent = {
+  __typename?: 'FeedMetadataURIUpdatedEvent';
+  blockNumber: Scalars['BigInt']['output'];
+  blockTimestamp: Scalars['BigInt']['output'];
+  feed: Feed;
+  id: Scalars['ID']['output'];
+  transactionHash: Scalars['Bytes']['output'];
+  uri: Scalars['String']['output'];
+};
+
+export type FeedMetadataUriUpdatedEvent_Filter = {
+  /** Filter for the block changed event. */
+  _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<FeedMetadataUriUpdatedEvent_Filter>>>;
+  blockNumber?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  blockNumber_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_not?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  blockTimestamp?: InputMaybe<Scalars['BigInt']['input']>;
+  blockTimestamp_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  blockTimestamp_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  blockTimestamp_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  blockTimestamp_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  blockTimestamp_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  blockTimestamp_not?: InputMaybe<Scalars['BigInt']['input']>;
+  blockTimestamp_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  feed?: InputMaybe<Scalars['String']['input']>;
+  feed_?: InputMaybe<Feed_Filter>;
+  feed_contains?: InputMaybe<Scalars['String']['input']>;
+  feed_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  feed_ends_with?: InputMaybe<Scalars['String']['input']>;
+  feed_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  feed_gt?: InputMaybe<Scalars['String']['input']>;
+  feed_gte?: InputMaybe<Scalars['String']['input']>;
+  feed_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  feed_lt?: InputMaybe<Scalars['String']['input']>;
+  feed_lte?: InputMaybe<Scalars['String']['input']>;
+  feed_not?: InputMaybe<Scalars['String']['input']>;
+  feed_not_contains?: InputMaybe<Scalars['String']['input']>;
+  feed_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  feed_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  feed_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  feed_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  feed_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  feed_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  feed_starts_with?: InputMaybe<Scalars['String']['input']>;
+  feed_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  id?: InputMaybe<Scalars['ID']['input']>;
+  id_gt?: InputMaybe<Scalars['ID']['input']>;
+  id_gte?: InputMaybe<Scalars['ID']['input']>;
+  id_in?: InputMaybe<Array<Scalars['ID']['input']>>;
+  id_lt?: InputMaybe<Scalars['ID']['input']>;
+  id_lte?: InputMaybe<Scalars['ID']['input']>;
+  id_not?: InputMaybe<Scalars['ID']['input']>;
+  id_not_in?: InputMaybe<Array<Scalars['ID']['input']>>;
+  or?: InputMaybe<Array<InputMaybe<FeedMetadataUriUpdatedEvent_Filter>>>;
+  transactionHash?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_gt?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_gte?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  transactionHash_lt?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_lte?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_not?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  uri?: InputMaybe<Scalars['String']['input']>;
+  uri_contains?: InputMaybe<Scalars['String']['input']>;
+  uri_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  uri_ends_with?: InputMaybe<Scalars['String']['input']>;
+  uri_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  uri_gt?: InputMaybe<Scalars['String']['input']>;
+  uri_gte?: InputMaybe<Scalars['String']['input']>;
+  uri_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  uri_lt?: InputMaybe<Scalars['String']['input']>;
+  uri_lte?: InputMaybe<Scalars['String']['input']>;
+  uri_not?: InputMaybe<Scalars['String']['input']>;
+  uri_not_contains?: InputMaybe<Scalars['String']['input']>;
+  uri_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  uri_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  uri_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  uri_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  uri_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  uri_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  uri_starts_with?: InputMaybe<Scalars['String']['input']>;
+  uri_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type FeedMetadataUriUpdatedEvent_OrderBy =
+  | 'blockNumber'
+  | 'blockTimestamp'
+  | 'feed'
+  | 'feed__banner'
+  | 'feed__createdAt'
+  | 'feed__createdTx'
+  | 'feed__description'
+  | 'feed__displayName'
+  | 'feed__externalLink'
+  | 'feed__id'
+  | 'feed__image'
+  | 'feed__index'
+  | 'feed__metadataCid'
+  | 'feed__metadataName'
+  | 'feed__metadataRaw'
+  | 'feed__metadataURI'
+  | 'feed__onchainName'
+  | 'feed__owner'
+  | 'feed__recipient'
+  | 'feed__slotCount'
+  | 'feed__updatedAt'
+  | 'id'
+  | 'transactionHash'
+  | 'uri';
+
+export type FeedNameUpdatedEvent = {
+  __typename?: 'FeedNameUpdatedEvent';
+  blockNumber: Scalars['BigInt']['output'];
+  blockTimestamp: Scalars['BigInt']['output'];
+  feed: Feed;
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  transactionHash: Scalars['Bytes']['output'];
+};
+
+export type FeedNameUpdatedEvent_Filter = {
+  /** Filter for the block changed event. */
+  _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<FeedNameUpdatedEvent_Filter>>>;
+  blockNumber?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  blockNumber_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_not?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  blockTimestamp?: InputMaybe<Scalars['BigInt']['input']>;
+  blockTimestamp_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  blockTimestamp_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  blockTimestamp_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  blockTimestamp_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  blockTimestamp_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  blockTimestamp_not?: InputMaybe<Scalars['BigInt']['input']>;
+  blockTimestamp_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  feed?: InputMaybe<Scalars['String']['input']>;
+  feed_?: InputMaybe<Feed_Filter>;
+  feed_contains?: InputMaybe<Scalars['String']['input']>;
+  feed_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  feed_ends_with?: InputMaybe<Scalars['String']['input']>;
+  feed_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  feed_gt?: InputMaybe<Scalars['String']['input']>;
+  feed_gte?: InputMaybe<Scalars['String']['input']>;
+  feed_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  feed_lt?: InputMaybe<Scalars['String']['input']>;
+  feed_lte?: InputMaybe<Scalars['String']['input']>;
+  feed_not?: InputMaybe<Scalars['String']['input']>;
+  feed_not_contains?: InputMaybe<Scalars['String']['input']>;
+  feed_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  feed_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  feed_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  feed_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  feed_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  feed_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  feed_starts_with?: InputMaybe<Scalars['String']['input']>;
+  feed_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  id?: InputMaybe<Scalars['ID']['input']>;
+  id_gt?: InputMaybe<Scalars['ID']['input']>;
+  id_gte?: InputMaybe<Scalars['ID']['input']>;
+  id_in?: InputMaybe<Array<Scalars['ID']['input']>>;
+  id_lt?: InputMaybe<Scalars['ID']['input']>;
+  id_lte?: InputMaybe<Scalars['ID']['input']>;
+  id_not?: InputMaybe<Scalars['ID']['input']>;
+  id_not_in?: InputMaybe<Array<Scalars['ID']['input']>>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  name_contains?: InputMaybe<Scalars['String']['input']>;
+  name_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  name_ends_with?: InputMaybe<Scalars['String']['input']>;
+  name_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  name_gt?: InputMaybe<Scalars['String']['input']>;
+  name_gte?: InputMaybe<Scalars['String']['input']>;
+  name_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  name_lt?: InputMaybe<Scalars['String']['input']>;
+  name_lte?: InputMaybe<Scalars['String']['input']>;
+  name_not?: InputMaybe<Scalars['String']['input']>;
+  name_not_contains?: InputMaybe<Scalars['String']['input']>;
+  name_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  name_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  name_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  name_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  name_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  name_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  name_starts_with?: InputMaybe<Scalars['String']['input']>;
+  name_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  or?: InputMaybe<Array<InputMaybe<FeedNameUpdatedEvent_Filter>>>;
+  transactionHash?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_gt?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_gte?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  transactionHash_lt?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_lte?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_not?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+};
+
+export type FeedNameUpdatedEvent_OrderBy =
+  | 'blockNumber'
+  | 'blockTimestamp'
+  | 'feed'
+  | 'feed__banner'
+  | 'feed__createdAt'
+  | 'feed__createdTx'
+  | 'feed__description'
+  | 'feed__displayName'
+  | 'feed__externalLink'
+  | 'feed__id'
+  | 'feed__image'
+  | 'feed__index'
+  | 'feed__metadataCid'
+  | 'feed__metadataName'
+  | 'feed__metadataRaw'
+  | 'feed__metadataURI'
+  | 'feed__onchainName'
+  | 'feed__owner'
+  | 'feed__recipient'
+  | 'feed__slotCount'
+  | 'feed__updatedAt'
+  | 'id'
+  | 'name'
+  | 'transactionHash';
+
+export type FeedRecipientUpdatedEvent = {
+  __typename?: 'FeedRecipientUpdatedEvent';
+  blockNumber: Scalars['BigInt']['output'];
+  blockTimestamp: Scalars['BigInt']['output'];
+  feed: Feed;
+  id: Scalars['ID']['output'];
+  recipient: Scalars['Bytes']['output'];
+  transactionHash: Scalars['Bytes']['output'];
+};
+
+export type FeedRecipientUpdatedEvent_Filter = {
+  /** Filter for the block changed event. */
+  _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<FeedRecipientUpdatedEvent_Filter>>>;
+  blockNumber?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  blockNumber_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_not?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  blockTimestamp?: InputMaybe<Scalars['BigInt']['input']>;
+  blockTimestamp_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  blockTimestamp_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  blockTimestamp_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  blockTimestamp_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  blockTimestamp_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  blockTimestamp_not?: InputMaybe<Scalars['BigInt']['input']>;
+  blockTimestamp_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  feed?: InputMaybe<Scalars['String']['input']>;
+  feed_?: InputMaybe<Feed_Filter>;
+  feed_contains?: InputMaybe<Scalars['String']['input']>;
+  feed_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  feed_ends_with?: InputMaybe<Scalars['String']['input']>;
+  feed_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  feed_gt?: InputMaybe<Scalars['String']['input']>;
+  feed_gte?: InputMaybe<Scalars['String']['input']>;
+  feed_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  feed_lt?: InputMaybe<Scalars['String']['input']>;
+  feed_lte?: InputMaybe<Scalars['String']['input']>;
+  feed_not?: InputMaybe<Scalars['String']['input']>;
+  feed_not_contains?: InputMaybe<Scalars['String']['input']>;
+  feed_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  feed_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  feed_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  feed_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  feed_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  feed_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  feed_starts_with?: InputMaybe<Scalars['String']['input']>;
+  feed_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  id?: InputMaybe<Scalars['ID']['input']>;
+  id_gt?: InputMaybe<Scalars['ID']['input']>;
+  id_gte?: InputMaybe<Scalars['ID']['input']>;
+  id_in?: InputMaybe<Array<Scalars['ID']['input']>>;
+  id_lt?: InputMaybe<Scalars['ID']['input']>;
+  id_lte?: InputMaybe<Scalars['ID']['input']>;
+  id_not?: InputMaybe<Scalars['ID']['input']>;
+  id_not_in?: InputMaybe<Array<Scalars['ID']['input']>>;
+  or?: InputMaybe<Array<InputMaybe<FeedRecipientUpdatedEvent_Filter>>>;
+  recipient?: InputMaybe<Scalars['Bytes']['input']>;
+  recipient_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  recipient_gt?: InputMaybe<Scalars['Bytes']['input']>;
+  recipient_gte?: InputMaybe<Scalars['Bytes']['input']>;
+  recipient_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  recipient_lt?: InputMaybe<Scalars['Bytes']['input']>;
+  recipient_lte?: InputMaybe<Scalars['Bytes']['input']>;
+  recipient_not?: InputMaybe<Scalars['Bytes']['input']>;
+  recipient_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  recipient_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  transactionHash?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_gt?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_gte?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  transactionHash_lt?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_lte?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_not?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+};
+
+export type FeedRecipientUpdatedEvent_OrderBy =
+  | 'blockNumber'
+  | 'blockTimestamp'
+  | 'feed'
+  | 'feed__banner'
+  | 'feed__createdAt'
+  | 'feed__createdTx'
+  | 'feed__description'
+  | 'feed__displayName'
+  | 'feed__externalLink'
+  | 'feed__id'
+  | 'feed__image'
+  | 'feed__index'
+  | 'feed__metadataCid'
+  | 'feed__metadataName'
+  | 'feed__metadataRaw'
+  | 'feed__metadataURI'
+  | 'feed__onchainName'
+  | 'feed__owner'
+  | 'feed__recipient'
+  | 'feed__slotCount'
+  | 'feed__updatedAt'
+  | 'id'
+  | 'recipient'
+  | 'transactionHash';
+
+export type FeedSlotAddedEvent = {
+  __typename?: 'FeedSlotAddedEvent';
+  blockNumber: Scalars['BigInt']['output'];
+  blockTimestamp: Scalars['BigInt']['output'];
+  feed: Feed;
+  id: Scalars['ID']['output'];
+  slot: Scalars['Bytes']['output'];
+  transactionHash: Scalars['Bytes']['output'];
+};
+
+export type FeedSlotAddedEvent_Filter = {
+  /** Filter for the block changed event. */
+  _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<FeedSlotAddedEvent_Filter>>>;
+  blockNumber?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  blockNumber_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_not?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  blockTimestamp?: InputMaybe<Scalars['BigInt']['input']>;
+  blockTimestamp_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  blockTimestamp_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  blockTimestamp_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  blockTimestamp_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  blockTimestamp_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  blockTimestamp_not?: InputMaybe<Scalars['BigInt']['input']>;
+  blockTimestamp_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  feed?: InputMaybe<Scalars['String']['input']>;
+  feed_?: InputMaybe<Feed_Filter>;
+  feed_contains?: InputMaybe<Scalars['String']['input']>;
+  feed_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  feed_ends_with?: InputMaybe<Scalars['String']['input']>;
+  feed_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  feed_gt?: InputMaybe<Scalars['String']['input']>;
+  feed_gte?: InputMaybe<Scalars['String']['input']>;
+  feed_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  feed_lt?: InputMaybe<Scalars['String']['input']>;
+  feed_lte?: InputMaybe<Scalars['String']['input']>;
+  feed_not?: InputMaybe<Scalars['String']['input']>;
+  feed_not_contains?: InputMaybe<Scalars['String']['input']>;
+  feed_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  feed_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  feed_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  feed_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  feed_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  feed_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  feed_starts_with?: InputMaybe<Scalars['String']['input']>;
+  feed_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  id?: InputMaybe<Scalars['ID']['input']>;
+  id_gt?: InputMaybe<Scalars['ID']['input']>;
+  id_gte?: InputMaybe<Scalars['ID']['input']>;
+  id_in?: InputMaybe<Array<Scalars['ID']['input']>>;
+  id_lt?: InputMaybe<Scalars['ID']['input']>;
+  id_lte?: InputMaybe<Scalars['ID']['input']>;
+  id_not?: InputMaybe<Scalars['ID']['input']>;
+  id_not_in?: InputMaybe<Array<Scalars['ID']['input']>>;
+  or?: InputMaybe<Array<InputMaybe<FeedSlotAddedEvent_Filter>>>;
+  slot?: InputMaybe<Scalars['Bytes']['input']>;
+  slot_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  slot_gt?: InputMaybe<Scalars['Bytes']['input']>;
+  slot_gte?: InputMaybe<Scalars['Bytes']['input']>;
+  slot_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  slot_lt?: InputMaybe<Scalars['Bytes']['input']>;
+  slot_lte?: InputMaybe<Scalars['Bytes']['input']>;
+  slot_not?: InputMaybe<Scalars['Bytes']['input']>;
+  slot_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  slot_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  transactionHash?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_gt?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_gte?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  transactionHash_lt?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_lte?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_not?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+};
+
+export type FeedSlotAddedEvent_OrderBy =
+  | 'blockNumber'
+  | 'blockTimestamp'
+  | 'feed'
+  | 'feed__banner'
+  | 'feed__createdAt'
+  | 'feed__createdTx'
+  | 'feed__description'
+  | 'feed__displayName'
+  | 'feed__externalLink'
+  | 'feed__id'
+  | 'feed__image'
+  | 'feed__index'
+  | 'feed__metadataCid'
+  | 'feed__metadataName'
+  | 'feed__metadataRaw'
+  | 'feed__metadataURI'
+  | 'feed__onchainName'
+  | 'feed__owner'
+  | 'feed__recipient'
+  | 'feed__slotCount'
+  | 'feed__updatedAt'
+  | 'id'
+  | 'slot'
+  | 'transactionHash';
+
+export type FeedSlotRemovedEvent = {
+  __typename?: 'FeedSlotRemovedEvent';
+  blockNumber: Scalars['BigInt']['output'];
+  blockTimestamp: Scalars['BigInt']['output'];
+  feed: Feed;
+  id: Scalars['ID']['output'];
+  slot: Scalars['Bytes']['output'];
+  transactionHash: Scalars['Bytes']['output'];
+};
+
+export type FeedSlotRemovedEvent_Filter = {
+  /** Filter for the block changed event. */
+  _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<FeedSlotRemovedEvent_Filter>>>;
+  blockNumber?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  blockNumber_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_not?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  blockTimestamp?: InputMaybe<Scalars['BigInt']['input']>;
+  blockTimestamp_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  blockTimestamp_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  blockTimestamp_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  blockTimestamp_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  blockTimestamp_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  blockTimestamp_not?: InputMaybe<Scalars['BigInt']['input']>;
+  blockTimestamp_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  feed?: InputMaybe<Scalars['String']['input']>;
+  feed_?: InputMaybe<Feed_Filter>;
+  feed_contains?: InputMaybe<Scalars['String']['input']>;
+  feed_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  feed_ends_with?: InputMaybe<Scalars['String']['input']>;
+  feed_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  feed_gt?: InputMaybe<Scalars['String']['input']>;
+  feed_gte?: InputMaybe<Scalars['String']['input']>;
+  feed_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  feed_lt?: InputMaybe<Scalars['String']['input']>;
+  feed_lte?: InputMaybe<Scalars['String']['input']>;
+  feed_not?: InputMaybe<Scalars['String']['input']>;
+  feed_not_contains?: InputMaybe<Scalars['String']['input']>;
+  feed_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  feed_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  feed_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  feed_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  feed_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  feed_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  feed_starts_with?: InputMaybe<Scalars['String']['input']>;
+  feed_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  id?: InputMaybe<Scalars['ID']['input']>;
+  id_gt?: InputMaybe<Scalars['ID']['input']>;
+  id_gte?: InputMaybe<Scalars['ID']['input']>;
+  id_in?: InputMaybe<Array<Scalars['ID']['input']>>;
+  id_lt?: InputMaybe<Scalars['ID']['input']>;
+  id_lte?: InputMaybe<Scalars['ID']['input']>;
+  id_not?: InputMaybe<Scalars['ID']['input']>;
+  id_not_in?: InputMaybe<Array<Scalars['ID']['input']>>;
+  or?: InputMaybe<Array<InputMaybe<FeedSlotRemovedEvent_Filter>>>;
+  slot?: InputMaybe<Scalars['Bytes']['input']>;
+  slot_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  slot_gt?: InputMaybe<Scalars['Bytes']['input']>;
+  slot_gte?: InputMaybe<Scalars['Bytes']['input']>;
+  slot_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  slot_lt?: InputMaybe<Scalars['Bytes']['input']>;
+  slot_lte?: InputMaybe<Scalars['Bytes']['input']>;
+  slot_not?: InputMaybe<Scalars['Bytes']['input']>;
+  slot_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  slot_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  transactionHash?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_gt?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_gte?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  transactionHash_lt?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_lte?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_not?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  transactionHash_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+};
+
+export type FeedSlotRemovedEvent_OrderBy =
+  | 'blockNumber'
+  | 'blockTimestamp'
+  | 'feed'
+  | 'feed__banner'
+  | 'feed__createdAt'
+  | 'feed__createdTx'
+  | 'feed__description'
+  | 'feed__displayName'
+  | 'feed__externalLink'
+  | 'feed__id'
+  | 'feed__image'
+  | 'feed__index'
+  | 'feed__metadataCid'
+  | 'feed__metadataName'
+  | 'feed__metadataRaw'
+  | 'feed__metadataURI'
+  | 'feed__onchainName'
+  | 'feed__owner'
+  | 'feed__recipient'
+  | 'feed__slotCount'
+  | 'feed__updatedAt'
+  | 'id'
+  | 'slot'
+  | 'transactionHash';
+
+export type Feed_Filter = {
+  /** Filter for the block changed event. */
+  _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<Feed_Filter>>>;
+  banner?: InputMaybe<Scalars['String']['input']>;
+  banner_contains?: InputMaybe<Scalars['String']['input']>;
+  banner_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  banner_ends_with?: InputMaybe<Scalars['String']['input']>;
+  banner_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  banner_gt?: InputMaybe<Scalars['String']['input']>;
+  banner_gte?: InputMaybe<Scalars['String']['input']>;
+  banner_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  banner_lt?: InputMaybe<Scalars['String']['input']>;
+  banner_lte?: InputMaybe<Scalars['String']['input']>;
+  banner_not?: InputMaybe<Scalars['String']['input']>;
+  banner_not_contains?: InputMaybe<Scalars['String']['input']>;
+  banner_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  banner_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  banner_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  banner_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  banner_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  banner_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  banner_starts_with?: InputMaybe<Scalars['String']['input']>;
+  banner_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  createdAt?: InputMaybe<Scalars['BigInt']['input']>;
+  createdAt_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  createdAt_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  createdAt_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  createdAt_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  createdAt_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  createdAt_not?: InputMaybe<Scalars['BigInt']['input']>;
+  createdAt_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  createdTx?: InputMaybe<Scalars['Bytes']['input']>;
+  createdTx_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  createdTx_gt?: InputMaybe<Scalars['Bytes']['input']>;
+  createdTx_gte?: InputMaybe<Scalars['Bytes']['input']>;
+  createdTx_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  createdTx_lt?: InputMaybe<Scalars['Bytes']['input']>;
+  createdTx_lte?: InputMaybe<Scalars['Bytes']['input']>;
+  createdTx_not?: InputMaybe<Scalars['Bytes']['input']>;
+  createdTx_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  createdTx_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  description_contains?: InputMaybe<Scalars['String']['input']>;
+  description_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  description_ends_with?: InputMaybe<Scalars['String']['input']>;
+  description_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  description_gt?: InputMaybe<Scalars['String']['input']>;
+  description_gte?: InputMaybe<Scalars['String']['input']>;
+  description_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  description_lt?: InputMaybe<Scalars['String']['input']>;
+  description_lte?: InputMaybe<Scalars['String']['input']>;
+  description_not?: InputMaybe<Scalars['String']['input']>;
+  description_not_contains?: InputMaybe<Scalars['String']['input']>;
+  description_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  description_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  description_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  description_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  description_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  description_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  description_starts_with?: InputMaybe<Scalars['String']['input']>;
+  description_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  displayName?: InputMaybe<Scalars['String']['input']>;
+  displayName_contains?: InputMaybe<Scalars['String']['input']>;
+  displayName_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  displayName_ends_with?: InputMaybe<Scalars['String']['input']>;
+  displayName_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  displayName_gt?: InputMaybe<Scalars['String']['input']>;
+  displayName_gte?: InputMaybe<Scalars['String']['input']>;
+  displayName_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  displayName_lt?: InputMaybe<Scalars['String']['input']>;
+  displayName_lte?: InputMaybe<Scalars['String']['input']>;
+  displayName_not?: InputMaybe<Scalars['String']['input']>;
+  displayName_not_contains?: InputMaybe<Scalars['String']['input']>;
+  displayName_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  displayName_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  displayName_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  displayName_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  displayName_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  displayName_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  displayName_starts_with?: InputMaybe<Scalars['String']['input']>;
+  displayName_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  externalLink?: InputMaybe<Scalars['String']['input']>;
+  externalLink_contains?: InputMaybe<Scalars['String']['input']>;
+  externalLink_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  externalLink_ends_with?: InputMaybe<Scalars['String']['input']>;
+  externalLink_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  externalLink_gt?: InputMaybe<Scalars['String']['input']>;
+  externalLink_gte?: InputMaybe<Scalars['String']['input']>;
+  externalLink_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  externalLink_lt?: InputMaybe<Scalars['String']['input']>;
+  externalLink_lte?: InputMaybe<Scalars['String']['input']>;
+  externalLink_not?: InputMaybe<Scalars['String']['input']>;
+  externalLink_not_contains?: InputMaybe<Scalars['String']['input']>;
+  externalLink_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  externalLink_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  externalLink_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  externalLink_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  externalLink_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  externalLink_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  externalLink_starts_with?: InputMaybe<Scalars['String']['input']>;
+  externalLink_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  hub?: InputMaybe<Scalars['String']['input']>;
+  hub_?: InputMaybe<FeedHub_Filter>;
+  hub_contains?: InputMaybe<Scalars['String']['input']>;
+  hub_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  hub_ends_with?: InputMaybe<Scalars['String']['input']>;
+  hub_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  hub_gt?: InputMaybe<Scalars['String']['input']>;
+  hub_gte?: InputMaybe<Scalars['String']['input']>;
+  hub_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  hub_lt?: InputMaybe<Scalars['String']['input']>;
+  hub_lte?: InputMaybe<Scalars['String']['input']>;
+  hub_not?: InputMaybe<Scalars['String']['input']>;
+  hub_not_contains?: InputMaybe<Scalars['String']['input']>;
+  hub_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  hub_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  hub_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  hub_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  hub_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  hub_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  hub_starts_with?: InputMaybe<Scalars['String']['input']>;
+  hub_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  id?: InputMaybe<Scalars['ID']['input']>;
+  id_gt?: InputMaybe<Scalars['ID']['input']>;
+  id_gte?: InputMaybe<Scalars['ID']['input']>;
+  id_in?: InputMaybe<Array<Scalars['ID']['input']>>;
+  id_lt?: InputMaybe<Scalars['ID']['input']>;
+  id_lte?: InputMaybe<Scalars['ID']['input']>;
+  id_not?: InputMaybe<Scalars['ID']['input']>;
+  id_not_in?: InputMaybe<Array<Scalars['ID']['input']>>;
+  image?: InputMaybe<Scalars['String']['input']>;
+  image_contains?: InputMaybe<Scalars['String']['input']>;
+  image_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  image_ends_with?: InputMaybe<Scalars['String']['input']>;
+  image_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  image_gt?: InputMaybe<Scalars['String']['input']>;
+  image_gte?: InputMaybe<Scalars['String']['input']>;
+  image_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  image_lt?: InputMaybe<Scalars['String']['input']>;
+  image_lte?: InputMaybe<Scalars['String']['input']>;
+  image_not?: InputMaybe<Scalars['String']['input']>;
+  image_not_contains?: InputMaybe<Scalars['String']['input']>;
+  image_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  image_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  image_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  image_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  image_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  image_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  image_starts_with?: InputMaybe<Scalars['String']['input']>;
+  image_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  index?: InputMaybe<Scalars['BigInt']['input']>;
+  index_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  index_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  index_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  index_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  index_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  index_not?: InputMaybe<Scalars['BigInt']['input']>;
+  index_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  metadataCid?: InputMaybe<Scalars['String']['input']>;
+  metadataCid_contains?: InputMaybe<Scalars['String']['input']>;
+  metadataCid_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  metadataCid_ends_with?: InputMaybe<Scalars['String']['input']>;
+  metadataCid_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  metadataCid_gt?: InputMaybe<Scalars['String']['input']>;
+  metadataCid_gte?: InputMaybe<Scalars['String']['input']>;
+  metadataCid_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  metadataCid_lt?: InputMaybe<Scalars['String']['input']>;
+  metadataCid_lte?: InputMaybe<Scalars['String']['input']>;
+  metadataCid_not?: InputMaybe<Scalars['String']['input']>;
+  metadataCid_not_contains?: InputMaybe<Scalars['String']['input']>;
+  metadataCid_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  metadataCid_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  metadataCid_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  metadataCid_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  metadataCid_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  metadataCid_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  metadataCid_starts_with?: InputMaybe<Scalars['String']['input']>;
+  metadataCid_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  metadataName?: InputMaybe<Scalars['String']['input']>;
+  metadataName_contains?: InputMaybe<Scalars['String']['input']>;
+  metadataName_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  metadataName_ends_with?: InputMaybe<Scalars['String']['input']>;
+  metadataName_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  metadataName_gt?: InputMaybe<Scalars['String']['input']>;
+  metadataName_gte?: InputMaybe<Scalars['String']['input']>;
+  metadataName_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  metadataName_lt?: InputMaybe<Scalars['String']['input']>;
+  metadataName_lte?: InputMaybe<Scalars['String']['input']>;
+  metadataName_not?: InputMaybe<Scalars['String']['input']>;
+  metadataName_not_contains?: InputMaybe<Scalars['String']['input']>;
+  metadataName_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  metadataName_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  metadataName_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  metadataName_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  metadataName_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  metadataName_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  metadataName_starts_with?: InputMaybe<Scalars['String']['input']>;
+  metadataName_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  metadataRaw?: InputMaybe<Scalars['String']['input']>;
+  metadataRaw_contains?: InputMaybe<Scalars['String']['input']>;
+  metadataRaw_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  metadataRaw_ends_with?: InputMaybe<Scalars['String']['input']>;
+  metadataRaw_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  metadataRaw_gt?: InputMaybe<Scalars['String']['input']>;
+  metadataRaw_gte?: InputMaybe<Scalars['String']['input']>;
+  metadataRaw_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  metadataRaw_lt?: InputMaybe<Scalars['String']['input']>;
+  metadataRaw_lte?: InputMaybe<Scalars['String']['input']>;
+  metadataRaw_not?: InputMaybe<Scalars['String']['input']>;
+  metadataRaw_not_contains?: InputMaybe<Scalars['String']['input']>;
+  metadataRaw_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  metadataRaw_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  metadataRaw_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  metadataRaw_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  metadataRaw_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  metadataRaw_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  metadataRaw_starts_with?: InputMaybe<Scalars['String']['input']>;
+  metadataRaw_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  metadataURI?: InputMaybe<Scalars['String']['input']>;
+  metadataURI_contains?: InputMaybe<Scalars['String']['input']>;
+  metadataURI_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  metadataURI_ends_with?: InputMaybe<Scalars['String']['input']>;
+  metadataURI_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  metadataURI_gt?: InputMaybe<Scalars['String']['input']>;
+  metadataURI_gte?: InputMaybe<Scalars['String']['input']>;
+  metadataURI_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  metadataURI_lt?: InputMaybe<Scalars['String']['input']>;
+  metadataURI_lte?: InputMaybe<Scalars['String']['input']>;
+  metadataURI_not?: InputMaybe<Scalars['String']['input']>;
+  metadataURI_not_contains?: InputMaybe<Scalars['String']['input']>;
+  metadataURI_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  metadataURI_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  metadataURI_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  metadataURI_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  metadataURI_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  metadataURI_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  metadataURI_starts_with?: InputMaybe<Scalars['String']['input']>;
+  metadataURI_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  onchainName?: InputMaybe<Scalars['String']['input']>;
+  onchainName_contains?: InputMaybe<Scalars['String']['input']>;
+  onchainName_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  onchainName_ends_with?: InputMaybe<Scalars['String']['input']>;
+  onchainName_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  onchainName_gt?: InputMaybe<Scalars['String']['input']>;
+  onchainName_gte?: InputMaybe<Scalars['String']['input']>;
+  onchainName_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  onchainName_lt?: InputMaybe<Scalars['String']['input']>;
+  onchainName_lte?: InputMaybe<Scalars['String']['input']>;
+  onchainName_not?: InputMaybe<Scalars['String']['input']>;
+  onchainName_not_contains?: InputMaybe<Scalars['String']['input']>;
+  onchainName_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  onchainName_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  onchainName_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  onchainName_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  onchainName_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  onchainName_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  onchainName_starts_with?: InputMaybe<Scalars['String']['input']>;
+  onchainName_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  or?: InputMaybe<Array<InputMaybe<Feed_Filter>>>;
+  owner?: InputMaybe<Scalars['Bytes']['input']>;
+  owner_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  owner_gt?: InputMaybe<Scalars['Bytes']['input']>;
+  owner_gte?: InputMaybe<Scalars['Bytes']['input']>;
+  owner_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  owner_lt?: InputMaybe<Scalars['Bytes']['input']>;
+  owner_lte?: InputMaybe<Scalars['Bytes']['input']>;
+  owner_not?: InputMaybe<Scalars['Bytes']['input']>;
+  owner_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  owner_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  recipient?: InputMaybe<Scalars['Bytes']['input']>;
+  recipient_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  recipient_gt?: InputMaybe<Scalars['Bytes']['input']>;
+  recipient_gte?: InputMaybe<Scalars['Bytes']['input']>;
+  recipient_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  recipient_lt?: InputMaybe<Scalars['Bytes']['input']>;
+  recipient_lte?: InputMaybe<Scalars['Bytes']['input']>;
+  recipient_not?: InputMaybe<Scalars['Bytes']['input']>;
+  recipient_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  recipient_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  slotCount?: InputMaybe<Scalars['BigInt']['input']>;
+  slotCount_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  slotCount_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  slotCount_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  slotCount_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  slotCount_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  slotCount_not?: InputMaybe<Scalars['BigInt']['input']>;
+  slotCount_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  slots_?: InputMaybe<Slot_Filter>;
+  updatedAt?: InputMaybe<Scalars['BigInt']['input']>;
+  updatedAt_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  updatedAt_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  updatedAt_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  updatedAt_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  updatedAt_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  updatedAt_not?: InputMaybe<Scalars['BigInt']['input']>;
+  updatedAt_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+};
+
+export type Feed_OrderBy =
+  | 'banner'
+  | 'createdAt'
+  | 'createdTx'
+  | 'description'
+  | 'displayName'
+  | 'externalLink'
+  | 'hub'
+  | 'hub__feedCount'
+  | 'hub__id'
+  | 'id'
+  | 'image'
+  | 'index'
+  | 'metadataCid'
+  | 'metadataName'
+  | 'metadataRaw'
+  | 'metadataURI'
+  | 'onchainName'
+  | 'owner'
+  | 'recipient'
+  | 'slotCount'
+  | 'slots'
+  | 'updatedAt';
 
 export type LiquidatedEvent = {
   __typename?: 'LiquidatedEvent';
@@ -888,6 +2006,8 @@ export type LiquidatedEvent_OrderBy =
   | 'slot__createdAt'
   | 'slot__createdTx'
   | 'slot__deposit'
+  | 'slot__epochSeconds'
+  | 'slot__hasPendingPolicy'
   | 'slot__id'
   | 'slot__isOccupied'
   | 'slot__liquidationBountyBps'
@@ -895,7 +2015,14 @@ export type LiquidatedEvent_OrderBy =
   | 'slot__minDepositSeconds'
   | 'slot__mutableModule'
   | 'slot__mutableTax'
+  | 'slot__occupancyPolicy'
   | 'slot__occupant'
+  | 'slot__occupiedSince'
+  | 'slot__pendingBuyer'
+  | 'slot__pendingDeposit'
+  | 'slot__pendingEffectiveAt'
+  | 'slot__pendingPolicy'
+  | 'slot__pendingPrice'
   | 'slot__price'
   | 'slot__recipient'
   | 'slot__taxPercentage'
@@ -1118,6 +2245,8 @@ export type MetadataSlot_OrderBy =
   | 'slot__createdAt'
   | 'slot__createdTx'
   | 'slot__deposit'
+  | 'slot__epochSeconds'
+  | 'slot__hasPendingPolicy'
   | 'slot__id'
   | 'slot__isOccupied'
   | 'slot__liquidationBountyBps'
@@ -1125,7 +2254,14 @@ export type MetadataSlot_OrderBy =
   | 'slot__minDepositSeconds'
   | 'slot__mutableModule'
   | 'slot__mutableTax'
+  | 'slot__occupancyPolicy'
   | 'slot__occupant'
+  | 'slot__occupiedSince'
+  | 'slot__pendingBuyer'
+  | 'slot__pendingDeposit'
+  | 'slot__pendingEffectiveAt'
+  | 'slot__pendingPolicy'
+  | 'slot__pendingPrice'
   | 'slot__price'
   | 'slot__recipient'
   | 'slot__taxPercentage'
@@ -1343,6 +2479,8 @@ export type MetadataUpdatedEvent_OrderBy =
   | 'slot__createdAt'
   | 'slot__createdTx'
   | 'slot__deposit'
+  | 'slot__epochSeconds'
+  | 'slot__hasPendingPolicy'
   | 'slot__id'
   | 'slot__isOccupied'
   | 'slot__liquidationBountyBps'
@@ -1350,7 +2488,14 @@ export type MetadataUpdatedEvent_OrderBy =
   | 'slot__minDepositSeconds'
   | 'slot__mutableModule'
   | 'slot__mutableTax'
+  | 'slot__occupancyPolicy'
   | 'slot__occupant'
+  | 'slot__occupiedSince'
+  | 'slot__pendingBuyer'
+  | 'slot__pendingDeposit'
+  | 'slot__pendingEffectiveAt'
+  | 'slot__pendingPolicy'
+  | 'slot__pendingPrice'
   | 'slot__price'
   | 'slot__recipient'
   | 'slot__taxPercentage'
@@ -1543,6 +2688,8 @@ export type ModuleFeePaidEvent_OrderBy =
   | 'slot__createdAt'
   | 'slot__createdTx'
   | 'slot__deposit'
+  | 'slot__epochSeconds'
+  | 'slot__hasPendingPolicy'
   | 'slot__id'
   | 'slot__isOccupied'
   | 'slot__liquidationBountyBps'
@@ -1550,7 +2697,14 @@ export type ModuleFeePaidEvent_OrderBy =
   | 'slot__minDepositSeconds'
   | 'slot__mutableModule'
   | 'slot__mutableTax'
+  | 'slot__occupancyPolicy'
   | 'slot__occupant'
+  | 'slot__occupiedSince'
+  | 'slot__pendingBuyer'
+  | 'slot__pendingDeposit'
+  | 'slot__pendingEffectiveAt'
+  | 'slot__pendingPolicy'
+  | 'slot__pendingPrice'
   | 'slot__price'
   | 'slot__recipient'
   | 'slot__taxPercentage'
@@ -1650,6 +2804,8 @@ export type ModuleUpdateProposedEvent_OrderBy =
   | 'slot__createdAt'
   | 'slot__createdTx'
   | 'slot__deposit'
+  | 'slot__epochSeconds'
+  | 'slot__hasPendingPolicy'
   | 'slot__id'
   | 'slot__isOccupied'
   | 'slot__liquidationBountyBps'
@@ -1657,7 +2813,14 @@ export type ModuleUpdateProposedEvent_OrderBy =
   | 'slot__minDepositSeconds'
   | 'slot__mutableModule'
   | 'slot__mutableTax'
+  | 'slot__occupancyPolicy'
   | 'slot__occupant'
+  | 'slot__occupiedSince'
+  | 'slot__pendingBuyer'
+  | 'slot__pendingDeposit'
+  | 'slot__pendingEffectiveAt'
+  | 'slot__pendingPolicy'
+  | 'slot__pendingPrice'
   | 'slot__price'
   | 'slot__recipient'
   | 'slot__taxPercentage'
@@ -2143,6 +3306,8 @@ export type NftToken_OrderBy =
   | 'slot__createdAt'
   | 'slot__createdTx'
   | 'slot__deposit'
+  | 'slot__epochSeconds'
+  | 'slot__hasPendingPolicy'
   | 'slot__id'
   | 'slot__isOccupied'
   | 'slot__liquidationBountyBps'
@@ -2150,7 +3315,14 @@ export type NftToken_OrderBy =
   | 'slot__minDepositSeconds'
   | 'slot__mutableModule'
   | 'slot__mutableTax'
+  | 'slot__occupancyPolicy'
   | 'slot__occupant'
+  | 'slot__occupiedSince'
+  | 'slot__pendingBuyer'
+  | 'slot__pendingDeposit'
+  | 'slot__pendingEffectiveAt'
+  | 'slot__pendingPolicy'
+  | 'slot__pendingPrice'
   | 'slot__price'
   | 'slot__recipient'
   | 'slot__taxPercentage'
@@ -2158,6 +3330,144 @@ export type NftToken_OrderBy =
   | 'slot__updatedAt'
   | 'tokenId'
   | 'uri';
+
+/**
+ * Operator delegation. An operator may selfAssess and topUp on the occupant's
+ * behalf; it may never withdraw or release.
+ */
+export type OperatorSetEvent = {
+  __typename?: 'OperatorSetEvent';
+  approved: Scalars['Boolean']['output'];
+  blockNumber: Scalars['BigInt']['output'];
+  id: Scalars['ID']['output'];
+  occupant: Scalars['Bytes']['output'];
+  operator: Scalars['Bytes']['output'];
+  slot: Slot;
+  timestamp: Scalars['BigInt']['output'];
+  tx: Scalars['Bytes']['output'];
+};
+
+export type OperatorSetEvent_Filter = {
+  /** Filter for the block changed event. */
+  _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<OperatorSetEvent_Filter>>>;
+  approved?: InputMaybe<Scalars['Boolean']['input']>;
+  approved_in?: InputMaybe<Array<Scalars['Boolean']['input']>>;
+  approved_not?: InputMaybe<Scalars['Boolean']['input']>;
+  approved_not_in?: InputMaybe<Array<Scalars['Boolean']['input']>>;
+  blockNumber?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  blockNumber_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_not?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  id?: InputMaybe<Scalars['ID']['input']>;
+  id_gt?: InputMaybe<Scalars['ID']['input']>;
+  id_gte?: InputMaybe<Scalars['ID']['input']>;
+  id_in?: InputMaybe<Array<Scalars['ID']['input']>>;
+  id_lt?: InputMaybe<Scalars['ID']['input']>;
+  id_lte?: InputMaybe<Scalars['ID']['input']>;
+  id_not?: InputMaybe<Scalars['ID']['input']>;
+  id_not_in?: InputMaybe<Array<Scalars['ID']['input']>>;
+  occupant?: InputMaybe<Scalars['Bytes']['input']>;
+  occupant_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  occupant_gt?: InputMaybe<Scalars['Bytes']['input']>;
+  occupant_gte?: InputMaybe<Scalars['Bytes']['input']>;
+  occupant_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  occupant_lt?: InputMaybe<Scalars['Bytes']['input']>;
+  occupant_lte?: InputMaybe<Scalars['Bytes']['input']>;
+  occupant_not?: InputMaybe<Scalars['Bytes']['input']>;
+  occupant_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  occupant_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  operator?: InputMaybe<Scalars['Bytes']['input']>;
+  operator_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  operator_gt?: InputMaybe<Scalars['Bytes']['input']>;
+  operator_gte?: InputMaybe<Scalars['Bytes']['input']>;
+  operator_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  operator_lt?: InputMaybe<Scalars['Bytes']['input']>;
+  operator_lte?: InputMaybe<Scalars['Bytes']['input']>;
+  operator_not?: InputMaybe<Scalars['Bytes']['input']>;
+  operator_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  operator_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  or?: InputMaybe<Array<InputMaybe<OperatorSetEvent_Filter>>>;
+  slot?: InputMaybe<Scalars['String']['input']>;
+  slot_?: InputMaybe<Slot_Filter>;
+  slot_contains?: InputMaybe<Scalars['String']['input']>;
+  slot_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_ends_with?: InputMaybe<Scalars['String']['input']>;
+  slot_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_gt?: InputMaybe<Scalars['String']['input']>;
+  slot_gte?: InputMaybe<Scalars['String']['input']>;
+  slot_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  slot_lt?: InputMaybe<Scalars['String']['input']>;
+  slot_lte?: InputMaybe<Scalars['String']['input']>;
+  slot_not?: InputMaybe<Scalars['String']['input']>;
+  slot_not_contains?: InputMaybe<Scalars['String']['input']>;
+  slot_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  slot_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  slot_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  slot_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_starts_with?: InputMaybe<Scalars['String']['input']>;
+  slot_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  timestamp?: InputMaybe<Scalars['BigInt']['input']>;
+  timestamp_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  timestamp_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  timestamp_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  timestamp_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  timestamp_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  timestamp_not?: InputMaybe<Scalars['BigInt']['input']>;
+  timestamp_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  tx?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_gt?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_gte?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  tx_lt?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_lte?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_not?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+};
+
+export type OperatorSetEvent_OrderBy =
+  | 'approved'
+  | 'blockNumber'
+  | 'id'
+  | 'occupant'
+  | 'operator'
+  | 'slot'
+  | 'slot__collectedTax'
+  | 'slot__createdAt'
+  | 'slot__createdTx'
+  | 'slot__deposit'
+  | 'slot__epochSeconds'
+  | 'slot__hasPendingPolicy'
+  | 'slot__id'
+  | 'slot__isOccupied'
+  | 'slot__liquidationBountyBps'
+  | 'slot__manager'
+  | 'slot__minDepositSeconds'
+  | 'slot__mutableModule'
+  | 'slot__mutableTax'
+  | 'slot__occupancyPolicy'
+  | 'slot__occupant'
+  | 'slot__occupiedSince'
+  | 'slot__pendingBuyer'
+  | 'slot__pendingDeposit'
+  | 'slot__pendingEffectiveAt'
+  | 'slot__pendingPolicy'
+  | 'slot__pendingPrice'
+  | 'slot__price'
+  | 'slot__recipient'
+  | 'slot__taxPercentage'
+  | 'slot__totalCollected'
+  | 'slot__updatedAt'
+  | 'timestamp'
+  | 'tx';
 
 /** Defines the order direction, either ascending or descending */
 export type OrderDirection =
@@ -2243,6 +3553,8 @@ export type PendingUpdateCancelledEvent_OrderBy =
   | 'slot__createdAt'
   | 'slot__createdTx'
   | 'slot__deposit'
+  | 'slot__epochSeconds'
+  | 'slot__hasPendingPolicy'
   | 'slot__id'
   | 'slot__isOccupied'
   | 'slot__liquidationBountyBps'
@@ -2250,7 +3562,246 @@ export type PendingUpdateCancelledEvent_OrderBy =
   | 'slot__minDepositSeconds'
   | 'slot__mutableModule'
   | 'slot__mutableTax'
+  | 'slot__occupancyPolicy'
   | 'slot__occupant'
+  | 'slot__occupiedSince'
+  | 'slot__pendingBuyer'
+  | 'slot__pendingDeposit'
+  | 'slot__pendingEffectiveAt'
+  | 'slot__pendingPolicy'
+  | 'slot__pendingPrice'
+  | 'slot__price'
+  | 'slot__recipient'
+  | 'slot__taxPercentage'
+  | 'slot__totalCollected'
+  | 'slot__updatedAt'
+  | 'timestamp'
+  | 'tx';
+
+export type PolicyUpdateAppliedEvent = {
+  __typename?: 'PolicyUpdateAppliedEvent';
+  blockNumber: Scalars['BigInt']['output'];
+  id: Scalars['ID']['output'];
+  newPolicy: Scalars['Bytes']['output'];
+  slot: Slot;
+  timestamp: Scalars['BigInt']['output'];
+  tx: Scalars['Bytes']['output'];
+};
+
+export type PolicyUpdateAppliedEvent_Filter = {
+  /** Filter for the block changed event. */
+  _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<PolicyUpdateAppliedEvent_Filter>>>;
+  blockNumber?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  blockNumber_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_not?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  id?: InputMaybe<Scalars['ID']['input']>;
+  id_gt?: InputMaybe<Scalars['ID']['input']>;
+  id_gte?: InputMaybe<Scalars['ID']['input']>;
+  id_in?: InputMaybe<Array<Scalars['ID']['input']>>;
+  id_lt?: InputMaybe<Scalars['ID']['input']>;
+  id_lte?: InputMaybe<Scalars['ID']['input']>;
+  id_not?: InputMaybe<Scalars['ID']['input']>;
+  id_not_in?: InputMaybe<Array<Scalars['ID']['input']>>;
+  newPolicy?: InputMaybe<Scalars['Bytes']['input']>;
+  newPolicy_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  newPolicy_gt?: InputMaybe<Scalars['Bytes']['input']>;
+  newPolicy_gte?: InputMaybe<Scalars['Bytes']['input']>;
+  newPolicy_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  newPolicy_lt?: InputMaybe<Scalars['Bytes']['input']>;
+  newPolicy_lte?: InputMaybe<Scalars['Bytes']['input']>;
+  newPolicy_not?: InputMaybe<Scalars['Bytes']['input']>;
+  newPolicy_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  newPolicy_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  or?: InputMaybe<Array<InputMaybe<PolicyUpdateAppliedEvent_Filter>>>;
+  slot?: InputMaybe<Scalars['String']['input']>;
+  slot_?: InputMaybe<Slot_Filter>;
+  slot_contains?: InputMaybe<Scalars['String']['input']>;
+  slot_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_ends_with?: InputMaybe<Scalars['String']['input']>;
+  slot_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_gt?: InputMaybe<Scalars['String']['input']>;
+  slot_gte?: InputMaybe<Scalars['String']['input']>;
+  slot_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  slot_lt?: InputMaybe<Scalars['String']['input']>;
+  slot_lte?: InputMaybe<Scalars['String']['input']>;
+  slot_not?: InputMaybe<Scalars['String']['input']>;
+  slot_not_contains?: InputMaybe<Scalars['String']['input']>;
+  slot_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  slot_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  slot_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  slot_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_starts_with?: InputMaybe<Scalars['String']['input']>;
+  slot_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  timestamp?: InputMaybe<Scalars['BigInt']['input']>;
+  timestamp_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  timestamp_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  timestamp_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  timestamp_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  timestamp_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  timestamp_not?: InputMaybe<Scalars['BigInt']['input']>;
+  timestamp_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  tx?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_gt?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_gte?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  tx_lt?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_lte?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_not?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+};
+
+export type PolicyUpdateAppliedEvent_OrderBy =
+  | 'blockNumber'
+  | 'id'
+  | 'newPolicy'
+  | 'slot'
+  | 'slot__collectedTax'
+  | 'slot__createdAt'
+  | 'slot__createdTx'
+  | 'slot__deposit'
+  | 'slot__epochSeconds'
+  | 'slot__hasPendingPolicy'
+  | 'slot__id'
+  | 'slot__isOccupied'
+  | 'slot__liquidationBountyBps'
+  | 'slot__manager'
+  | 'slot__minDepositSeconds'
+  | 'slot__mutableModule'
+  | 'slot__mutableTax'
+  | 'slot__occupancyPolicy'
+  | 'slot__occupant'
+  | 'slot__occupiedSince'
+  | 'slot__pendingBuyer'
+  | 'slot__pendingDeposit'
+  | 'slot__pendingEffectiveAt'
+  | 'slot__pendingPolicy'
+  | 'slot__pendingPrice'
+  | 'slot__price'
+  | 'slot__recipient'
+  | 'slot__taxPercentage'
+  | 'slot__totalCollected'
+  | 'slot__updatedAt'
+  | 'timestamp'
+  | 'tx';
+
+export type PolicyUpdateProposedEvent = {
+  __typename?: 'PolicyUpdateProposedEvent';
+  blockNumber: Scalars['BigInt']['output'];
+  id: Scalars['ID']['output'];
+  newPolicy: Scalars['Bytes']['output'];
+  slot: Slot;
+  timestamp: Scalars['BigInt']['output'];
+  tx: Scalars['Bytes']['output'];
+};
+
+export type PolicyUpdateProposedEvent_Filter = {
+  /** Filter for the block changed event. */
+  _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<PolicyUpdateProposedEvent_Filter>>>;
+  blockNumber?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  blockNumber_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_not?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  id?: InputMaybe<Scalars['ID']['input']>;
+  id_gt?: InputMaybe<Scalars['ID']['input']>;
+  id_gte?: InputMaybe<Scalars['ID']['input']>;
+  id_in?: InputMaybe<Array<Scalars['ID']['input']>>;
+  id_lt?: InputMaybe<Scalars['ID']['input']>;
+  id_lte?: InputMaybe<Scalars['ID']['input']>;
+  id_not?: InputMaybe<Scalars['ID']['input']>;
+  id_not_in?: InputMaybe<Array<Scalars['ID']['input']>>;
+  newPolicy?: InputMaybe<Scalars['Bytes']['input']>;
+  newPolicy_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  newPolicy_gt?: InputMaybe<Scalars['Bytes']['input']>;
+  newPolicy_gte?: InputMaybe<Scalars['Bytes']['input']>;
+  newPolicy_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  newPolicy_lt?: InputMaybe<Scalars['Bytes']['input']>;
+  newPolicy_lte?: InputMaybe<Scalars['Bytes']['input']>;
+  newPolicy_not?: InputMaybe<Scalars['Bytes']['input']>;
+  newPolicy_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  newPolicy_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  or?: InputMaybe<Array<InputMaybe<PolicyUpdateProposedEvent_Filter>>>;
+  slot?: InputMaybe<Scalars['String']['input']>;
+  slot_?: InputMaybe<Slot_Filter>;
+  slot_contains?: InputMaybe<Scalars['String']['input']>;
+  slot_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_ends_with?: InputMaybe<Scalars['String']['input']>;
+  slot_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_gt?: InputMaybe<Scalars['String']['input']>;
+  slot_gte?: InputMaybe<Scalars['String']['input']>;
+  slot_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  slot_lt?: InputMaybe<Scalars['String']['input']>;
+  slot_lte?: InputMaybe<Scalars['String']['input']>;
+  slot_not?: InputMaybe<Scalars['String']['input']>;
+  slot_not_contains?: InputMaybe<Scalars['String']['input']>;
+  slot_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  slot_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  slot_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  slot_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_starts_with?: InputMaybe<Scalars['String']['input']>;
+  slot_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  timestamp?: InputMaybe<Scalars['BigInt']['input']>;
+  timestamp_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  timestamp_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  timestamp_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  timestamp_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  timestamp_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  timestamp_not?: InputMaybe<Scalars['BigInt']['input']>;
+  timestamp_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  tx?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_gt?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_gte?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  tx_lt?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_lte?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_not?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+};
+
+export type PolicyUpdateProposedEvent_OrderBy =
+  | 'blockNumber'
+  | 'id'
+  | 'newPolicy'
+  | 'slot'
+  | 'slot__collectedTax'
+  | 'slot__createdAt'
+  | 'slot__createdTx'
+  | 'slot__deposit'
+  | 'slot__epochSeconds'
+  | 'slot__hasPendingPolicy'
+  | 'slot__id'
+  | 'slot__isOccupied'
+  | 'slot__liquidationBountyBps'
+  | 'slot__manager'
+  | 'slot__minDepositSeconds'
+  | 'slot__mutableModule'
+  | 'slot__mutableTax'
+  | 'slot__occupancyPolicy'
+  | 'slot__occupant'
+  | 'slot__occupiedSince'
+  | 'slot__pendingBuyer'
+  | 'slot__pendingDeposit'
+  | 'slot__pendingEffectiveAt'
+  | 'slot__pendingPolicy'
+  | 'slot__pendingPrice'
   | 'slot__price'
   | 'slot__recipient'
   | 'slot__taxPercentage'
@@ -2385,6 +3936,8 @@ export type PriceUpdatedEvent_OrderBy =
   | 'slot__createdAt'
   | 'slot__createdTx'
   | 'slot__deposit'
+  | 'slot__epochSeconds'
+  | 'slot__hasPendingPolicy'
   | 'slot__id'
   | 'slot__isOccupied'
   | 'slot__liquidationBountyBps'
@@ -2392,7 +3945,14 @@ export type PriceUpdatedEvent_OrderBy =
   | 'slot__minDepositSeconds'
   | 'slot__mutableModule'
   | 'slot__mutableTax'
+  | 'slot__occupancyPolicy'
   | 'slot__occupant'
+  | 'slot__occupiedSince'
+  | 'slot__pendingBuyer'
+  | 'slot__pendingDeposit'
+  | 'slot__pendingEffectiveAt'
+  | 'slot__pendingPolicy'
+  | 'slot__pendingPrice'
   | 'slot__price'
   | 'slot__recipient'
   | 'slot__taxPercentage'
@@ -2419,6 +3979,22 @@ export type Query = {
   depositedEvents: Array<DepositedEvent>;
   factories: Array<Factory>;
   factory?: Maybe<Factory>;
+  feed?: Maybe<Feed>;
+  feedCreatedEvent?: Maybe<FeedCreatedEvent>;
+  feedCreatedEvents: Array<FeedCreatedEvent>;
+  feedHub?: Maybe<FeedHub>;
+  feedHubs: Array<FeedHub>;
+  feedMetadataURIUpdatedEvent?: Maybe<FeedMetadataUriUpdatedEvent>;
+  feedMetadataURIUpdatedEvents: Array<FeedMetadataUriUpdatedEvent>;
+  feedNameUpdatedEvent?: Maybe<FeedNameUpdatedEvent>;
+  feedNameUpdatedEvents: Array<FeedNameUpdatedEvent>;
+  feedRecipientUpdatedEvent?: Maybe<FeedRecipientUpdatedEvent>;
+  feedRecipientUpdatedEvents: Array<FeedRecipientUpdatedEvent>;
+  feedSlotAddedEvent?: Maybe<FeedSlotAddedEvent>;
+  feedSlotAddedEvents: Array<FeedSlotAddedEvent>;
+  feedSlotRemovedEvent?: Maybe<FeedSlotRemovedEvent>;
+  feedSlotRemovedEvents: Array<FeedSlotRemovedEvent>;
+  feeds: Array<Feed>;
   liquidatedEvent?: Maybe<LiquidatedEvent>;
   liquidatedEvents: Array<LiquidatedEvent>;
   metadataSlot?: Maybe<MetadataSlot>;
@@ -2435,10 +4011,20 @@ export type Query = {
   nftcollections: Array<NftCollection>;
   nfttoken?: Maybe<NftToken>;
   nfttokens: Array<NftToken>;
+  operatorSetEvent?: Maybe<OperatorSetEvent>;
+  operatorSetEvents: Array<OperatorSetEvent>;
   pendingUpdateCancelledEvent?: Maybe<PendingUpdateCancelledEvent>;
   pendingUpdateCancelledEvents: Array<PendingUpdateCancelledEvent>;
+  policyUpdateAppliedEvent?: Maybe<PolicyUpdateAppliedEvent>;
+  policyUpdateAppliedEvents: Array<PolicyUpdateAppliedEvent>;
+  policyUpdateProposedEvent?: Maybe<PolicyUpdateProposedEvent>;
+  policyUpdateProposedEvents: Array<PolicyUpdateProposedEvent>;
   priceUpdatedEvent?: Maybe<PriceUpdatedEvent>;
   priceUpdatedEvents: Array<PriceUpdatedEvent>;
+  refundClaimedEvent?: Maybe<RefundClaimedEvent>;
+  refundClaimedEvents: Array<RefundClaimedEvent>;
+  refundCreditedEvent?: Maybe<RefundCreditedEvent>;
+  refundCreditedEvents: Array<RefundCreditedEvent>;
   releasedEvent?: Maybe<ReleasedEvent>;
   releasedEvents: Array<ReleasedEvent>;
   settledEvent?: Maybe<SettledEvent>;
@@ -2446,11 +4032,17 @@ export type Query = {
   slot?: Maybe<Slot>;
   slotDeployedEvent?: Maybe<SlotDeployedEvent>;
   slotDeployedEvents: Array<SlotDeployedEvent>;
+  slotOperator?: Maybe<SlotOperator>;
+  slotOperators: Array<SlotOperator>;
+  slotRefund?: Maybe<SlotRefund>;
+  slotRefunds: Array<SlotRefund>;
   slots: Array<Slot>;
   taxCollectedEvent?: Maybe<TaxCollectedEvent>;
   taxCollectedEvents: Array<TaxCollectedEvent>;
   taxUpdateProposedEvent?: Maybe<TaxUpdateProposedEvent>;
   taxUpdateProposedEvents: Array<TaxUpdateProposedEvent>;
+  transferScheduledEvent?: Maybe<TransferScheduledEvent>;
+  transferScheduledEvents: Array<TransferScheduledEvent>;
   withdrawnEvent?: Maybe<WithdrawnEvent>;
   withdrawnEvents: Array<WithdrawnEvent>;
 };
@@ -2577,6 +4169,150 @@ export type QueryFactoryArgs = {
   block?: InputMaybe<Block_Height>;
   id: Scalars['ID']['input'];
   subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type QueryFeedArgs = {
+  block?: InputMaybe<Block_Height>;
+  id: Scalars['ID']['input'];
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type QueryFeedCreatedEventArgs = {
+  block?: InputMaybe<Block_Height>;
+  id: Scalars['ID']['input'];
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type QueryFeedCreatedEventsArgs = {
+  block?: InputMaybe<Block_Height>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<FeedCreatedEvent_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  subgraphError?: _SubgraphErrorPolicy_;
+  where?: InputMaybe<FeedCreatedEvent_Filter>;
+};
+
+
+export type QueryFeedHubArgs = {
+  block?: InputMaybe<Block_Height>;
+  id: Scalars['ID']['input'];
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type QueryFeedHubsArgs = {
+  block?: InputMaybe<Block_Height>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<FeedHub_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  subgraphError?: _SubgraphErrorPolicy_;
+  where?: InputMaybe<FeedHub_Filter>;
+};
+
+
+export type QueryFeedMetadataUriUpdatedEventArgs = {
+  block?: InputMaybe<Block_Height>;
+  id: Scalars['ID']['input'];
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type QueryFeedMetadataUriUpdatedEventsArgs = {
+  block?: InputMaybe<Block_Height>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<FeedMetadataUriUpdatedEvent_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  subgraphError?: _SubgraphErrorPolicy_;
+  where?: InputMaybe<FeedMetadataUriUpdatedEvent_Filter>;
+};
+
+
+export type QueryFeedNameUpdatedEventArgs = {
+  block?: InputMaybe<Block_Height>;
+  id: Scalars['ID']['input'];
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type QueryFeedNameUpdatedEventsArgs = {
+  block?: InputMaybe<Block_Height>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<FeedNameUpdatedEvent_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  subgraphError?: _SubgraphErrorPolicy_;
+  where?: InputMaybe<FeedNameUpdatedEvent_Filter>;
+};
+
+
+export type QueryFeedRecipientUpdatedEventArgs = {
+  block?: InputMaybe<Block_Height>;
+  id: Scalars['ID']['input'];
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type QueryFeedRecipientUpdatedEventsArgs = {
+  block?: InputMaybe<Block_Height>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<FeedRecipientUpdatedEvent_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  subgraphError?: _SubgraphErrorPolicy_;
+  where?: InputMaybe<FeedRecipientUpdatedEvent_Filter>;
+};
+
+
+export type QueryFeedSlotAddedEventArgs = {
+  block?: InputMaybe<Block_Height>;
+  id: Scalars['ID']['input'];
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type QueryFeedSlotAddedEventsArgs = {
+  block?: InputMaybe<Block_Height>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<FeedSlotAddedEvent_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  subgraphError?: _SubgraphErrorPolicy_;
+  where?: InputMaybe<FeedSlotAddedEvent_Filter>;
+};
+
+
+export type QueryFeedSlotRemovedEventArgs = {
+  block?: InputMaybe<Block_Height>;
+  id: Scalars['ID']['input'];
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type QueryFeedSlotRemovedEventsArgs = {
+  block?: InputMaybe<Block_Height>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<FeedSlotRemovedEvent_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  subgraphError?: _SubgraphErrorPolicy_;
+  where?: InputMaybe<FeedSlotRemovedEvent_Filter>;
+};
+
+
+export type QueryFeedsArgs = {
+  block?: InputMaybe<Block_Height>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Feed_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  subgraphError?: _SubgraphErrorPolicy_;
+  where?: InputMaybe<Feed_Filter>;
 };
 
 
@@ -2724,6 +4460,24 @@ export type QueryNfttokensArgs = {
 };
 
 
+export type QueryOperatorSetEventArgs = {
+  block?: InputMaybe<Block_Height>;
+  id: Scalars['ID']['input'];
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type QueryOperatorSetEventsArgs = {
+  block?: InputMaybe<Block_Height>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<OperatorSetEvent_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  subgraphError?: _SubgraphErrorPolicy_;
+  where?: InputMaybe<OperatorSetEvent_Filter>;
+};
+
+
 export type QueryPendingUpdateCancelledEventArgs = {
   block?: InputMaybe<Block_Height>;
   id: Scalars['ID']['input'];
@@ -2742,6 +4496,42 @@ export type QueryPendingUpdateCancelledEventsArgs = {
 };
 
 
+export type QueryPolicyUpdateAppliedEventArgs = {
+  block?: InputMaybe<Block_Height>;
+  id: Scalars['ID']['input'];
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type QueryPolicyUpdateAppliedEventsArgs = {
+  block?: InputMaybe<Block_Height>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<PolicyUpdateAppliedEvent_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  subgraphError?: _SubgraphErrorPolicy_;
+  where?: InputMaybe<PolicyUpdateAppliedEvent_Filter>;
+};
+
+
+export type QueryPolicyUpdateProposedEventArgs = {
+  block?: InputMaybe<Block_Height>;
+  id: Scalars['ID']['input'];
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type QueryPolicyUpdateProposedEventsArgs = {
+  block?: InputMaybe<Block_Height>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<PolicyUpdateProposedEvent_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  subgraphError?: _SubgraphErrorPolicy_;
+  where?: InputMaybe<PolicyUpdateProposedEvent_Filter>;
+};
+
+
 export type QueryPriceUpdatedEventArgs = {
   block?: InputMaybe<Block_Height>;
   id: Scalars['ID']['input'];
@@ -2757,6 +4547,42 @@ export type QueryPriceUpdatedEventsArgs = {
   skip?: InputMaybe<Scalars['Int']['input']>;
   subgraphError?: _SubgraphErrorPolicy_;
   where?: InputMaybe<PriceUpdatedEvent_Filter>;
+};
+
+
+export type QueryRefundClaimedEventArgs = {
+  block?: InputMaybe<Block_Height>;
+  id: Scalars['ID']['input'];
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type QueryRefundClaimedEventsArgs = {
+  block?: InputMaybe<Block_Height>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<RefundClaimedEvent_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  subgraphError?: _SubgraphErrorPolicy_;
+  where?: InputMaybe<RefundClaimedEvent_Filter>;
+};
+
+
+export type QueryRefundCreditedEventArgs = {
+  block?: InputMaybe<Block_Height>;
+  id: Scalars['ID']['input'];
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type QueryRefundCreditedEventsArgs = {
+  block?: InputMaybe<Block_Height>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<RefundCreditedEvent_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  subgraphError?: _SubgraphErrorPolicy_;
+  where?: InputMaybe<RefundCreditedEvent_Filter>;
 };
 
 
@@ -2821,6 +4647,42 @@ export type QuerySlotDeployedEventsArgs = {
 };
 
 
+export type QuerySlotOperatorArgs = {
+  block?: InputMaybe<Block_Height>;
+  id: Scalars['ID']['input'];
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type QuerySlotOperatorsArgs = {
+  block?: InputMaybe<Block_Height>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<SlotOperator_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  subgraphError?: _SubgraphErrorPolicy_;
+  where?: InputMaybe<SlotOperator_Filter>;
+};
+
+
+export type QuerySlotRefundArgs = {
+  block?: InputMaybe<Block_Height>;
+  id: Scalars['ID']['input'];
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type QuerySlotRefundsArgs = {
+  block?: InputMaybe<Block_Height>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<SlotRefund_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  subgraphError?: _SubgraphErrorPolicy_;
+  where?: InputMaybe<SlotRefund_Filter>;
+};
+
+
 export type QuerySlotsArgs = {
   block?: InputMaybe<Block_Height>;
   first?: InputMaybe<Scalars['Int']['input']>;
@@ -2868,6 +4730,24 @@ export type QueryTaxUpdateProposedEventsArgs = {
 };
 
 
+export type QueryTransferScheduledEventArgs = {
+  block?: InputMaybe<Block_Height>;
+  id: Scalars['ID']['input'];
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type QueryTransferScheduledEventsArgs = {
+  block?: InputMaybe<Block_Height>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<TransferScheduledEvent_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  subgraphError?: _SubgraphErrorPolicy_;
+  where?: InputMaybe<TransferScheduledEvent_Filter>;
+};
+
+
 export type QueryWithdrawnEventArgs = {
   block?: InputMaybe<Block_Height>;
   id: Scalars['ID']['input'];
@@ -2884,6 +4764,317 @@ export type QueryWithdrawnEventsArgs = {
   subgraphError?: _SubgraphErrorPolicy_;
   where?: InputMaybe<WithdrawnEvent_Filter>;
 };
+
+export type RefundClaimedEvent = {
+  __typename?: 'RefundClaimedEvent';
+  account: Scalars['Bytes']['output'];
+  amount: Scalars['BigInt']['output'];
+  blockNumber: Scalars['BigInt']['output'];
+  currency: Currency;
+  id: Scalars['ID']['output'];
+  slot: Slot;
+  timestamp: Scalars['BigInt']['output'];
+  tx: Scalars['Bytes']['output'];
+};
+
+export type RefundClaimedEvent_Filter = {
+  /** Filter for the block changed event. */
+  _change_block?: InputMaybe<BlockChangedFilter>;
+  account?: InputMaybe<Scalars['Bytes']['input']>;
+  account_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  account_gt?: InputMaybe<Scalars['Bytes']['input']>;
+  account_gte?: InputMaybe<Scalars['Bytes']['input']>;
+  account_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  account_lt?: InputMaybe<Scalars['Bytes']['input']>;
+  account_lte?: InputMaybe<Scalars['Bytes']['input']>;
+  account_not?: InputMaybe<Scalars['Bytes']['input']>;
+  account_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  account_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  amount?: InputMaybe<Scalars['BigInt']['input']>;
+  amount_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  amount_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  amount_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  amount_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  amount_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  amount_not?: InputMaybe<Scalars['BigInt']['input']>;
+  amount_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  and?: InputMaybe<Array<InputMaybe<RefundClaimedEvent_Filter>>>;
+  blockNumber?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  blockNumber_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_not?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  currency?: InputMaybe<Scalars['String']['input']>;
+  currency_?: InputMaybe<Currency_Filter>;
+  currency_contains?: InputMaybe<Scalars['String']['input']>;
+  currency_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  currency_ends_with?: InputMaybe<Scalars['String']['input']>;
+  currency_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  currency_gt?: InputMaybe<Scalars['String']['input']>;
+  currency_gte?: InputMaybe<Scalars['String']['input']>;
+  currency_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  currency_lt?: InputMaybe<Scalars['String']['input']>;
+  currency_lte?: InputMaybe<Scalars['String']['input']>;
+  currency_not?: InputMaybe<Scalars['String']['input']>;
+  currency_not_contains?: InputMaybe<Scalars['String']['input']>;
+  currency_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  currency_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  currency_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  currency_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  currency_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  currency_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  currency_starts_with?: InputMaybe<Scalars['String']['input']>;
+  currency_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  id?: InputMaybe<Scalars['ID']['input']>;
+  id_gt?: InputMaybe<Scalars['ID']['input']>;
+  id_gte?: InputMaybe<Scalars['ID']['input']>;
+  id_in?: InputMaybe<Array<Scalars['ID']['input']>>;
+  id_lt?: InputMaybe<Scalars['ID']['input']>;
+  id_lte?: InputMaybe<Scalars['ID']['input']>;
+  id_not?: InputMaybe<Scalars['ID']['input']>;
+  id_not_in?: InputMaybe<Array<Scalars['ID']['input']>>;
+  or?: InputMaybe<Array<InputMaybe<RefundClaimedEvent_Filter>>>;
+  slot?: InputMaybe<Scalars['String']['input']>;
+  slot_?: InputMaybe<Slot_Filter>;
+  slot_contains?: InputMaybe<Scalars['String']['input']>;
+  slot_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_ends_with?: InputMaybe<Scalars['String']['input']>;
+  slot_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_gt?: InputMaybe<Scalars['String']['input']>;
+  slot_gte?: InputMaybe<Scalars['String']['input']>;
+  slot_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  slot_lt?: InputMaybe<Scalars['String']['input']>;
+  slot_lte?: InputMaybe<Scalars['String']['input']>;
+  slot_not?: InputMaybe<Scalars['String']['input']>;
+  slot_not_contains?: InputMaybe<Scalars['String']['input']>;
+  slot_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  slot_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  slot_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  slot_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_starts_with?: InputMaybe<Scalars['String']['input']>;
+  slot_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  timestamp?: InputMaybe<Scalars['BigInt']['input']>;
+  timestamp_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  timestamp_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  timestamp_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  timestamp_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  timestamp_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  timestamp_not?: InputMaybe<Scalars['BigInt']['input']>;
+  timestamp_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  tx?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_gt?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_gte?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  tx_lt?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_lte?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_not?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+};
+
+export type RefundClaimedEvent_OrderBy =
+  | 'account'
+  | 'amount'
+  | 'blockNumber'
+  | 'currency'
+  | 'currency__decimals'
+  | 'currency__id'
+  | 'currency__name'
+  | 'currency__symbol'
+  | 'id'
+  | 'slot'
+  | 'slot__collectedTax'
+  | 'slot__createdAt'
+  | 'slot__createdTx'
+  | 'slot__deposit'
+  | 'slot__epochSeconds'
+  | 'slot__hasPendingPolicy'
+  | 'slot__id'
+  | 'slot__isOccupied'
+  | 'slot__liquidationBountyBps'
+  | 'slot__manager'
+  | 'slot__minDepositSeconds'
+  | 'slot__mutableModule'
+  | 'slot__mutableTax'
+  | 'slot__occupancyPolicy'
+  | 'slot__occupant'
+  | 'slot__occupiedSince'
+  | 'slot__pendingBuyer'
+  | 'slot__pendingDeposit'
+  | 'slot__pendingEffectiveAt'
+  | 'slot__pendingPolicy'
+  | 'slot__pendingPrice'
+  | 'slot__price'
+  | 'slot__recipient'
+  | 'slot__taxPercentage'
+  | 'slot__totalCollected'
+  | 'slot__updatedAt'
+  | 'timestamp'
+  | 'tx';
+
+/**
+ * A refund that could not be pushed (e.g. a blocklisting currency) and was
+ * credited for later claim instead. A non-zero balance here means someone is
+ * owed money by the slot.
+ */
+export type RefundCreditedEvent = {
+  __typename?: 'RefundCreditedEvent';
+  account: Scalars['Bytes']['output'];
+  amount: Scalars['BigInt']['output'];
+  blockNumber: Scalars['BigInt']['output'];
+  currency: Currency;
+  id: Scalars['ID']['output'];
+  slot: Slot;
+  timestamp: Scalars['BigInt']['output'];
+  tx: Scalars['Bytes']['output'];
+};
+
+export type RefundCreditedEvent_Filter = {
+  /** Filter for the block changed event. */
+  _change_block?: InputMaybe<BlockChangedFilter>;
+  account?: InputMaybe<Scalars['Bytes']['input']>;
+  account_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  account_gt?: InputMaybe<Scalars['Bytes']['input']>;
+  account_gte?: InputMaybe<Scalars['Bytes']['input']>;
+  account_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  account_lt?: InputMaybe<Scalars['Bytes']['input']>;
+  account_lte?: InputMaybe<Scalars['Bytes']['input']>;
+  account_not?: InputMaybe<Scalars['Bytes']['input']>;
+  account_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  account_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  amount?: InputMaybe<Scalars['BigInt']['input']>;
+  amount_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  amount_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  amount_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  amount_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  amount_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  amount_not?: InputMaybe<Scalars['BigInt']['input']>;
+  amount_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  and?: InputMaybe<Array<InputMaybe<RefundCreditedEvent_Filter>>>;
+  blockNumber?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  blockNumber_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_not?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  currency?: InputMaybe<Scalars['String']['input']>;
+  currency_?: InputMaybe<Currency_Filter>;
+  currency_contains?: InputMaybe<Scalars['String']['input']>;
+  currency_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  currency_ends_with?: InputMaybe<Scalars['String']['input']>;
+  currency_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  currency_gt?: InputMaybe<Scalars['String']['input']>;
+  currency_gte?: InputMaybe<Scalars['String']['input']>;
+  currency_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  currency_lt?: InputMaybe<Scalars['String']['input']>;
+  currency_lte?: InputMaybe<Scalars['String']['input']>;
+  currency_not?: InputMaybe<Scalars['String']['input']>;
+  currency_not_contains?: InputMaybe<Scalars['String']['input']>;
+  currency_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  currency_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  currency_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  currency_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  currency_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  currency_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  currency_starts_with?: InputMaybe<Scalars['String']['input']>;
+  currency_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  id?: InputMaybe<Scalars['ID']['input']>;
+  id_gt?: InputMaybe<Scalars['ID']['input']>;
+  id_gte?: InputMaybe<Scalars['ID']['input']>;
+  id_in?: InputMaybe<Array<Scalars['ID']['input']>>;
+  id_lt?: InputMaybe<Scalars['ID']['input']>;
+  id_lte?: InputMaybe<Scalars['ID']['input']>;
+  id_not?: InputMaybe<Scalars['ID']['input']>;
+  id_not_in?: InputMaybe<Array<Scalars['ID']['input']>>;
+  or?: InputMaybe<Array<InputMaybe<RefundCreditedEvent_Filter>>>;
+  slot?: InputMaybe<Scalars['String']['input']>;
+  slot_?: InputMaybe<Slot_Filter>;
+  slot_contains?: InputMaybe<Scalars['String']['input']>;
+  slot_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_ends_with?: InputMaybe<Scalars['String']['input']>;
+  slot_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_gt?: InputMaybe<Scalars['String']['input']>;
+  slot_gte?: InputMaybe<Scalars['String']['input']>;
+  slot_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  slot_lt?: InputMaybe<Scalars['String']['input']>;
+  slot_lte?: InputMaybe<Scalars['String']['input']>;
+  slot_not?: InputMaybe<Scalars['String']['input']>;
+  slot_not_contains?: InputMaybe<Scalars['String']['input']>;
+  slot_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  slot_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  slot_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  slot_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_starts_with?: InputMaybe<Scalars['String']['input']>;
+  slot_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  timestamp?: InputMaybe<Scalars['BigInt']['input']>;
+  timestamp_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  timestamp_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  timestamp_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  timestamp_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  timestamp_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  timestamp_not?: InputMaybe<Scalars['BigInt']['input']>;
+  timestamp_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  tx?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_gt?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_gte?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  tx_lt?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_lte?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_not?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+};
+
+export type RefundCreditedEvent_OrderBy =
+  | 'account'
+  | 'amount'
+  | 'blockNumber'
+  | 'currency'
+  | 'currency__decimals'
+  | 'currency__id'
+  | 'currency__name'
+  | 'currency__symbol'
+  | 'id'
+  | 'slot'
+  | 'slot__collectedTax'
+  | 'slot__createdAt'
+  | 'slot__createdTx'
+  | 'slot__deposit'
+  | 'slot__epochSeconds'
+  | 'slot__hasPendingPolicy'
+  | 'slot__id'
+  | 'slot__isOccupied'
+  | 'slot__liquidationBountyBps'
+  | 'slot__manager'
+  | 'slot__minDepositSeconds'
+  | 'slot__mutableModule'
+  | 'slot__mutableTax'
+  | 'slot__occupancyPolicy'
+  | 'slot__occupant'
+  | 'slot__occupiedSince'
+  | 'slot__pendingBuyer'
+  | 'slot__pendingDeposit'
+  | 'slot__pendingEffectiveAt'
+  | 'slot__pendingPolicy'
+  | 'slot__pendingPrice'
+  | 'slot__price'
+  | 'slot__recipient'
+  | 'slot__taxPercentage'
+  | 'slot__totalCollected'
+  | 'slot__updatedAt'
+  | 'timestamp'
+  | 'tx';
 
 export type ReleasedEvent = {
   __typename?: 'ReleasedEvent';
@@ -3013,6 +5204,8 @@ export type ReleasedEvent_OrderBy =
   | 'slot__createdAt'
   | 'slot__createdTx'
   | 'slot__deposit'
+  | 'slot__epochSeconds'
+  | 'slot__hasPendingPolicy'
   | 'slot__id'
   | 'slot__isOccupied'
   | 'slot__liquidationBountyBps'
@@ -3020,7 +5213,14 @@ export type ReleasedEvent_OrderBy =
   | 'slot__minDepositSeconds'
   | 'slot__mutableModule'
   | 'slot__mutableTax'
+  | 'slot__occupancyPolicy'
   | 'slot__occupant'
+  | 'slot__occupiedSince'
+  | 'slot__pendingBuyer'
+  | 'slot__pendingDeposit'
+  | 'slot__pendingEffectiveAt'
+  | 'slot__pendingPolicy'
+  | 'slot__pendingPrice'
   | 'slot__price'
   | 'slot__recipient'
   | 'slot__taxPercentage'
@@ -3163,6 +5363,8 @@ export type SettledEvent_OrderBy =
   | 'slot__createdAt'
   | 'slot__createdTx'
   | 'slot__deposit'
+  | 'slot__epochSeconds'
+  | 'slot__hasPendingPolicy'
   | 'slot__id'
   | 'slot__isOccupied'
   | 'slot__liquidationBountyBps'
@@ -3170,7 +5372,14 @@ export type SettledEvent_OrderBy =
   | 'slot__minDepositSeconds'
   | 'slot__mutableModule'
   | 'slot__mutableTax'
+  | 'slot__occupancyPolicy'
   | 'slot__occupant'
+  | 'slot__occupiedSince'
+  | 'slot__pendingBuyer'
+  | 'slot__pendingDeposit'
+  | 'slot__pendingEffectiveAt'
+  | 'slot__pendingPolicy'
+  | 'slot__pendingPrice'
   | 'slot__price'
   | 'slot__recipient'
   | 'slot__taxPercentage'
@@ -3190,6 +5399,9 @@ export type Slot = {
   deployEvent?: Maybe<SlotDeployedEvent>;
   deposit: Scalars['BigInt']['output'];
   deposits: Array<DepositedEvent>;
+  epochSeconds: Scalars['BigInt']['output'];
+  feed?: Maybe<Feed>;
+  hasPendingPolicy: Scalars['Boolean']['output'];
   id: Scalars['ID']['output'];
   isOccupied: Scalars['Boolean']['output'];
   liquidationBountyBps: Scalars['BigInt']['output'];
@@ -3203,8 +5415,15 @@ export type Slot = {
   moduleUpdateProposals: Array<ModuleUpdateProposedEvent>;
   mutableModule: Scalars['Boolean']['output'];
   mutableTax: Scalars['Boolean']['output'];
+  occupancyPolicy?: Maybe<Scalars['Bytes']['output']>;
   occupant?: Maybe<Scalars['Bytes']['output']>;
   occupantAccount?: Maybe<Account>;
+  occupiedSince: Scalars['BigInt']['output'];
+  pendingBuyer?: Maybe<Scalars['Bytes']['output']>;
+  pendingDeposit?: Maybe<Scalars['BigInt']['output']>;
+  pendingEffectiveAt?: Maybe<Scalars['BigInt']['output']>;
+  pendingPolicy?: Maybe<Scalars['Bytes']['output']>;
+  pendingPrice?: Maybe<Scalars['BigInt']['output']>;
   pendingUpdateCancellations: Array<PendingUpdateCancelledEvent>;
   price: Scalars['BigInt']['output'];
   priceUpdates: Array<PriceUpdatedEvent>;
@@ -3533,6 +5752,8 @@ export type SlotDeployedEvent_OrderBy =
   | 'slot__createdAt'
   | 'slot__createdTx'
   | 'slot__deposit'
+  | 'slot__epochSeconds'
+  | 'slot__hasPendingPolicy'
   | 'slot__id'
   | 'slot__isOccupied'
   | 'slot__liquidationBountyBps'
@@ -3540,7 +5761,14 @@ export type SlotDeployedEvent_OrderBy =
   | 'slot__minDepositSeconds'
   | 'slot__mutableModule'
   | 'slot__mutableTax'
+  | 'slot__occupancyPolicy'
   | 'slot__occupant'
+  | 'slot__occupiedSince'
+  | 'slot__pendingBuyer'
+  | 'slot__pendingDeposit'
+  | 'slot__pendingEffectiveAt'
+  | 'slot__pendingPolicy'
+  | 'slot__pendingPrice'
   | 'slot__price'
   | 'slot__recipient'
   | 'slot__taxPercentage'
@@ -3549,6 +5777,244 @@ export type SlotDeployedEvent_OrderBy =
   | 'taxPercentage'
   | 'timestamp'
   | 'tx';
+
+/** Current operator approvals, keyed slot-occupant-operator. */
+export type SlotOperator = {
+  __typename?: 'SlotOperator';
+  approved: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
+  occupant: Scalars['Bytes']['output'];
+  operator: Scalars['Bytes']['output'];
+  slot: Slot;
+  updatedAt: Scalars['BigInt']['output'];
+};
+
+export type SlotOperator_Filter = {
+  /** Filter for the block changed event. */
+  _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<SlotOperator_Filter>>>;
+  approved?: InputMaybe<Scalars['Boolean']['input']>;
+  approved_in?: InputMaybe<Array<Scalars['Boolean']['input']>>;
+  approved_not?: InputMaybe<Scalars['Boolean']['input']>;
+  approved_not_in?: InputMaybe<Array<Scalars['Boolean']['input']>>;
+  id?: InputMaybe<Scalars['ID']['input']>;
+  id_gt?: InputMaybe<Scalars['ID']['input']>;
+  id_gte?: InputMaybe<Scalars['ID']['input']>;
+  id_in?: InputMaybe<Array<Scalars['ID']['input']>>;
+  id_lt?: InputMaybe<Scalars['ID']['input']>;
+  id_lte?: InputMaybe<Scalars['ID']['input']>;
+  id_not?: InputMaybe<Scalars['ID']['input']>;
+  id_not_in?: InputMaybe<Array<Scalars['ID']['input']>>;
+  occupant?: InputMaybe<Scalars['Bytes']['input']>;
+  occupant_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  occupant_gt?: InputMaybe<Scalars['Bytes']['input']>;
+  occupant_gte?: InputMaybe<Scalars['Bytes']['input']>;
+  occupant_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  occupant_lt?: InputMaybe<Scalars['Bytes']['input']>;
+  occupant_lte?: InputMaybe<Scalars['Bytes']['input']>;
+  occupant_not?: InputMaybe<Scalars['Bytes']['input']>;
+  occupant_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  occupant_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  operator?: InputMaybe<Scalars['Bytes']['input']>;
+  operator_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  operator_gt?: InputMaybe<Scalars['Bytes']['input']>;
+  operator_gte?: InputMaybe<Scalars['Bytes']['input']>;
+  operator_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  operator_lt?: InputMaybe<Scalars['Bytes']['input']>;
+  operator_lte?: InputMaybe<Scalars['Bytes']['input']>;
+  operator_not?: InputMaybe<Scalars['Bytes']['input']>;
+  operator_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  operator_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  or?: InputMaybe<Array<InputMaybe<SlotOperator_Filter>>>;
+  slot?: InputMaybe<Scalars['String']['input']>;
+  slot_?: InputMaybe<Slot_Filter>;
+  slot_contains?: InputMaybe<Scalars['String']['input']>;
+  slot_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_ends_with?: InputMaybe<Scalars['String']['input']>;
+  slot_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_gt?: InputMaybe<Scalars['String']['input']>;
+  slot_gte?: InputMaybe<Scalars['String']['input']>;
+  slot_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  slot_lt?: InputMaybe<Scalars['String']['input']>;
+  slot_lte?: InputMaybe<Scalars['String']['input']>;
+  slot_not?: InputMaybe<Scalars['String']['input']>;
+  slot_not_contains?: InputMaybe<Scalars['String']['input']>;
+  slot_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  slot_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  slot_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  slot_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_starts_with?: InputMaybe<Scalars['String']['input']>;
+  slot_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  updatedAt?: InputMaybe<Scalars['BigInt']['input']>;
+  updatedAt_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  updatedAt_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  updatedAt_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  updatedAt_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  updatedAt_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  updatedAt_not?: InputMaybe<Scalars['BigInt']['input']>;
+  updatedAt_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+};
+
+export type SlotOperator_OrderBy =
+  | 'approved'
+  | 'id'
+  | 'occupant'
+  | 'operator'
+  | 'slot'
+  | 'slot__collectedTax'
+  | 'slot__createdAt'
+  | 'slot__createdTx'
+  | 'slot__deposit'
+  | 'slot__epochSeconds'
+  | 'slot__hasPendingPolicy'
+  | 'slot__id'
+  | 'slot__isOccupied'
+  | 'slot__liquidationBountyBps'
+  | 'slot__manager'
+  | 'slot__minDepositSeconds'
+  | 'slot__mutableModule'
+  | 'slot__mutableTax'
+  | 'slot__occupancyPolicy'
+  | 'slot__occupant'
+  | 'slot__occupiedSince'
+  | 'slot__pendingBuyer'
+  | 'slot__pendingDeposit'
+  | 'slot__pendingEffectiveAt'
+  | 'slot__pendingPolicy'
+  | 'slot__pendingPrice'
+  | 'slot__price'
+  | 'slot__recipient'
+  | 'slot__taxPercentage'
+  | 'slot__totalCollected'
+  | 'slot__updatedAt'
+  | 'updatedAt';
+
+/** Outstanding claimable refund balance per slot-account. */
+export type SlotRefund = {
+  __typename?: 'SlotRefund';
+  account: Scalars['Bytes']['output'];
+  claimed: Scalars['BigInt']['output'];
+  credited: Scalars['BigInt']['output'];
+  id: Scalars['ID']['output'];
+  outstanding: Scalars['BigInt']['output'];
+  slot: Slot;
+  updatedAt: Scalars['BigInt']['output'];
+};
+
+export type SlotRefund_Filter = {
+  /** Filter for the block changed event. */
+  _change_block?: InputMaybe<BlockChangedFilter>;
+  account?: InputMaybe<Scalars['Bytes']['input']>;
+  account_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  account_gt?: InputMaybe<Scalars['Bytes']['input']>;
+  account_gte?: InputMaybe<Scalars['Bytes']['input']>;
+  account_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  account_lt?: InputMaybe<Scalars['Bytes']['input']>;
+  account_lte?: InputMaybe<Scalars['Bytes']['input']>;
+  account_not?: InputMaybe<Scalars['Bytes']['input']>;
+  account_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  account_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  and?: InputMaybe<Array<InputMaybe<SlotRefund_Filter>>>;
+  claimed?: InputMaybe<Scalars['BigInt']['input']>;
+  claimed_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  claimed_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  claimed_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  claimed_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  claimed_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  claimed_not?: InputMaybe<Scalars['BigInt']['input']>;
+  claimed_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  credited?: InputMaybe<Scalars['BigInt']['input']>;
+  credited_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  credited_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  credited_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  credited_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  credited_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  credited_not?: InputMaybe<Scalars['BigInt']['input']>;
+  credited_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  id?: InputMaybe<Scalars['ID']['input']>;
+  id_gt?: InputMaybe<Scalars['ID']['input']>;
+  id_gte?: InputMaybe<Scalars['ID']['input']>;
+  id_in?: InputMaybe<Array<Scalars['ID']['input']>>;
+  id_lt?: InputMaybe<Scalars['ID']['input']>;
+  id_lte?: InputMaybe<Scalars['ID']['input']>;
+  id_not?: InputMaybe<Scalars['ID']['input']>;
+  id_not_in?: InputMaybe<Array<Scalars['ID']['input']>>;
+  or?: InputMaybe<Array<InputMaybe<SlotRefund_Filter>>>;
+  outstanding?: InputMaybe<Scalars['BigInt']['input']>;
+  outstanding_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  outstanding_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  outstanding_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  outstanding_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  outstanding_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  outstanding_not?: InputMaybe<Scalars['BigInt']['input']>;
+  outstanding_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  slot?: InputMaybe<Scalars['String']['input']>;
+  slot_?: InputMaybe<Slot_Filter>;
+  slot_contains?: InputMaybe<Scalars['String']['input']>;
+  slot_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_ends_with?: InputMaybe<Scalars['String']['input']>;
+  slot_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_gt?: InputMaybe<Scalars['String']['input']>;
+  slot_gte?: InputMaybe<Scalars['String']['input']>;
+  slot_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  slot_lt?: InputMaybe<Scalars['String']['input']>;
+  slot_lte?: InputMaybe<Scalars['String']['input']>;
+  slot_not?: InputMaybe<Scalars['String']['input']>;
+  slot_not_contains?: InputMaybe<Scalars['String']['input']>;
+  slot_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  slot_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  slot_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  slot_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_starts_with?: InputMaybe<Scalars['String']['input']>;
+  slot_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  updatedAt?: InputMaybe<Scalars['BigInt']['input']>;
+  updatedAt_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  updatedAt_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  updatedAt_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  updatedAt_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  updatedAt_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  updatedAt_not?: InputMaybe<Scalars['BigInt']['input']>;
+  updatedAt_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+};
+
+export type SlotRefund_OrderBy =
+  | 'account'
+  | 'claimed'
+  | 'credited'
+  | 'id'
+  | 'outstanding'
+  | 'slot'
+  | 'slot__collectedTax'
+  | 'slot__createdAt'
+  | 'slot__createdTx'
+  | 'slot__deposit'
+  | 'slot__epochSeconds'
+  | 'slot__hasPendingPolicy'
+  | 'slot__id'
+  | 'slot__isOccupied'
+  | 'slot__liquidationBountyBps'
+  | 'slot__manager'
+  | 'slot__minDepositSeconds'
+  | 'slot__mutableModule'
+  | 'slot__mutableTax'
+  | 'slot__occupancyPolicy'
+  | 'slot__occupant'
+  | 'slot__occupiedSince'
+  | 'slot__pendingBuyer'
+  | 'slot__pendingDeposit'
+  | 'slot__pendingEffectiveAt'
+  | 'slot__pendingPolicy'
+  | 'slot__pendingPrice'
+  | 'slot__price'
+  | 'slot__recipient'
+  | 'slot__taxPercentage'
+  | 'slot__totalCollected'
+  | 'slot__updatedAt'
+  | 'updatedAt';
 
 export type Slot_Filter = {
   /** Filter for the block changed event. */
@@ -3611,6 +6077,39 @@ export type Slot_Filter = {
   deposit_not?: InputMaybe<Scalars['BigInt']['input']>;
   deposit_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
   deposits_?: InputMaybe<DepositedEvent_Filter>;
+  epochSeconds?: InputMaybe<Scalars['BigInt']['input']>;
+  epochSeconds_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  epochSeconds_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  epochSeconds_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  epochSeconds_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  epochSeconds_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  epochSeconds_not?: InputMaybe<Scalars['BigInt']['input']>;
+  epochSeconds_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  feed?: InputMaybe<Scalars['String']['input']>;
+  feed_?: InputMaybe<Feed_Filter>;
+  feed_contains?: InputMaybe<Scalars['String']['input']>;
+  feed_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  feed_ends_with?: InputMaybe<Scalars['String']['input']>;
+  feed_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  feed_gt?: InputMaybe<Scalars['String']['input']>;
+  feed_gte?: InputMaybe<Scalars['String']['input']>;
+  feed_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  feed_lt?: InputMaybe<Scalars['String']['input']>;
+  feed_lte?: InputMaybe<Scalars['String']['input']>;
+  feed_not?: InputMaybe<Scalars['String']['input']>;
+  feed_not_contains?: InputMaybe<Scalars['String']['input']>;
+  feed_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  feed_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  feed_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  feed_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  feed_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  feed_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  feed_starts_with?: InputMaybe<Scalars['String']['input']>;
+  feed_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  hasPendingPolicy?: InputMaybe<Scalars['Boolean']['input']>;
+  hasPendingPolicy_in?: InputMaybe<Array<Scalars['Boolean']['input']>>;
+  hasPendingPolicy_not?: InputMaybe<Scalars['Boolean']['input']>;
+  hasPendingPolicy_not_in?: InputMaybe<Array<Scalars['Boolean']['input']>>;
   id?: InputMaybe<Scalars['ID']['input']>;
   id_gt?: InputMaybe<Scalars['ID']['input']>;
   id_gte?: InputMaybe<Scalars['ID']['input']>;
@@ -3683,6 +6182,16 @@ export type Slot_Filter = {
   mutableTax_in?: InputMaybe<Array<Scalars['Boolean']['input']>>;
   mutableTax_not?: InputMaybe<Scalars['Boolean']['input']>;
   mutableTax_not_in?: InputMaybe<Array<Scalars['Boolean']['input']>>;
+  occupancyPolicy?: InputMaybe<Scalars['Bytes']['input']>;
+  occupancyPolicy_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  occupancyPolicy_gt?: InputMaybe<Scalars['Bytes']['input']>;
+  occupancyPolicy_gte?: InputMaybe<Scalars['Bytes']['input']>;
+  occupancyPolicy_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  occupancyPolicy_lt?: InputMaybe<Scalars['Bytes']['input']>;
+  occupancyPolicy_lte?: InputMaybe<Scalars['Bytes']['input']>;
+  occupancyPolicy_not?: InputMaybe<Scalars['Bytes']['input']>;
+  occupancyPolicy_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  occupancyPolicy_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
   occupant?: InputMaybe<Scalars['Bytes']['input']>;
   occupantAccount?: InputMaybe<Scalars['String']['input']>;
   occupantAccount_?: InputMaybe<Account_Filter>;
@@ -3714,7 +6223,59 @@ export type Slot_Filter = {
   occupant_not?: InputMaybe<Scalars['Bytes']['input']>;
   occupant_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
   occupant_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  occupiedSince?: InputMaybe<Scalars['BigInt']['input']>;
+  occupiedSince_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  occupiedSince_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  occupiedSince_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  occupiedSince_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  occupiedSince_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  occupiedSince_not?: InputMaybe<Scalars['BigInt']['input']>;
+  occupiedSince_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
   or?: InputMaybe<Array<InputMaybe<Slot_Filter>>>;
+  pendingBuyer?: InputMaybe<Scalars['Bytes']['input']>;
+  pendingBuyer_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  pendingBuyer_gt?: InputMaybe<Scalars['Bytes']['input']>;
+  pendingBuyer_gte?: InputMaybe<Scalars['Bytes']['input']>;
+  pendingBuyer_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  pendingBuyer_lt?: InputMaybe<Scalars['Bytes']['input']>;
+  pendingBuyer_lte?: InputMaybe<Scalars['Bytes']['input']>;
+  pendingBuyer_not?: InputMaybe<Scalars['Bytes']['input']>;
+  pendingBuyer_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  pendingBuyer_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  pendingDeposit?: InputMaybe<Scalars['BigInt']['input']>;
+  pendingDeposit_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  pendingDeposit_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  pendingDeposit_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  pendingDeposit_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  pendingDeposit_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  pendingDeposit_not?: InputMaybe<Scalars['BigInt']['input']>;
+  pendingDeposit_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  pendingEffectiveAt?: InputMaybe<Scalars['BigInt']['input']>;
+  pendingEffectiveAt_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  pendingEffectiveAt_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  pendingEffectiveAt_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  pendingEffectiveAt_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  pendingEffectiveAt_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  pendingEffectiveAt_not?: InputMaybe<Scalars['BigInt']['input']>;
+  pendingEffectiveAt_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  pendingPolicy?: InputMaybe<Scalars['Bytes']['input']>;
+  pendingPolicy_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  pendingPolicy_gt?: InputMaybe<Scalars['Bytes']['input']>;
+  pendingPolicy_gte?: InputMaybe<Scalars['Bytes']['input']>;
+  pendingPolicy_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  pendingPolicy_lt?: InputMaybe<Scalars['Bytes']['input']>;
+  pendingPolicy_lte?: InputMaybe<Scalars['Bytes']['input']>;
+  pendingPolicy_not?: InputMaybe<Scalars['Bytes']['input']>;
+  pendingPolicy_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  pendingPolicy_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  pendingPrice?: InputMaybe<Scalars['BigInt']['input']>;
+  pendingPrice_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  pendingPrice_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  pendingPrice_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  pendingPrice_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  pendingPrice_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  pendingPrice_not?: InputMaybe<Scalars['BigInt']['input']>;
+  pendingPrice_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
   pendingUpdateCancellations_?: InputMaybe<PendingUpdateCancelledEvent_Filter>;
   price?: InputMaybe<Scalars['BigInt']['input']>;
   priceUpdates_?: InputMaybe<PriceUpdatedEvent_Filter>;
@@ -3813,6 +6374,27 @@ export type Slot_OrderBy =
   | 'deployEvent__tx'
   | 'deposit'
   | 'deposits'
+  | 'epochSeconds'
+  | 'feed'
+  | 'feed__banner'
+  | 'feed__createdAt'
+  | 'feed__createdTx'
+  | 'feed__description'
+  | 'feed__displayName'
+  | 'feed__externalLink'
+  | 'feed__id'
+  | 'feed__image'
+  | 'feed__index'
+  | 'feed__metadataCid'
+  | 'feed__metadataName'
+  | 'feed__metadataRaw'
+  | 'feed__metadataURI'
+  | 'feed__onchainName'
+  | 'feed__owner'
+  | 'feed__recipient'
+  | 'feed__slotCount'
+  | 'feed__updatedAt'
+  | 'hasPendingPolicy'
   | 'id'
   | 'isOccupied'
   | 'liquidationBountyBps'
@@ -3846,6 +6428,7 @@ export type Slot_OrderBy =
   | 'module__version'
   | 'mutableModule'
   | 'mutableTax'
+  | 'occupancyPolicy'
   | 'occupant'
   | 'occupantAccount'
   | 'occupantAccount__id'
@@ -3854,6 +6437,12 @@ export type Slot_OrderBy =
   | 'occupantAccount__slotCount'
   | 'occupantAccount__totalHoldTime'
   | 'occupantAccount__type'
+  | 'occupiedSince'
+  | 'pendingBuyer'
+  | 'pendingDeposit'
+  | 'pendingEffectiveAt'
+  | 'pendingPolicy'
+  | 'pendingPrice'
   | 'pendingUpdateCancellations'
   | 'price'
   | 'priceUpdates'
@@ -4003,6 +6592,8 @@ export type TaxCollectedEvent_OrderBy =
   | 'slot__createdAt'
   | 'slot__createdTx'
   | 'slot__deposit'
+  | 'slot__epochSeconds'
+  | 'slot__hasPendingPolicy'
   | 'slot__id'
   | 'slot__isOccupied'
   | 'slot__liquidationBountyBps'
@@ -4010,7 +6601,14 @@ export type TaxCollectedEvent_OrderBy =
   | 'slot__minDepositSeconds'
   | 'slot__mutableModule'
   | 'slot__mutableTax'
+  | 'slot__occupancyPolicy'
   | 'slot__occupant'
+  | 'slot__occupiedSince'
+  | 'slot__pendingBuyer'
+  | 'slot__pendingDeposit'
+  | 'slot__pendingEffectiveAt'
+  | 'slot__pendingPolicy'
+  | 'slot__pendingPrice'
   | 'slot__price'
   | 'slot__recipient'
   | 'slot__taxPercentage'
@@ -4108,6 +6706,8 @@ export type TaxUpdateProposedEvent_OrderBy =
   | 'slot__createdAt'
   | 'slot__createdTx'
   | 'slot__deposit'
+  | 'slot__epochSeconds'
+  | 'slot__hasPendingPolicy'
   | 'slot__id'
   | 'slot__isOccupied'
   | 'slot__liquidationBountyBps'
@@ -4115,7 +6715,192 @@ export type TaxUpdateProposedEvent_OrderBy =
   | 'slot__minDepositSeconds'
   | 'slot__mutableModule'
   | 'slot__mutableTax'
+  | 'slot__occupancyPolicy'
   | 'slot__occupant'
+  | 'slot__occupiedSince'
+  | 'slot__pendingBuyer'
+  | 'slot__pendingDeposit'
+  | 'slot__pendingEffectiveAt'
+  | 'slot__pendingPolicy'
+  | 'slot__pendingPrice'
+  | 'slot__price'
+  | 'slot__recipient'
+  | 'slot__taxPercentage'
+  | 'slot__totalCollected'
+  | 'slot__updatedAt'
+  | 'timestamp'
+  | 'tx';
+
+/**
+ * A buy that committed but has not yet taken effect. On an epoch slot, `buy()`
+ * escrows funds and schedules the handover for the next boundary; the matching
+ * BoughtEvent fires later, in whatever transaction happens to materialise it.
+ */
+export type TransferScheduledEvent = {
+  __typename?: 'TransferScheduledEvent';
+  blockNumber: Scalars['BigInt']['output'];
+  buyer: Scalars['Bytes']['output'];
+  currency: Currency;
+  deposit: Scalars['BigInt']['output'];
+  effectiveAt: Scalars['BigInt']['output'];
+  id: Scalars['ID']['output'];
+  price: Scalars['BigInt']['output'];
+  slot: Slot;
+  timestamp: Scalars['BigInt']['output'];
+  tx: Scalars['Bytes']['output'];
+};
+
+export type TransferScheduledEvent_Filter = {
+  /** Filter for the block changed event. */
+  _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<TransferScheduledEvent_Filter>>>;
+  blockNumber?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  blockNumber_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_not?: InputMaybe<Scalars['BigInt']['input']>;
+  blockNumber_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  buyer?: InputMaybe<Scalars['Bytes']['input']>;
+  buyer_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  buyer_gt?: InputMaybe<Scalars['Bytes']['input']>;
+  buyer_gte?: InputMaybe<Scalars['Bytes']['input']>;
+  buyer_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  buyer_lt?: InputMaybe<Scalars['Bytes']['input']>;
+  buyer_lte?: InputMaybe<Scalars['Bytes']['input']>;
+  buyer_not?: InputMaybe<Scalars['Bytes']['input']>;
+  buyer_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  buyer_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  currency?: InputMaybe<Scalars['String']['input']>;
+  currency_?: InputMaybe<Currency_Filter>;
+  currency_contains?: InputMaybe<Scalars['String']['input']>;
+  currency_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  currency_ends_with?: InputMaybe<Scalars['String']['input']>;
+  currency_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  currency_gt?: InputMaybe<Scalars['String']['input']>;
+  currency_gte?: InputMaybe<Scalars['String']['input']>;
+  currency_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  currency_lt?: InputMaybe<Scalars['String']['input']>;
+  currency_lte?: InputMaybe<Scalars['String']['input']>;
+  currency_not?: InputMaybe<Scalars['String']['input']>;
+  currency_not_contains?: InputMaybe<Scalars['String']['input']>;
+  currency_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  currency_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  currency_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  currency_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  currency_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  currency_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  currency_starts_with?: InputMaybe<Scalars['String']['input']>;
+  currency_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  deposit?: InputMaybe<Scalars['BigInt']['input']>;
+  deposit_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  deposit_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  deposit_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  deposit_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  deposit_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  deposit_not?: InputMaybe<Scalars['BigInt']['input']>;
+  deposit_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  effectiveAt?: InputMaybe<Scalars['BigInt']['input']>;
+  effectiveAt_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  effectiveAt_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  effectiveAt_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  effectiveAt_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  effectiveAt_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  effectiveAt_not?: InputMaybe<Scalars['BigInt']['input']>;
+  effectiveAt_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  id?: InputMaybe<Scalars['ID']['input']>;
+  id_gt?: InputMaybe<Scalars['ID']['input']>;
+  id_gte?: InputMaybe<Scalars['ID']['input']>;
+  id_in?: InputMaybe<Array<Scalars['ID']['input']>>;
+  id_lt?: InputMaybe<Scalars['ID']['input']>;
+  id_lte?: InputMaybe<Scalars['ID']['input']>;
+  id_not?: InputMaybe<Scalars['ID']['input']>;
+  id_not_in?: InputMaybe<Array<Scalars['ID']['input']>>;
+  or?: InputMaybe<Array<InputMaybe<TransferScheduledEvent_Filter>>>;
+  price?: InputMaybe<Scalars['BigInt']['input']>;
+  price_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  price_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  price_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  price_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  price_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  price_not?: InputMaybe<Scalars['BigInt']['input']>;
+  price_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  slot?: InputMaybe<Scalars['String']['input']>;
+  slot_?: InputMaybe<Slot_Filter>;
+  slot_contains?: InputMaybe<Scalars['String']['input']>;
+  slot_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_ends_with?: InputMaybe<Scalars['String']['input']>;
+  slot_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_gt?: InputMaybe<Scalars['String']['input']>;
+  slot_gte?: InputMaybe<Scalars['String']['input']>;
+  slot_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  slot_lt?: InputMaybe<Scalars['String']['input']>;
+  slot_lte?: InputMaybe<Scalars['String']['input']>;
+  slot_not?: InputMaybe<Scalars['String']['input']>;
+  slot_not_contains?: InputMaybe<Scalars['String']['input']>;
+  slot_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  slot_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  slot_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  slot_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  slot_starts_with?: InputMaybe<Scalars['String']['input']>;
+  slot_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  timestamp?: InputMaybe<Scalars['BigInt']['input']>;
+  timestamp_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  timestamp_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  timestamp_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  timestamp_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  timestamp_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  timestamp_not?: InputMaybe<Scalars['BigInt']['input']>;
+  timestamp_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  tx?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_gt?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_gte?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  tx_lt?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_lte?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_not?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  tx_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+};
+
+export type TransferScheduledEvent_OrderBy =
+  | 'blockNumber'
+  | 'buyer'
+  | 'currency'
+  | 'currency__decimals'
+  | 'currency__id'
+  | 'currency__name'
+  | 'currency__symbol'
+  | 'deposit'
+  | 'effectiveAt'
+  | 'id'
+  | 'price'
+  | 'slot'
+  | 'slot__collectedTax'
+  | 'slot__createdAt'
+  | 'slot__createdTx'
+  | 'slot__deposit'
+  | 'slot__epochSeconds'
+  | 'slot__hasPendingPolicy'
+  | 'slot__id'
+  | 'slot__isOccupied'
+  | 'slot__liquidationBountyBps'
+  | 'slot__manager'
+  | 'slot__minDepositSeconds'
+  | 'slot__mutableModule'
+  | 'slot__mutableTax'
+  | 'slot__occupancyPolicy'
+  | 'slot__occupant'
+  | 'slot__occupiedSince'
+  | 'slot__pendingBuyer'
+  | 'slot__pendingDeposit'
+  | 'slot__pendingEffectiveAt'
+  | 'slot__pendingPolicy'
+  | 'slot__pendingPrice'
   | 'slot__price'
   | 'slot__recipient'
   | 'slot__taxPercentage'
@@ -4252,6 +7037,8 @@ export type WithdrawnEvent_OrderBy =
   | 'slot__createdAt'
   | 'slot__createdTx'
   | 'slot__deposit'
+  | 'slot__epochSeconds'
+  | 'slot__hasPendingPolicy'
   | 'slot__id'
   | 'slot__isOccupied'
   | 'slot__liquidationBountyBps'
@@ -4259,7 +7046,14 @@ export type WithdrawnEvent_OrderBy =
   | 'slot__minDepositSeconds'
   | 'slot__mutableModule'
   | 'slot__mutableTax'
+  | 'slot__occupancyPolicy'
   | 'slot__occupant'
+  | 'slot__occupiedSince'
+  | 'slot__pendingBuyer'
+  | 'slot__pendingDeposit'
+  | 'slot__pendingEffectiveAt'
+  | 'slot__pendingPolicy'
+  | 'slot__pendingPrice'
   | 'slot__price'
   | 'slot__recipient'
   | 'slot__taxPercentage'
@@ -4583,7 +7377,7 @@ export type GetMetadataUpdatedEventsQueryVariables = Exact<{
 
 export type GetMetadataUpdatedEventsQuery = { __typename?: 'Query', metadataUpdatedEvents: Array<{ __typename?: 'MetadataUpdatedEvent', id: string, updatedBy: string, uri: string, rawJson?: string | null, adType?: string | null, timestamp: string, blockNumber: string, tx: string, slot: { __typename?: 'Slot', id: string }, author: { __typename?: 'Account', id: string, type: AccountType } }> };
 
-export type SlotFieldsFragment = { __typename?: 'Slot', id: string, recipient: string, manager: string, mutableTax: boolean, mutableModule: boolean, taxPercentage: string, occupant?: string | null, isOccupied: boolean, price: string, deposit: string, collectedTax: string, totalCollected: string, liquidationBountyBps: string, minDepositSeconds: string, createdAt: string, createdTx: string, updatedAt: string, recipientAccount: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number }, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number }, module?: { __typename?: 'Module', id: string, verified: boolean, name: string, version: string, feeBps: string, moduleURI?: string | null, image?: string | null, description?: string | null, totalFeesCollected: string } | null, occupantAccount?: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number } | null };
+export type SlotFieldsFragment = { __typename?: 'Slot', id: string, recipient: string, manager: string, mutableTax: boolean, mutableModule: boolean, taxPercentage: string, occupant?: string | null, isOccupied: boolean, price: string, deposit: string, collectedTax: string, totalCollected: string, liquidationBountyBps: string, minDepositSeconds: string, epochSeconds: string, occupancyPolicy?: string | null, occupiedSince: string, pendingBuyer?: string | null, pendingEffectiveAt?: string | null, pendingPrice?: string | null, pendingDeposit?: string | null, pendingPolicy?: string | null, hasPendingPolicy: boolean, createdAt: string, createdTx: string, updatedAt: string, recipientAccount: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number }, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number }, module?: { __typename?: 'Module', id: string, verified: boolean, name: string, version: string, feeBps: string, moduleURI?: string | null, image?: string | null, description?: string | null, totalFeesCollected: string } | null, occupantAccount?: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number } | null };
 
 export type GetSlotsQueryVariables = Exact<{
   first: Scalars['Int']['input'];
@@ -4595,7 +7389,7 @@ export type GetSlotsQueryVariables = Exact<{
 }>;
 
 
-export type GetSlotsQuery = { __typename?: 'Query', slots: Array<{ __typename?: 'Slot', id: string, recipient: string, manager: string, mutableTax: boolean, mutableModule: boolean, taxPercentage: string, occupant?: string | null, isOccupied: boolean, price: string, deposit: string, collectedTax: string, totalCollected: string, liquidationBountyBps: string, minDepositSeconds: string, createdAt: string, createdTx: string, updatedAt: string, recipientAccount: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number }, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number }, module?: { __typename?: 'Module', id: string, verified: boolean, name: string, version: string, feeBps: string, moduleURI?: string | null, image?: string | null, description?: string | null, totalFeesCollected: string } | null, occupantAccount?: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number } | null }> };
+export type GetSlotsQuery = { __typename?: 'Query', slots: Array<{ __typename?: 'Slot', id: string, recipient: string, manager: string, mutableTax: boolean, mutableModule: boolean, taxPercentage: string, occupant?: string | null, isOccupied: boolean, price: string, deposit: string, collectedTax: string, totalCollected: string, liquidationBountyBps: string, minDepositSeconds: string, epochSeconds: string, occupancyPolicy?: string | null, occupiedSince: string, pendingBuyer?: string | null, pendingEffectiveAt?: string | null, pendingPrice?: string | null, pendingDeposit?: string | null, pendingPolicy?: string | null, hasPendingPolicy: boolean, createdAt: string, createdTx: string, updatedAt: string, recipientAccount: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number }, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number }, module?: { __typename?: 'Module', id: string, verified: boolean, name: string, version: string, feeBps: string, moduleURI?: string | null, image?: string | null, description?: string | null, totalFeesCollected: string } | null, occupantAccount?: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number } | null }> };
 
 export type GetSlotQueryVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -4603,7 +7397,7 @@ export type GetSlotQueryVariables = Exact<{
 }>;
 
 
-export type GetSlotQuery = { __typename?: 'Query', slot?: { __typename?: 'Slot', id: string, recipient: string, manager: string, mutableTax: boolean, mutableModule: boolean, taxPercentage: string, occupant?: string | null, isOccupied: boolean, price: string, deposit: string, collectedTax: string, totalCollected: string, liquidationBountyBps: string, minDepositSeconds: string, createdAt: string, createdTx: string, updatedAt: string, recipientAccount: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number }, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number }, module?: { __typename?: 'Module', id: string, verified: boolean, name: string, version: string, feeBps: string, moduleURI?: string | null, image?: string | null, description?: string | null, totalFeesCollected: string } | null, occupantAccount?: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number } | null } | null };
+export type GetSlotQuery = { __typename?: 'Query', slot?: { __typename?: 'Slot', id: string, recipient: string, manager: string, mutableTax: boolean, mutableModule: boolean, taxPercentage: string, occupant?: string | null, isOccupied: boolean, price: string, deposit: string, collectedTax: string, totalCollected: string, liquidationBountyBps: string, minDepositSeconds: string, epochSeconds: string, occupancyPolicy?: string | null, occupiedSince: string, pendingBuyer?: string | null, pendingEffectiveAt?: string | null, pendingPrice?: string | null, pendingDeposit?: string | null, pendingPolicy?: string | null, hasPendingPolicy: boolean, createdAt: string, createdTx: string, updatedAt: string, recipientAccount: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number }, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number }, module?: { __typename?: 'Module', id: string, verified: boolean, name: string, version: string, feeBps: string, moduleURI?: string | null, image?: string | null, description?: string | null, totalFeesCollected: string } | null, occupantAccount?: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number } | null } | null };
 
 export type GetSlotsByRecipientQueryVariables = Exact<{
   recipient: Scalars['Bytes']['input'];
@@ -4615,7 +7409,7 @@ export type GetSlotsByRecipientQueryVariables = Exact<{
 }>;
 
 
-export type GetSlotsByRecipientQuery = { __typename?: 'Query', slots: Array<{ __typename?: 'Slot', id: string, recipient: string, manager: string, mutableTax: boolean, mutableModule: boolean, taxPercentage: string, occupant?: string | null, isOccupied: boolean, price: string, deposit: string, collectedTax: string, totalCollected: string, liquidationBountyBps: string, minDepositSeconds: string, createdAt: string, createdTx: string, updatedAt: string, recipientAccount: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number }, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number }, module?: { __typename?: 'Module', id: string, verified: boolean, name: string, version: string, feeBps: string, moduleURI?: string | null, image?: string | null, description?: string | null, totalFeesCollected: string } | null, occupantAccount?: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number } | null }> };
+export type GetSlotsByRecipientQuery = { __typename?: 'Query', slots: Array<{ __typename?: 'Slot', id: string, recipient: string, manager: string, mutableTax: boolean, mutableModule: boolean, taxPercentage: string, occupant?: string | null, isOccupied: boolean, price: string, deposit: string, collectedTax: string, totalCollected: string, liquidationBountyBps: string, minDepositSeconds: string, epochSeconds: string, occupancyPolicy?: string | null, occupiedSince: string, pendingBuyer?: string | null, pendingEffectiveAt?: string | null, pendingPrice?: string | null, pendingDeposit?: string | null, pendingPolicy?: string | null, hasPendingPolicy: boolean, createdAt: string, createdTx: string, updatedAt: string, recipientAccount: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number }, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number }, module?: { __typename?: 'Module', id: string, verified: boolean, name: string, version: string, feeBps: string, moduleURI?: string | null, image?: string | null, description?: string | null, totalFeesCollected: string } | null, occupantAccount?: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number } | null }> };
 
 export type GetSlotsByOccupantQueryVariables = Exact<{
   occupant: Scalars['Bytes']['input'];
@@ -4627,7 +7421,7 @@ export type GetSlotsByOccupantQueryVariables = Exact<{
 }>;
 
 
-export type GetSlotsByOccupantQuery = { __typename?: 'Query', slots: Array<{ __typename?: 'Slot', id: string, recipient: string, manager: string, mutableTax: boolean, mutableModule: boolean, taxPercentage: string, occupant?: string | null, isOccupied: boolean, price: string, deposit: string, collectedTax: string, totalCollected: string, liquidationBountyBps: string, minDepositSeconds: string, createdAt: string, createdTx: string, updatedAt: string, recipientAccount: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number }, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number }, module?: { __typename?: 'Module', id: string, verified: boolean, name: string, version: string, feeBps: string, moduleURI?: string | null, image?: string | null, description?: string | null, totalFeesCollected: string } | null, occupantAccount?: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number } | null }> };
+export type GetSlotsByOccupantQuery = { __typename?: 'Query', slots: Array<{ __typename?: 'Slot', id: string, recipient: string, manager: string, mutableTax: boolean, mutableModule: boolean, taxPercentage: string, occupant?: string | null, isOccupied: boolean, price: string, deposit: string, collectedTax: string, totalCollected: string, liquidationBountyBps: string, minDepositSeconds: string, epochSeconds: string, occupancyPolicy?: string | null, occupiedSince: string, pendingBuyer?: string | null, pendingEffectiveAt?: string | null, pendingPrice?: string | null, pendingDeposit?: string | null, pendingPolicy?: string | null, hasPendingPolicy: boolean, createdAt: string, createdTx: string, updatedAt: string, recipientAccount: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number }, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number }, module?: { __typename?: 'Module', id: string, verified: boolean, name: string, version: string, feeBps: string, moduleURI?: string | null, image?: string | null, description?: string | null, totalFeesCollected: string } | null, occupantAccount?: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number } | null }> };
 
 export type SlotMetadataFieldsFragment = { __typename?: 'MetadataSlot', id: string, uri: string, rawJson?: string | null, adType?: string | null, updatedBy: string, updateCount: string, createdAt: string, createdTx: string, updatedAt: string, updatedTx: string };
 
@@ -4641,7 +7435,7 @@ export type GetSlotsWithMetadataQueryVariables = Exact<{
 }>;
 
 
-export type GetSlotsWithMetadataQuery = { __typename?: 'Query', slots: Array<{ __typename?: 'Slot', id: string, recipient: string, manager: string, mutableTax: boolean, mutableModule: boolean, taxPercentage: string, occupant?: string | null, isOccupied: boolean, price: string, deposit: string, collectedTax: string, totalCollected: string, liquidationBountyBps: string, minDepositSeconds: string, createdAt: string, createdTx: string, updatedAt: string, metadata?: { __typename?: 'MetadataSlot', id: string, uri: string, rawJson?: string | null, adType?: string | null, updatedBy: string, updateCount: string, createdAt: string, createdTx: string, updatedAt: string, updatedTx: string } | null, recipientAccount: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number }, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number }, module?: { __typename?: 'Module', id: string, verified: boolean, name: string, version: string, feeBps: string, moduleURI?: string | null, image?: string | null, description?: string | null, totalFeesCollected: string } | null, occupantAccount?: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number } | null }> };
+export type GetSlotsWithMetadataQuery = { __typename?: 'Query', slots: Array<{ __typename?: 'Slot', id: string, recipient: string, manager: string, mutableTax: boolean, mutableModule: boolean, taxPercentage: string, occupant?: string | null, isOccupied: boolean, price: string, deposit: string, collectedTax: string, totalCollected: string, liquidationBountyBps: string, minDepositSeconds: string, epochSeconds: string, occupancyPolicy?: string | null, occupiedSince: string, pendingBuyer?: string | null, pendingEffectiveAt?: string | null, pendingPrice?: string | null, pendingDeposit?: string | null, pendingPolicy?: string | null, hasPendingPolicy: boolean, createdAt: string, createdTx: string, updatedAt: string, metadata?: { __typename?: 'MetadataSlot', id: string, uri: string, rawJson?: string | null, adType?: string | null, updatedBy: string, updateCount: string, createdAt: string, createdTx: string, updatedAt: string, updatedTx: string } | null, recipientAccount: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number }, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number }, module?: { __typename?: 'Module', id: string, verified: boolean, name: string, version: string, feeBps: string, moduleURI?: string | null, image?: string | null, description?: string | null, totalFeesCollected: string } | null, occupantAccount?: { __typename?: 'Account', id: string, type: AccountType, slotCount: number, occupiedCount: number } | null }> };
 
 export const AccountSlotFieldsFragmentDoc = gql`
     fragment AccountSlotFields on AccountSlot {
@@ -4763,6 +7557,15 @@ export const SlotFieldsFragmentDoc = gql`
   totalCollected
   liquidationBountyBps
   minDepositSeconds
+  epochSeconds
+  occupancyPolicy
+  occupiedSince
+  pendingBuyer
+  pendingEffectiveAt
+  pendingPrice
+  pendingDeposit
+  pendingPolicy
+  hasPendingPolicy
   createdAt
   createdTx
   updatedAt

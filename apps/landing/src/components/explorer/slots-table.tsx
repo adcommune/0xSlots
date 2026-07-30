@@ -6,6 +6,8 @@ import { useEffect, useState } from "react";
 import { isAddress, stringify } from "viem";
 import { AccountTypeIcon } from "@/components/account-type-icon";
 import { EnsAddress } from "@/components/ens-address";
+import { OccupantCell } from "@/components/explorer/occupant-cell";
+import { OccupancyPolicyBadge } from "@/components/occupancy-policy-badge";
 import { TablePagination } from "@/components/table-pagination";
 import { TableEmpty, TableSkeleton } from "@/components/table-states";
 import { Badge } from "@/components/ui/badge";
@@ -360,19 +362,7 @@ export function SlotsTable() {
                       </span>
                     </TableCell>
                     <TableCell className="text-xs">
-                      {isOccupied && slot.occupant && slot.occupantAccount ? (
-                        <span className="inline-flex items-center gap-1.5">
-                          <AccountTypeIcon
-                            type={slot.occupantAccount.type}
-                            className="h-3 w-3"
-                          />
-                          {truncateAddress(slot.occupant)}
-                        </span>
-                      ) : (
-                        <Badge variant="secondary" className="text-[10px]">
-                          VACANT
-                        </Badge>
-                      )}
+                      <OccupantCell slot={slot} />
                     </TableCell>
                     <TableCell className="text-right text-xs whitespace-nowrap">
                       <span className="font-bold">
@@ -396,7 +386,15 @@ export function SlotsTable() {
                         : "—"}
                     </TableCell>
                     <TableCell>
-                      <div className="flex gap-1">
+                      <div className="flex flex-wrap items-center gap-1">
+                        {/* How easily this slot can actually be bought out —
+                            more consequential to a holder than the mutability
+                            flags beside it. */}
+                        <OccupancyPolicyBadge
+                          epochSeconds={slot.epochSeconds}
+                          occupancyPolicy={slot.occupancyPolicy}
+                          className="[&_*]:text-[9px]"
+                        />
                         {slot.mutableTax && (
                           <Badge variant="outline" className="text-[9px]">
                             TAX

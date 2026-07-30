@@ -30,6 +30,12 @@ export type SlotOnChain = {
   pendingTaxPercentage: bigint;
   hasPendingModule: boolean;
   pendingModule: string;
+  // v3 occupancy layer
+  occupancyPolicy: string | null;
+  epochSeconds: bigint;
+  occupiedSince: bigint;
+  hasPendingPolicy: boolean;
+  pendingPolicy: string | null;
   // Currency metadata
   currencyName?: string;
   currencySymbol?: string;
@@ -59,6 +65,11 @@ type SlotInfoResult = {
   pendingTaxPercentage: bigint;
   hasPendingModule: boolean;
   pendingModule: string;
+  occupancyPolicy: string;
+  epochSeconds: bigint;
+  occupiedSince: bigint;
+  hasPendingPolicy: boolean;
+  pendingPolicy: string;
 };
 
 function parseSlotInfo(
@@ -89,6 +100,21 @@ function parseSlotInfo(
     pendingTaxPercentage: info.pendingTaxPercentage,
     hasPendingModule: info.hasPendingModule,
     pendingModule: info.pendingModule.toLowerCase(),
+    // v3. getSlotInfo() already resolves occupant/price/deposit against a
+    // matured transfer on-chain, so unlike subgraph rows these need no
+    // client-side fix-up. It does NOT expose pendingTransfer, so a
+    // not-yet-effective buy is visible only via the subgraph's pendingBuyer.
+    occupancyPolicy:
+      info.occupancyPolicy === ZERO_ADDRESS
+        ? null
+        : info.occupancyPolicy.toLowerCase(),
+    epochSeconds: info.epochSeconds,
+    occupiedSince: info.occupiedSince,
+    hasPendingPolicy: info.hasPendingPolicy,
+    pendingPolicy:
+      info.pendingPolicy === ZERO_ADDRESS
+        ? null
+        : info.pendingPolicy.toLowerCase(),
     currencyName: currencyMeta?.name,
     currencySymbol: currencyMeta?.symbol,
     currencyDecimals: currencyMeta?.decimals,

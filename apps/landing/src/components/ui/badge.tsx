@@ -14,6 +14,9 @@ const badgeVariants = cva(
         destructive:
           "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
         outline: "text-foreground",
+        // V3 occupancy states
+        settling: "border-transparent bg-violet-100 text-violet-900",
+        incoming: "border-transparent bg-sky-100 text-sky-900",
         // V3 event types
         Buy: "border-transparent bg-purple-100 text-purple-900",
         Release: "border-transparent bg-orange-100 text-orange-900",
