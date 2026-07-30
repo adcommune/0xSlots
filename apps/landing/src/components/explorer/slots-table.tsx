@@ -6,8 +6,7 @@ import { useEffect, useState } from "react";
 import { isAddress, stringify } from "viem";
 import { AccountTypeIcon } from "@/components/account-type-icon";
 import { EnsAddress } from "@/components/ens-address";
-import { OccupantCell } from "@/components/explorer/occupant-cell";
-import { OccupancyPolicyBadge } from "@/components/occupancy-policy-badge";
+import { SlotRow } from "@/components/explorer/slot-row";
 import { TablePagination } from "@/components/table-pagination";
 import { TableEmpty, TableSkeleton } from "@/components/table-states";
 import { Badge } from "@/components/ui/badge";
@@ -342,80 +341,13 @@ export function SlotsTable() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paged.map((slot) => {
-                const isOccupied = slot.occupant != null;
-                return (
-                  <TableRow
-                    key={slot.id}
-                    className="cursor-pointer"
-                    onClick={() => {
-                      push(`/slots/${slot.id}`);
-                    }}
-                  >
-                    <TableCell>
-                      <span className="inline-flex items-center gap-1.5">
-                        <AccountTypeIcon
-                          type={slot.recipientAccount.type}
-                          className="h-3 w-3"
-                        />
-                        <EnsAddress address={slot.recipient} />
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-xs">
-                      <OccupantCell slot={slot} />
-                    </TableCell>
-                    <TableCell className="text-right text-xs whitespace-nowrap">
-                      <span className="font-bold">
-                        {isOccupied
-                          ? formatPrice(
-                              slot.price,
-                              slot.currency.decimals ?? 18,
-                            )
-                          : "0"}
-                      </span>
-                      <span className="text-muted-foreground text-[10px] ml-1">
-                        {slot.currency.symbol}
-                      </span>
-                      <span className="text-muted-foreground text-[10px] ml-1">
-                        ({Number(slot.taxPercentage) / 100}%/mo)
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
-                      {slot.module
-                        ? `${slot.module.name || truncateAddress(slot.module.id)}${slot.module.verified ? " ✓" : ""}`
-                        : "—"}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap items-center gap-1">
-                        {/* How easily this slot can actually be bought out —
-                            more consequential to a holder than the mutability
-                            flags beside it. */}
-                        <OccupancyPolicyBadge
-                          epochSeconds={slot.epochSeconds}
-                          occupancyPolicy={slot.occupancyPolicy}
-                          className="[&_*]:text-[9px]"
-                        />
-                        {slot.mutableTax && (
-                          <Badge variant="outline" className="text-[9px]">
-                            TAX
-                          </Badge>
-                        )}
-                        {slot.mutableModule && (
-                          <Badge variant="outline" className="text-[9px]">
-                            MOD
-                          </Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right text-xs text-muted-foreground whitespace-nowrap">
-                      {formatDistanceToNow(
-                        new Date(Number(slot.createdAt) * 1000),
-                        { addSuffix: true },
-                      )}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+              {paged.map((slot) => (
+                <SlotRow
+                  key={slot.id}
+                  slot={slot}
+                  onSelect={(id) => push(`/slots/${id}`)}
+                />
+              ))}
             </TableBody>
           </Table>
           <TablePagination
