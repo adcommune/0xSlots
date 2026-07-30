@@ -68,10 +68,11 @@ export function OccupancyPolicyBadge({
             <TooltipContent className="max-w-xs">
               <p className="font-medium">Near-pure Harberger.</p>
               <p className="mt-1">
-                Buys take effect on the clock, not on arrival — a buy now lands
-                at the next {formatDuration(epoch)} boundary. Everyone waits the
-                same sub-epoch amount and nobody picks theirs, so being faster
-                stops being worth anything.
+                Taking this slot from its occupant lands on the clock, not on
+                arrival — at the next {formatDuration(epoch)} boundary. Everyone
+                waits the same sub-epoch amount and nobody picks theirs, so
+                being faster stops being worth anything. Claiming it while
+                vacant is immediate.
               </p>
             </TooltipContent>
           </Tooltip>

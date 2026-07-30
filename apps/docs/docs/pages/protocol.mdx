@@ -97,15 +97,26 @@ The occupant maintains a deposit that covers future tax. When depleted, anyone c
 
 ### Epochs
 
-A slot can be configured with `epochSeconds` so occupancy changes only take
-effect on a clock boundary. `epochSeconds = 0` (the default) means instant buy.
+A slot can be configured with `epochSeconds` so that **taking it from an
+occupant** only takes effect on a clock boundary. `epochSeconds = 0` (the
+default) means instant buy.
 
-With `epochSeconds = 3600`:
+With `epochSeconds = 3600`, buying an **occupied** slot:
 
 ```
 14:14  buyer calls buy()   — funds are escrowed, current occupant keeps occupying
 15:00  boundary            — occupancy AND tax liability transfer to the buyer
 ```
+
+Claiming a **vacant** slot is immediate, whatever `epochSeconds` is. The delay
+exists so an occupant cannot be sniped at their declared price by whoever is
+fastest; an empty slot has no occupant and no declared price — the claimant
+sets their own valuation and pays only the deposit — so delaying it would cost
+the recipient revenue on a slot nobody holds and protect against nothing.
+
+One consequence worth knowing: because a buy-out lands on the next boundary,
+whoever holds the slot is guaranteed at least one full epoch before they can be
+displaced. Epochs give you a free minimum tenure of one epoch.
 
 Nothing runs on a timer. The transfer is applied lazily on the next interaction
 with the contract, and `occupant()`, `price()`, `deposit()`, and `taxOwed()` all
@@ -117,7 +128,8 @@ report the post-boundary state as soon as the boundary passes.
   occupant cannot raise their price to dodge a sale they have already seen.
 - If the occupant releases or is liquidated before the boundary, the slot goes
   vacant and the scheduled transfer still lands. The buyer's purchase price is
-  refunded, since a vacant slot costs only the deposit.
+  refunded, since a vacant slot costs only the deposit. Nobody else can claim it
+  in the meantime — a pending claim is protected even though the slot is empty.
 
 **Harberger impact: near-pure.** Everyone gets the same sub-epoch delay and
 nobody chooses theirs, so there is nothing to game — it removes the latency

@@ -65,8 +65,9 @@ export function OccupancySection() {
       <div>
         <p className="text-sm font-medium">Occupancy</p>
         <p className="text-xs text-muted-foreground mt-1">
-          When this slot can change hands. Leave both off for instant buy —
-          anyone can take it at its declared price, in the next block.
+          When this slot can be taken from whoever holds it. Leave both off for
+          instant buy — anyone can take it at its declared price, in the next
+          block. Neither setting delays claiming the slot while empty.
         </p>
       </div>
 
@@ -111,13 +112,16 @@ export function OccupancySection() {
             <FormDescription>
               {epochIsOn ? (
                 <>
-                  Buys land on the clock, not on arrival — a buy takes effect at
-                  the next {epochValue} {epochUnitLabel} boundary. Everyone
-                  waits the same sub-epoch amount and nobody picks theirs, so
-                  being faster stops being worth anything.
+                  <strong>Taking the slot from someone</strong> lands on the
+                  clock, not on arrival — at the next {epochValue}{" "}
+                  {epochUnitLabel} boundary. Everyone waits the same sub-epoch
+                  amount and nobody picks theirs, so being faster stops being
+                  worth anything.{" "}
+                  <strong>Claiming it while empty is immediate</strong> — there
+                  is no occupant to take it from.
                 </>
               ) : (
-                <>0 = instant buy. Set a value to schedule transfers.</>
+                <>0 = instant buy. Set a value to schedule buy-outs.</>
               )}
             </FormDescription>
             {epochTooShort && (
