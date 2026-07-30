@@ -203,6 +203,12 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
             revert InvalidModule_NoCode();
         epochSeconds = _epochSeconds;
         occupancyPolicy = _occupancyPolicy;
+
+        // Indexers cannot learn these any other way: `createSlotV3` emits the
+        // pre-v3 `SlotDeployed` (SlotInitParams was deliberately not extended,
+        // to preserve the factory's ABI and selector), so without this event a
+        // slot's epoch length and policy are invisible off-chain.
+        emit SlotConfiguredV3(_epochSeconds, _occupancyPolicy);
     }
 
     // ═══════════════════════════════════════════════════════════

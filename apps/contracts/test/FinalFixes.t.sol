@@ -145,6 +145,39 @@ contract FinalFixesTest is Test {
         assertEq(s.epochSeconds(), 3600);
     }
 
+    /// @dev `SlotConfiguredV3` is the ONLY on-chain signal carrying a slot's
+    ///      epoch length and occupancy policy — `createSlotV3` emits the pre-v3
+    ///      `SlotDeployed`, whose `SlotInitParams` tuple was deliberately not
+    ///      extended (doing so would change the factory's selector and break
+    ///      every published ABI). Without this event those two fields are
+    ///      invisible to the subgraph and Ponder.
+    event SlotConfiguredV3(uint64 epochSeconds, address occupancyPolicy);
+
+    function test_InitializeV3_EmitsConfigForIndexers() public {
+        Slot s = _slot();
+        FFDenyAllPolicy p = new FFDenyAllPolicy();
+
+        vm.expectEmit(false, false, false, true, address(s));
+        emit SlotConfiguredV3(3600, address(p));
+
+        vm.prank(address(factory));
+        s.initializeV3(3600, address(p));
+    }
+
+    /// The migration path must be indexable too — legacy slots brought up to v3
+    /// by the admin have to surface their config the same way.
+    function test_MigrateSlotsV3_EmitsConfigForIndexers() public {
+        Slot s = _legacySlot();
+        address[] memory slots = new address[](1);
+        slots[0] = address(s);
+
+        vm.expectEmit(false, false, false, true, address(s));
+        emit SlotConfiguredV3(7200, address(0));
+
+        factory.migrateSlotsV3(slots, 7200, address(0));
+        assertEq(s.epochSeconds(), 7200);
+    }
+
     /// @dev A "legacy" slot: a bare BeaconProxy that only ever ran v1
     ///      `initialize`, exactly like the slots deployed before the v2 beacon
     ///      upgrade. `factory` is still address(0) there, which must be

@@ -136,6 +136,12 @@ interface ISlotEvents {
 
     event ModuleCallFailed(string callbackName);
 
+    /// @notice Emitted by `initializeV3`. The only on-chain signal carrying a
+    ///         slot's epoch length and occupancy policy — `SlotDeployed` predates
+    ///         both and was intentionally left unchanged to preserve the
+    ///         factory's ABI.
+    event SlotConfiguredV3(uint64 epochSeconds, address occupancyPolicy);
+
     event PolicyUpdateProposed(address newPolicy);
 
     event PolicyUpdateApplied(address newPolicy);

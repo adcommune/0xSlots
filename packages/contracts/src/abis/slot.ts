@@ -1278,6 +1278,25 @@ export const slotAbi = [
   },
   {
     "type": "event",
+    "name": "SlotConfiguredV3",
+    "inputs": [
+      {
+        "name": "epochSeconds",
+        "type": "uint64",
+        "indexed": false,
+        "internalType": "uint64"
+      },
+      {
+        "name": "occupancyPolicy",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "SlotCreated",
     "inputs": [
       {
