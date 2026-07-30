@@ -35,10 +35,6 @@ import { useAccount, useSwitchChain } from "wagmi";
 import { AccountTypeIcon } from "@/components/account-type-icon";
 import { OccupancyBadge } from "@/components/occupancy-badge";
 import { OccupancyPolicyBadge } from "@/components/occupancy-policy-badge";
-import {
-  formatDuration as formatShortDuration,
-  useEffectiveOccupancy,
-} from "@/hooks/use-effective-occupancy";
 import { PageHeader } from "@/components/page-header";
 import { SplitRecipientsBar } from "@/components/split-recipients-bar";
 import {
@@ -69,6 +65,10 @@ import {
   slotQueryOptions,
 } from "@/hooks/slot-queries";
 import { useCurrencyBalance } from "@/hooks/use-currency-balance";
+import {
+  formatDuration as formatShortDuration,
+  useEffectiveOccupancy,
+} from "@/hooks/use-effective-occupancy";
 import { useSlotAction } from "@/hooks/use-slot-action";
 import { useSlotOnChain } from "@/hooks/use-slot-onchain";
 import { useModules } from "@/hooks/use-v3";
@@ -185,6 +185,9 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
     );
   }
 
+  const isPendingBuyer =
+    !!address &&
+    effectiveOccupancy?.pendingBuyer?.toLowerCase() === address.toLowerCase();
   const isOccupied = slot.occupant != null;
   const isOccupant = address?.toLowerCase() === slot.occupant?.toLowerCase();
   const isRecipient = address?.toLowerCase() === slot.recipient.toLowerCase();
@@ -949,16 +952,36 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
           <div className="p-4 border-b">
             {effectiveOccupancy?.hasPendingTransfer ? (
               <>
-                <p className="text-sm font-medium">Already claimed</p>
+                {/* The buyer and a bystander need different sentences here.
+                    "Already claimed" reads as "someone beat you to it", which
+                    is exactly wrong when shown to the person who just bought. */}
+                <p className="text-sm font-medium">
+                  {isPendingBuyer ? "Your buy is landing" : "Already claimed"}
+                </p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  A buy is committed and takes effect at the next epoch
-                  boundary, in{" "}
-                  {formatShortDuration(
-                    Number(effectiveOccupancy.pendingEffectiveAt ?? 0n) -
-                      Math.floor(Date.now() / 1000),
+                  {isPendingBuyer ? (
+                    <>
+                      You take the slot at the next epoch boundary, in{" "}
+                      {formatShortDuration(
+                        Number(effectiveOccupancy.pendingEffectiveAt ?? 0n) -
+                          Math.floor(Date.now() / 1000),
+                      )}
+                      . Your funds are already escrowed and the commit cannot be
+                      cancelled — nobody can outbid or displace you in the
+                      meantime.
+                    </>
+                  ) : (
+                    <>
+                      A buy is committed and takes effect at the next epoch
+                      boundary, in{" "}
+                      {formatShortDuration(
+                        Number(effectiveOccupancy.pendingEffectiveAt ?? 0n) -
+                          Math.floor(Date.now() / 1000),
+                      )}
+                      . First commit wins and commits cannot be cancelled, so
+                      buying now would revert.
+                    </>
                   )}
-                  . First commit wins and commits cannot be cancelled, so
-                  buying now would revert.
                 </p>
               </>
             ) : (
@@ -1063,8 +1086,10 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
                         <AlertDialogTitle>Release this slot?</AlertDialogTitle>
                         <AlertDialogDescription>
                           This will give up your occupancy and return your
-                          remaining deposit. You will lose your position and
-                          someone else can claim the slot.
+                          remaining deposit. You lose your position and the slot
+                          becomes claimable — immediately if nobody has a buy
+                          committed, otherwise by whoever committed first, at
+                          their boundary.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>

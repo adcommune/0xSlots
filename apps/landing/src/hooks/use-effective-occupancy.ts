@@ -12,10 +12,11 @@ import { useEffect, useMemo, useState } from "react";
  * Resolve a slot's TRUE current occupancy.
  *
  * Indexed `slot.occupant` is the last occupant the subgraph saw materialise.
- * On an epoch slot the handover happens at a clock boundary but is applied
- * lazily on-chain, so between the boundary and the next transaction touching
- * the slot the chain already treats the buyer as occupant while the subgraph
- * still names the seller. That gap can be hours.
+ * When a buy TAKES an epoch slot from someone the handover happens at a clock
+ * boundary and is applied lazily on-chain, so between the boundary and the next
+ * transaction touching the slot the chain already treats the buyer as occupant
+ * while the subgraph still names the seller. That gap can be hours. (Claiming a
+ * vacant slot is immediate, so it never opens one.)
  *
  * Never render `slot.occupant` directly, and never gate occupant-only actions
  * on it — during that window it names someone who has already stopped paying

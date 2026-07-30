@@ -19,8 +19,10 @@ import { formatDuration } from "@/hooks/use-effective-occupancy";
  *   already holds the slot and pays its tax, but no transaction has written
  *   that to storage yet so the subgraph still shows the old occupant. The
  *   address shown alongside is already the new one.
- * - INCOMING — a buy is committed and waiting for its boundary. The current
- *   occupant still holds and still pays until then.
+ * - INCOMING — a buy is committed and waiting for its boundary. Whoever holds
+ *   the slot keeps it and keeps paying until then. Only reachable when the buy
+ *   took the slot FROM someone: claiming a vacant slot is immediate, so it
+ *   never produces this state.
  */
 export function OccupancyBadge({
   occupancy,
@@ -83,9 +85,11 @@ export function OccupancyBadge({
             </Badge>
           </TooltipTrigger>
           <TooltipContent className="max-w-xs">
-            A buy is committed and takes effect at the next epoch boundary. The
-            current occupant holds the slot and pays its tax until then, and
-            cannot change its price in the meantime.
+            A buy is committed and takes effect at the next epoch boundary.
+            Whoever holds the slot keeps it and keeps paying its tax until then,
+            and cannot change its price in the meantime. If they leave first the
+            slot sits empty, but the claim still lands — nobody else can take it
+            in the meantime.
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
