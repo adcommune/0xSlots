@@ -52,6 +52,7 @@ contract SlotFactory is UUPSUpgradeable {
         address indexed newAdmin
     );
     event SlotEvent(address indexed slot, uint8 indexed eventType, bytes data);
+    event BeaconUpgraded(address indexed newImplementation);
 
     // ═══════════════════════════════════════════════════════════
     // STATE
@@ -288,6 +289,56 @@ contract SlotFactory is UUPSUpgradeable {
     ) external onlyAdmin {
         if (occupancyPolicy != address(0) && occupancyPolicy.code.length == 0)
             revert InvalidModule_NoCode();
+        for (uint256 i = 0; i < slots.length; i++) {
+            isSlot[slots[i]] = true;
+            try Slot(slots[i]).initializeV2(address(this)) {} catch {}
+            Slot(slots[i]).initializeV3(epochSeconds, occupancyPolicy);
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // BEACON UPGRADES
+    // ═══════════════════════════════════════════════════════════
+
+    /// @notice Upgrade the beacon (admin only). Requires the factory to own it.
+    /// @dev Beacon ownership starts with `admin` (see `initialize`). Transfer it
+    ///      to this factory with `UpgradeableBeacon.transferOwnership` to enable
+    ///      this and `upgradeBeaconAndMigrateV3`. Authority is unchanged either
+    ///      way — `onlyAdmin` here is the same address that owned the beacon.
+    function upgradeBeacon(address newImplementation) external onlyAdmin {
+        beacon.upgradeTo(newImplementation);
+        emit BeaconUpgraded(newImplementation);
+    }
+
+    /// @notice Upgrade the beacon AND migrate legacy slots to v3 atomically.
+    /// @dev THIS ATOMICITY IS A SECURITY REQUIREMENT, not a convenience.
+    ///
+    ///      `Slot.initializeV2` is unauthenticated (a v1 slot has no unforgeable
+    ///      notion of its factory). So the instant the beacon serves v3 code, any
+    ///      slot still at v1 can be captured by an attacker calling
+    ///      `initializeV2(self)` — which sets `factory` to them — and then
+    ///      `initializeV3(absurdEpoch, denyAllPolicy)`, which passes the
+    ///      `msg.sender == factory` gate. That permanently ends forced sale on
+    ///      the slot and strands the next buyer's escrow, with no admin repair
+    ///      path (`initializeV3` is a one-shot reinitializer).
+    ///
+    ///      Doing the upgrade and the migration in two transactions leaves that
+    ///      window open in the mempool. Doing them here leaves no window at all.
+    ///
+    ///      Pass every not-yet-v2 slot on the chain. Slots already at v3 must be
+    ///      excluded — `initializeV3` reverts on them and would revert the batch.
+    function upgradeBeaconAndMigrateV3(
+        address newImplementation,
+        address[] calldata slots,
+        uint64 epochSeconds,
+        address occupancyPolicy
+    ) external onlyAdmin {
+        if (occupancyPolicy != address(0) && occupancyPolicy.code.length == 0)
+            revert InvalidModule_NoCode();
+
+        beacon.upgradeTo(newImplementation);
+        emit BeaconUpgraded(newImplementation);
+
         for (uint256 i = 0; i < slots.length; i++) {
             isSlot[slots[i]] = true;
             try Slot(slots[i]).initializeV2(address(this)) {} catch {}

@@ -496,6 +496,47 @@ export const slotFactoryAbi = [
   },
   {
     "type": "function",
+    "name": "upgradeBeacon",
+    "inputs": [
+      {
+        "name": "newImplementation",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "upgradeBeaconAndMigrateV3",
+    "inputs": [
+      {
+        "name": "newImplementation",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "slots",
+        "type": "address[]",
+        "internalType": "address[]"
+      },
+      {
+        "name": "epochSeconds",
+        "type": "uint64",
+        "internalType": "uint64"
+      },
+      {
+        "name": "occupancyPolicy",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "upgradeToAndCall",
     "inputs": [
       {
@@ -562,6 +603,19 @@ export const slotFactoryAbi = [
       },
       {
         "name": "newAdmin",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "BeaconUpgraded",
+    "inputs": [
+      {
+        "name": "newImplementation",
         "type": "address",
         "indexed": true,
         "internalType": "address"

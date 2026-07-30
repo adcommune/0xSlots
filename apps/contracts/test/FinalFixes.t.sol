@@ -164,6 +164,86 @@ contract FinalFixesTest is Test {
         s.initializeV3(3600, address(p));
     }
 
+    // ═══════════════════════════════════════════════════════════
+    // ATOMIC BEACON UPGRADE + MIGRATION
+    // ═══════════════════════════════════════════════════════════
+
+    /// @dev Models the real Base Sepolia situation: occupied slots still on a v1
+    ///      implementation, where `factory()` does not even exist. Upgrading the
+    ///      beacon exposes them until they are migrated.
+    function _occupiedLegacySlot() internal returns (Slot) {
+        Slot s = _legacySlot();
+        vm.startPrank(alice);
+        token.approve(address(s), type(uint256).max);
+        s.buy(alice, 10 ether, 100 ether);
+        vm.stopPrank();
+        return s;
+    }
+
+    /// THE window this whole mechanism exists to close: between a beacon upgrade
+    /// and migration, a v1 slot is capturable by anyone.
+    function test_TwoStepUpgrade_LeavesLegacySlotCapturable() public {
+        Slot s = _occupiedLegacySlot();
+
+        // Step 1 alone — beacon serves v3 code, slot still has factory == 0.
+        Slot newImpl = new Slot();
+        factory.beacon().transferOwnership(address(factory));
+        factory.upgradeBeacon(address(newImpl));
+
+        // Attacker takes it before the admin's second transaction lands.
+        FFDenyAllPolicy deny = new FFDenyAllPolicy();
+        vm.startPrank(attacker);
+        s.initializeV2(attacker);
+        s.initializeV3(type(uint64).max, address(deny));
+        vm.stopPrank();
+
+        assertEq(s.factory(), attacker, "attacker owns the factory pointer");
+        assertEq(s.occupancyPolicy(), address(deny), "deny-all installed");
+
+        // Forced sale is over: nobody can ever buy this slot again.
+        vm.startPrank(bob);
+        token.approve(address(s), type(uint256).max);
+        vm.expectRevert(FFDenyAllPolicy.Denied.selector);
+        s.buy(bob, 10 ether, 200 ether);
+        vm.stopPrank();
+    }
+
+    /// The same scenario through the atomic path — no window, no capture.
+    function test_AtomicUpgradeAndMigrate_ClosesTheWindow() public {
+        Slot s = _occupiedLegacySlot();
+        address occupantBefore = s.occupant();
+        uint256 priceBefore = s.price();
+
+        Slot newImpl = new Slot();
+        factory.beacon().transferOwnership(address(factory));
+
+        address[] memory slots = new address[](1);
+        slots[0] = address(s);
+        factory.upgradeBeaconAndMigrateV3(address(newImpl), slots, 3600, address(0));
+
+        // Migrated: factory is the real one, config is set, occupancy survived.
+        assertEq(s.factory(), address(factory));
+        assertEq(s.epochSeconds(), 3600);
+        assertEq(s.occupant(), occupantBefore, "occupancy survived the upgrade");
+        assertEq(s.price(), priceBefore, "price survived the upgrade");
+
+        // The capture is now unreachable — both initializers are spent.
+        vm.startPrank(attacker);
+        vm.expectRevert();
+        s.initializeV2(attacker);
+        vm.expectRevert();
+        s.initializeV3(type(uint64).max, address(0));
+        vm.stopPrank();
+    }
+
+    function test_UpgradeBeacon_RejectsNonAdmin() public {
+        Slot newImpl = new Slot();
+        factory.beacon().transferOwnership(address(factory));
+        vm.prank(attacker);
+        vm.expectRevert(SlotFactory.NotAdmin.selector);
+        factory.upgradeBeacon(address(newImpl));
+    }
+
     /// The migration path must be indexable too — legacy slots brought up to v3
     /// by the admin have to surface their config the same way.
     function test_MigrateSlotsV3_EmitsConfigForIndexers() public {
