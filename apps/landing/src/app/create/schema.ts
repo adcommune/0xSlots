@@ -9,10 +9,18 @@ function isValidAddressOrEns(val: string) {
   return false;
 }
 
-export const timeDenominations = ["hours", "days", "months"] as const;
+export const timeDenominations = [
+  "seconds",
+  "minutes",
+  "hours",
+  "days",
+  "months",
+] as const;
 export type TimeDenomination = (typeof timeDenominations)[number];
 
 export const TIME_MULTIPLIERS: Record<TimeDenomination, number> = {
+  seconds: 1,
+  minutes: 60,
   hours: 3600,
   days: 86400,
   months: 2592000, // 30 days

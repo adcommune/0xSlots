@@ -20,7 +20,11 @@ import {
 import { KNOWN_POLICIES, knownPoliciesForChain } from "@/config/policies";
 import { useChain } from "@/context/chain";
 import { AddressInput } from "../address-input";
-import { type CreateSlotFormValues, timeDenominations } from "../schema";
+import {
+  type CreateSlotFormValues,
+  TIME_MULTIPLIERS,
+  timeDenominations,
+} from "../schema";
 
 /**
  * Occupancy terms — when a slot can change hands, and under what rule.
@@ -42,6 +46,11 @@ export function OccupancySection() {
   const knownForChain = knownPoliciesForChain(chainId);
 
   const epochIsOn = Number(epochValue) > 0;
+  const epochSeconds = Number(epochValue) * (TIME_MULTIPLIERS[epochUnit] ?? 0);
+  // Base produces a block roughly every 2s. An epoch spanning only a block or
+  // two batches nothing — arrival order still decides, so it costs latency and
+  // buys none of the fairness epochs exist for.
+  const epochTooShort = epochIsOn && epochSeconds > 0 && epochSeconds < 24;
   // "1 hours" reads as a bug even when the value is right.
   const epochUnitLabel =
     Number(epochValue) === 1 ? epochUnit.replace(/s$/, "") : epochUnit;
@@ -111,6 +120,14 @@ export function OccupancySection() {
                 <>0 = instant buy. Set a value to schedule transfers.</>
               )}
             </FormDescription>
+            {epochTooShort && (
+              <FormDescription className="text-amber-600 dark:text-amber-500">
+                Shorter than a handful of blocks. At ~2s per block this batches
+                almost nothing — arrival order still decides who wins, so you
+                pay the delay without removing the speed advantage. Use tens of
+                seconds or more for that to bite.
+              </FormDescription>
+            )}
             <FormMessage />
           </FormItem>
         )}
