@@ -348,14 +348,30 @@ contract SlotQueueTest is Test {
         queue.joinQueue(address(s), 90 ether, 10 ether, 1 ether, uint96(block.timestamp + 30 days));
         vm.stopPrank();
 
-        // First fill(): bob's bid schedules a transfer; the slot is not yet
-        // vacated of its "pending" state, but occupant() still reads address(0).
+        // First fill(): the slot is VACANT, so bob's claim is immediate — there
+        // is no incumbent to schedule around.
         queue.fill(address(s));
-        assertEq(s.occupant(), address(0), "transfer only scheduled, not yet materialised");
+        assertEq(s.occupant(), bob, "vacant claim lands immediately");
         assertEq(queue.liveBidCount(address(s)), 1, "carol's bid is still live");
         assertEq(queue.headIndex(address(s)), 1, "head sits at carol's bid");
 
-        // Second fill(): must revert SlotTransferPending, not evict carol.
+        // Now produce the state this test exists for: a scheduled transfer on a
+        // slot that is nonetheless vacant. Dave takes it from bob (scheduled,
+        // since bob is an incumbent), then bob releases — raw storage is vacant
+        // but dave holds a live claim.
+        address dave = makeAddr("dave");
+        token.mint(dave, 1000 ether);
+        vm.startPrank(dave);
+        token.approve(address(s), type(uint256).max);
+        s.buy(dave, 10 ether, 95 ether);
+        vm.stopPrank();
+
+        vm.prank(bob);
+        s.release();
+        assertEq(s.occupant(), address(0), "vacant, but dave has a pending claim");
+
+        // fill() must revert SlotTransferPending rather than evict carol —
+        // otherwise a later bidder could clear the queue by timing a fill.
         vm.expectRevert(SlotQueue.SlotTransferPending.selector);
         queue.fill(address(s));
 

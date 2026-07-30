@@ -339,17 +339,29 @@ contract FinalFixesTest is Test {
     ///      reverted NotOccupant, and `collect()` reverted NothingToCollect
     ///      (rolling back the materialisation it had just performed). Alice
     ///      occupied indefinitely having paid zero tax.
-    function test_Liquidate_ZeroDepositFromVacant_OnEpochSlot() public {
+    /// `liquidate()` and `topUp()` must gate on the RESOLVING `occupant()`, not
+    /// raw `_occupant`. This reproduces the state where the two disagree:
+    /// bob's transfer is scheduled, alice then releases so raw storage is
+    /// vacant, and once the boundary passes bob is the occupant by every
+    /// getter while `_occupant` is still address(0). Bob holds a zero deposit,
+    /// so he is insolvent the instant he lands — and must be liquidatable.
+    /// Gating on raw storage would revert NotInsolvent and leave an insolvent
+    /// occupant sitting there paying nothing, breaking the spec's first
+    /// invariant: insolvency always ends occupancy.
+    function test_Liquidate_ResolvedOccupantWithRawStorageVacant() public {
         Slot s = _epochSlot(3600);
 
         vm.warp(3600);
-        _buy(s, alice, 0, 100 ether); // zero deposit, slot was vacant
+        _buy(s, alice, 10 ether, 100 ether); // vacant claim — immediate
+        assertEq(s.occupant(), alice);
 
-        // Raw storage is still vacant; the transfer is only scheduled.
-        assertEq(s.occupant(), address(0), "not yet effective");
+        _buy(s, bob, 0, 100 ether); // taking it from alice — scheduled, no deposit
 
-        vm.warp(2 * uint256(3600) + 1); // past the boundary
-        assertEq(s.occupant(), alice, "alice resolves as occupant");
+        vm.prank(alice);
+        s.release(); // raw _occupant becomes address(0); bob's claim survives
+
+        vm.warp(2 * uint256(3600) + 1); // past bob's boundary
+        assertEq(s.occupant(), bob, "bob resolves as occupant");
         assertTrue(s.isInsolvent(), "zero deposit => insolvent");
 
         // The whole point: liquidation must succeed.
@@ -357,9 +369,8 @@ contract FinalFixesTest is Test {
         assertEq(s.occupant(), address(0), "occupancy ended");
         assertEq(s.price(), 0);
 
-        // And the slot is immediately reusable.
+        // And the slot is immediately reusable — vacant, so this is instant.
         _buy(s, bob, 10 ether, 50 ether);
-        vm.warp(4 * uint256(3600) + 1);
         assertEq(s.occupant(), bob);
     }
 

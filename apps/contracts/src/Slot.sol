@@ -282,7 +282,19 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
             currency.safeTransferFrom(msg.sender, address(this), owedByBuyer);
         }
 
-        if (epochSeconds > 0) {
+        // Schedule only when there is an incumbent to take the slot FROM.
+        //
+        // The delay exists so an occupant cannot be sniped at their declared
+        // price by whoever's infrastructure is fastest. A vacant slot has no
+        // incumbent and no declared price — the claimant sets their own
+        // valuation and pays only the deposit — so the delay would protect
+        // against almost nothing while costing the recipient up to a full
+        // epoch of zero revenue on a slot nobody holds.
+        //
+        // A committed buyer stays protected regardless: the TransferPending
+        // guard above still blocks anyone else, so releasing mid-window does
+        // not let a third party jump the pending claim.
+        if (epochSeconds > 0 && prev != address(0)) {
             uint256 effectiveAt = nextBoundary();
             pendingTransfer = PendingTransfer({
                 buyer: account,

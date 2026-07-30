@@ -78,19 +78,81 @@ contract EpochsTest is Test {
         assertEq(s.nextBoundary(), 3 * uint256(HOUR));
     }
 
-    function test_Buy_SchedulesInsteadOfExecuting() public {
+    /// Claiming an EMPTY slot is immediate — there is no incumbent to snipe,
+    /// so the delay would only cost the recipient revenue on a slot nobody
+    /// holds. Taking one FROM someone still schedules; see the test below.
+    function test_Buy_VacantSlotClaimsImmediately() public {
         Slot s = _epochSlot(HOUR);
         vm.warp(10_000);
         _buy(s, alice, 10 ether, 100 ether);
 
-        // Not yet occupant — the boundary has not passed
-        assertEq(s.occupant(), address(0));
+        assertEq(s.occupant(), alice, "vacant claim is immediate");
+        assertEq(s.price(), 100 ether);
+        (, uint96 effectiveAt, , , ) = s.pendingTransfer();
+        assertEq(uint256(effectiveAt), 0, "nothing should be scheduled");
+    }
+
+    /// Taking the slot from a live occupant still waits for the boundary.
+    function test_Buy_OccupiedSlotStillSchedules() public {
+        Slot s = _epochSlot(HOUR);
+        vm.warp(HOUR);
+        _buy(s, alice, 100 ether, 100 ether);
+        assertEq(s.occupant(), alice);
+
+        vm.warp(HOUR + 600);
+        _buy(s, bob, 100 ether, 120 ether);
+
+        assertEq(s.occupant(), alice, "alice holds until the boundary");
+        (address buyer, uint96 at, , , ) = s.pendingTransfer();
+        assertEq(buyer, bob);
+        assertEq(uint256(at), 2 * uint256(HOUR));
+    }
+
+    /// A committed buyer must not lose their claim just because the occupant
+    /// left first — the slot going vacant mid-window must not let a third
+    /// party claim it immediately under the new rule.
+    function test_PendingBuyerNotJumpedWhenOccupantReleasesEarly() public {
+        Slot s = _epochSlot(HOUR);
+        vm.warp(HOUR);
+        _buy(s, alice, 100 ether, 100 ether);
+        vm.warp(2 * uint256(HOUR) + 1);
+        s.collect();
+
+        _buy(s, bob, 50 ether, 80 ether); // scheduled for 3*HOUR
+
+        vm.prank(alice);
+        s.release();
+        assertEq(s.occupant(), address(0), "vacant, but bob has a claim");
+
+        address carol = makeAddr("carol");
+        token.mint(carol, 1000 ether);
+        vm.startPrank(carol);
+        token.approve(address(s), type(uint256).max);
+        vm.expectRevert(Slot.TransferPending.selector);
+        s.buy(carol, 50 ether, 90 ether);
+        vm.stopPrank();
+
+        vm.warp(3 * uint256(HOUR) + 1);
+        assertEq(s.occupant(), bob, "bob still gets it");
+    }
+
+    /// @dev Needs a live occupant: claiming a VACANT slot is immediate, so only
+    ///      a buy that takes the slot from someone exercises scheduling.
+    function test_Buy_SchedulesInsteadOfExecuting() public {
+        Slot s = _epochSlot(HOUR);
+        vm.warp(10_000);
+        _buy(s, alice, 10 ether, 100 ether); // immediate — alice occupies now
+
+        _buy(s, bob, 20 ether, 150 ether); // takes it from alice — scheduled
+
+        // Alice keeps the slot until the boundary
+        assertEq(s.occupant(), alice);
 
         (address buyer, uint96 effectiveAt, uint256 dep, uint256 newPrice, ) = s.pendingTransfer();
-        assertEq(buyer, alice);
+        assertEq(buyer, bob);
         assertEq(uint256(effectiveAt), 3 * uint256(HOUR));
-        assertEq(dep, 10 ether);
-        assertEq(newPrice, 100 ether);
+        assertEq(dep, 20 ether);
+        assertEq(newPrice, 150 ether);
     }
 
     function test_Buy_PullsFundsAtCommit() public {
@@ -111,12 +173,16 @@ contract EpochsTest is Test {
     function test_SecondCommit_Reverts() public {
         Slot s = _epochSlot(HOUR);
         vm.warp(10_000);
-        _buy(s, alice, 10 ether, 100 ether);
+        _buy(s, alice, 10 ether, 100 ether); // immediate — alice occupies
 
-        vm.startPrank(bob);
+        _buy(s, bob, 10 ether, 120 ether); // scheduled, bob is now pending
+
+        address carol = makeAddr("carol");
+        token.mint(carol, 1000 ether);
+        vm.startPrank(carol);
         token.approve(address(s), type(uint256).max);
         vm.expectRevert(Slot.TransferPending.selector);
-        s.buy(bob, 10 ether, 120 ether);
+        s.buy(carol, 10 ether, 130 ether);
         vm.stopPrank();
     }
 
@@ -148,14 +214,16 @@ contract EpochsTest is Test {
         // `t = block.timestamp`, then `vm.warp(t + 1)`, then reading `t`
         // again yields the post-warp value, not the original. Sticking to
         // literal/constant arithmetic for all warp targets sidesteps it.
-        uint256 aliceStart = 2 * uint256(HOUR); // alice materialises here
-        vm.warp(aliceStart + 1);       // nudge past the exact boundary so
-                                        // there is something to collect —
-                                        // at the boundary itself, elapsed
-                                        // since materialisation is 0 and
-                                        // collect() reverts NothingToCollect
+        // Claiming a vacant slot is immediate, so alice occupies from `HOUR`.
+        // Flush her first stretch of tax and measure the recipient DELTA from
+        // here on, rather than an absolute balance — that keeps the assertion
+        // below about the boundary split itself, independent of how the
+        // tenure started.
+        uint256 aliceStart = 2 * uint256(HOUR);
+        vm.warp(aliceStart);
         s.collect();
         assertEq(s.occupant(), alice);
+        uint256 recipientBefore = token.balanceOf(recipient);
 
         vm.warp(aliceStart + 1800);    // 30 min into alice's tenure
         // Bob prices differently from alice (250 ether vs 100 ether) so a
@@ -184,7 +252,11 @@ contract EpochsTest is Test {
         // up to its own call time, and materialisation's leg 1 up to the
         // boundary) — each floor-divides independently, so up to a few wei
         // of rounding slack versus this two-leg reference calc is expected.
-        assertApproxEqAbs(token.balanceOf(recipient), expected, 4);
+        assertApproxEqAbs(
+            token.balanceOf(recipient) - recipientBefore,
+            expected,
+            4
+        );
         assertEq(s.occupant(), bob);
         assertEq(s.price(), 250 ether);
     }
@@ -400,20 +472,18 @@ contract EpochsTest is Test {
         vm.warp(HOUR);
         _buy(s, alice, 1000 ether, 100 ether);
 
-        // Nudge past the exact boundary before collecting — see the note in
-        // test_OutgoingOccupantPaysUntilBoundary_ThenIncomingPays: warping to
-        // exactly the boundary and calling collect() there reverts
-        // NothingToCollect() (materialisation itself accrues nothing, and
-        // zero time has elapsed since for the newly-materialised occupant).
-        vm.warp(2 * uint256(HOUR) + 1);
+        // Alice claimed a vacant slot, so she occupies from `HOUR` immediately.
+        // Flush that first stretch and measure the recipient DELTA from the
+        // boundary onward, so the invariant under test stays "tax is conserved
+        // across a handover" rather than depending on how the tenure began.
+        vm.warp(2 * uint256(HOUR));
         s.collect();
+        uint256 recipientBefore = token.balanceOf(recipient);
 
         // `start`/`end` are literal constant-derived expressions, never a
         // local captured from `block.timestamp` and re-read after an
         // intervening vm.warp() — see the via_ir note in
-        // test_OutgoingOccupantPaysUntilBoundary_ThenIncomingPays. `start` is
-        // the instant alice's occupancy materialised (the first boundary),
-        // which is exactly where the recipient's balance starts climbing.
+        // test_OutgoingOccupantPaysUntilBoundary_ThenIncomingPays.
         uint256 start = 2 * uint256(HOUR);
         vm.warp(start + offset);
         _buy(s, bob, 1000 ether, 100 ether); // same price — stream is continuous
@@ -428,7 +498,11 @@ contract EpochsTest is Test {
         // materialisation, and the incoming leg) where a continuous stream
         // would compute exactly one — tolerance covers the accumulated
         // floor-division loss, not a masked bug.
-        assertApproxEqAbs(token.balanceOf(recipient), expected, 4);
+        assertApproxEqAbs(
+            token.balanceOf(recipient) - recipientBefore,
+            expected,
+            4
+        );
     }
 
     /// Occupied slot must survive a beacon upgrade with state intact.
