@@ -28,6 +28,9 @@ export type SplitRecipientInput = z.infer<typeof splitRecipientSchema>;
 export const moduleModes = ["none", "verified", "custom"] as const;
 export type ModuleMode = (typeof moduleModes)[number];
 
+export const occupancyPolicyModes = ["none", "known", "custom"] as const;
+export type OccupancyPolicyMode = (typeof occupancyPolicyModes)[number];
+
 export const createSlotSchema = z
   .object({
     recipientMode: z.enum(["single", "group"]),
@@ -65,6 +68,19 @@ export const createSlotSchema = z
       ),
     minDepositUnit: z.enum(timeDenominations),
     module: z.string().refine(isValidAddressOrEns, {
+      message: "Enter a valid address (0x…) or ENS name",
+    }),
+    // ── Occupancy layer (v3) ──
+    // epochValue 0 = instant buy, which is what every pre-v3 slot does.
+    epochValue: z
+      .string()
+      .refine(
+        (v) => !isNaN(Number(v)) && Number(v) >= 0,
+        "Must be a non-negative number",
+      ),
+    epochUnit: z.enum(timeDenominations),
+    occupancyPolicyMode: z.enum(occupancyPolicyModes),
+    occupancyPolicy: z.string().refine(isValidAddressOrEns, {
       message: "Enter a valid address (0x…) or ENS name",
     }),
     mutableTax: z.boolean(),
@@ -165,6 +181,12 @@ export const defaultValues: CreateSlotFormValues = {
   minDepositValue: "1",
   minDepositUnit: "days",
   module: "",
+  // Default to instant buy — the pre-v3 behaviour. Epochs and policies are
+  // opt-in, so an unchanged form produces exactly the slot it always did.
+  epochValue: "0",
+  epochUnit: "hours",
+  occupancyPolicyMode: "none",
+  occupancyPolicy: "",
   mutableTax: false,
   mutableModule: false,
   manager: "",

@@ -24,18 +24,22 @@ export interface KnownPolicy {
   label: string;
   impact: PolicyImpact;
   description: string;
+  /** Chain this deployment lives on. A policy address is chain-specific. */
+  chainId: number;
 }
 
 /** Keyed by lowercase address. Same policy can be deployed per chain. */
 export const KNOWN_POLICIES: Record<string, KnownPolicy> = {
   // Base Sepolia — deployed 2026-07-29, block 44825297
   "0xb7a0c71a6ab1293732216540e8321bda1f986622": {
+    chainId: 84532,
     label: "7d minimum tenure",
     impact: "soft",
     description:
       "The occupant cannot be bought out for 7 days after acquiring the slot. They pay for that protection up front — the full window's tax must be escrowed — and cannot cut their price while protected. Forced sale is delayed, not removed: a dishonestly low price is still punished, just later. Liquidation still works throughout, so insolvency always ends the tenure.",
   },
   "0x0c8501c02b88bfcb10d9a2de6a40abce342eb1cd": {
+    chainId: 84532,
     label: "Queue priority",
     impact: "near-pure",
     description:
@@ -47,3 +51,12 @@ export const KNOWN_POLICIES: Record<string, KnownPolicy> = {
 export const SLOT_QUEUE_ADDRESSES: Record<number, string> = {
   84532: "0x83AFEf8eF55B4d624D5f61088FD095603913616d",
 };
+
+/** Verified policies deployed on a given chain, for the create form. */
+export function knownPoliciesForChain(
+  chainId: number,
+): Array<[string, KnownPolicy]> {
+  return Object.entries(KNOWN_POLICIES).filter(
+    ([, p]) => p.chainId === chainId,
+  );
+}

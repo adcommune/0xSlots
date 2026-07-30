@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { AddressInput } from "../address-input";
 import type { CreateSlotFormValues } from "../schema";
+import { OccupancySection } from "./occupancy-section";
 
 export function StepExtra() {
   const form = useFormContext<CreateSlotFormValues>();
@@ -86,6 +87,10 @@ export function StepExtra() {
           </p>
         )}
       </div>
+
+      <Separator />
+
+      <OccupancySection />
 
       <Separator />
 

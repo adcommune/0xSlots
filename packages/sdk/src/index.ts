@@ -9,6 +9,7 @@ export {
   type SlotConfig,
   type SlotInitParams,
   type CreateSlotParams,
+  type CreateSlotV3Params,
   type CreateSlotsParams,
   type BuyParams,
 } from "./client";

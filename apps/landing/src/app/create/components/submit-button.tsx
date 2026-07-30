@@ -63,7 +63,8 @@ export function SubmitButton({
         className={className}
         onClick={() => switchChain({ chainId })}
       >
-        Switch to {CHAINS.find((c) => c.id === chainId)?.name ?? `chain ${chainId}`}
+        Switch to{" "}
+        {CHAINS.find((c) => c.id === chainId)?.name ?? `chain ${chainId}`}
       </Button>
     );
   }

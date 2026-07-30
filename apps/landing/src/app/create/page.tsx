@@ -1,21 +1,21 @@
 "use client";
 
+import { getChainTokens } from "@0xslots/sdk";
 import { SplitV2Type } from "@0xsplits/splits-sdk/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Check, ChevronLeft, ChevronRight } from "lucide-react";
-import { useNavigation } from "@/context/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { type Address, getAddress, isAddress, zeroAddress } from "viem";
 import { useAccount, useSwitchChain } from "wagmi";
-import { resolveEnsAddress } from "@/lib/ens";
-import { getChainTokens } from "@0xslots/sdk";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { useChain } from "@/context/chain";
+import { useNavigation } from "@/context/navigation";
 import { useSlotAction } from "@/hooks/use-slot-action";
 import { useSplitClient } from "@/hooks/use-split-client";
+import { resolveEnsAddress } from "@/lib/ens";
 import { useResolveAddress } from "./address-input";
 import { MobileBottomBar } from "./components/mobile-bottom-bar";
 import { StepExtra } from "./components/step-extra";
@@ -43,6 +43,7 @@ export default function CreatePage() {
   const { chainId: selectedChainId } = useChain();
   const {
     createSlot: sdkCreateSlot,
+    createSlotV3: sdkCreateSlotV3,
     createSlots: sdkCreateSlots,
     isPending,
     isConfirming,
@@ -50,6 +51,7 @@ export default function CreatePage() {
   } = useSlotAction();
   const splitClient = useSplitClient();
   const [slotCount, setSlotCount] = useState(1);
+
   const [step, setStep] = useState(1);
   const [creatingSplit, setCreatingSplit] = useState(false);
 
@@ -58,6 +60,17 @@ export default function CreatePage() {
     defaultValues,
     mode: "onChange",
   });
+
+  // createSlotV3 is single-slot only (SlotInitParams could not be extended
+  // without changing the factory's selector, so there is no batch counterpart).
+  // Clamp rather than let the batch path silently discard the epoch/policy the
+  // user just configured.
+  const occupancyConfigured =
+    Number(form.watch("epochValue")) > 0 ||
+    form.watch("occupancyPolicyMode") !== "none";
+  useEffect(() => {
+    if (occupancyConfigured && slotCount !== 1) setSlotCount(1);
+  }, [occupancyConfigured, slotCount]);
 
   // Only watch what the page itself needs for submission logic
   const watchedRecipientMode = form.watch("recipientMode");
@@ -160,8 +173,7 @@ export default function CreatePage() {
         if (deployed) {
           recipient = predictedAddress;
         } else {
-          const { splitAddress } =
-            await splitClient.createSplit(splitParams);
+          const { splitAddress } = await splitClient.createSplit(splitParams);
           recipient = splitAddress;
         }
       } catch (err) {
@@ -191,7 +203,31 @@ export default function CreatePage() {
       minDepositSeconds: toSeconds(data.minDepositValue, data.minDepositUnit),
     };
 
-    if (slotCount === 1) {
+    // Occupancy layer. Both default to off, in which case createSlot is used
+    // and the result is byte-for-byte the slot this form always produced.
+    const epochSeconds = toSeconds(data.epochValue, data.epochUnit);
+    const occupancyPolicy = (
+      data.occupancyPolicyMode !== "none" &&
+      isAddress(data.occupancyPolicy as string)
+        ? data.occupancyPolicy
+        : zeroAddress
+    ) as Address;
+    const usesOccupancyLayer =
+      epochSeconds > 0n || occupancyPolicy !== zeroAddress;
+
+    if (slotCount === 1 && usesOccupancyLayer) {
+      // createSlotV3 has no batch counterpart — SlotInitParams could not be
+      // extended without changing the factory's selector, so the v3 entry point
+      // is single-slot only. Batch creation stays on the legacy path below.
+      sdkCreateSlotV3({
+        recipient: recipient as Address,
+        currency: currency as Address,
+        config,
+        initParams,
+        epochSeconds,
+        occupancyPolicy,
+      });
+    } else if (slotCount === 1) {
       sdkCreateSlot({
         recipient: recipient as Address,
         currency: currency as Address,

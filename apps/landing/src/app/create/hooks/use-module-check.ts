@@ -13,8 +13,7 @@ import { useReadContracts } from "wagmi";
  * `apps/contracts/src/interfaces/ISlotsModule.sol`. Matches the value
  * returned by `type(ISlotsModule).interfaceId` in Solidity.
  */
-export const ISLOTS_MODULE_INTERFACE_ID =
-  "0x0871cc1c" as `0x${string}`;
+export const ISLOTS_MODULE_INTERFACE_ID = "0x0871cc1c" as `0x${string}`;
 
 const moduleProbeAbi = [
   {

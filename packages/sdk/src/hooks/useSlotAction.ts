@@ -6,6 +6,7 @@ import { useWaitForTransactionReceipt } from "wagmi";
 import type {
   BuyParams,
   CreateSlotParams,
+  CreateSlotV3Params,
   CreateSlotsParams,
   SlotsChain,
 } from "../client";
@@ -112,6 +113,11 @@ export function useSlotAction(opts?: SlotActionCallbacks) {
       exec("Create slot", () => client.createSlot(params)),
     [exec, client],
   );
+  const createSlotV3 = useCallback(
+    (params: CreateSlotV3Params) =>
+      exec("Create slot", () => client.createSlotV3(params)),
+    [client, exec],
+  );
   const createSlots = useCallback(
     (params: CreateSlotsParams) =>
       exec("Create slots", () => client.createSlots(params)),
@@ -185,6 +191,7 @@ export function useSlotAction(opts?: SlotActionCallbacks) {
   return {
     // Actions
     createSlot,
+    createSlotV3,
     createSlots,
     buy,
     selfAssess,

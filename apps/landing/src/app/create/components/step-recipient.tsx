@@ -173,7 +173,9 @@ export function StepRecipient() {
                         inputMode="decimal"
                         value={pctField.value}
                         onChange={(e) => {
-                          const v = parseFloat(normalizeDecimal(e.target.value));
+                          const v = parseFloat(
+                            normalizeDecimal(e.target.value),
+                          );
                           pctField.onChange(Number.isNaN(v) ? 0 : v);
                         }}
                         className="pr-6 text-xs"

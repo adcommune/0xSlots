@@ -1,7 +1,7 @@
+import { getChainTokens } from "@0xslots/sdk";
 import { Clock, Coins, HandCoins, Puzzle, Sparkles } from "lucide-react";
 import { useFormContext } from "react-hook-form";
 import { isAddress } from "viem";
-import { getChainTokens } from "@0xslots/sdk";
 import { SplitBar } from "@/components/split-recipients-bar";
 import { Separator } from "@/components/ui/separator";
 import { truncateAddress } from "@/utils";
@@ -44,16 +44,12 @@ export function SummaryCard({
 
   const recipientResolved = useResolveAddress(recipient);
   const effectiveRecipient =
-    recipientMode === "group"
-      ? "Group"
-      : recipientResolved.resolved || "";
+    recipientMode === "group" ? "Group" : recipientResolved.resolved || "";
 
   // Currency resolution
   const chainTokens = getChainTokens(chainId);
   const presetToken = chainTokens.find((t) => t.address === presetCurrency);
-  const erc20 = useErc20Check(
-    currencyMode === "custom" ? customCurrency : "",
-  );
+  const erc20 = useErc20Check(currencyMode === "custom" ? customCurrency : "");
   const currencyLabel =
     currencyMode === "preset" && presetToken
       ? `${presetToken.symbol}`
@@ -141,7 +137,9 @@ export function SummaryCard({
                   <Puzzle className="size-3" /> Module
                 </span>
                 <span className="font-semibold text-xs truncate max-w-32">
-                  {moduleMode === "verified" ? "Metadata" : truncateAddress(module)}
+                  {moduleMode === "verified"
+                    ? "Metadata"
+                    : truncateAddress(module)}
                 </span>
               </div>
             )}

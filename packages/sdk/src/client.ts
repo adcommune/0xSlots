@@ -76,6 +76,13 @@ export interface CreateSlotParams {
   initParams: SlotInitParams;
 }
 
+export interface CreateSlotV3Params extends CreateSlotParams {
+  /** Seconds per epoch. 0 = instant buy (identical to createSlot). */
+  epochSeconds: bigint;
+  /** IOccupancyPolicy address, or zero for none. */
+  occupancyPolicy: Address;
+}
+
 export interface CreateSlotsParams extends CreateSlotParams {
   count: bigint;
 }
@@ -455,6 +462,35 @@ export class SlotsClient {
         params.currency,
         params.config,
         params.initParams,
+      ],
+      account: this.account,
+      chain: this.chain,
+    });
+  }
+
+  /**
+   * Deploy a slot with the v3 occupancy layer: epoch-scheduled transfers and/or
+   * an occupancy policy.
+   *
+   * `createSlot` is kept as-is rather than extended because `SlotInitParams` is
+   * part of the factory's function signature — adding a field would change the
+   * selector and break every published ABI. Use this when either occupancy
+   * parameter is non-default; the two are otherwise identical.
+   *
+   * @returns Transaction hash.
+   */
+  async createSlotV3(params: CreateSlotV3Params): Promise<Hash> {
+    return this.wallet.writeContract({
+      address: this.factory,
+      abi: slotFactoryAbi,
+      functionName: "createSlotV3",
+      args: [
+        params.recipient,
+        params.currency,
+        params.config,
+        params.initParams,
+        params.epochSeconds,
+        params.occupancyPolicy,
       ],
       account: this.account,
       chain: this.chain,
