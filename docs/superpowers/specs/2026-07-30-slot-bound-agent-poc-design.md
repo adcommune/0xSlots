@@ -43,7 +43,7 @@ Everything new lives in `apps/api` (Hono) plus one small UI panel. Reused: the S
 │  UI panel (wagmi)      │        │  apps/api (Hono)                           │
 │  - connect + sign msg  │──────► │  POST /agent/:collection/:tokenId/message  │
 │  - chat transcript     │        │    1. recover signer, check == ownerOf     │
-│  - memory feed         │◄────── │    2. run agent (AI SDK + Claude)          │
+│  - memory feed         │◄────── │    2. run agent (Mastra + OpenAI)          │
 └────────────────────────┘        │    3. agent may call saveFacet tool        │
                                    │  GET  /agent/:collection/:tokenId/memory   │
                                    │  POST /agent/:collection/:tokenId/secure   │
