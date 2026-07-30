@@ -44,6 +44,7 @@ export default function CreatePage() {
   const {
     createSlot: sdkCreateSlot,
     createSlotV3: sdkCreateSlotV3,
+    createSlotWithTenure: sdkCreateSlotWithTenure,
     createSlots: sdkCreateSlots,
     isPending,
     isConfirming,
@@ -213,9 +214,25 @@ export default function CreatePage() {
         : zeroAddress
     ) as Address;
     const usesOccupancyLayer =
-      epochSeconds > 0n || occupancyPolicy !== zeroAddress;
+      epochSeconds > 0n ||
+      occupancyPolicy !== zeroAddress ||
+      data.occupancyPolicyMode === "tenure";
 
-    if (slotCount === 1 && usesOccupancyLayer) {
+    // Minimum tenure resolves to a policy contract deployed on demand at a
+    // CREATE2 address derived from the duration, so the hook handles deploy +
+    // create. Every other mode already has a concrete address.
+    if (slotCount === 1 && data.occupancyPolicyMode === "tenure") {
+      sdkCreateSlotWithTenure(
+        {
+          recipient: recipient as Address,
+          currency: currency as Address,
+          config,
+          initParams,
+          epochSeconds,
+        },
+        toSeconds(data.tenureValue, data.tenureUnit),
+      );
+    } else if (slotCount === 1 && usesOccupancyLayer) {
       // createSlotV3 has no batch counterpart — SlotInitParams could not be
       // extended without changing the factory's selector, so the v3 entry point
       // is single-slot only. Batch creation stays on the legacy path below.

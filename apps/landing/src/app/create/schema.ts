@@ -28,7 +28,12 @@ export type SplitRecipientInput = z.infer<typeof splitRecipientSchema>;
 export const moduleModes = ["none", "verified", "custom"] as const;
 export type ModuleMode = (typeof moduleModes)[number];
 
-export const occupancyPolicyModes = ["none", "known", "custom"] as const;
+export const occupancyPolicyModes = [
+  "none",
+  "tenure",
+  "known",
+  "custom",
+] as const;
 export type OccupancyPolicyMode = (typeof occupancyPolicyModes)[number];
 
 export const createSlotSchema = z
@@ -80,6 +85,15 @@ export const createSlotSchema = z
       ),
     epochUnit: z.enum(timeDenominations),
     occupancyPolicyMode: z.enum(occupancyPolicyModes),
+    // Only read when occupancyPolicyMode === "tenure". The policy contract for
+    // this duration is deployed on demand at a CREATE2 address derived from it.
+    tenureValue: z
+      .string()
+      .refine(
+        (v) => !isNaN(Number(v)) && Number(v) > 0,
+        "Must be greater than zero",
+      ),
+    tenureUnit: z.enum(timeDenominations),
     occupancyPolicy: z.string().refine(isValidAddressOrEns, {
       message: "Enter a valid address (0x…) or ENS name",
     }),
@@ -186,6 +200,8 @@ export const defaultValues: CreateSlotFormValues = {
   epochValue: "0",
   epochUnit: "hours",
   occupancyPolicyMode: "none",
+  tenureValue: "7",
+  tenureUnit: "days",
   occupancyPolicy: "",
   mutableTax: false,
   mutableModule: false,

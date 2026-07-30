@@ -75,3 +75,12 @@ export function isSlotsHubDeployed(chainId: number): boolean {
 export function getSupportedChainIds(): SupportedChainId[] {
   return Object.keys(slotFactoryAddress).map(Number) as SupportedChainId[];
 }
+
+/**
+ * MinimumTenurePolicyFactory — deploys one MinimumTenurePolicy per duration at
+ * a CREATE2 address derived from that duration, so any tenure is available
+ * without the policy needing mutable per-slot storage.
+ */
+export const MINIMUM_TENURE_POLICY_FACTORY: Partial<Record<number, `0x${string}`>> = {
+  [baseSepolia.id]: "0xDCCb7ac7A342bF09e36CeDE60eAA937d72D3a2Ea",
+};

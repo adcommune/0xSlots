@@ -46,6 +46,11 @@ export function OccupancySection() {
   const epochUnitLabel =
     Number(epochValue) === 1 ? epochUnit.replace(/s$/, "") : epochUnit;
 
+  const tenureValue = form.watch("tenureValue");
+  const tenureUnit = form.watch("tenureUnit");
+  const tenureUnitLabel =
+    Number(tenureValue) === 1 ? tenureUnit.replace(/s$/, "") : tenureUnit;
+
   return (
     <div className="space-y-4">
       <div>
@@ -127,6 +132,7 @@ export function OccupancySection() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">None</SelectItem>
+                <SelectItem value="tenure">Minimum tenure</SelectItem>
                 <SelectItem value="known" disabled={knownForChain.length === 0}>
                   Verified policy
                   {knownForChain.length === 0 && " — none on this chain"}
@@ -142,6 +148,58 @@ export function OccupancySection() {
           </FormItem>
         )}
       />
+
+      {policyMode === "tenure" && (
+        <FormField
+          control={form.control}
+          name="tenureValue"
+          render={({ field }) => (
+            <FormItem>
+              <div className="flex gap-2">
+                <Input
+                  {...field}
+                  type="text"
+                  inputMode="decimal"
+                  className="flex-1"
+                />
+                <FormField
+                  control={form.control}
+                  name="tenureUnit"
+                  render={({ field: unitField }) => (
+                    <Select
+                      onValueChange={unitField.onChange}
+                      value={unitField.value}
+                    >
+                      <SelectTrigger className="w-28">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {timeDenominations.map((u) => (
+                          <SelectItem key={u} value={u}>
+                            {u}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </div>
+              <FormDescription>
+                Nobody can buy the occupant out for {field.value}{" "}
+                {tenureUnitLabel}. They pay for it up front — the whole window's
+                tax must be escrowed — and cannot cut their price while
+                protected, so the tax stays honest even with forced sale
+                suspended. Liquidation still works throughout: insolvency always
+                ends the tenure.
+              </FormDescription>
+              <FormDescription className="text-amber-600 dark:text-amber-500">
+                Softens Harberger — forced sale is delayed, not removed.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
 
       {policyMode === "known" && knownForChain.length === 0 && (
         <p className="text-sm text-muted-foreground rounded-md border border-dashed p-3">

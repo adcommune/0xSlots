@@ -118,6 +118,30 @@ export function useSlotAction(opts?: SlotActionCallbacks) {
       exec("Create slot", () => client.createSlotV3(params)),
     [client, exec],
   );
+  /**
+   * Ensure the minimum-tenure policy for `tenureSeconds` exists, then create the
+   * slot pointing at it. Two transactions only the first time anyone uses that
+   * duration — afterwards the policy already exists and this is a single tx.
+   */
+  const createSlotWithTenure = useCallback(
+    async (
+      params: Omit<CreateSlotV3Params, "occupancyPolicy">,
+      tenureSeconds: bigint,
+    ) => {
+      const policy = await client.predictTenurePolicy(tenureSeconds);
+      const exists = await client.isTenurePolicyDeployed(tenureSeconds);
+      if (!exists) {
+        await exec("Deploy tenure policy", () =>
+          client.deployTenurePolicy(tenureSeconds),
+        );
+      }
+      return exec("Create slot", () =>
+        client.createSlotV3({ ...params, occupancyPolicy: policy }),
+      );
+    },
+    [client, exec],
+  );
+
   const createSlots = useCallback(
     (params: CreateSlotsParams) =>
       exec("Create slots", () => client.createSlots(params)),
@@ -192,6 +216,7 @@ export function useSlotAction(opts?: SlotActionCallbacks) {
     // Actions
     createSlot,
     createSlotV3,
+    createSlotWithTenure,
     createSlots,
     buy,
     selfAssess,

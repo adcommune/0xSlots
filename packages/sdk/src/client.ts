@@ -1,5 +1,7 @@
 import {
   getSlotsHubAddress,
+  MINIMUM_TENURE_POLICY_FACTORY,
+  minimumTenurePolicyFactoryAbi,
   slotAbi,
   slotFactoryAbi,
 } from "@0xslots/contracts";
@@ -495,6 +497,61 @@ export class SlotsClient {
       account: this.account,
       chain: this.chain,
     });
+  }
+
+  // ─── Minimum tenure policies ───────────────────────────────────────────────
+  //
+  // MinimumTenurePolicy holds its window in an immutable constructor arg, so a
+  // given duration is one contract at one address. The factory deploys that
+  // contract deterministically from the duration, which keeps the policy
+  // stateless (nobody can lengthen protection under a sitting occupant) while
+  // still allowing any duration. A duration is deployed once protocol-wide.
+
+  /** Address the tenure policy for `tenureSeconds` has, or would have. */
+  async predictTenurePolicy(tenureSeconds: bigint): Promise<Address> {
+    return this.publicClient.readContract({
+      address: this.tenurePolicyFactory(),
+      abi: minimumTenurePolicyFactoryAbi,
+      functionName: "predict",
+      args: [tenureSeconds],
+    }) as Promise<Address>;
+  }
+
+  /** Whether that policy already exists — lets callers skip a transaction. */
+  async isTenurePolicyDeployed(tenureSeconds: bigint): Promise<boolean> {
+    return this.publicClient.readContract({
+      address: this.tenurePolicyFactory(),
+      abi: minimumTenurePolicyFactoryAbi,
+      functionName: "isDeployed",
+      args: [tenureSeconds],
+    }) as Promise<boolean>;
+  }
+
+  /**
+   * Deploy the tenure policy for `tenureSeconds` if it does not exist yet.
+   * Idempotent — safe to call when another caller deployed it first.
+   */
+  async deployTenurePolicy(tenureSeconds: bigint): Promise<Hash> {
+    return this.wallet.writeContract({
+      address: this.tenurePolicyFactory(),
+      abi: minimumTenurePolicyFactoryAbi,
+      functionName: "getOrDeploy",
+      args: [tenureSeconds],
+      account: this.account,
+      chain: this.chain,
+    });
+  }
+
+  private tenurePolicyFactory(): Address {
+    const addr = MINIMUM_TENURE_POLICY_FACTORY[this.chainId];
+    if (!addr)
+      throw new SlotsError(
+        "Resolve tenure policy factory",
+        new Error(
+          `No MinimumTenurePolicyFactory deployed on chain ${this.chainId}`,
+        ),
+      );
+    return addr;
   }
 
   /**
