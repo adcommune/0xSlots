@@ -24,6 +24,7 @@ export {
   CHAIN_TOKENS,
   getChainTokens,
   getDefaultToken,
+  getFaucetToken,
 } from "./tokens";
 
 // Occupancy resolution (v3 epochs)
