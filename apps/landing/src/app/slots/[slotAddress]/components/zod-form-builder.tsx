@@ -2,10 +2,10 @@
 
 import type { Control, FieldValues } from "react-hook-form";
 import {
+  FormControl,
   FormField,
   FormItem,
   FormLabel,
-  FormControl,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -41,11 +41,20 @@ function unwrapField(field: any): { base: any; optional: boolean } {
     if (typeName === "ZodOptional" || typeName === "optional") {
       optional = true;
       // v3: .unwrap(), v4: ._zod.def.innerType
-      current = current.unwrap?.() ?? current._zod?.def?.innerType ?? current._def?.innerType;
+      current =
+        current.unwrap?.() ??
+        current._zod?.def?.innerType ??
+        current._def?.innerType;
     } else if (typeName === "ZodEffects" || typeName === "effects") {
-      current = current.innerType?.() ?? current._zod?.def?.innerType ?? current._def?.schema;
+      current =
+        current.innerType?.() ??
+        current._zod?.def?.innerType ??
+        current._def?.schema;
     } else if (typeName === "ZodDefault" || typeName === "default") {
-      current = current.removeDefault?.() ?? current._zod?.def?.innerType ?? current._def?.innerType;
+      current =
+        current.removeDefault?.() ??
+        current._zod?.def?.innerType ??
+        current._def?.innerType;
     } else {
       break;
     }
@@ -110,7 +119,9 @@ export function ZodFormBuilder<T extends FieldValues>({
         const typeName = getTypeName(base);
         const isNumber = isNumberType(typeName);
 
-        const choices = (fieldSchema as { choices?: { label: string; value: unknown }[] }).choices;
+        const choices = (
+          fieldSchema as { choices?: { label: string; value: unknown }[] }
+        ).choices;
 
         return (
           <FormField
@@ -122,7 +133,9 @@ export function ZodFormBuilder<T extends FieldValues>({
                 <FormLabel className="text-xs">
                   {humanizeKey(key)}
                   {optional && (
-                    <span className="text-muted-foreground ml-1">(optional)</span>
+                    <span className="text-muted-foreground ml-1">
+                      (optional)
+                    </span>
                   )}
                 </FormLabel>
                 <FormControl>
@@ -131,14 +144,20 @@ export function ZodFormBuilder<T extends FieldValues>({
                       onValueChange={(v) =>
                         field.onChange(isNumber ? Number(v) : v)
                       }
-                      value={field.value != null ? String(field.value) : undefined}
+                      value={
+                        field.value != null ? String(field.value) : undefined
+                      }
                     >
                       <SelectTrigger className="text-xs w-full">
                         <SelectValue placeholder={humanizeKey(key)} />
                       </SelectTrigger>
                       <SelectContent className="w-full">
                         {choices.map((c) => (
-                          <SelectItem key={String(c.value)} value={String(c.value)} className="text-xs">
+                          <SelectItem
+                            key={String(c.value)}
+                            value={String(c.value)}
+                            className="text-xs"
+                          >
                             {c.label}
                           </SelectItem>
                         ))}

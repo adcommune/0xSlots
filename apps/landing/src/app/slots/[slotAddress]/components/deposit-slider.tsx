@@ -3,9 +3,9 @@
 import { AlertTriangle, Banknote } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { type Address, formatUnits, parseUnits } from "viem";
-import { MONTH_SECONDS } from "@/constants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MONTH_SECONDS } from "@/constants";
 import { useSlotAction } from "@/hooks/use-slot-action";
 import type { SlotOnChain } from "@/hooks/use-slot-onchain";
 import { cn } from "@/lib/utils";
@@ -63,17 +63,23 @@ export function DepositSlider({
   const invalid = belowMin || exceedsWallet;
 
   // Coverage estimate
-  const taxPerSecond = (slot.price * slot.taxPercentage) / (MONTH_SECONDS * 10000n);
+  const taxPerSecond =
+    (slot.price * slot.taxPercentage) / (MONTH_SECONDS * 10000n);
   const coverageSeconds =
     taxPerSecond > 0n
       ? Number(
-          parseUnits(normalizeDecimal(Math.max(targetDeposit, 0).toFixed(decimals)), decimals) /
-            taxPerSecond,
+          parseUnits(
+            normalizeDecimal(Math.max(targetDeposit, 0).toFixed(decimals)),
+            decimals,
+          ) / taxPerSecond,
         )
       : Infinity;
 
   async function handleAction() {
-    const deltaUnits = parseUnits(normalizeDecimal(absDelta.toFixed(decimals)), decimals);
+    const deltaUnits = parseUnits(
+      normalizeDecimal(absDelta.toFixed(decimals)),
+      decimals,
+    );
 
     if (isTopUp) {
       await topUp(slotAddress as Address, deltaUnits);

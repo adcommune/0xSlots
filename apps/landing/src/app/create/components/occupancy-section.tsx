@@ -112,16 +112,16 @@ export function OccupancySection() {
             <FormDescription>
               {epochIsOn ? (
                 <>
-                  <strong>Taking the slot from someone</strong> lands on the
+                  <strong>Taking the slot from someone</strong> happens on the
                   clock, not on arrival — at the next {epochValue}{" "}
-                  {epochUnitLabel} boundary. Everyone waits the same sub-epoch
-                  amount and nobody picks theirs, so being faster stops being
-                  worth anything.{" "}
+                  {epochUnitLabel} boundary. Everyone waits the same amount and
+                  nobody picks theirs, so being faster stops being worth
+                  anything.{" "}
                   <strong>Claiming it while empty is immediate</strong> — there
                   is no occupant to take it from.
                 </>
               ) : (
-                <>0 = instant buy. Set a value to schedule buy-outs.</>
+                <>0 = instant buy. Set a value to put buy-outs on the clock.</>
               )}
             </FormDescription>
             {epochTooShort && (

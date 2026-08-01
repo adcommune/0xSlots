@@ -62,10 +62,9 @@ export function OccupancyBadge({
               SETTLING
             </Badge>
           </TooltipTrigger>
-          <TooltipContent className="max-w-xs">
-            The epoch boundary has passed, so on-chain this slot has already
-            changed hands and the new occupant is paying tax on it. The handover
-            is written to storage the next time anyone touches the slot.
+          <TooltipContent className="max-w-[16rem]">
+            Just changed hands — the new holder is shown. The explorer catches
+            up shortly.
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -88,7 +87,7 @@ export function OccupancyBadge({
             A buy is committed and takes effect at the next epoch boundary.
             Whoever holds the slot keeps it and keeps paying its tax until then,
             and cannot change its price in the meantime. If they leave first the
-            slot sits empty, but the claim still lands — nobody else can take it
+            slot sits empty, but the buy still stands — nobody else can take it
             in the meantime.
           </TooltipContent>
         </Tooltip>

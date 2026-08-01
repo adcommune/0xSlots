@@ -6,8 +6,8 @@ import {
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import {
-  slotQueryOptions,
   slotActivityQueryOptions,
+  slotQueryOptions,
 } from "@/hooks/slot-queries";
 import { getChainFromSearchParams } from "@/lib/config";
 import { getFrameMetadata } from "@/lib/frame-metadata";

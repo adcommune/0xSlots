@@ -79,3 +79,22 @@ export function formatDuration(seconds: number): string {
   }
   return `${Math.floor(seconds / 86400)}d`;
 }
+
+/**
+ * Ticking wall clock in unix seconds, for time-position visuals.
+ *
+ * Only ticks while `enabled`, so a slot with no epoch and no tenure re-renders
+ * nothing on a timer.
+ */
+export function useNow(enabled = true, intervalMs = 1000): number {
+  const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
+  useEffect(() => {
+    if (!enabled) return;
+    const id = setInterval(
+      () => setNow(Math.floor(Date.now() / 1000)),
+      intervalMs,
+    );
+    return () => clearInterval(id);
+  }, [enabled, intervalMs]);
+  return now;
+}

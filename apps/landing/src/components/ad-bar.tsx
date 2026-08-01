@@ -21,9 +21,9 @@ import {
 } from "@/components/ui/carousel";
 import { AD_SLOTS, APP_URL, alchemyKey } from "@/constants";
 import { useChain } from "@/context/chain";
+import { useFarcaster } from "@/context/farcaster";
 import { useSlotOnChain } from "@/hooks/use-slot-onchain";
 import { truncateAddress } from "@/utils";
-import { useFarcaster } from "@/context/farcaster";
 
 function AdCard({
   slot,

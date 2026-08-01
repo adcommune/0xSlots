@@ -46,9 +46,8 @@ export function OccupancyPolicyBadge({
               Instant buy
             </Badge>
           </TooltipTrigger>
-          <TooltipContent className="max-w-xs">
-            Pure Harberger. Anyone can buy this slot at its declared price, in
-            the very next block.
+          <TooltipContent>
+            Anyone can buy this slot right now, at its listed price.
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -65,15 +64,10 @@ export function OccupancyPolicyBadge({
                 {formatDuration(epoch)} epochs
               </Badge>
             </TooltipTrigger>
-            <TooltipContent className="max-w-xs">
-              <p className="font-medium">Near-pure Harberger.</p>
-              <p className="mt-1">
-                Taking this slot from its occupant lands on the clock, not on
-                arrival — at the next {formatDuration(epoch)} boundary. Everyone
-                waits the same sub-epoch amount and nobody picks theirs, so
-                being faster stops being worth anything. Claiming it while
-                vacant is immediate.
-              </p>
+            <TooltipContent className="max-w-[16rem]">
+              This slot changes hands on the clock, every{" "}
+              {formatDuration(epoch)}. If it is empty you can take it right
+              away.
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -89,27 +83,9 @@ export function OccupancyPolicyBadge({
                 {known?.label ?? `Policy ${truncateAddress(policy)}`}
               </Badge>
             </TooltipTrigger>
-            <TooltipContent className="max-w-xs">
-              {known ? (
-                <>
-                  <p className="font-medium">
-                    {known.impact === "soft"
-                      ? "Softens Harberger."
-                      : "Near-pure Harberger."}
-                  </p>
-                  <p className="mt-1">{known.description}</p>
-                </>
-              ) : (
-                <>
-                  <p className="font-medium">Unrecognised policy.</p>
-                  <p className="mt-1">
-                    This slot has an occupancy policy this app does not know
-                    about, so how easily it can be bought out is unknown. It can
-                    still never block liquidation or stop the occupant leaving —
-                    the core forbids both.
-                  </p>
-                </>
-              )}
+            <TooltipContent className="max-w-[16rem]">
+              {known?.description ??
+                "An occupancy rule this app doesn't recognise — how easily this slot can be bought out is unknown."}
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>

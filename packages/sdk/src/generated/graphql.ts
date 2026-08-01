@@ -7324,7 +7324,7 @@ export type GetSlotActivityQueryVariables = Exact<{
 }>;
 
 
-export type GetSlotActivityQuery = { __typename?: 'Query', boughtEvents: Array<{ __typename?: 'BoughtEvent', id: string, buyer: string, previousOccupant: string, price: string, selfAssessedPrice: string, deposit: string, timestamp: string, tx: string, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number } }>, releasedEvents: Array<{ __typename?: 'ReleasedEvent', id: string, occupant: string, refund: string, timestamp: string, tx: string, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number } }>, liquidatedEvents: Array<{ __typename?: 'LiquidatedEvent', id: string, liquidator: string, occupant: string, bounty: string, timestamp: string, tx: string, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number } }>, priceUpdatedEvents: Array<{ __typename?: 'PriceUpdatedEvent', id: string, oldPrice: string, newPrice: string, timestamp: string, tx: string, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number } }>, depositedEvents: Array<{ __typename?: 'DepositedEvent', id: string, depositor: string, amount: string, timestamp: string, tx: string, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number } }>, withdrawnEvents: Array<{ __typename?: 'WithdrawnEvent', id: string, occupant: string, amount: string, timestamp: string, tx: string, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number } }>, taxCollectedEvents: Array<{ __typename?: 'TaxCollectedEvent', id: string, recipient: string, amount: string, timestamp: string, tx: string, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number } }>, taxUpdateProposedEvents: Array<{ __typename?: 'TaxUpdateProposedEvent', id: string, newPercentage: string, timestamp: string, tx: string }>, moduleUpdateProposedEvents: Array<{ __typename?: 'ModuleUpdateProposedEvent', id: string, newModule: string, timestamp: string, tx: string }>, pendingUpdateCancelledEvents: Array<{ __typename?: 'PendingUpdateCancelledEvent', id: string, timestamp: string, tx: string }> };
+export type GetSlotActivityQuery = { __typename?: 'Query', transferScheduledEvents: Array<{ __typename?: 'TransferScheduledEvent', id: string, buyer: string, effectiveAt: string, price: string, deposit: string, timestamp: string, tx: string }>, boughtEvents: Array<{ __typename?: 'BoughtEvent', id: string, buyer: string, previousOccupant: string, price: string, selfAssessedPrice: string, deposit: string, timestamp: string, tx: string, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number } }>, releasedEvents: Array<{ __typename?: 'ReleasedEvent', id: string, occupant: string, refund: string, timestamp: string, tx: string, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number } }>, liquidatedEvents: Array<{ __typename?: 'LiquidatedEvent', id: string, liquidator: string, occupant: string, bounty: string, timestamp: string, tx: string, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number } }>, priceUpdatedEvents: Array<{ __typename?: 'PriceUpdatedEvent', id: string, oldPrice: string, newPrice: string, timestamp: string, tx: string, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number } }>, depositedEvents: Array<{ __typename?: 'DepositedEvent', id: string, depositor: string, amount: string, timestamp: string, tx: string, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number } }>, withdrawnEvents: Array<{ __typename?: 'WithdrawnEvent', id: string, occupant: string, amount: string, timestamp: string, tx: string, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number } }>, taxCollectedEvents: Array<{ __typename?: 'TaxCollectedEvent', id: string, recipient: string, amount: string, timestamp: string, tx: string, currency: { __typename?: 'Currency', id: string, name?: string | null, symbol?: string | null, decimals: number } }>, taxUpdateProposedEvents: Array<{ __typename?: 'TaxUpdateProposedEvent', id: string, newPercentage: string, timestamp: string, tx: string }>, moduleUpdateProposedEvents: Array<{ __typename?: 'ModuleUpdateProposedEvent', id: string, newModule: string, timestamp: string, tx: string }>, pendingUpdateCancelledEvents: Array<{ __typename?: 'PendingUpdateCancelledEvent', id: string, timestamp: string, tx: string }> };
 
 export type GetFactoryQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -8070,6 +8070,21 @@ export const GetPriceUpdatedEventsDocument = gql`
     ${CurrencyFieldsFragmentDoc}`;
 export const GetSlotActivityDocument = gql`
     query GetSlotActivity($slotId: String!, $first: Int!, $skip: Int) {
+  transferScheduledEvents(
+    first: $first
+    skip: $skip
+    orderBy: timestamp
+    orderDirection: desc
+    where: {slot: $slotId}
+  ) {
+    id
+    buyer
+    effectiveAt
+    price
+    deposit
+    timestamp
+    tx
+  }
   boughtEvents(
     first: $first
     skip: $skip

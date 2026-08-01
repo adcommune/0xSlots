@@ -23,6 +23,7 @@ import {
   RefreshCw,
   Settings,
   Shield,
+  ShieldCheck,
   Sparkles,
   Timer,
   User,
@@ -33,8 +34,7 @@ import { useEffect, useState } from "react";
 import { type Address, zeroAddress } from "viem";
 import { useAccount, useSwitchChain } from "wagmi";
 import { AccountTypeIcon } from "@/components/account-type-icon";
-import { OccupancyBadge } from "@/components/occupancy-badge";
-import { OccupancyPolicyBadge } from "@/components/occupancy-policy-badge";
+import { EpochTimeline, TenureMeter } from "@/components/occupancy-timeline";
 import { PageHeader } from "@/components/page-header";
 import { SplitRecipientsBar } from "@/components/split-recipients-bar";
 import {
@@ -57,6 +57,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { KNOWN_POLICIES } from "@/config/policies";
 import { useChain } from "@/context/chain";
 import { useFarcaster } from "@/context/farcaster";
 import { NavLink } from "@/context/navigation";
@@ -68,6 +69,7 @@ import { useCurrencyBalance } from "@/hooks/use-currency-balance";
 import {
   formatDuration as formatShortDuration,
   useEffectiveOccupancy,
+  useNow,
 } from "@/hooks/use-effective-occupancy";
 import { useSlotAction } from "@/hooks/use-slot-action";
 import { useSlotOnChain } from "@/hooks/use-slot-onchain";
@@ -108,9 +110,24 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
   // hooks cannot be conditional.
   const effectiveOccupancy = useEffectiveOccupancy(subgraphSlot);
 
+  // Wall clock for the occupancy visuals. Above the early returns — hooks
+  // cannot be conditional — and only ticking when there is something
+  // time-positioned to draw.
+  const epochSecondsNum = Number(slot?.epochSeconds ?? 0);
+  const nowSeconds = useNow(epochSecondsNum > 0 || !!slot?.occupancyPolicy);
+  const knownPolicy = slot?.occupancyPolicy
+    ? KNOWN_POLICIES[slot.occupancyPolicy.toLowerCase()]
+    : undefined;
+
   const { data: activityData } = useSuspenseQuery(
     slotActivityQueryOptions(selectedChainId, slotAddress),
   );
+
+  // Only the TransferScheduled event knows WHEN a buy was committed; the Slot
+  // entity only knows where it takes effect.
+  const pendingCommittedAt = effectiveOccupancy?.hasPendingTransfer
+    ? (activityData?.transferScheduledEvents?.[0]?.timestamp ?? null)
+    : null;
 
   const { address, isConnected, chainId, chain } = useAccount();
   const { switchChain } = useSwitchChain();
@@ -283,32 +300,13 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
             <p className="text-xs text-muted-foreground">
               {isOccupied
                 ? `Occupied by ${truncateAddress(slot.occupant!)}`
-                : "Vacant"}{" "}
-              · {chain?.name}
+                : "Vacant"}
+              {chain?.name ? ` · ${chain.name}` : ""}
             </p>
             {role && (
               <Badge variant="outline" className={role.badge}>
                 {role.label}
               </Badge>
-            )}
-            {/* On-chain occupancy terms. getSlotInfo() resolves occupant/price
-                against a matured transfer, so the header above is already
-                truthful; this says how easily the slot can be taken at all. */}
-            <OccupancyPolicyBadge
-              epochSeconds={slot.epochSeconds}
-              occupancyPolicy={slot.occupancyPolicy}
-              className="text-[10px]"
-            />
-            {/* getSlotInfo() does not expose pendingTransfer, so a committed
-                but not-yet-effective buy is only visible via the subgraph.
-                Without this the page reads "Vacant" while the slot is in fact
-                already spoken for. */}
-            {(effectiveOccupancy?.hasPendingTransfer ||
-              effectiveOccupancy?.isResolvedAhead) && (
-              <OccupancyBadge
-                occupancy={effectiveOccupancy}
-                className="text-[10px]"
-              />
             )}
           </div>
         </div>
@@ -503,6 +501,65 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
                           {formatBps(slot.liquidationBountyBps.toString())}
                         </span>
                       </div>
+
+                      {(epochSecondsNum > 0 || slot.occupancyPolicy) && (
+                        <>
+                          <div className="border-t" />
+
+                          {/* Occupancy terms, shown rather than described —
+                              both are positions in time, which a reader takes
+                              in far quicker from a picture than a paragraph. */}
+                          {epochSecondsNum > 0 && (
+                            <div className="space-y-2">
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground flex items-center gap-1.5">
+                                  <Clock className="size-3 text-sky-500" />{" "}
+                                  Changes hands
+                                </span>
+                                <span>
+                                  every {formatShortDuration(epochSecondsNum)}
+                                </span>
+                              </div>
+                              <EpochTimeline
+                                epochSeconds={epochSecondsNum}
+                                committedAt={
+                                  pendingCommittedAt
+                                    ? Number(pendingCommittedAt)
+                                    : null
+                                }
+                                now={nowSeconds}
+                              />
+                            </div>
+                          )}
+
+                          {slot.occupancyPolicy && (
+                            <div className="space-y-2">
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground flex items-center gap-1.5">
+                                  <ShieldCheck className="size-3 text-violet-500" />{" "}
+                                  Occupancy policy
+                                </span>
+                                <span className="text-xs">
+                                  {knownPolicy?.label ??
+                                    truncateAddress(slot.occupancyPolicy)}
+                                </span>
+                              </div>
+                              {knownPolicy?.tenureSeconds && isOccupied && (
+                                <TenureMeter
+                                  tenureSeconds={knownPolicy.tenureSeconds}
+                                  occupiedSince={Number(slot.occupiedSince)}
+                                  now={nowSeconds}
+                                />
+                              )}
+                              {knownPolicy && (
+                                <p className="text-[11px] text-muted-foreground">
+                                  {knownPolicy.description}
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        </>
+                      )}
 
                       <div className="border-t" />
 
@@ -961,7 +1018,7 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
                 <p className="text-sm text-muted-foreground mt-1">
                   {isPendingBuyer ? (
                     <>
-                      You take the slot at the next epoch boundary, in{" "}
+                      You take the slot at the next boundary, in{" "}
                       {formatShortDuration(
                         Number(effectiveOccupancy.pendingEffectiveAt ?? 0n) -
                           Math.floor(Date.now() / 1000),

@@ -1,5 +1,5 @@
-import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
+import type * as React from "react";
 import { cn } from "@/lib/utils";
 
 const badgeVariants = cva(
@@ -30,7 +30,8 @@ const badgeVariants = cva(
         ModuleProposed: "border-transparent bg-cyan-100 text-cyan-900",
         UpdateCancelled: "border-transparent bg-gray-100 text-gray-900",
         UpdateApplied: "border-transparent bg-teal-100 text-teal-900",
-        LiquidationBountyUpdated: "border-transparent bg-pink-100 text-pink-900",
+        LiquidationBountyUpdated:
+          "border-transparent bg-pink-100 text-pink-900",
         // V2 event types
         landOpened: "border-transparent bg-blue-100 text-blue-900",
         slotCreated: "border-transparent bg-green-100 text-green-900",
@@ -42,7 +43,7 @@ const badgeVariants = cva(
     defaultVariants: {
       variant: "default",
     },
-  }
+  },
 );
 
 export interface BadgeProps

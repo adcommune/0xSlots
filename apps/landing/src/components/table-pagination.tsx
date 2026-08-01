@@ -28,7 +28,14 @@ export function usePagination<T>(items: T[], defaultPageSize = 25) {
     [safePage, pageSize],
   );
 
-  return { page: safePage, setPage, pageSize, setPageSize: changePageSize, totalPages, paged };
+  return {
+    page: safePage,
+    setPage,
+    pageSize,
+    setPageSize: changePageSize,
+    totalPages,
+    paged,
+  };
 }
 
 type TablePaginationProps = {
@@ -59,9 +66,7 @@ export function TablePagination({
     ? from + pageSize - 1
     : Math.min((page + 1) * pageSize, total);
 
-  const nextDisabled = isServerMode
-    ? !hasMore
-    : page >= (totalPages ?? 1) - 1;
+  const nextDisabled = isServerMode ? !hasMore : page >= (totalPages ?? 1) - 1;
 
   return (
     <div className="flex items-center justify-between px-4 py-2 border-t text-xs text-muted-foreground">

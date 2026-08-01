@@ -26,6 +26,12 @@ export interface KnownPolicy {
   description: string;
   /** Chain this deployment lives on. A policy address is chain-specific. */
   chainId: number;
+  /**
+   * Protection window, for policies that have one. Lets the UI draw a meter
+   * instead of describing the rule in a paragraph. Absent for policies whose
+   * behaviour is not a duration.
+   */
+  tenureSeconds?: number;
 }
 
 /** Keyed by lowercase address. Same policy can be deployed per chain. */
@@ -33,17 +39,18 @@ export const KNOWN_POLICIES: Record<string, KnownPolicy> = {
   // Base Sepolia — deployed 2026-07-29, block 44825297
   "0xb7a0c71a6ab1293732216540e8321bda1f986622": {
     chainId: 84532,
+    tenureSeconds: 604800,
     label: "7d minimum tenure",
     impact: "soft",
     description:
-      "The occupant cannot be bought out for 7 days after acquiring the slot. They pay for that protection up front — the full window's tax must be escrowed — and cannot cut their price while protected. Forced sale is delayed, not removed: a dishonestly low price is still punished, just later. Liquidation still works throughout, so insolvency always ends the tenure.",
+      "Nobody can buy the occupant out for 7 days after they take the slot. Liquidation still works if they stop paying.",
   },
   "0x0c8501c02b88bfcb10d9a2de6a40abce342eb1cd": {
     chainId: 84532,
     label: "Queue priority",
     impact: "near-pure",
     description:
-      "While the slot is vacant and its queue has live bids, only the queue may claim it — so the first bidder in line cannot be front-run the instant it frees up. It does not restrict buying an occupied slot, and it orders who may act rather than who sets the price.",
+      "When the slot frees up it goes to whoever queued first, rather than to whoever is fastest. Buying an occupied slot is unaffected.",
   },
 };
 

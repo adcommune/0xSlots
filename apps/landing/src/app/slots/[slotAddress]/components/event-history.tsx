@@ -1,8 +1,6 @@
 "use client";
 
 import { formatDistanceToNow } from "date-fns";
-import { NavLink } from "@/context/navigation";
-
 import { EventTypeBadge } from "@/components/event-type-badge";
 import {
   Table,
@@ -12,6 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { NavLink } from "@/context/navigation";
 import type { UnifiedEvent } from "@/lib/normalize-events";
 import { truncateAddress } from "@/utils";
 

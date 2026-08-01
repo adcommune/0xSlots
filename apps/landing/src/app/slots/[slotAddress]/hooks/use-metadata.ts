@@ -2,9 +2,9 @@
 
 import { useQuery } from "@tanstack/react-query";
 import type { Address } from "viem";
+import { useChain } from "@/context/chain";
 import { useSlotsClient } from "@/hooks/use-slots-client";
 import { useSlotsClient as useSubgraphSlotsClient } from "@/hooks/use-v3";
-import { useChain } from "@/context/chain";
 
 type AdContent = {
   type: string;

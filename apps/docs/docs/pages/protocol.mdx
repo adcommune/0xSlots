@@ -114,7 +114,7 @@ fastest; an empty slot has no occupant and no declared price — the claimant
 sets their own valuation and pays only the deposit — so delaying it would cost
 the recipient revenue on a slot nobody holds and protect against nothing.
 
-One consequence worth knowing: because a buy-out lands on the next boundary,
+One consequence worth knowing: because a buy-out takes effect on the next boundary,
 whoever holds the slot is guaranteed at least one full epoch before they can be
 displaced. Epochs give you a free minimum tenure of one epoch.
 
@@ -127,7 +127,7 @@ report the post-boundary state as soon as the boundary passes.
 - **`selfAssess()` is blocked while a transfer is pending**, so the outgoing
   occupant cannot raise their price to dodge a sale they have already seen.
 - If the occupant releases or is liquidated before the boundary, the slot goes
-  vacant and the scheduled transfer still lands. The buyer's purchase price is
+  vacant and the scheduled buy still stands. The buyer's purchase price is
   refunded, since a vacant slot costs only the deposit. Nobody else can claim it
   in the meantime — a pending claim is protected even though the slot is empty.
 

@@ -37,7 +37,7 @@ export function BuySection({
     slot.occupant.toLowerCase() === address.toLowerCase();
 
   // Only a buy that takes the slot FROM someone is scheduled — claiming a
-  // vacant slot lands immediately however long the epoch is.
+  // vacant slot is taken immediately however long the epoch is.
   const isScheduledBuy = isOccupied && Number(slot.epochSeconds) > 0;
   const secondsUntilEffective = useSecondsUntilEffective(slot.epochSeconds);
 
@@ -210,11 +210,11 @@ export function BuySection({
           is immediate whatever the epoch, so say nothing there. */}
       {isScheduledBuy && (
         <p className="rounded-md border border-dashed px-3 py-2 text-xs text-muted-foreground">
-          This slot changes hands on the clock. Your buy takes effect{" "}
+          This slot changes hands on the clock. You take it{" "}
           <span className="font-medium text-foreground">
             in {formatDuration(secondsUntilEffective)}
           </span>
-          , at the next {formatDuration(Number(slot.epochSeconds))} boundary —
+          , — at the next {formatDuration(Number(slot.epochSeconds))} boundary.
           the current occupant holds it and pays its tax until then. Your funds
           are escrowed now and the commit cannot be cancelled, but nobody can
           outbid or displace you in the meantime.

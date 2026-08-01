@@ -1,8 +1,6 @@
 "use client";
 
 import { formatDistanceToNow } from "date-fns";
-import { NavLink } from "@/context/navigation";
-
 import { EventTypeBadge } from "@/components/event-type-badge";
 import { TablePagination, usePagination } from "@/components/table-pagination";
 import { TableEmpty, TableSkeleton } from "@/components/table-states";
@@ -15,6 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useChain } from "@/context/chain";
+import { NavLink } from "@/context/navigation";
 import { useRecentEvents } from "@/hooks/use-v3";
 import { normalizeEvents } from "@/lib/normalize-events";
 import { truncateAddress } from "@/utils";
