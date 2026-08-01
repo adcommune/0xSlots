@@ -801,6 +801,23 @@ export class Slot extends Entity {
     }
   }
 
+  get pendingCommittedAt(): BigInt | null {
+    let value = this.get("pendingCommittedAt");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set pendingCommittedAt(value: BigInt | null) {
+    if (!value) {
+      this.unset("pendingCommittedAt");
+    } else {
+      this.set("pendingCommittedAt", Value.fromBigInt(<BigInt>value));
+    }
+  }
+
   get pendingPrice(): BigInt | null {
     let value = this.get("pendingPrice");
     if (!value || value.kind == ValueKind.NULL) {
