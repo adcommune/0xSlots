@@ -10,13 +10,16 @@
 }
 
 @theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 12px);
-  --radius-4xl: calc(var(--radius) + 16px);
+  /* Square corners throughout. Each step is pinned rather than derived from
+     --radius: the scale is calc(var(--radius) ± Npx), so zeroing only the base
+     would leave the larger steps rounded and push --radius-sm negative. */
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
+  --radius-2xl: 0;
+  --radius-3xl: 0;
+  --radius-4xl: 0;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -51,7 +54,7 @@
 }
 
 :root {
-  --radius: 0.625rem;
+  --radius: 0;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -126,4 +129,15 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* `rounded-full` compiles to calc(infinity * 1px), not to a scale step, so
+   zeroing the scale above leaves pills and avatars untouched. Squared here
+   instead of edited out of every call site. */
+.rounded-full,
+.rounded-t-full,
+.rounded-r-full,
+.rounded-b-full,
+.rounded-l-full {
+  border-radius: 0;
 }
