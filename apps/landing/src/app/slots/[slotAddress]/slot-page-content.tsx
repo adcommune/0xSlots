@@ -34,6 +34,7 @@ import { useEffect, useState } from "react";
 import { type Address, zeroAddress } from "viem";
 import { useAccount, useSwitchChain } from "wagmi";
 import { AccountTypeIcon } from "@/components/account-type-icon";
+import { EnsIdentity } from "@/components/ens-identity";
 import { EpochTimeline, TenureMeter } from "@/components/occupancy-timeline";
 import { PageHeader } from "@/components/page-header";
 import { SplitRecipientsBar } from "@/components/split-recipients-bar";
@@ -397,7 +398,11 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
                             href={`/recipient/${slot.recipient}`}
                             className="text-primary hover:underline text-xs"
                           >
-                            {truncateAddress(slot.recipient)}
+                            <EnsIdentity
+                              address={slot.recipient}
+                              size={16}
+                              nameClassName="text-xs"
+                            />
                           </NavLink>
                           <button
                             type="button"
@@ -514,10 +519,10 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
                               <div className="flex justify-between">
                                 <span className="text-muted-foreground flex items-center gap-1.5">
                                   <Clock className="size-3 text-sky-500" />{" "}
-                                  Changes hands
+                                  Epoch
                                 </span>
                                 <span>
-                                  every {formatShortDuration(epochSecondsNum)}
+                                  {formatShortDuration(epochSecondsNum)}
                                 </span>
                               </div>
                               <EpochTimeline
