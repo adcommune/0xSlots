@@ -62,9 +62,10 @@ export function OccupancyBadge({
               SETTLING
             </Badge>
           </TooltipTrigger>
-          <TooltipContent className="max-w-[16rem]">
-            Just changed hands — the new holder is shown. The explorer catches
-            up shortly.
+          <TooltipContent className="max-w-[17rem]">
+            Already changed hands on-chain — the new holder is shown here. The
+            handover gets written the next time anyone transacts on this slot,
+            so the explorer can lag until then.
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>

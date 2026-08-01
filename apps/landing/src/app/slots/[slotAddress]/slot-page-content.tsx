@@ -1010,6 +1010,38 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
           </div>
         )}
 
+        {/* The handover is written by the next transaction touching the slot —
+            nothing runs at the boundary. Without a nudge this state can sit for
+            days, so offer the (permissionless) poke rather than just
+            explaining the lag. */}
+        {effectiveOccupancy?.isResolvedAhead && (
+          <div className="p-4 border-b space-y-2">
+            <p className="text-sm font-medium">Handover not written yet</p>
+            <p className="text-sm text-muted-foreground">
+              This slot already changed hands on-chain and the new holder is
+              shown above. Nothing runs at the boundary — the handover is
+              recorded by the next transaction that touches the slot, so
+              listings lag until someone acts. Anyone can do it.
+            </p>
+            <Button
+              size="sm"
+              variant="outline"
+              className="w-full"
+              disabled={busy}
+              onClick={() => collect(slotAddress as Address)}
+            >
+              {busy && activeAction === "Collect tax" ? (
+                <>
+                  <Loader2 className="size-4 animate-spin mr-2" />
+                  Recording...
+                </>
+              ) : (
+                "Record the handover"
+              )}
+            </Button>
+          </div>
+        )}
+
         {!isOccupied && (
           <div className="p-4 border-b">
             {effectiveOccupancy?.hasPendingTransfer ? (
