@@ -6,8 +6,8 @@ import { useWaitForTransactionReceipt } from "wagmi";
 import type {
   BuyParams,
   CreateSlotParams,
-  CreateSlotV3Params,
   CreateSlotsParams,
+  CreateSlotV3Params,
   SlotsChain,
 } from "../client";
 import { useSlotsClient } from "./useSlotsClient";
@@ -81,9 +81,16 @@ export function useSlotAction(opts?: SlotActionCallbacks) {
 
   /**
    * Execute an SDK method with shared pending/receipt tracking.
+   *
+   * Reports failures through `onError` rather than throwing, so a single action
+   * needs no try/catch at the call site. Returns the hash — or `undefined` when
+   * it failed, which is what a multi-step action must check before continuing.
    */
   const exec = useCallback(
-    async (label: string, fn: () => Promise<Hash>) => {
+    async (
+      label: string,
+      fn: () => Promise<Hash>,
+    ): Promise<Hash | undefined> => {
       labelRef.current = label;
       setActiveAction(label);
       setIsPending(true);
@@ -91,11 +98,13 @@ export function useSlotAction(opts?: SlotActionCallbacks) {
       try {
         const txHash = await fn();
         setHash(txHash);
+        return txHash;
       } catch (error) {
         console.error(`[useSlotAction] ${label} failed:`, error);
         setActiveAction(null);
         labelRef.current = "";
         opts?.onError?.(label, extractErrorMessage(error));
+        return undefined;
       } finally {
         setIsPending(false);
       }
@@ -131,9 +140,12 @@ export function useSlotAction(opts?: SlotActionCallbacks) {
       const policy = await client.predictTenurePolicy(tenureSeconds);
       const exists = await client.isTenurePolicyDeployed(tenureSeconds);
       if (!exists) {
-        await exec("Deploy tenure policy", () =>
+        const deployed = await exec("Deploy tenure policy", () =>
           client.deployTenurePolicy(tenureSeconds),
         );
+        // Bail on a rejected or reverted deploy: `createSlotV3` requires code at
+        // `policy` and would otherwise fail a second time, more confusingly.
+        if (!deployed) return undefined;
       }
       return exec("Create slot", () =>
         client.createSlotV3({ ...params, occupancyPolicy: policy }),

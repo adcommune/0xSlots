@@ -17,8 +17,8 @@ import {
 } from "viem";
 import { SlotsError } from "./errors";
 import { getSdk } from "./generated/graphql";
-import { MetadataModuleClient } from "./modules/metadata";
 import { FeedModuleClient } from "./modules/feed";
+import { MetadataModuleClient } from "./modules/metadata";
 
 // ─── GraphQL Meta ─────────────────────────────────────────────────────────────
 
@@ -342,9 +342,7 @@ export class SlotsClient {
   getAccountSlot(
     ...args: Parameters<ReturnType<typeof getSdk>["GetAccountSlot"]>
   ) {
-    return this.query("getAccountSlot", () =>
-      this.sdk.GetAccountSlot(...args),
-    );
+    return this.query("getAccountSlot", () => this.sdk.GetAccountSlot(...args));
   }
   /** Fetch a paginated list of account-slot interactions. */
   getAccountSlots(
@@ -530,9 +528,15 @@ export class SlotsClient {
   /**
    * Deploy the tenure policy for `tenureSeconds` if it does not exist yet.
    * Idempotent — safe to call when another caller deployed it first.
+   *
+   * Waits for the receipt rather than returning on broadcast. Callers deploy a
+   * policy in order to immediately reference it, and `createSlotV3` reverts with
+   * `InvalidModule_NoCode` while the CREATE2 address is still empty — which
+   * surfaces as an opaque RPC gas-limit rejection, because a wallet whose
+   * estimation reverts falls back to the block gas limit.
    */
   async deployTenurePolicy(tenureSeconds: bigint): Promise<Hash> {
-    return this.wallet.writeContract({
+    const hash = await this.wallet.writeContract({
       address: this.tenurePolicyFactory(),
       abi: minimumTenurePolicyFactoryAbi,
       functionName: "getOrDeploy",
@@ -540,6 +544,8 @@ export class SlotsClient {
       account: this.account,
       chain: this.chain,
     });
+    await this.publicClient.waitForTransactionReceipt({ hash });
+    return hash;
   }
 
   private tenurePolicyFactory(): Address {
