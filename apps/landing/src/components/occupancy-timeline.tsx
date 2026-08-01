@@ -54,7 +54,7 @@ export function EpochTimeline({
       <div
         className="relative h-2.5 w-full rounded-full bg-muted overflow-hidden"
         role="img"
-        aria-label={`${formatDuration(end - now)} until this slot can change hands`}
+        aria-label={`Sales on this slot complete in ${formatDuration(end - now)}`}
       >
         <div
           className="h-full bg-sky-500/70 transition-[width] duration-1000 ease-linear"
@@ -73,7 +73,7 @@ export function EpochTimeline({
           {clockLabel(start, epochSeconds)}
         </span>
         <span>
-          changes hands{" "}
+          completes{" "}
           <span className="font-medium">{clockLabel(end, epochSeconds)}</span>
           <span className="text-muted-foreground">
             {" "}
@@ -85,8 +85,8 @@ export function EpochTimeline({
       {commitPct !== null && committedAt != null && (
         <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
           <span className="inline-block h-2 w-[3px] shrink-0 rounded-full bg-amber-500" />
-          Bought at {clockLabel(committedAt, epochSeconds)} — the buyer takes
-          the slot when the bar fills.
+          Sold at {clockLabel(committedAt, epochSeconds)} — completes when the
+          bar fills.
         </p>
       )}
     </div>

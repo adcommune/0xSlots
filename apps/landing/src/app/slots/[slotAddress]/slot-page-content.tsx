@@ -1016,12 +1016,12 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
             explaining the lag. */}
         {effectiveOccupancy?.isResolvedAhead && (
           <div className="p-4 border-b space-y-2">
-            <p className="text-sm font-medium">Handover not written yet</p>
+            <p className="text-sm font-medium">Sale not registered yet</p>
             <p className="text-sm text-muted-foreground">
-              This slot already changed hands on-chain and the new holder is
-              shown above. Nothing runs at the boundary — the handover is
-              recorded by the next transaction that touches the slot, so
-              listings lag until someone acts. Anyone can do it.
+              This sale has completed and the new holder is shown above, but it
+              has not been registered on the slot yet. Registering happens the
+              next time anyone acts on it, so listings elsewhere can still show
+              the old holder until then. Anyone can register it.
             </p>
             <Button
               size="sm"
@@ -1036,7 +1036,7 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
                   Recording...
                 </>
               ) : (
-                "Record the handover"
+                "Register the sale"
               )}
             </Button>
           </div>

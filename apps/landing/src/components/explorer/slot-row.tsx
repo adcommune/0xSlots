@@ -36,7 +36,10 @@ export function SlotRow({
   // The account entity describes the INDEXED occupant, so it only applies to
   // the address we're rendering when we haven't resolved past it.
   const account = occupancy?.isResolvedAhead ? null : slot.occupantAccount;
-  const showState = occupancy?.isResolvedAhead || occupancy?.hasPendingTransfer;
+  // Only the SOLD state is worth a badge in a listing. "Completed but not yet
+  // recorded" is a fact about our index, not the property — and the holder
+  // rendered here is already resolved to the correct one.
+  const showState = occupancy?.hasPendingTransfer;
 
   return (
     <TableRow className="cursor-pointer" onClick={() => onSelect(slot.id)}>

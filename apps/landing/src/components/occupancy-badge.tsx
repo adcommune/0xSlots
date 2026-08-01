@@ -13,16 +13,16 @@ import { formatDuration } from "@/hooks/use-effective-occupancy";
 /**
  * Occupancy state, resolved rather than indexed.
  *
- * Two states exist only because transfers on epoch slots apply lazily:
+ * SOLD is the property analogue of exchanged contracts: binding at an agreed
+ * price, completing on a set date, with the current holder keeping the slot and
+ * paying for it until then. Only reachable when the buy took the slot FROM
+ * someone — claiming a vacant slot completes immediately.
  *
- * - SETTLING — the boundary has passed, so on-chain the incoming occupant
- *   already holds the slot and pays its tax, but no transaction has written
- *   that to storage yet so the subgraph still shows the old occupant. The
- *   address shown alongside is already the new one.
- * - INCOMING — a buy is committed and waiting for its boundary. Whoever holds
- *   the slot keeps it and keeps paying until then. Only reachable when the buy
- *   took the slot FROM someone: claiming a vacant slot is immediate, so it
- *   never produces this state.
+ * There is deliberately NO badge for "completed but not yet recorded". The
+ * holder shown is already the correct one, so flagging that our index is behind
+ * tells the reader something about our pipeline rather than about the property.
+ * The slot page still raises it, because there it comes with a button that
+ * fixes it.
  */
 export function OccupancyBadge({
   occupancy,
@@ -53,25 +53,6 @@ export function OccupancyBadge({
     );
   }
 
-  if (occupancy.isResolvedAhead) {
-    return (
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Badge variant="settling" className={className}>
-              SETTLING
-            </Badge>
-          </TooltipTrigger>
-          <TooltipContent className="max-w-[17rem]">
-            Already changed hands on-chain — the new holder is shown here. The
-            handover gets written the next time anyone transacts on this slot,
-            so the explorer can lag until then.
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    );
-  }
-
   if (occupancy.hasPendingTransfer) {
     const secondsLeft = occupancy.pendingEffectiveAt
       ? Number(occupancy.pendingEffectiveAt) - Math.floor(Date.now() / 1000)
@@ -81,15 +62,14 @@ export function OccupancyBadge({
         <Tooltip>
           <TooltipTrigger asChild>
             <Badge variant="incoming" className={className}>
-              INCOMING {formatDuration(secondsLeft)}
+              SOLD · {formatDuration(secondsLeft)}
             </Badge>
           </TooltipTrigger>
-          <TooltipContent className="max-w-xs">
-            A buy is committed and takes effect at the next epoch boundary.
-            Whoever holds the slot keeps it and keeps paying its tax until then,
-            and cannot change its price in the meantime. If they leave first the
-            slot sits empty, but the buy still stands — nobody else can take it
-            in the meantime.
+          <TooltipContent className="max-w-[17rem]">
+            Sold — completes in {formatDuration(secondsLeft)}. The sale is
+            binding at the agreed price and nobody else can buy it before then.
+            Until it completes the current holder keeps the slot, keeps paying
+            for it, and cannot change its price.
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>

@@ -78,7 +78,7 @@ export function OccupancyPolicyBadge({
           <Tooltip>
             <TooltipTrigger asChild>
               <Badge
-                variant={known?.impact === "soft" ? "settling" : "outline"}
+                variant={known?.impact === "soft" ? "protected" : "outline"}
               >
                 {known?.label ?? `Policy ${truncateAddress(policy)}`}
               </Badge>
