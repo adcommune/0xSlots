@@ -22,6 +22,7 @@ import { useChain } from "@/context/chain";
 import { AddressInput } from "../address-input";
 import {
   type CreateSlotFormValues,
+  formatValueUnit,
   TIME_MULTIPLIERS,
   timeDenominations,
 } from "../schema";
@@ -51,14 +52,8 @@ export function OccupancySection() {
   // two batches nothing — arrival order still decides, so it costs latency and
   // buys none of the fairness epochs exist for.
   const epochTooShort = epochIsOn && epochSeconds > 0 && epochSeconds < 24;
-  // "1 hours" reads as a bug even when the value is right.
-  const epochUnitLabel =
-    Number(epochValue) === 1 ? epochUnit.replace(/s$/, "") : epochUnit;
 
-  const tenureValue = form.watch("tenureValue");
   const tenureUnit = form.watch("tenureUnit");
-  const tenureUnitLabel =
-    Number(tenureValue) === 1 ? tenureUnit.replace(/s$/, "") : tenureUnit;
 
   return (
     <div className="space-y-4">
@@ -113,10 +108,10 @@ export function OccupancySection() {
               {epochIsOn ? (
                 <>
                   <strong>Taking the slot from someone</strong> happens on the
-                  clock, not on arrival — at the next {epochValue}{" "}
-                  {epochUnitLabel} boundary. Everyone waits the same amount and
-                  nobody picks theirs, so being faster stops being worth
-                  anything.{" "}
+                  clock, not on arrival — at the next{" "}
+                  {formatValueUnit(epochValue, epochUnit)} boundary. Everyone
+                  waits the same amount and nobody picks theirs, so being faster
+                  stops being worth anything.{" "}
                   <strong>Claiming it while empty is immediate</strong> — there
                   is no occupant to take it from.
                 </>
@@ -206,12 +201,12 @@ export function OccupancySection() {
                 />
               </div>
               <FormDescription>
-                Nobody can buy the occupant out for {field.value}{" "}
-                {tenureUnitLabel}. They pay for it up front — the whole window's
-                tax must be escrowed — and cannot cut their price while
-                protected, so the tax stays honest even with forced sale
-                suspended. Liquidation still works throughout: insolvency always
-                ends the tenure.
+                Nobody can buy the occupant out for{" "}
+                {formatValueUnit(field.value, tenureUnit)}. They pay for it up
+                front — the whole window's tax must be escrowed — and cannot cut
+                their price while protected, so the tax stays honest even with
+                forced sale suspended. Liquidation still works throughout:
+                insolvency always ends the tenure.
               </FormDescription>
               <FormDescription className="text-amber-600 dark:text-amber-500">
                 Softens Harberger — forced sale is delayed, not removed.

@@ -225,3 +225,13 @@ export function percentToBps(percent: string): bigint {
 export function toSeconds(value: string, unit: TimeDenomination): bigint {
   return BigInt(Math.round(Number(value) * TIME_MULTIPLIERS[unit]));
 }
+
+/**
+ * ("1", "hours") → "1 hour". Echoes back what was typed rather than
+ * normalising it, so "90 minutes" does not come back as "1h 30m" and leave the
+ * reader checking whether the form understood them.
+ */
+export function formatValueUnit(value: string, unit: TimeDenomination): string {
+  const singular = Number(value) === 1 ? unit.replace(/s$/, "") : unit;
+  return `${value} ${singular}`;
+}

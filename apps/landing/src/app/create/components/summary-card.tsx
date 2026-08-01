@@ -8,6 +8,7 @@ import { truncateAddress } from "@/utils";
 import { useResolveAddress } from "../address-input";
 import { useErc20Check } from "../hooks/use-erc20-check";
 import type { CreateSlotFormValues } from "../schema";
+import { OccupancySummaryRows } from "./occupancy-summary-rows";
 import { SlotCounter } from "./slot-counter";
 import { SubmitButton, type SubmitState } from "./submit-button";
 
@@ -161,6 +162,8 @@ export function SummaryCard({
                 {minDepositValue || "0"} {minDepositUnit}
               </span>
             </div>
+
+            <OccupancySummaryRows />
 
             {/* Mutable — only show if something is mutable */}
             {hasMutable && (
