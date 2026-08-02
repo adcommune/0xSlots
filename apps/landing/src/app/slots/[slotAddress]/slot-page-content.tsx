@@ -1077,9 +1077,7 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
                         <AlertDialogDescription>
                           This will give up your occupancy and return your
                           remaining deposit. You lose your position and the slot
-                          becomes claimable — immediately if nobody has a buy
-                          committed, otherwise by whoever committed first, at
-                          their boundary.
+                          becomes claimable by anyone straight away.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>

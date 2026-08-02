@@ -140,47 +140,18 @@ contract NoEpochsTest is Test {
         assertEq(s.price(), 300 ether);
     }
 
-    // ── 2. Legacy pending transfers still land ──────────────────────────────
+    // ── 2. Leftover pending storage is inert ───────────────────────────────
 
-    function test_LegacyPendingTransfer_StillMaterialises() public {
+    /// @dev `_materialize` was deleted in stage B, after every outstanding
+    ///      transfer was drained and all 251 slots verified clean on-chain.
+    ///      The four storage slots survive only because `isOperator` and
+    ///      `withdrawableOf` sit after them.
+    ///
+    ///      Nothing can write them any more. This proves that if something
+    ///      somehow did, it would be ignored rather than bricking the slot —
+    ///      the getters read raw state and every entry point still works.
+    function test_LeftoverPendingStorage_IsInert() public {
         Slot s = _slot();
-        _forceEpochSeconds(s, HOUR);
-        _buy(s, alice, 100 ether, 100 ether);
-
-        // Forge the state a pre-upgrade `buy()` would have written: bob's
-        // transfer, matured one second ago, price already paid into the slot.
-        uint96 effectiveAt = uint96(block.timestamp - 1);
-        vm.store(
-            address(s),
-            bytes32(SLOT_PENDING_HEAD),
-            bytes32((uint256(effectiveAt) << 160) | uint256(uint160(bob)))
-        );
-        vm.store(address(s), bytes32(SLOT_PENDING_DEPOSIT), bytes32(uint256(50 ether)));
-        vm.store(address(s), bytes32(SLOT_PENDING_NEWPRICE), bytes32(uint256(200 ether)));
-        vm.store(address(s), bytes32(SLOT_PENDING_PRICEPAID), bytes32(uint256(100 ether)));
-        // Fund the slot as the pre-upgrade commit would have.
-        token.mint(address(s), 150 ether);
-
-        uint256 aliceBefore = token.balanceOf(alice);
-
-        s.collect(); // permissionless — anyone can push the handover through
-
-        assertEq(s.occupant(), bob, "drain must still work after removal");
-        assertEq(s.price(), 200 ether);
-        (, uint96 stillPending, , , ) = s.pendingTransfer();
-        assertEq(uint256(stillPending), 0, "pending transfer must be cleared");
-        assertGt(
-            token.balanceOf(alice),
-            aliceBefore,
-            "outgoing occupant must be refunded"
-        );
-    }
-
-    /// A matured transfer resolves through the getters until someone settles —
-    /// retained so a legacy slot never misreports its occupant in the gap.
-    function test_LegacyPendingTransfer_ResolvesBeforeMaterialisation() public {
-        Slot s = _slot();
-        _forceEpochSeconds(s, HOUR);
         _buy(s, alice, 100 ether, 100 ether);
 
         uint96 effectiveAt = uint96(block.timestamp - 1);
@@ -189,12 +160,17 @@ contract NoEpochsTest is Test {
             bytes32(SLOT_PENDING_HEAD),
             bytes32((uint256(effectiveAt) << 160) | uint256(uint160(bob)))
         );
-        vm.store(address(s), bytes32(SLOT_PENDING_DEPOSIT), bytes32(uint256(50 ether)));
-        vm.store(address(s), bytes32(SLOT_PENDING_NEWPRICE), bytes32(uint256(200 ether)));
-        vm.store(address(s), bytes32(SLOT_PENDING_PRICEPAID), bytes32(uint256(100 ether)));
+        vm.store(address(s), bytes32(SLOT_PENDING_NEWPRICE), bytes32(uint256(999 ether)));
 
-        assertEq(s.occupant(), bob, "getter must resolve the matured transfer");
-        assertEq(s.price(), 200 ether);
+        // Ignored, not honoured.
+        assertEq(s.occupant(), alice, "raw occupant must win");
+        assertEq(s.price(), 100 ether, "raw price must win");
+
+        // And the slot is still fully usable.
+        vm.warp(block.timestamp + 1 days);
+        s.collect();
+        _buy(s, bob, 100 ether, 200 ether);
+        assertEq(s.occupant(), bob);
     }
 
     // ── 3. Creation rejects epochs ──────────────────────────────────────────
@@ -214,5 +190,32 @@ contract NoEpochsTest is Test {
     function test_CreateSlotV3_AcceptsZeroEpoch() public {
         Slot s = _slot();
         assertEq(s.epochSeconds(), 0);
+    }
+
+    // ── 4. Stage B: the drain path is gone, the storage is not ──────────────
+
+    /// @dev `pendingTransfer` occupies slots 18-21 and `isOperator` (22) /
+    ///      `withdrawableOf` (23) sit AFTER it. Deleting the fields would shift
+    ///      both mappings on every live slot, silently voiding operator
+    ///      approvals and unclaimed refunds. The declarations must stay forever
+    ///      even though nothing reads or writes them.
+    function test_StorageLayout_SurvivesDrainRemoval() public {
+        Slot s = _slot();
+
+        // Operator approval lands in slot 22 and must read back.
+        vm.prank(alice);
+        s.setOperator(bob, true);
+        assertTrue(s.isOperator(alice, bob), "isOperator moved");
+
+        // pendingTransfer is inert but still addressable.
+        (, uint96 effectiveAt, , , ) = s.pendingTransfer();
+        assertEq(uint256(effectiveAt), 0);
+
+        // Writing slot 22 directly must land on isOperator, proving nothing
+        // below pendingTransfer shifted.
+        bytes32 key = keccak256(
+            abi.encode(bob, keccak256(abi.encode(alice, uint256(22))))
+        );
+        assertEq(uint256(vm.load(address(s), key)), 1, "isOperator not at slot 22");
     }
 }

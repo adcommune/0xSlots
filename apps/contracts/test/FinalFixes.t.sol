@@ -354,62 +354,6 @@ contract FinalFixesTest is Test {
     // FINDING 2 — liquidate()/topUp() must gate on occupant(), not _occupant
     // ═══════════════════════════════════════════════════════════
 
-    /// @dev The zero-deposit-from-vacant path. `minDepositSeconds == 0` lets
-    ///      alice buy a VACANT epoch slot with a zero deposit; because the slot
-    ///      was vacant, `_occupant` stays address(0) behind the pending
-    ///      transfer. Past the boundary every getter reports alice as occupant
-    ///      and `isInsolvent()` is true — yet the old raw-storage gates made
-    ///      her unremovable: `liquidate()` reverted NotInsolvent, `topUp()`
-    ///      reverted NotOccupant, and `collect()` reverted NothingToCollect
-    ///      (rolling back the materialisation it had just performed). Alice
-    ///      occupied indefinitely having paid zero tax.
-    /// `liquidate()` and `topUp()` must gate on the RESOLVING `occupant()`, not
-    /// raw `_occupant`. This reproduces the state where the two disagree:
-    /// bob's transfer is scheduled, alice then releases so raw storage is
-    /// vacant, and once the boundary passes bob is the occupant by every
-    /// getter while `_occupant` is still address(0). Bob holds a zero deposit,
-    /// so he is insolvent the instant he lands — and must be liquidatable.
-    /// Gating on raw storage would revert NotInsolvent and leave an insolvent
-    /// occupant sitting there paying nothing, breaking the spec's first
-    /// invariant: insolvency always ends occupancy.
-    function test_Liquidate_ResolvedOccupantWithRawStorageVacant() public {
-        Slot s = _epochSlot(3600);
-
-        vm.warp(3600);
-        _buy(s, alice, 10 ether, 100 ether);
-        assertEq(s.occupant(), alice);
-
-        vm.prank(alice);
-        s.release(); // raw _occupant becomes address(0)
-
-        // Forge the legacy state this test exists for: a matured transfer that
-        // no transaction has written yet, so `occupant()` resolves to bob while
-        // raw storage still reads vacant. Unreachable through `buy()` now, but
-        // `_materialize` is retained for exactly this, so it must stay covered.
-        uint96 effectiveAt = uint96(block.timestamp);
-        vm.store(
-            address(s),
-            bytes32(uint256(18)),
-            bytes32((uint256(effectiveAt) << 160) | uint256(uint160(bob)))
-        );
-        vm.store(address(s), bytes32(uint256(19)), bytes32(uint256(0)));          // deposit
-        vm.store(address(s), bytes32(uint256(20)), bytes32(uint256(100 ether)));  // newPrice
-        vm.store(address(s), bytes32(uint256(21)), bytes32(uint256(0)));          // pricePaid
-
-        vm.warp(2 * uint256(3600) + 1);
-        assertEq(s.occupant(), bob, "bob resolves as occupant");
-        assertTrue(s.isInsolvent(), "zero deposit => insolvent");
-
-        // The whole point: liquidation must succeed.
-        s.liquidate();
-        assertEq(s.occupant(), address(0), "occupancy ended");
-        assertEq(s.price(), 0);
-
-        // And the slot is immediately reusable — vacant, so this is instant.
-        _buy(s, bob, 10 ether, 50 ether);
-        assertEq(s.occupant(), bob);
-    }
-
     /// @dev Same window, the `topUp` half: anyone must be able to fund an
     ///      occupancy that has matured but not yet been written to storage.
     function test_TopUp_ResolvesMaturedTransfer() public {
@@ -526,47 +470,6 @@ contract FinalFixesTest is Test {
 
         vm.expectRevert(Slot.NothingToClaim.selector);
         s.claim(alice);
-    }
-
-    /// @dev The vacant branch of the same refund: the slot went vacant before
-    ///      the boundary, so the incoming buyer gets their purchase price back.
-    ///      A blocked BUYER must not brick the slot either.
-    function test_BlockedBuyerRefund_OnVacantMaterialisation_DoesNotBrickSlot() public {
-        Slot s = _blockSlot(0);
-
-        vm.warp(3600);
-        _buyBlk(s, alice, 100 ether, 100 ether);
-
-        vm.prank(alice);
-        s.release(); // slot goes vacant
-
-        // Forge the legacy case `_materialize` still handles: bob committed a
-        // buy that matured after the slot went vacant, so the price he paid for
-        // an occupant who is no longer there comes back to him. Unreachable via
-        // `buy()` now; retained code, so still covered.
-        blk.mint(address(s), 150 ether); // bob's commit: 100 price + 50 deposit
-        uint96 effectiveAt = uint96(block.timestamp);
-        vm.store(
-            address(s),
-            bytes32(uint256(18)),
-            bytes32((uint256(effectiveAt) << 160) | uint256(uint160(bob)))
-        );
-        vm.store(address(s), bytes32(uint256(19)), bytes32(uint256(50 ether)));   // deposit
-        vm.store(address(s), bytes32(uint256(20)), bytes32(uint256(80 ether)));   // newPrice
-        vm.store(address(s), bytes32(uint256(21)), bytes32(uint256(100 ether)));  // pricePaid
-
-        blk.setBlocked(bob, true);
-
-        vm.warp(3 * uint256(3600) + 1);
-        s.collect();
-
-        assertEq(s.occupant(), bob, "bob still lands as occupant");
-        assertEq(s.withdrawableOf(bob), 100 ether, "his price came back as a credit");
-
-        blk.setBlocked(bob, false);
-        uint256 before = blk.balanceOf(bob);
-        s.claim(bob);
-        assertEq(blk.balanceOf(bob), before + 100 ether);
     }
 
     /// @dev Non-epoch path: a blocked outgoing occupant must not be able to

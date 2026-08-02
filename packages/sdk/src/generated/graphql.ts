@@ -7644,16 +7644,6 @@ export type GetSlotActivityQueryVariables = Exact<{
 
 export type GetSlotActivityQuery = {
   __typename?: "Query";
-  transferScheduledEvents: Array<{
-    __typename?: "TransferScheduledEvent";
-    id: string;
-    buyer: string;
-    effectiveAt: string;
-    price: string;
-    deposit: string;
-    timestamp: string;
-    tx: string;
-  }>;
   boughtEvents: Array<{
     __typename?: "BoughtEvent";
     id: string;
@@ -9101,21 +9091,6 @@ export const GetPriceUpdatedEventsDocument = gql`
     ${CurrencyFieldsFragmentDoc}`;
 export const GetSlotActivityDocument = gql`
     query GetSlotActivity($slotId: String!, $first: Int!, $skip: Int) {
-  transferScheduledEvents(
-    first: $first
-    skip: $skip
-    orderBy: timestamp
-    orderDirection: desc
-    where: {slot: $slotId}
-  ) {
-    id
-    buyer
-    effectiveAt
-    price
-    deposit
-    timestamp
-    tx
-  }
   boughtEvents(
     first: $first
     skip: $skip

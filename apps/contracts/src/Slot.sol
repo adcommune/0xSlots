@@ -40,7 +40,6 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     error InvalidCurrency();
     error InvalidModule_NoCode();
     error PolicyNotMutable();
-    error TransferPending();
     error NotFactory();
     error NothingToClaim();
     /// @dev Epoch scheduling was removed in v4; `epochSeconds` must be zero.
@@ -82,7 +81,7 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
 
     // --- v3 storage (appended after beacon upgrade) ---
     address public occupancyPolicy; // slot 15, offset 0
-    uint64 public epochSeconds;     // slot 15, offset 20 — reserved, used in Stage 2
+    uint64 public epochSeconds;     // slot 15, offset 20 — vestigial, see below
     uint256 public occupiedSince;   // slot 16
 
     struct PendingPolicyUpdate {
@@ -91,11 +90,16 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     }
     PendingPolicyUpdate public pendingPolicyUpdate; // slot 17
 
-    /// @notice A committed-but-not-yet-effective occupancy transfer.
-    /// @dev `pricePaid` is stored explicitly rather than re-read from `_price`
-    ///      at materialisation. Redundant today (selfAssess is blocked while a
-    ///      transfer is pending) but it keeps the refund correct if that
-    ///      ordering ever changes.
+    /// @notice DEAD STORAGE — never read, never written, never removable.
+    /// @dev Held a committed-but-not-yet-effective transfer under epoch
+    ///      scheduling. That was removed in v4 and every outstanding transfer
+    ///      was drained first, so these four slots are permanently zero.
+    ///
+    ///      They cannot be deleted: `isOperator` (22) and `withdrawableOf` (23)
+    ///      sit AFTER them, and removing the struct would shift both mappings
+    ///      on every live slot — silently voiding operator approvals and
+    ///      unclaimed refunds. Guarded by
+    ///      `test_StorageLayout_SurvivesDrainRemoval`.
     struct PendingTransfer {
         address buyer;       // slot 18, offset 0
         uint96 effectiveAt;  // slot 18, offset 20
@@ -112,13 +116,10 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     /// @notice Refunds that could not be pushed, claimable with `claim()`.
     /// @dev Escape hatch for a refund recipient the currency refuses to pay —
     ///      a USDC-style blocklist, a contract that reverts on receipt, a token
-    ///      returning false. `_materialize` runs inside `_settle()`, which is
-    ///      the first statement of EVERY mutating entry point, so a refund that
-    ///      reverts would otherwise brick `buy`, `release`, `selfAssess`,
-    ///      `topUp`, `withdraw`, `liquidate` AND `collect` permanently —
-    ///      locking the outgoing deposit, the incoming buyer's escrow and all
-    ///      accrued tax. Crediting instead keeps the slot fully functional and
-    ///      the blocked party whole once they can receive again.
+    ///      returning false. A refund that reverts would otherwise brick the
+    ///      entry point that owes it — locking the outgoing occupant's deposit
+    ///      and the price paid. Crediting instead keeps the slot fully
+    ///      functional and the blocked party whole once they can receive again.
     mapping(address => uint256) public withdrawableOf; // slot 23
 
     // ═══════════════════════════════════════════════════════════
@@ -260,8 +261,6 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         // Stage 2 relies on this ordering too — see Task 6.
         _settle();
 
-        if (pendingTransfer.effectiveAt != 0) revert TransferPending();
-
         if (account == _occupant) revert CannotBuyFromYourself();
 
         if (occupancyPolicy != address(0)) {
@@ -297,9 +296,9 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         // is where it can be expressed without a second phase: MinimumTenure
         // for "not yet", QueueExclusivity for "first queued, not fastest".
         //
-        // `epochSeconds` is ignored, and `_materialize()` is retained so any
-        // transfer scheduled before this upgrade still completes. See
-        // `initializeV3`, which now rejects a non-zero value outright.
+        // `epochSeconds` is ignored. `initializeV3` rejects a non-zero value
+        // outright, and the storage below it may never be reclaimed — see the
+        // note on `pendingTransfer`.
 
         // Refund the outgoing occupant. Computed here, paid
         // after the state writes, and never allowed to revert: an outgoing
@@ -381,8 +380,6 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         // only rejects a genuinely still-pending one and the policy sees
         // current state.
         _settle();
-
-        if (pendingTransfer.effectiveAt != 0) revert TransferPending();
 
         if (occupancyPolicy != address(0)) {
             IOccupancyPolicy(occupancyPolicy).checkPriceUpdate(
@@ -580,32 +577,24 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     // VIEW
     // ═══════════════════════════════════════════════════════════
 
-    /// @notice Current occupant. Hand-written rather than an auto-getter so that
-    ///         Stage 2 can resolve a matured-but-unmaterialised transfer here.
+    /// @notice Current occupant. Hand-written rather than an auto-getter
+    ///         because `_occupant` is internal.
     function occupant() public view returns (address) {
-        if (_transferMatured()) return pendingTransfer.buyer;
         return _occupant;
     }
 
     function price() public view returns (uint256) {
-        if (_transferMatured()) return pendingTransfer.newPrice;
         return _price;
     }
 
     function deposit() public view returns (uint256) {
-        if (_transferMatured()) return pendingTransfer.deposit;
         return _deposit;
-    }
-
-    function _effectiveLastSettled() internal view returns (uint256) {
-        if (_transferMatured()) return pendingTransfer.effectiveAt;
-        return lastSettled;
     }
 
     function taxOwed() public view returns (uint256) {
         address occ = occupant();
         if (occ == address(0)) return 0;
-        uint256 elapsed = block.timestamp - _effectiveLastSettled();
+        uint256 elapsed = block.timestamp - lastSettled;
         return (price() * taxPercentage * elapsed) / (MONTH * BASIS_POINTS);
     }
 
@@ -626,14 +615,6 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
 
     function isVacant() public view returns (bool) {
         return occupant() == address(0);
-    }
-
-    /// @notice The next epoch boundary. Returns `block.timestamp` when epochs
-    ///         are off, so callers can treat both modes uniformly.
-    function nextBoundary() public view returns (uint256) {
-        uint256 e = epochSeconds;
-        if (e == 0) return block.timestamp;
-        return ((block.timestamp / e) + 1) * e;
     }
 
     function getPendingUpdate() external view returns (PendingUpdate memory) {
@@ -680,7 +661,7 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
 
         info.occupancyPolicy = occupancyPolicy;
         info.epochSeconds = epochSeconds;
-        info.occupiedSince = _effectiveOccupiedSince();
+        info.occupiedSince = occupiedSince;
         info.hasPendingPolicy = pendingPolicyUpdate.hasPolicyUpdate;
         info.pendingPolicy = pendingPolicyUpdate.newPolicy;
     }
@@ -688,11 +669,6 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     // ═══════════════════════════════════════════════════════════
     // INTERNAL
     // ═══════════════════════════════════════════════════════════
-
-    function _effectiveOccupiedSince() internal view returns (uint256) {
-        if (_transferMatured()) return pendingTransfer.effectiveAt;
-        return occupiedSince;
-    }
 
     function _occupancyCtx(
         address account,
@@ -704,7 +680,7 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
             caller: msg.sender,
             account: account,
             occupant: occupant(),
-            occupiedSince: _effectiveOccupiedSince(),
+            occupiedSince: occupiedSince,
             taxPercentage: taxPercentage,
             currentPrice: price(),
             newPrice: newPrice,
@@ -712,15 +688,7 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         });
     }
 
-    /// @dev True once a scheduled transfer's boundary has passed, whether or not
-    ///      it has been written to storage yet.
-    function _transferMatured() internal view returns (bool) {
-        uint96 at = pendingTransfer.effectiveAt;
-        return at != 0 && block.timestamp >= at;
-    }
-
-    /// @dev Accrue tax for the current occupant up to `upTo`. Never crosses a
-    ///      transfer boundary — `_materialize` splits the legs.
+    /// @dev Accrue tax for the current occupant up to `upTo`.
     function _accrue(uint256 upTo) internal {
         if (upTo <= lastSettled) return;
 
@@ -747,57 +715,7 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         emit Settled(owed, paid, _deposit);
     }
 
-    /// @dev Apply a matured transfer. Passive — nothing runs on a timer, state
-    ///      catches up on the next interaction.
-    function _materialize() internal {
-        PendingTransfer memory p = pendingTransfer;
-        if (p.effectiveAt == 0 || block.timestamp < p.effectiveAt) return;
-
-        // Leg 1 — the outgoing occupant pays right up to the boundary.
-        _accrue(p.effectiveAt);
-
-        address prev = _occupant;
-        address payee;
-        uint256 refund;
-        if (prev != address(0)) {
-            payee = prev;
-            refund = _deposit + p.pricePaid;
-        } else if (p.pricePaid > 0) {
-            // The slot went vacant (release/liquidation) before the boundary, so
-            // the buyer paid a price for a slot nobody holds. Give it back.
-            payee = p.buyer;
-            refund = p.pricePaid;
-        }
-
-        _occupant = p.buyer;
-        _price = p.newPrice;
-        _deposit = p.deposit;
-        occupiedSince = p.effectiveAt;
-        lastSettled = p.effectiveAt;
-        delete pendingTransfer;
-
-        // Interactions last, and never in a way that can revert: a refund the
-        // currency refuses becomes a claimable credit. `_materialize` runs
-        // inside `_settle()`, so a hard revert here would brick every mutating
-        // entry point on the slot, not just this one transfer.
-        _payOrCredit(payee, refund);
-
-        _applyPendingUpdates();
-
-        _notifyModule(
-            "onTransfer",
-            abi.encodeCall(ISlotsModule.onTransfer, (0, prev, p.buyer))
-        );
-
-        emit Bought(p.buyer, prev, p.pricePaid, p.deposit, p.newPrice);
-        _emitProtocolEvent(
-            EVT_BOUGHT,
-            abi.encode(p.buyer, prev, p.pricePaid, p.deposit, p.newPrice)
-        );
-    }
-
     function _settle() internal {
-        _materialize();
         _accrue(block.timestamp);
     }
 

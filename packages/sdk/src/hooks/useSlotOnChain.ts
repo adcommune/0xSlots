@@ -100,10 +100,9 @@ function parseSlotInfo(
     pendingTaxPercentage: info.pendingTaxPercentage,
     hasPendingModule: info.hasPendingModule,
     pendingModule: info.pendingModule.toLowerCase(),
-    // v3. getSlotInfo() already resolves occupant/price/deposit against a
-    // matured transfer on-chain, so unlike subgraph rows these need no
-    // client-side fix-up. It does NOT expose pendingTransfer, so a
-    // not-yet-effective buy is visible only via the subgraph's pendingBuyer.
+    // Occupancy layer. `epochSeconds` is vestigial since v4 — scheduling was
+    // removed and `buy()` ignores it — but stays readable for slots created
+    // before that upgrade.
     occupancyPolicy:
       info.occupancyPolicy === ZERO_ADDRESS
         ? null

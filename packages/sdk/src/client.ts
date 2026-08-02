@@ -79,7 +79,11 @@ export interface CreateSlotParams {
 }
 
 export interface CreateSlotV3Params extends CreateSlotParams {
-  /** Seconds per epoch. 0 = instant buy (identical to createSlot). */
+  /**
+   * Retained for ABI compatibility and MUST be zero. Epoch scheduling was
+   * removed in v4 and the factory rejects a non-zero value with
+   * `EpochsRemoved` rather than silently ignoring it.
+   */
   epochSeconds: bigint;
   /** IOccupancyPolicy address, or zero for none. */
   occupancyPolicy: Address;
@@ -469,8 +473,7 @@ export class SlotsClient {
   }
 
   /**
-   * Deploy a slot with the v3 occupancy layer: epoch-scheduled transfers and/or
-   * an occupancy policy.
+   * Deploy a slot with an occupancy policy.
    *
    * `createSlot` is kept as-is rather than extended because `SlotInitParams` is
    * part of the factory's function signature — adding a field would change the

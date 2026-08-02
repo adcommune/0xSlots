@@ -522,24 +522,6 @@ query GetPriceUpdatedEvents(
 # ── Per-slot activity (all event types) ──
 
 query GetSlotActivity($slotId: String!, $first: Int!, $skip: Int) {
-  # Carries the moment a buy was COMMITTED, which the Slot entity does not —
-  # it only knows where the transfer takes effect. Needed to mark the commit
-  # on the epoch timeline.
-  transferScheduledEvents(
-    first: $first
-    skip: $skip
-    orderBy: timestamp
-    orderDirection: desc
-    where: { slot: $slotId }
-  ) {
-    id
-    buyer
-    effectiveAt
-    price
-    deposit
-    timestamp
-    tx
-  }
   boughtEvents(
     first: $first
     skip: $skip
