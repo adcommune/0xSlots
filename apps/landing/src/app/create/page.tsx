@@ -64,11 +64,9 @@ export default function CreatePage() {
 
   // createSlotV3 is single-slot only (SlotInitParams could not be extended
   // without changing the factory's selector, so there is no batch counterpart).
-  // Clamp rather than let the batch path silently discard the epoch/policy the
-  // user just configured.
-  const occupancyConfigured =
-    Number(form.watch("epochValue")) > 0 ||
-    form.watch("occupancyPolicyMode") !== "none";
+  // Clamp rather than let the batch path silently discard the policy the user
+  // just configured.
+  const occupancyConfigured = form.watch("occupancyPolicyMode") !== "none";
   useEffect(() => {
     if (occupancyConfigured && slotCount !== 1) setSlotCount(1);
   }, [occupancyConfigured, slotCount]);
@@ -204,9 +202,13 @@ export default function CreatePage() {
       minDepositSeconds: toSeconds(data.minDepositValue, data.minDepositUnit),
     };
 
-    // Occupancy layer. Both default to off, in which case createSlot is used
-    // and the result is byte-for-byte the slot this form always produced.
-    const epochSeconds = toSeconds(data.epochValue, data.epochUnit);
+    // Occupancy layer. Defaults to off, in which case createSlot is used and
+    // the result is byte-for-byte the slot this form always produced.
+    //
+    // Epoch scheduling was removed — occupancy timing is expressed entirely by
+    // policy vetoes now. The parameter is retained by the factory for ABI
+    // compatibility and must be zero.
+    const epochSeconds = 0n;
     const occupancyPolicy = (
       data.occupancyPolicyMode !== "none" &&
       isAddress(data.occupancyPolicy as string)
@@ -214,9 +216,7 @@ export default function CreatePage() {
         : zeroAddress
     ) as Address;
     const usesOccupancyLayer =
-      epochSeconds > 0n ||
-      occupancyPolicy !== zeroAddress ||
-      data.occupancyPolicyMode === "tenure";
+      occupancyPolicy !== zeroAddress || data.occupancyPolicyMode === "tenure";
 
     // Minimum tenure resolves to a policy contract deployed on demand at a
     // CREATE2 address derived from the duration, so the hook handles deploy +

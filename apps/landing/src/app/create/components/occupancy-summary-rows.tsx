@@ -1,6 +1,6 @@
 "use client";
 
-import { ShieldCheck, Timer } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { useFormContext } from "react-hook-form";
 import { isAddress } from "viem";
 import { KNOWN_POLICIES } from "@/config/policies";
@@ -16,17 +16,10 @@ import { type CreateSlotFormValues, formatValueUnit } from "../schema";
  */
 export function OccupancySummaryRows() {
   const form = useFormContext<CreateSlotFormValues>();
-  const epochValue = form.watch("epochValue");
-  const epochUnit = form.watch("epochUnit");
   const policyMode = form.watch("occupancyPolicyMode");
   const tenureValue = form.watch("tenureValue");
   const tenureUnit = form.watch("tenureUnit");
   const occupancyPolicy = form.watch("occupancyPolicy");
-
-  const epochLabel =
-    Number(epochValue) > 0
-      ? formatValueUnit(epochValue, epochUnit)
-      : "Instant buy";
 
   const policyLabel = (() => {
     switch (policyMode) {
@@ -42,32 +35,20 @@ export function OccupancySummaryRows() {
           ? truncateAddress(occupancyPolicy)
           : "—";
       default:
-        return null;
+        // Always says something: "Instant buy" is itself a term worth
+        // confirming before signing, not the absence of one.
+        return "Instant buy";
     }
   })();
 
   return (
-    <>
-      {/* Always shown: "Instant buy" is itself a term worth confirming before
-          signing, not the absence of one. */}
-      <div className="flex justify-between">
-        <span className="text-muted-foreground flex items-center gap-1">
-          <Timer className="size-3 text-sky-500" /> Epoch
-        </span>
-        <span className="font-semibold">{epochLabel}</span>
-      </div>
-
-      {/* Hidden when there is no policy, like Module */}
-      {policyLabel && (
-        <div className="flex justify-between">
-          <span className="text-muted-foreground flex items-center gap-1">
-            <ShieldCheck className="size-3 text-violet-500" /> Policy
-          </span>
-          <span className="font-semibold text-xs truncate max-w-32">
-            {policyLabel}
-          </span>
-        </div>
-      )}
-    </>
+    <div className="flex justify-between">
+      <span className="text-muted-foreground flex items-center gap-1">
+        <ShieldCheck className="size-3 text-violet-500" /> Occupancy
+      </span>
+      <span className="font-semibold text-xs truncate max-w-32">
+        {policyLabel}
+      </span>
+    </div>
   );
 }

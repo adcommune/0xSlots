@@ -83,15 +83,9 @@ export const createSlotSchema = z
     module: z.string().refine(isValidAddressOrEns, {
       message: "Enter a valid address (0x…) or ENS name",
     }),
-    // ── Occupancy layer (v3) ──
-    // epochValue 0 = instant buy, which is what every pre-v3 slot does.
-    epochValue: z
-      .string()
-      .refine(
-        (v) => !isNaN(Number(v)) && Number(v) >= 0,
-        "Must be a non-negative number",
-      ),
-    epochUnit: z.enum(timeDenominations),
+    // ── Occupancy layer ──
+    // Timing is expressed entirely by policy vetoes; there is no scheduling
+    // dial. "none" means instant buy, which is what every pre-v3 slot does.
     occupancyPolicyMode: z.enum(occupancyPolicyModes),
     // Only read when occupancyPolicyMode === "tenure". The policy contract for
     // this duration is deployed on demand at a CREATE2 address derived from it.
@@ -203,10 +197,8 @@ export const defaultValues: CreateSlotFormValues = {
   minDepositValue: "1",
   minDepositUnit: "days",
   module: "",
-  // Default to instant buy — the pre-v3 behaviour. Epochs and policies are
-  // opt-in, so an unchanged form produces exactly the slot it always did.
-  epochValue: "0",
-  epochUnit: "hours",
+  // Default to instant buy — the pre-v3 behaviour. A policy is opt-in, so an
+  // unchanged form produces exactly the slot it always did.
   occupancyPolicyMode: "none",
   tenureValue: "7",
   tenureUnit: "days",

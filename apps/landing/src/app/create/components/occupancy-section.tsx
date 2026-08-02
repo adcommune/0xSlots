@@ -1,6 +1,6 @@
 "use client";
 
-import { Clock, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { useFormContext } from "react-hook-form";
 import {
   FormDescription,
@@ -23,7 +23,6 @@ import { AddressInput } from "../address-input";
 import {
   type CreateSlotFormValues,
   formatValueUnit,
-  TIME_MULTIPLIERS,
   timeDenominations,
 } from "../schema";
 
@@ -39,19 +38,10 @@ export function OccupancySection() {
   const form = useFormContext<CreateSlotFormValues>();
   const { chainId } = useChain();
   const policyMode = form.watch("occupancyPolicyMode");
-  const epochValue = form.watch("epochValue");
-  const epochUnit = form.watch("epochUnit");
 
   // A policy address is chain-specific — offering one from another chain would
   // produce a slot whose policy has no code.
   const knownForChain = knownPoliciesForChain(chainId);
-
-  const epochIsOn = Number(epochValue) > 0;
-  const epochSeconds = Number(epochValue) * (TIME_MULTIPLIERS[epochUnit] ?? 0);
-  // Base produces a block roughly every 2s. An epoch spanning only a block or
-  // two batches nothing — arrival order still decides, so it costs latency and
-  // buys none of the fairness epochs exist for.
-  const epochTooShort = epochIsOn && epochSeconds > 0 && epochSeconds < 24;
 
   const tenureUnit = form.watch("tenureUnit");
 
@@ -60,77 +50,11 @@ export function OccupancySection() {
       <div>
         <p className="text-sm font-medium">Occupancy</p>
         <p className="text-xs text-muted-foreground mt-1">
-          When this slot can be taken from whoever holds it. Leave both off for
-          instant buy — anyone can take it at its declared price, in the next
-          block. Neither setting delays claiming the slot while empty.
+          When this slot can be taken from whoever holds it. Leave the policy at
+          None for instant buy — anyone can take it at its declared price, in
+          the next block.
         </p>
       </div>
-
-      {/* ── Epochs ── */}
-      <FormField
-        control={form.control}
-        name="epochValue"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel className="flex items-center gap-1.5">
-              <Clock className="size-3.5 text-sky-500" /> Epoch length
-            </FormLabel>
-            <div className="flex gap-2">
-              <Input
-                {...field}
-                type="text"
-                inputMode="decimal"
-                className="flex-1"
-              />
-              <FormField
-                control={form.control}
-                name="epochUnit"
-                render={({ field: unitField }) => (
-                  <Select
-                    onValueChange={unitField.onChange}
-                    value={unitField.value}
-                  >
-                    <SelectTrigger className="w-28">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {timeDenominations.map((u) => (
-                        <SelectItem key={u} value={u}>
-                          {u}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-            </div>
-            <FormDescription>
-              {epochIsOn ? (
-                <>
-                  <strong>Taking the slot from someone</strong> happens on the
-                  clock, not on arrival — at the next{" "}
-                  {formatValueUnit(epochValue, epochUnit)} boundary. Everyone
-                  waits the same amount and nobody picks theirs, so being faster
-                  stops being worth anything.{" "}
-                  <strong>Claiming it while empty is immediate</strong> — there
-                  is no occupant to take it from.
-                </>
-              ) : (
-                <>0 = instant buy. Set a value to put buy-outs on the clock.</>
-              )}
-            </FormDescription>
-            {epochTooShort && (
-              <FormDescription className="text-amber-600 dark:text-amber-500">
-                Shorter than a handful of blocks. At ~2s per block this batches
-                almost nothing — arrival order still decides who wins, so you
-                pay the delay without removing the speed advantage. Use tens of
-                seconds or more for that to bite.
-              </FormDescription>
-            )}
-            <FormMessage />
-          </FormItem>
-        )}
-      />
 
       {/* ── Policy ── */}
       <FormField
