@@ -7,8 +7,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { KNOWN_POLICIES } from "@/config/policies";
-import { formatDuration } from "@/hooks/use-effective-occupancy";
+import { useChain } from "@/context/chain";
+import { useResolvedPolicy } from "@/hooks/use-resolved-policy";
 import { truncateAddress } from "@/utils";
 
 /**
@@ -21,23 +21,27 @@ import { truncateAddress } from "@/utils";
  * so they are dials, not switches. This badge says which dial is turned and by
  * how much, because a slot you cannot be bought out of for a week is a
  * materially different thing to hold than one you can lose in the next block.
+ *
+ * There was an epoch badge here too, for slots whose buys landed on a clock
+ * boundary. That scheduling was removed in v4 and a policy veto is now the only
+ * thing that changes when a slot can change hands.
  */
 export function OccupancyPolicyBadge({
-  epochSeconds,
   occupancyPolicy,
   className,
 }: {
-  epochSeconds?: string | bigint | null;
   occupancyPolicy?: string | null;
   className?: string;
 }) {
-  const epoch = epochSeconds ? Number(epochSeconds) : 0;
+  const { chainId } = useChain();
   const policy = occupancyPolicy?.toLowerCase() ?? null;
-  const known = policy ? KNOWN_POLICIES[policy] : undefined;
+  // Resolved on-chain when the static map has no entry — tenure is chosen per
+  // slot now, so most policy addresses will never be in a hardcoded list.
+  const { policy: known } = useResolvedPolicy(policy, chainId);
 
   // The common case today: instant buy, no policy. Plain Harberger — say so
   // rather than rendering nothing, since "no badge" reads as "unknown".
-  if (epoch === 0 && !policy) {
+  if (!policy) {
     return (
       <TooltipProvider>
         <Tooltip>
@@ -56,23 +60,6 @@ export function OccupancyPolicyBadge({
 
   return (
     <span className={className}>
-      {epoch > 0 && (
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Badge variant="incoming" className="mr-1">
-                {formatDuration(epoch)} epochs
-              </Badge>
-            </TooltipTrigger>
-            <TooltipContent className="max-w-[16rem]">
-              This slot changes hands on the clock, every{" "}
-              {formatDuration(epoch)}. If it is empty you can take it right
-              away.
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      )}
-
       {policy && (
         <TooltipProvider>
           <Tooltip>

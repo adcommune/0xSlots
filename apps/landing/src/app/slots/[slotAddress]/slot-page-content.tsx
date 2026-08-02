@@ -35,7 +35,7 @@ import { type Address, zeroAddress } from "viem";
 import { useAccount, useSwitchChain } from "wagmi";
 import { AccountTypeIcon } from "@/components/account-type-icon";
 import { EnsIdentity } from "@/components/ens-identity";
-import { EpochTimeline, TenureMeter } from "@/components/occupancy-timeline";
+import { TenureMeter } from "@/components/occupancy-timeline";
 import { PageHeader } from "@/components/page-header";
 import { SplitRecipientsBar } from "@/components/split-recipients-bar";
 import {
@@ -58,7 +58,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { KNOWN_POLICIES } from "@/config/policies";
 import { useChain } from "@/context/chain";
 import { useFarcaster } from "@/context/farcaster";
 import { NavLink } from "@/context/navigation";
@@ -69,9 +68,9 @@ import {
 import { useCurrencyBalance } from "@/hooks/use-currency-balance";
 import {
   formatDuration as formatShortDuration,
-  useEffectiveOccupancy,
   useNow,
-} from "@/hooks/use-effective-occupancy";
+} from "@/hooks/use-duration";
+import { useResolvedPolicy } from "@/hooks/use-resolved-policy";
 import { useSlotAction } from "@/hooks/use-slot-action";
 import { useSlotOnChain } from "@/hooks/use-slot-onchain";
 import { useModules } from "@/hooks/use-v3";
@@ -105,30 +104,21 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
   const { data: subgraphSlot } = useSuspenseQuery(
     slotQueryOptions(selectedChainId, slotAddress),
   );
-  // On-chain occupant is authoritative (getSlotInfo resolves it against a
-  // matured transfer), but only the subgraph knows about one that has not
-  // taken effect yet. Must sit above the isLoading/!slot early returns —
-  // hooks cannot be conditional.
-  const effectiveOccupancy = useEffectiveOccupancy(subgraphSlot);
-
-  // Wall clock for the occupancy visuals. Above the early returns — hooks
-  // cannot be conditional — and only ticking when there is something
+  // Wall clock for the tenure meter. Above the isLoading/!slot early returns —
+  // hooks cannot be conditional — and only ticking when there is something
   // time-positioned to draw.
-  const epochSecondsNum = Number(slot?.epochSeconds ?? 0);
-  const nowSeconds = useNow(epochSecondsNum > 0 || !!slot?.occupancyPolicy);
-  const knownPolicy = slot?.occupancyPolicy
-    ? KNOWN_POLICIES[slot.occupancyPolicy.toLowerCase()]
-    : undefined;
+  const nowSeconds = useNow(!!slot?.occupancyPolicy);
+  // Static map first, then the chain — see use-resolved-policy. This drives the
+  // tenure meter, so an unresolvable policy correctly draws nothing rather than
+  // a meter with an invented window.
+  const { policy: knownPolicy } = useResolvedPolicy(
+    slot?.occupancyPolicy,
+    selectedChainId,
+  );
 
   const { data: activityData } = useSuspenseQuery(
     slotActivityQueryOptions(selectedChainId, slotAddress),
   );
-
-  // Only the TransferScheduled event knows WHEN a buy was committed; the Slot
-  // entity only knows where it takes effect.
-  const pendingCommittedAt = effectiveOccupancy?.hasPendingTransfer
-    ? (activityData?.transferScheduledEvents?.[0]?.timestamp ?? null)
-    : null;
 
   const { address, isConnected, chainId, chain } = useAccount();
   const { switchChain } = useSwitchChain();
@@ -203,9 +193,6 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
     );
   }
 
-  const isPendingBuyer =
-    !!address &&
-    effectiveOccupancy?.pendingBuyer?.toLowerCase() === address.toLowerCase();
   const isOccupied = slot.occupant != null;
   const isOccupant = address?.toLowerCase() === slot.occupant?.toLowerCase();
   const isRecipient = address?.toLowerCase() === slot.recipient.toLowerCase();
@@ -507,36 +494,13 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
                         </span>
                       </div>
 
-                      {(epochSecondsNum > 0 || slot.occupancyPolicy) && (
+                      {slot.occupancyPolicy && (
                         <>
                           <div className="border-t" />
 
-                          {/* Occupancy terms, shown rather than described —
-                              both are positions in time, which a reader takes
-                              in far quicker from a picture than a paragraph. */}
-                          {epochSecondsNum > 0 && (
-                            <div className="space-y-2">
-                              <div className="flex justify-between">
-                                <span className="text-muted-foreground flex items-center gap-1.5">
-                                  <Clock className="size-3 text-sky-500" />{" "}
-                                  Epoch
-                                </span>
-                                <span>
-                                  {formatShortDuration(epochSecondsNum)}
-                                </span>
-                              </div>
-                              <EpochTimeline
-                                epochSeconds={epochSecondsNum}
-                                committedAt={
-                                  pendingCommittedAt
-                                    ? Number(pendingCommittedAt)
-                                    : null
-                                }
-                                now={nowSeconds}
-                              />
-                            </div>
-                          )}
-
+                          {/* Occupancy terms, shown rather than described — a
+                              protection window is a position in time, which a
+                              reader takes in far quicker from a picture. */}
                           {slot.occupancyPolicy && (
                             <div className="space-y-2">
                               <div className="flex justify-between">
@@ -1010,79 +974,11 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
           </div>
         )}
 
-        {/* The handover is written by the next transaction touching the slot —
-            nothing runs at the boundary. Without a nudge this state can sit for
-            days, so offer the (permissionless) poke rather than just
-            explaining the lag. */}
-        {effectiveOccupancy?.isResolvedAhead && (
-          <div className="p-4 border-b space-y-2">
-            <p className="text-sm font-medium">Sale not registered yet</p>
-            <p className="text-sm text-muted-foreground">
-              This sale has completed and the new holder is shown above, but it
-              has not been registered on the slot yet. Registering happens the
-              next time anyone acts on it, so listings elsewhere can still show
-              the old holder until then. Anyone can register it.
-            </p>
-            <Button
-              size="sm"
-              variant="outline"
-              className="w-full"
-              disabled={busy}
-              onClick={() => collect(slotAddress as Address)}
-            >
-              {busy && activeAction === "Collect tax" ? (
-                <>
-                  <Loader2 className="size-4 animate-spin mr-2" />
-                  Recording...
-                </>
-              ) : (
-                "Register the sale"
-              )}
-            </Button>
-          </div>
-        )}
-
         {!isOccupied && (
           <div className="p-4 border-b">
-            {effectiveOccupancy?.hasPendingTransfer ? (
-              <>
-                {/* The buyer and a bystander need different sentences here.
-                    "Already claimed" reads as "someone beat you to it", which
-                    is exactly wrong when shown to the person who just bought. */}
-                <p className="text-sm font-medium">
-                  {isPendingBuyer ? "Your buy is landing" : "Already claimed"}
-                </p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {isPendingBuyer ? (
-                    <>
-                      You take the slot at the next boundary, in{" "}
-                      {formatShortDuration(
-                        Number(effectiveOccupancy.pendingEffectiveAt ?? 0n) -
-                          Math.floor(Date.now() / 1000),
-                      )}
-                      . Your funds are already escrowed and the commit cannot be
-                      cancelled — nobody can outbid or displace you in the
-                      meantime.
-                    </>
-                  ) : (
-                    <>
-                      A buy is committed and takes effect at the next epoch
-                      boundary, in{" "}
-                      {formatShortDuration(
-                        Number(effectiveOccupancy.pendingEffectiveAt ?? 0n) -
-                          Math.floor(Date.now() / 1000),
-                      )}
-                      . First commit wins and commits cannot be cancelled, so
-                      buying now would revert.
-                    </>
-                  )}
-                </p>
-              </>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                Vacant — No escrow data
-              </p>
-            )}
+            <p className="text-sm text-muted-foreground">
+              Vacant — No escrow data
+            </p>
           </div>
         )}
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { Context, sdk } from "@farcaster/miniapp-sdk";
+import { type Context, sdk } from "@farcaster/miniapp-sdk";
 import {
   createContext,
   type ReactNode,

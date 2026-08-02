@@ -129,7 +129,10 @@ function parseSlotInfo(
  * @param slotAddress - The slot contract address
  * @param chainId - The chain ID to read from
  */
-export function useSlotOnChain(slotAddress: string, chainId: number): {
+export function useSlotOnChain(
+  slotAddress: string,
+  chainId: number,
+): {
   data: SlotOnChain | null;
   isLoading: boolean;
   refetch: () => void;
@@ -156,9 +159,24 @@ export function useSlotOnChain(slotAddress: string, chainId: number): {
   const { data: currencyMeta, isLoading: metaLoading } = useReadContracts({
     contracts: currencyAddr
       ? [
-          { address: currencyAddr, abi: erc20Abi, functionName: "name", chainId },
-          { address: currencyAddr, abi: erc20Abi, functionName: "symbol", chainId },
-          { address: currencyAddr, abi: erc20Abi, functionName: "decimals", chainId },
+          {
+            address: currencyAddr,
+            abi: erc20Abi,
+            functionName: "name",
+            chainId,
+          },
+          {
+            address: currencyAddr,
+            abi: erc20Abi,
+            functionName: "symbol",
+            chainId,
+          },
+          {
+            address: currencyAddr,
+            abi: erc20Abi,
+            functionName: "decimals",
+            chainId,
+          },
         ]
       : [],
     query: { enabled: !!currencyAddr, staleTime: Infinity },
@@ -189,7 +207,10 @@ export function useSlotOnChain(slotAddress: string, chainId: number): {
  * @param slotAddresses - Array of slot contract addresses
  * @param chainId - The chain ID to read from
  */
-export function useSlotsOnChain(slotAddresses: string[], chainId: number): {
+export function useSlotsOnChain(
+  slotAddresses: string[],
+  chainId: number,
+): {
   data: SlotOnChain[];
   isLoading: boolean;
   refetch: () => void;
@@ -221,17 +242,25 @@ export function useSlotsOnChain(slotAddresses: string[], chainId: number): {
   if (infos) {
     for (const r of infos) {
       if (r.result)
-        currencies.add(
-          (r.result as SlotInfoResult).currency.toLowerCase(),
-        );
+        currencies.add((r.result as SlotInfoResult).currency.toLowerCase());
     }
   }
   const currencyList = Array.from(currencies);
 
   const { data: metaResults, isLoading: metaLoading } = useReadContracts({
     contracts: currencyList.flatMap((c) => [
-      { address: c as Address, abi: erc20Abi, functionName: "name" as const, chainId },
-      { address: c as Address, abi: erc20Abi, functionName: "symbol" as const, chainId },
+      {
+        address: c as Address,
+        abi: erc20Abi,
+        functionName: "name" as const,
+        chainId,
+      },
+      {
+        address: c as Address,
+        abi: erc20Abi,
+        functionName: "symbol" as const,
+        chainId,
+      },
       {
         address: c as Address,
         abi: erc20Abi,

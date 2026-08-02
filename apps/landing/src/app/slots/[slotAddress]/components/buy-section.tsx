@@ -7,10 +7,6 @@ import { useAccount } from "wagmi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MONTH_SECONDS } from "@/constants";
-import {
-  formatDuration,
-  useSecondsUntilEffective,
-} from "@/hooks/use-effective-occupancy";
 import { useSlotAction } from "@/hooks/use-slot-action";
 import type { SlotOnChain } from "@/hooks/use-slot-onchain";
 import { formatBalance, normalizeDecimal, toRawUnits } from "@/utils";
@@ -35,11 +31,6 @@ export function BuySection({
     !!address &&
     !!slot.occupant &&
     slot.occupant.toLowerCase() === address.toLowerCase();
-
-  // Only a buy that takes the slot FROM someone is scheduled — claiming a
-  // vacant slot is taken immediately however long the epoch is.
-  const isScheduledBuy = isOccupied && Number(slot.epochSeconds) > 0;
-  const secondsUntilEffective = useSecondsUntilEffective(slot.epochSeconds);
 
   const currentPriceRaw = isOccupied ? formatUnits(slot.price, decimals) : "0";
   const currentPriceDisplay = isOccupied
@@ -204,23 +195,6 @@ export function BuySection({
         </div>
       </div>
 
-      {/* Taking an OCCUPIED epoch slot is scheduled, not immediate. Without
-          this the button reads as an instant purchase and the buyer only
-          discovers the wait afterwards, from a badge. Claiming a vacant slot
-          is immediate whatever the epoch, so say nothing there. */}
-      {isScheduledBuy && (
-        <p className="rounded-md border border-dashed px-3 py-2 text-xs text-muted-foreground">
-          This slot changes hands on the clock. You take it{" "}
-          <span className="font-medium text-foreground">
-            in {formatDuration(secondsUntilEffective)}
-          </span>
-          , — at the next {formatDuration(Number(slot.epochSeconds))} boundary.
-          the current occupant holds it and pays its tax until then. Your funds
-          are escrowed now and the commit cannot be cancelled, but nobody can
-          outbid or displace you in the meantime.
-        </p>
-      )}
-
       <Button
         disabled={busy || !address}
         onClick={handleBuy}
@@ -231,11 +205,7 @@ export function BuySection({
             <Loader2 className="size-4 animate-spin mr-2" /> Processing...
           </>
         ) : isOccupied ? (
-          isScheduledBuy ? (
-            `Commit @ ${currentPriceDisplay} ${symbol}`
-          ) : (
-            `Buy @ ${currentPriceDisplay} ${symbol}`
-          )
+          `Buy @ ${currentPriceDisplay} ${symbol}`
         ) : (
           "Buy Slot"
         )}

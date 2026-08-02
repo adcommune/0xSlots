@@ -1,8 +1,8 @@
 "use client";
 
 import {
-  createSlotsClient,
   type AccountFieldsFragment,
+  createSlotsClient,
   type SlotFieldsFragment,
 } from "@0xslots/sdk";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";

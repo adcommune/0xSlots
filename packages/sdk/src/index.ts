@@ -1,50 +1,39 @@
 // Unified client (read + write)
 export {
-  SlotsClient,
+  type BuyParams,
+  type CreateSlotParams,
+  type CreateSlotsParams,
+  type CreateSlotV3Params,
   createSlotsClient,
-  SlotsChain,
-  SUBGRAPH_URLS,
-  type SlotsClientConfig,
-  type SubgraphMeta,
   type SlotConfig,
   type SlotInitParams,
-  type CreateSlotParams,
-  type CreateSlotV3Params,
-  type CreateSlotsParams,
-  type BuyParams,
+  SlotsChain,
+  SlotsClient,
+  type SlotsClientConfig,
+  SUBGRAPH_URLS,
+  type SubgraphMeta,
 } from "./client";
-
+// Errors
+export { SlotsError } from "./errors";
+// Re-export generated types and SDK
+export * from "./generated/graphql";
+export { FeedModuleClient } from "./modules/feed";
 // Modules
 export { MetadataModuleClient } from "./modules/metadata";
-export { FeedModuleClient } from "./modules/feed";
-
+// Occupancy
+//
+// Buys apply immediately since v4, so indexed occupancy needs no reconciling —
+// read `slot.occupant` directly. The resolution helpers that used to live here
+// existed only for epoch scheduling; see ./occupancy.ts.
+export {
+  canAttemptBuy,
+  type OccupancyFields,
+} from "./occupancy";
 // Tokens
 export {
-  type TokenInfo,
   CHAIN_TOKENS,
   getChainTokens,
   getDefaultToken,
   getFaucetToken,
+  type TokenInfo,
 } from "./tokens";
-
-// Occupancy resolution (v3 epochs)
-//
-// REQUIRED for any UI reading occupancy from the subgraph: between an epoch
-// boundary and the transaction that materialises the transfer, indexed
-// `occupant` names the OLD occupant while the chain already names the new one.
-// resolveEffectiveOccupancy closes that gap; the subgraph cannot, because
-// GraphQL has no "now" at query time.
-export {
-  resolveEffectiveOccupancy,
-  nextBoundary,
-  secondsUntilEffective,
-  canAttemptBuy,
-  type OccupancyFields,
-  type EffectiveOccupancy,
-} from "./occupancy";
-
-// Errors
-export { SlotsError } from "./errors";
-
-// Re-export generated types and SDK
-export * from "./generated/graphql";

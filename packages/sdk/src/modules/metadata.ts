@@ -1,7 +1,7 @@
 import { metadataModuleAbi } from "@0xslots/contracts";
 import type { Address, Chain, Hash, PublicClient, WalletClient } from "viem";
 import { SlotsError } from "../errors";
-import { getSdk } from "../generated/graphql";
+import type { getSdk } from "../generated/graphql";
 
 const EXPECTED_MODULE_NAME = "AdLandModule";
 

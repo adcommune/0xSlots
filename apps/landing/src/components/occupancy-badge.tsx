@@ -1,6 +1,5 @@
 "use client";
 
-import type { EffectiveOccupancy } from "@0xslots/sdk";
 import { Badge } from "@/components/ui/badge";
 import {
   Tooltip,
@@ -8,33 +7,24 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { formatDuration } from "@/hooks/use-effective-occupancy";
 
 /**
- * Occupancy state, resolved rather than indexed.
+ * Whether the slot is held, and whether it is about to be taken away.
  *
- * SOLD is the property analogue of exchanged contracts: binding at an agreed
- * price, completing on a set date, with the current holder keeping the slot and
- * paying for it until then. Only reachable when the buy took the slot FROM
- * someone — claiming a vacant slot completes immediately.
- *
- * There is deliberately NO badge for "completed but not yet recorded". The
- * holder shown is already the correct one, so flagging that our index is behind
- * tells the reader something about our pipeline rather than about the property.
- * The slot page still raises it, because there it comes with a button that
- * fixes it.
+ * There used to be a SOLD state here, for a buy that was binding but would only
+ * complete at the next epoch boundary. Epoch scheduling was removed in v4 —
+ * buys complete in the transaction that makes them — so a slot is only ever
+ * held or free.
  */
 export function OccupancyBadge({
-  occupancy,
+  occupant,
   insolvent,
   className,
 }: {
-  occupancy: EffectiveOccupancy | null;
+  occupant?: string | null;
   insolvent?: boolean;
   className?: string;
 }) {
-  if (!occupancy) return null;
-
   if (insolvent) {
     return (
       <TooltipProvider>
@@ -53,35 +43,9 @@ export function OccupancyBadge({
     );
   }
 
-  if (occupancy.hasPendingTransfer) {
-    const secondsLeft = occupancy.pendingEffectiveAt
-      ? Number(occupancy.pendingEffectiveAt) - Math.floor(Date.now() / 1000)
-      : 0;
-    return (
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Badge variant="incoming" className={className}>
-              SOLD · {formatDuration(secondsLeft)}
-            </Badge>
-          </TooltipTrigger>
-          <TooltipContent className="max-w-[17rem]">
-            Sold — completes in {formatDuration(secondsLeft)}. The sale is
-            binding at the agreed price and nobody else can buy it before then.
-            Until it completes the current holder keeps the slot, keeps paying
-            for it, and cannot change its price.
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    );
-  }
-
   return (
-    <Badge
-      variant={occupancy.occupant ? "default" : "secondary"}
-      className={className}
-    >
-      {occupancy.occupant ? "OCCUPIED" : "VACANT"}
+    <Badge variant={occupant ? "default" : "secondary"} className={className}>
+      {occupant ? "OCCUPIED" : "VACANT"}
     </Badge>
   );
 }
