@@ -1531,6 +1531,11 @@ export const slotAbi = [
   },
   {
     "type": "error",
+    "name": "EpochsRemoved",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "NotInitializing",
     "inputs": []
   },

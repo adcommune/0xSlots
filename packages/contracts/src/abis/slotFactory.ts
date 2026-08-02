@@ -876,6 +876,11 @@ export const slotFactoryAbi = [
   },
   {
     "type": "error",
+    "name": "EpochsRemoved",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "InvalidTaxPercentage",
     "inputs": []
   },
