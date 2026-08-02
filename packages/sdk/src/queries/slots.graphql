@@ -45,16 +45,17 @@ fragment SlotFields on Slot {
 
   # Occupancy layer.
   # `occupant` above is safe to render directly: epoch scheduling was removed in
-  # v4, so a buy is indexed the moment it lands. The pending* fields below only
-  # ever describe a transfer scheduled before that upgrade, and are kept so the
-  # UI can say so rather than silently misreporting. See src/occupancy.ts.
-  epochSeconds
+  # v4, so a buy is indexed the moment it lands.
+  #
+  # The subgraph still exposes pendingBuyer/pendingEffectiveAt/pendingPrice/
+  # pendingDeposit and they are still indexed — dropping them from the schema
+  # would force a destructive resync for no gain — but they are permanently
+  # zero and nothing should read them. Not selected here.
+  #
+  # pendingPolicy/hasPendingPolicy are unrelated and still live: they describe a
+  # queued POLICY change, which is a different mechanism.
   occupancyPolicy
   occupiedSince
-  pendingBuyer
-  pendingEffectiveAt
-  pendingPrice
-  pendingDeposit
   pendingPolicy
   hasPendingPolicy
 

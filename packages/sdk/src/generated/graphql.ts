@@ -8013,13 +8013,8 @@ export type SlotFieldsFragment = {
   totalCollected: string;
   liquidationBountyBps: string;
   minDepositSeconds: string;
-  epochSeconds: string;
   occupancyPolicy?: string | null;
   occupiedSince: string;
-  pendingBuyer?: string | null;
-  pendingEffectiveAt?: string | null;
-  pendingPrice?: string | null;
-  pendingDeposit?: string | null;
   pendingPolicy?: string | null;
   hasPendingPolicy: boolean;
   createdAt: string;
@@ -8087,13 +8082,8 @@ export type GetSlotsQuery = {
     totalCollected: string;
     liquidationBountyBps: string;
     minDepositSeconds: string;
-    epochSeconds: string;
     occupancyPolicy?: string | null;
     occupiedSince: string;
-    pendingBuyer?: string | null;
-    pendingEffectiveAt?: string | null;
-    pendingPrice?: string | null;
-    pendingDeposit?: string | null;
     pendingPolicy?: string | null;
     hasPendingPolicy: boolean;
     createdAt: string;
@@ -8158,13 +8148,8 @@ export type GetSlotQuery = {
     totalCollected: string;
     liquidationBountyBps: string;
     minDepositSeconds: string;
-    epochSeconds: string;
     occupancyPolicy?: string | null;
     occupiedSince: string;
-    pendingBuyer?: string | null;
-    pendingEffectiveAt?: string | null;
-    pendingPrice?: string | null;
-    pendingDeposit?: string | null;
     pendingPolicy?: string | null;
     hasPendingPolicy: boolean;
     createdAt: string;
@@ -8233,13 +8218,8 @@ export type GetSlotsByRecipientQuery = {
     totalCollected: string;
     liquidationBountyBps: string;
     minDepositSeconds: string;
-    epochSeconds: string;
     occupancyPolicy?: string | null;
     occupiedSince: string;
-    pendingBuyer?: string | null;
-    pendingEffectiveAt?: string | null;
-    pendingPrice?: string | null;
-    pendingDeposit?: string | null;
     pendingPolicy?: string | null;
     hasPendingPolicy: boolean;
     createdAt: string;
@@ -8308,13 +8288,8 @@ export type GetSlotsByOccupantQuery = {
     totalCollected: string;
     liquidationBountyBps: string;
     minDepositSeconds: string;
-    epochSeconds: string;
     occupancyPolicy?: string | null;
     occupiedSince: string;
-    pendingBuyer?: string | null;
-    pendingEffectiveAt?: string | null;
-    pendingPrice?: string | null;
-    pendingDeposit?: string | null;
     pendingPolicy?: string | null;
     hasPendingPolicy: boolean;
     createdAt: string;
@@ -8397,13 +8372,8 @@ export type GetSlotsWithMetadataQuery = {
     totalCollected: string;
     liquidationBountyBps: string;
     minDepositSeconds: string;
-    epochSeconds: string;
     occupancyPolicy?: string | null;
     occupiedSince: string;
-    pendingBuyer?: string | null;
-    pendingEffectiveAt?: string | null;
-    pendingPrice?: string | null;
-    pendingDeposit?: string | null;
     pendingPolicy?: string | null;
     hasPendingPolicy: boolean;
     createdAt: string;
@@ -8578,13 +8548,8 @@ export const SlotFieldsFragmentDoc = gql`
   totalCollected
   liquidationBountyBps
   minDepositSeconds
-  epochSeconds
   occupancyPolicy
   occupiedSince
-  pendingBuyer
-  pendingEffectiveAt
-  pendingPrice
-  pendingDeposit
   pendingPolicy
   hasPendingPolicy
   createdAt

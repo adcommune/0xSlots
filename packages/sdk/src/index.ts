@@ -20,15 +20,6 @@ export * from "./generated/graphql";
 export { FeedModuleClient } from "./modules/feed";
 // Modules
 export { MetadataModuleClient } from "./modules/metadata";
-// Occupancy
-//
-// Buys apply immediately since v4, so indexed occupancy needs no reconciling —
-// read `slot.occupant` directly. The resolution helpers that used to live here
-// existed only for epoch scheduling; see ./occupancy.ts.
-export {
-  canAttemptBuy,
-  type OccupancyFields,
-} from "./occupancy";
 // Tokens
 export {
   CHAIN_TOKENS,
