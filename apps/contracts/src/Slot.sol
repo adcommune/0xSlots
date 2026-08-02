@@ -43,6 +43,8 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     error TransferPending();
     error NotFactory();
     error NothingToClaim();
+    /// @dev Epoch scheduling was removed in v4; `epochSeconds` must be zero.
+    error EpochsRemoved();
 
     // ═══════════════════════════════════════════════════════════
     // STORAGE — KEEP ORDER, APPEND ONLY
@@ -183,8 +185,12 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         factory = _factory;
     }
 
-    /// @notice v3 upgrade — sets epoch length and occupancy policy.
-    /// @dev Both default to zero, which is exactly pre-v3 behaviour.
+    /// @notice v3 upgrade — sets the occupancy policy.
+    /// @dev `_epochSeconds` is retained for ABI compatibility and MUST be zero:
+    ///      epoch scheduling was removed in v4 and `buy()` no longer reads it.
+    ///      Accepting a non-zero value would write storage nothing honours,
+    ///      leaving the slot advertising a delay it does not apply.
+    /// @dev The policy defaults to zero, which is exactly pre-v3 behaviour.
     /// @dev AUTHENTICATED. `reinitializer(3)` alone only checks the version is
     ///      below 3 — every slot created by `createSlot`/`createSlots` (and
     ///      every already-deployed slot after the v2 beacon upgrade) sits at
@@ -199,9 +205,9 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     ) external reinitializer(3) {
         address f = factory;
         if (f == address(0) || msg.sender != f) revert NotFactory();
+        if (_epochSeconds != 0) revert EpochsRemoved();
         if (_occupancyPolicy != address(0) && _occupancyPolicy.code.length == 0)
             revert InvalidModule_NoCode();
-        epochSeconds = _epochSeconds;
         occupancyPolicy = _occupancyPolicy;
 
         // Indexers cannot learn these any other way: `createSlotV3` emits the
@@ -267,10 +273,7 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         uint256 currentPrice = _price;
         address prev = _occupant;
 
-        // Epochs off — apply pending updates now, as before.
-        if (epochSeconds == 0) {
-            _applyPendingUpdates();
-        }
+        _applyPendingUpdates();
 
         _enforceMinDeposit(depositAmount, selfAssessedPrice);
 
@@ -282,32 +285,23 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
             currency.safeTransferFrom(msg.sender, address(this), owedByBuyer);
         }
 
-        // Schedule only when there is an incumbent to take the slot FROM.
+        // Epoch scheduling was removed here. A buy used to be deferred to the
+        // next clock boundary when `epochSeconds > 0`, on the theory that it
+        // stopped an occupant being sniped by whoever's infrastructure was
+        // fastest. It did not: the first commit after a boundary locked
+        // everyone else out until the next one, so a two-second latency edge
+        // bought a full epoch of exclusivity at a price fixed before that
+        // epoch's news — a worse dynamic than the one it replaced.
         //
-        // The delay exists so an occupant cannot be sniped at their declared
-        // price by whoever's infrastructure is fastest. A vacant slot has no
-        // incumbent and no declared price — the claimant sets their own
-        // valuation and pays only the deposit — so the delay would protect
-        // against almost nothing while costing the recipient up to a full
-        // epoch of zero revenue on a slot nobody holds.
+        // Occupancy timing now lives entirely in IOccupancyPolicy vetoes, which
+        // is where it can be expressed without a second phase: MinimumTenure
+        // for "not yet", QueueExclusivity for "first queued, not fastest".
         //
-        // A committed buyer stays protected regardless: the TransferPending
-        // guard above still blocks anyone else, so releasing mid-window does
-        // not let a third party jump the pending claim.
-        if (epochSeconds > 0 && prev != address(0)) {
-            uint256 effectiveAt = nextBoundary();
-            pendingTransfer = PendingTransfer({
-                buyer: account,
-                effectiveAt: uint96(effectiveAt),
-                deposit: depositAmount,
-                newPrice: selfAssessedPrice,
-                pricePaid: prev == address(0) ? 0 : currentPrice
-            });
-            emit TransferScheduled(account, effectiveAt, selfAssessedPrice, depositAmount);
-            return;
-        }
+        // `epochSeconds` is ignored, and `_materialize()` is retained so any
+        // transfer scheduled before this upgrade still completes. See
+        // `initializeV3`, which now rejects a non-zero value outright.
 
-        // Immediate path — refund the outgoing occupant. Computed here, paid
+        // Refund the outgoing occupant. Computed here, paid
         // after the state writes, and never allowed to revert: an outgoing
         // occupant the currency refuses to pay must not be able to veto their
         // own forced sale.

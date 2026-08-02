@@ -26,6 +26,11 @@ contract SlotFactory is UUPSUpgradeable {
     error NotAdmin();
     error AlreadyInitialized();
     error InvalidModule_NoCode();
+    /// @dev Epoch scheduling was removed in v4. The `epochSeconds` parameter is
+    ///      retained so the selector and every existing caller keep working,
+    ///      but a non-zero value is rejected rather than silently ignored — a
+    ///      caller asking for a delay should learn it will not happen.
+    error EpochsRemoved();
 
     // ═══════════════════════════════════════════════════════════
     // EVENTS
@@ -156,6 +161,7 @@ contract SlotFactory is UUPSUpgradeable {
         address occupancyPolicy
     ) external returns (address slot) {
         _validateConfig(config, initParams);
+        if (epochSeconds != 0) revert EpochsRemoved();
         if (occupancyPolicy != address(0) && occupancyPolicy.code.length == 0)
             revert InvalidModule_NoCode();
         slot = _deploySlot(recipient, currency, config, initParams);

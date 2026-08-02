@@ -110,8 +110,11 @@ contract SlotQueueTest is Test {
     ///      *schedules* a transfer (via `pendingTransfer`) instead of
     ///      executing it immediately, so `occupant()` keeps reading
     ///      `address(0)` until the boundary matures.
-    function _epochSlot(uint64 epochSeconds_) internal returns (Slot) {
-        return Slot(factory.createSlotV3(
+    /// @dev Epoch scheduling was removed, so `createSlotV3` refuses a non-zero
+    ///      value. Write it directly to reproduce a pre-v4 slot. Slot 15 packs
+    ///      `occupancyPolicy` (offset 0) with `epochSeconds` (offset 20).
+    function _epochSlot(uint64 epochSeconds_) internal returns (Slot s) {
+        s = Slot(factory.createSlotV3(
             recipient,
             IERC20(address(token)),
             SlotConfig({mutableTax: false, mutableModule: false, manager: address(0)}),
@@ -121,9 +124,14 @@ contract SlotQueueTest is Test {
                 liquidationBountyBps: 500,
                 minDepositSeconds: 0
             }),
-            epochSeconds_,
+            0,
             address(0)
         ));
+        vm.store(
+            address(s),
+            bytes32(uint256(15)),
+            bytes32((uint256(epochSeconds_) << 160) | uint256(uint160(s.occupancyPolicy())))
+        );
     }
 
     function test_Fill_AfterRelease() public {
@@ -356,18 +364,24 @@ contract SlotQueueTest is Test {
         assertEq(queue.headIndex(address(s)), 1, "head sits at carol's bid");
 
         // Now produce the state this test exists for: a scheduled transfer on a
-        // slot that is nonetheless vacant. Dave takes it from bob (scheduled,
-        // since bob is an incumbent), then bob releases — raw storage is vacant
-        // but dave holds a live claim.
+        // slot that is nonetheless vacant. Epoch scheduling was removed, so
+        // this is only reachable on a slot that still carried a pending
+        // transfer across the v4 upgrade — which `_materialize` still honours,
+        // so `fill()` must still refuse to evict the head bid over it.
         address dave = makeAddr("dave");
-        token.mint(dave, 1000 ether);
-        vm.startPrank(dave);
-        token.approve(address(s), type(uint256).max);
-        s.buy(dave, 10 ether, 95 ether);
-        vm.stopPrank();
-
         vm.prank(bob);
         s.release();
+        assertEq(s.occupant(), address(0), "vacant");
+
+        uint96 effectiveAt = uint96(block.timestamp + 1 hours); // not yet matured
+        vm.store(
+            address(s),
+            bytes32(uint256(18)),
+            bytes32((uint256(effectiveAt) << 160) | uint256(uint160(dave)))
+        );
+        vm.store(address(s), bytes32(uint256(19)), bytes32(uint256(10 ether)));
+        vm.store(address(s), bytes32(uint256(20)), bytes32(uint256(95 ether)));
+        vm.store(address(s), bytes32(uint256(21)), bytes32(uint256(0)));
         assertEq(s.occupant(), address(0), "vacant, but dave has a pending claim");
 
         // fill() must revert SlotTransferPending rather than evict carol —

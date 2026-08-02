@@ -93,15 +93,26 @@ contract FinalFixesTest is Test {
         ));
     }
 
-    function _epochSlot(uint64 epoch) internal returns (Slot) {
-        return Slot(factory.createSlotV3(
+    /// @dev Forge a pre-v4 slot. `createSlotV3` rejects a non-zero epoch now,
+    ///      so the only way to reach that state is to write it directly. Slot
+    ///      15 packs `occupancyPolicy` (offset 0) with `epochSeconds`
+    ///      (offset 20); layout verified against the live Base Sepolia
+    ///      bytecode. See NoEpochs.t.sol.
+    function _epochSlot(uint64 epoch) internal returns (Slot s) {
+        s = Slot(factory.createSlotV3(
             recipient,
             IERC20(address(token)),
             SlotConfig({mutableTax: false, mutableModule: false, manager: address(0)}),
             _init(),
-            epoch,
+            0,
             address(0)
         ));
+        vm.store(
+            address(s),
+            bytes32(uint256(15)),
+            bytes32((uint256(epoch) << 160) | uint256(uint160(s.occupancyPolicy())))
+        );
+        assertEq(s.epochSeconds(), epoch, "fixture: epochSeconds not written");
     }
 
     function _buy(Slot s, address who, uint256 dep, uint256 px) internal {
@@ -140,9 +151,19 @@ contract FinalFixesTest is Test {
     ///      not a blanket freeze.
     function test_InitializeV3_FactoryIsAllowed() public {
         Slot s = _slot();
+        FFDenyAllPolicy p = new FFDenyAllPolicy();
         vm.prank(address(factory));
+        s.initializeV3(0, address(p));
+        assertEq(s.occupancyPolicy(), address(p));
+    }
+
+    /// @dev Epoch scheduling was removed, so a non-zero value is rejected
+    ///      rather than written into storage nothing honours.
+    function test_InitializeV3_RejectsNonZeroEpoch() public {
+        Slot s = _slot();
+        vm.prank(address(factory));
+        vm.expectRevert(Slot.EpochsRemoved.selector);
         s.initializeV3(3600, address(0));
-        assertEq(s.epochSeconds(), 3600);
     }
 
     /// @dev `SlotConfiguredV3` is the ONLY on-chain signal carrying a slot's
@@ -158,10 +179,10 @@ contract FinalFixesTest is Test {
         FFDenyAllPolicy p = new FFDenyAllPolicy();
 
         vm.expectEmit(false, false, false, true, address(s));
-        emit SlotConfiguredV3(3600, address(p));
+        emit SlotConfiguredV3(0, address(p));
 
         vm.prank(address(factory));
-        s.initializeV3(3600, address(p));
+        s.initializeV3(0, address(p));
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -190,11 +211,14 @@ contract FinalFixesTest is Test {
         factory.beacon().transferOwnership(address(factory));
         factory.upgradeBeacon(address(newImpl));
 
-        // Attacker takes it before the admin's second transaction lands.
+        // Attacker takes it before the admin's second transaction lands. The
+        // absurd epoch that used to be part of this capture is rejected now,
+        // but the deny-all policy alone still ends forced sale — the window is
+        // narrower, not closed.
         FFDenyAllPolicy deny = new FFDenyAllPolicy();
         vm.startPrank(attacker);
         s.initializeV2(attacker);
-        s.initializeV3(type(uint64).max, address(deny));
+        s.initializeV3(0, address(deny));
         vm.stopPrank();
 
         assertEq(s.factory(), attacker, "attacker owns the factory pointer");
@@ -219,11 +243,11 @@ contract FinalFixesTest is Test {
 
         address[] memory slots = new address[](1);
         slots[0] = address(s);
-        factory.upgradeBeaconAndMigrateV3(address(newImpl), slots, 3600, address(0));
+        factory.upgradeBeaconAndMigrateV3(address(newImpl), slots, 0, address(0));
 
         // Migrated: factory is the real one, config is set, occupancy survived.
         assertEq(s.factory(), address(factory));
-        assertEq(s.epochSeconds(), 3600);
+        assertEq(s.epochSeconds(), 0);
         assertEq(s.occupant(), occupantBefore, "occupancy survived the upgrade");
         assertEq(s.price(), priceBefore, "price survived the upgrade");
 
@@ -252,10 +276,10 @@ contract FinalFixesTest is Test {
         slots[0] = address(s);
 
         vm.expectEmit(false, false, false, true, address(s));
-        emit SlotConfiguredV3(7200, address(0));
+        emit SlotConfiguredV3(0, address(0));
 
-        factory.migrateSlotsV3(slots, 7200, address(0));
-        assertEq(s.epochSeconds(), 7200);
+        factory.migrateSlotsV3(slots, 0, address(0));
+        assertEq(s.epochSeconds(), 0);
     }
 
     /// @dev A "legacy" slot: a bare BeaconProxy that only ever ran v1
@@ -295,12 +319,12 @@ contract FinalFixesTest is Test {
 
         vm.prank(attacker);
         vm.expectRevert(SlotFactory.NotAdmin.selector);
-        factory.migrateSlotsV3(slots, 3600, address(0));
+        factory.migrateSlotsV3(slots, 0, address(0));
 
-        factory.migrateSlotsV3(slots, 3600, address(0));
-        assertEq(legacy.epochSeconds(), 3600, "legacy v1 slot migrated to v3");
+        factory.migrateSlotsV3(slots, 0, address(0));
+        assertEq(legacy.factory(), address(factory), "legacy v1 slot migrated to v3");
         assertEq(legacy.factory(), address(factory), "legacy v1 slot got its factory");
-        assertEq(v2Slot.epochSeconds(), 3600, "v2 slot migrated to v3");
+        assertEq(v2Slot.factory(), address(factory), "v2 slot migrated to v3");
         assertTrue(factory.isSlot(address(legacy)));
     }
 
@@ -352,15 +376,27 @@ contract FinalFixesTest is Test {
         Slot s = _epochSlot(3600);
 
         vm.warp(3600);
-        _buy(s, alice, 10 ether, 100 ether); // vacant claim — immediate
+        _buy(s, alice, 10 ether, 100 ether);
         assertEq(s.occupant(), alice);
 
-        _buy(s, bob, 0, 100 ether); // taking it from alice — scheduled, no deposit
-
         vm.prank(alice);
-        s.release(); // raw _occupant becomes address(0); bob's claim survives
+        s.release(); // raw _occupant becomes address(0)
 
-        vm.warp(2 * uint256(3600) + 1); // past bob's boundary
+        // Forge the legacy state this test exists for: a matured transfer that
+        // no transaction has written yet, so `occupant()` resolves to bob while
+        // raw storage still reads vacant. Unreachable through `buy()` now, but
+        // `_materialize` is retained for exactly this, so it must stay covered.
+        uint96 effectiveAt = uint96(block.timestamp);
+        vm.store(
+            address(s),
+            bytes32(uint256(18)),
+            bytes32((uint256(effectiveAt) << 160) | uint256(uint160(bob)))
+        );
+        vm.store(address(s), bytes32(uint256(19)), bytes32(uint256(0)));          // deposit
+        vm.store(address(s), bytes32(uint256(20)), bytes32(uint256(100 ether)));  // newPrice
+        vm.store(address(s), bytes32(uint256(21)), bytes32(uint256(0)));          // pricePaid
+
+        vm.warp(2 * uint256(3600) + 1);
         assertEq(s.occupant(), bob, "bob resolves as occupant");
         assertTrue(s.isInsolvent(), "zero deposit => insolvent");
 
@@ -399,18 +435,26 @@ contract FinalFixesTest is Test {
 
     FFBlocklistERC20 blk;
 
-    function _blockSlot(uint64 epoch) internal returns (Slot) {
+    /// @dev Epoch written directly — see `_epochSlot`.
+    function _blockSlot(uint64 epoch) internal returns (Slot s) {
         blk = new FFBlocklistERC20();
         blk.mint(alice, 10_000 ether);
         blk.mint(bob, 10_000 ether);
-        return Slot(factory.createSlotV3(
+        s = Slot(factory.createSlotV3(
             recipient,
             IERC20(address(blk)),
             SlotConfig({mutableTax: false, mutableModule: false, manager: address(0)}),
             _init(),
-            epoch,
+            0,
             address(0)
         ));
+        if (epoch != 0) {
+            vm.store(
+                address(s),
+                bytes32(uint256(15)),
+                bytes32((uint256(epoch) << 160) | uint256(uint160(s.occupancyPolicy())))
+            );
+        }
     }
 
     function _buyBlk(Slot s, address who, uint256 dep, uint256 px) internal {
@@ -429,26 +473,23 @@ contract FinalFixesTest is Test {
     ///      locking the outgoing deposit, the incoming buyer's escrow and all
     ///      accrued tax with no way out.
     function test_BlockedOutgoingOccupant_DoesNotBrickSlot() public {
-        Slot s = _blockSlot(3600);
+        Slot s = _blockSlot(0);
 
         // Alice occupies for real.
         vm.warp(3600);
         _buyBlk(s, alice, 100 ether, 100 ether);
-        vm.warp(2 * uint256(3600) + 1);
-        s.collect();
         assertEq(s.occupant(), alice);
 
-        // Bob buys her out; the transfer matures at 3 * 3600.
-        _buyBlk(s, bob, 100 ether, 100 ether);
-
-        // Alice is blocklisted before the boundary lands.
+        // Alice is blocklisted before she is bought out, so the refund `buy()`
+        // owes her cannot be pushed. Exercised on the immediate path, which is
+        // the only transfer path there is now — and the one that matters, since
+        // it runs on every buy rather than only at a boundary.
         blk.setBlocked(alice, true);
+        vm.warp(2 * uint256(3600) + 1);
 
-        vm.warp(3 * uint256(3600) + 1);
-
-        // Materialisation must succeed and the slot must stay fully usable.
-        s.collect();
-        assertEq(s.occupant(), bob, "transfer landed despite the blocked refund");
+        // The buy must succeed and the slot must stay fully usable.
+        _buyBlk(s, bob, 100 ether, 100 ether);
+        assertEq(s.occupant(), bob, "buy landed despite the blocked refund");
 
         uint256 credited = s.withdrawableOf(alice);
         assertGt(credited, 100 ether, "alice's deposit + bob's price credited, not lost");
@@ -491,17 +532,28 @@ contract FinalFixesTest is Test {
     ///      the boundary, so the incoming buyer gets their purchase price back.
     ///      A blocked BUYER must not brick the slot either.
     function test_BlockedBuyerRefund_OnVacantMaterialisation_DoesNotBrickSlot() public {
-        Slot s = _blockSlot(3600);
+        Slot s = _blockSlot(0);
 
         vm.warp(3600);
         _buyBlk(s, alice, 100 ether, 100 ether);
-        vm.warp(2 * uint256(3600) + 1);
-        s.collect();
-
-        _buyBlk(s, bob, 50 ether, 80 ether); // pays 100 price + 50 deposit
 
         vm.prank(alice);
-        s.release(); // slot goes vacant before the boundary
+        s.release(); // slot goes vacant
+
+        // Forge the legacy case `_materialize` still handles: bob committed a
+        // buy that matured after the slot went vacant, so the price he paid for
+        // an occupant who is no longer there comes back to him. Unreachable via
+        // `buy()` now; retained code, so still covered.
+        blk.mint(address(s), 150 ether); // bob's commit: 100 price + 50 deposit
+        uint96 effectiveAt = uint96(block.timestamp);
+        vm.store(
+            address(s),
+            bytes32(uint256(18)),
+            bytes32((uint256(effectiveAt) << 160) | uint256(uint160(bob)))
+        );
+        vm.store(address(s), bytes32(uint256(19)), bytes32(uint256(50 ether)));   // deposit
+        vm.store(address(s), bytes32(uint256(20)), bytes32(uint256(80 ether)));   // newPrice
+        vm.store(address(s), bytes32(uint256(21)), bytes32(uint256(100 ether)));  // pricePaid
 
         blk.setBlocked(bob, true);
 
