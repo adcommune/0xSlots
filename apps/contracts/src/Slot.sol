@@ -713,6 +713,18 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         lastSettled = upTo;
 
         emit Settled(owed, paid, _deposit);
+
+        if (paid > 0) {
+            // Attributed to `_occupant`, which is still the payer here: every
+            // entry point calls `_settle()` before it reassigns occupancy, so
+            // a buy charges the OUTGOING occupant for their own tenure.
+            address payer = _occupant;
+            emit TaxPaid(payer, owed, paid);
+            _notifyModule(
+                "onSettle",
+                abi.encodeCall(ISlotsModule.onSettle, (0, payer, owed, paid))
+            );
+        }
     }
 
     function _settle() internal {

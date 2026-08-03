@@ -1265,6 +1265,31 @@ export const slotAbi = [
   },
   {
     type: "event",
+    name: "TaxPaid",
+    inputs: [
+      {
+        name: "occupant",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "taxOwed",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+      {
+        name: "taxPaid",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
     name: "SlotConfiguredV3",
     inputs: [
       {

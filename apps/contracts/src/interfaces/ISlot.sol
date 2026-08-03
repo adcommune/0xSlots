@@ -124,6 +124,26 @@ interface ISlotEvents {
 
     event Settled(uint256 taxOwed, uint256 taxPaid, uint256 depositRemaining);
 
+    /// @notice Tax actually taken from an occupant's deposit, attributed to them.
+    /// @dev `Settled` carries the same amounts but not WHO paid, so it cannot be
+    ///      reduced into a per-address ledger. This can.
+    ///
+    ///      Emitted as a NEW event rather than by extending `Settled`, because
+    ///      changing an existing event's signature changes its topic0 and would
+    ///      split historical indexing across two shapes.
+    ///
+    ///      `taxPaid` is the number that matters for accounting: it is capped by
+    ///      the remaining deposit, so it can be far less than `taxOwed` when an
+    ///      occupant is going insolvent. Anything reconstructing contributions
+    ///      from `price x time` computes `taxOwed` and will over-credit.
+    ///
+    ///      Gross of the module fee, which is skimmed later in `_distributeTax`.
+    event TaxPaid(
+        address indexed occupant,
+        uint256 taxOwed,
+        uint256 taxPaid
+    );
+
     event TaxUpdateProposed(uint256 newPercentage);
 
     event ModuleUpdateProposed(address newModule);

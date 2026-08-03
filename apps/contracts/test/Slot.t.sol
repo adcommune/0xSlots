@@ -30,6 +30,7 @@ contract MockModule is ISlotsModule {
     function onTransfer(uint256, address, address) external {}
     function onPriceUpdate(uint256, uint256, uint256) external {}
     function onRelease(uint256, address) external {}
+    function onSettle(uint256, address, uint256, uint256) external {}
     function supportsInterface(bytes4 id) external pure returns (bool) {
         return id == type(ISlotsModule).interfaceId || id == type(IERC165).interfaceId;
     }
