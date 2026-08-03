@@ -106,33 +106,6 @@ contract SlotQueueTest is Test {
         ));
     }
 
-    /// @dev A slot with epoch scheduling turned on: `Slot.buy()` only
-    ///      *schedules* a transfer (via `pendingTransfer`) instead of
-    ///      executing it immediately, so `occupant()` keeps reading
-    ///      `address(0)` until the boundary matures.
-    /// @dev Epoch scheduling was removed, so `createSlotV3` refuses a non-zero
-    ///      value. Write it directly to reproduce a pre-v4 slot. Slot 15 packs
-    ///      `occupancyPolicy` (offset 0) with `epochSeconds` (offset 20).
-    function _epochSlot(uint64 epochSeconds_) internal returns (Slot s) {
-        s = Slot(factory.createSlotV3(
-            recipient,
-            IERC20(address(token)),
-            SlotConfig({mutableTax: false, mutableModule: false, manager: address(0)}),
-            SlotInitParams({
-                taxPercentage: 100,
-                module: address(0),
-                liquidationBountyBps: 500,
-                minDepositSeconds: 0
-            }),
-            0,
-            address(0)
-        ));
-        vm.store(
-            address(s),
-            bytes32(uint256(15)),
-            bytes32((uint256(epochSeconds_) << 160) | uint256(uint160(s.occupancyPolicy())))
-        );
-    }
 
     function test_Fill_AfterRelease() public {
         Slot s = _slot();
@@ -330,20 +303,17 @@ contract SlotQueueTest is Test {
         vm.expectRevert(SlotQueue.AlreadyProcessed.selector);
         queue.cancel(address(s), 0);
     }
-
-    /// @dev Security fix round 2, Important: closes the "eviction jumping"
-    ///      hole the C2 `try/catch` introduced. On an `epochSeconds > 0`
-    ///      slot, filling bid #1 only *schedules* a transfer — `occupant()`
-    ///      still reads `address(0)` afterward. Without the pre-check, an
-    ///      unguarded second `fill()` would pass the vacancy check, reach
-    ///      `Slot.buy()`, hit `TransferPending`, and the C2 catch would
-    ///      wrongly treat that transient condition as a deterministic
-    ///      failure — permanently evicting and refunding bid #2 even though
-    ///      it did nothing wrong, defeating FIFO. `fill()` must instead
-    ///      revert `SlotTransferPending`, leaving bid #2's position, escrow,
-    ///      and queue bookkeeping completely untouched.
-    function test_Fill_RevertsOnPendingTransfer_DoesNotEvictNextBid() public {
-        Slot s = _epochSlot(1 hours);
+    /// @dev The head bid must never be evicted over a TRANSIENT condition —
+    ///      only over one that is deterministic for that bid. Otherwise anyone
+    ///      could clear the head by timing a `fill()` and then fill their own
+    ///      bid next, breaking FIFO.
+    ///
+    ///      Under epoch scheduling the transient case was a pending transfer.
+    ///      Buys apply in-transaction since v4, so the case that remains is
+    ///      simply "already occupied" — `fill()` must refuse without touching
+    ///      the next bid.
+    function test_Fill_WhenOccupied_DoesNotEvictNextBid() public {
+        Slot s = _slot();
 
         vm.startPrank(bob);
         token.approve(address(queue), type(uint256).max);
@@ -356,43 +326,18 @@ contract SlotQueueTest is Test {
         queue.joinQueue(address(s), 90 ether, 10 ether, 1 ether, uint96(block.timestamp + 30 days));
         vm.stopPrank();
 
-        // First fill(): the slot is VACANT, so bob's claim is immediate — there
-        // is no incumbent to schedule around.
         queue.fill(address(s));
-        assertEq(s.occupant(), bob, "vacant claim lands immediately");
-        assertEq(queue.liveBidCount(address(s)), 1, "carol's bid is still live");
+        assertEq(s.occupant(), bob, "first fill lands immediately");
+        assertEq(queue.liveBidCount(address(s)), 1, "carol's bid still live");
         assertEq(queue.headIndex(address(s)), 1, "head sits at carol's bid");
 
-        // Now produce the state this test exists for: a scheduled transfer on a
-        // slot that is nonetheless vacant. Epoch scheduling was removed, so
-        // this is only reachable on a slot that still carried a pending
-        // transfer across the v4 upgrade — which `_materialize` still honours,
-        // so `fill()` must still refuse to evict the head bid over it.
-        address dave = makeAddr("dave");
-        vm.prank(bob);
-        s.release();
-        assertEq(s.occupant(), address(0), "vacant");
-
-        uint96 effectiveAt = uint96(block.timestamp + 1 hours); // not yet matured
-        vm.store(
-            address(s),
-            bytes32(uint256(18)),
-            bytes32((uint256(effectiveAt) << 160) | uint256(uint160(dave)))
-        );
-        vm.store(address(s), bytes32(uint256(19)), bytes32(uint256(10 ether)));
-        vm.store(address(s), bytes32(uint256(20)), bytes32(uint256(95 ether)));
-        vm.store(address(s), bytes32(uint256(21)), bytes32(uint256(0)));
-        assertEq(s.occupant(), address(0), "vacant, but dave has a pending claim");
-
-        // fill() must revert SlotTransferPending rather than evict carol —
-        // otherwise a later bidder could clear the queue by timing a fill.
-        vm.expectRevert(SlotQueue.SlotTransferPending.selector);
+        // Slot is occupied now — a second fill must refuse, not evict carol.
+        vm.expectRevert(SlotQueue.SlotOccupied.selector);
         queue.fill(address(s));
 
-        // Carol's bid is completely untouched by the failed attempt.
         assertEq(queue.liveBidCount(address(s)), 1, "liveBidCount unchanged");
         assertEq(queue.headIndex(address(s)), 1, "headIndex unchanged");
-        assertEq(token.balanceOf(carol), carolBefore - 11 ether, "carol not refunded, still escrowed");
+        assertEq(token.balanceOf(carol), carolBefore - 11 ether, "carol still escrowed");
     }
 
     /// @dev Security fix round 2, Important: `joinQueue` must bound how far

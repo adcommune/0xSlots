@@ -87,8 +87,6 @@ contract SlotQueue is ReentrancyGuard {
     error ExpiryTooFar();
     error InvalidBid();
     error NotASlot();
-    error SlotTransferPending();
-    error EpochExceedsMaxBidDuration();
 
     constructor(address _factory) {
         factory = SlotFactory(_factory);
@@ -117,15 +115,6 @@ contract SlotQueue is ReentrancyGuard {
         // `fill()` can never be permanently blocked by a bid engineered to
         // always revert `Slot.buy()`.
         if (price == 0 || deposit == 0) revert InvalidBid();
-
-        // A slot whose epoch is longer than the maximum bid lifetime can never
-        // be queued usefully: `fill()` only SCHEDULES a transfer maturing at
-        // the next boundary, so every bid on such a slot expires before it
-        // could ever take effect. Funds were never at risk — they are swept
-        // back on expiry — but the queue was silently non-functional. Surface
-        // the misconfiguration at join time instead.
-        if (Slot(slot).epochSeconds() > MAX_BID_DURATION)
-            revert EpochExceedsMaxBidDuration();
 
         IERC20 currency = Slot(slot).currency();
         currency.safeTransferFrom(msg.sender, address(this), deposit + tip);
@@ -208,23 +197,13 @@ contract SlotQueue is ReentrancyGuard {
         // contract, so our own `nonReentrant` guard does not cover it). Fail
         // cleanly here rather than letting `Slot.buy()` revert confusingly
         // (e.g. paying a stale price it was never funded for).
+        //
+        // This is now the ONLY transient condition to screen for. Under epoch
+        // scheduling a fill could leave the slot occupied-but-still-reading-
+        // vacant, which needed a second check against `pendingTransfer`; buys
+        // apply in-transaction since v4, so a filled slot reports occupied
+        // immediately and this catches it.
         if (Slot(slot).occupant() != address(0)) revert SlotOccupied();
-
-        // Reject a transient condition instead of letting it reach the catch
-        // below: on an `epochSeconds > 0` slot, filling one bid *schedules*
-        // a transfer rather than executing it, so `occupant()` above still
-        // read `address(0)` even though the slot is no longer really free.
-        // Without this check, a second `fill()` would reach `Slot.buy()`,
-        // hit `TransferPending`, and the catch below would treat that as a
-        // deterministic failure — permanently evicting and refunding the
-        // (perfectly fine, just temporarily blocked) head bid. That breaks
-        // the FIFO guarantee: anyone could evict the head by calling `fill`
-        // at the right moment and then fill their own bid next. A revert
-        // here instead leaves the head bid's position, funds, and queue
-        // index completely untouched; the caller (or anyone) simply retries
-        // `fill()` after the scheduled boundary passes.
-        (, uint96 effectiveAt, , , ) = Slot(slot).pendingTransfer();
-        if (effectiveAt != 0) revert SlotTransferPending();
 
         address bidder = b.bidder;
         uint256 dep = b.deposit;

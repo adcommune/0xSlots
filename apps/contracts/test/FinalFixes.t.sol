@@ -578,41 +578,4 @@ contract FinalFixesTest is Test {
         assertEq(s.occupant(), bob);
     }
 
-    // ═══════════════════════════════════════════════════════════
-    // FINDING 5 — silent queue misconfiguration
-    // ═══════════════════════════════════════════════════════════
-
-    /// @dev If a slot's epoch is longer than MAX_BID_DURATION, every bid on it
-    ///      expires before the boundary its fill would schedule — the queue is
-    ///      silently non-functional. Funds were never at risk, but the failure
-    ///      must surface at join time, not by quiet expiry weeks later.
-    function test_JoinQueue_RejectsSlotWithEpochBeyondMaxBidDuration() public {
-        SlotQueue queue = new SlotQueue(address(factory));
-        Slot s = _epochSlot(uint64(31 days));
-
-        uint96 expiry = uint96(block.timestamp + 30 days);
-        vm.startPrank(bob);
-        token.approve(address(queue), type(uint256).max);
-        vm.expectRevert(SlotQueue.EpochExceedsMaxBidDuration.selector);
-        queue.joinQueue(address(s), 80 ether, 10 ether, 1 ether, expiry);
-        vm.stopPrank();
-    }
-
-    /// @dev The boundary case must still be accepted, and epochs-off slots
-    ///      (epochSeconds == 0) are unaffected.
-    function test_JoinQueue_AcceptsEpochAtMaxBidDuration() public {
-        SlotQueue queue = new SlotQueue(address(factory));
-        Slot atCap = _epochSlot(uint64(30 days));
-        Slot noEpoch = _slot();
-
-        uint96 expiry = uint96(block.timestamp + 30 days);
-        vm.startPrank(bob);
-        token.approve(address(queue), type(uint256).max);
-        queue.joinQueue(address(atCap), 80 ether, 10 ether, 0, expiry);
-        queue.joinQueue(address(noEpoch), 80 ether, 10 ether, 0, expiry);
-        vm.stopPrank();
-
-        assertEq(queue.liveBidCount(address(atCap)), 1);
-        assertEq(queue.liveBidCount(address(noEpoch)), 1);
-    }
 }
