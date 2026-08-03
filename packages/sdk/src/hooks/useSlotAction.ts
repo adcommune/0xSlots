@@ -168,7 +168,7 @@ export function useSlotAction(opts?: SlotActionCallbacks) {
         const deployed = await exec("Deploy price policy", () =>
           client.deployPricePolicy(params.currency, minPrice),
         );
-        // Bail on a rejected or reverted deploy: `createSlotV3` requires code
+        // Bail on a rejected or reverted deploy: `createSlot` requires code
         // at `policy` and would otherwise fail a second time, more confusingly.
         if (!deployed) return undefined;
       }
