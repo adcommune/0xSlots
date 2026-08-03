@@ -1,4 +1,8 @@
+import type { Address } from "viem";
 import type { VouchedPolicy } from "./types";
+
+/** Circle USDC on Base — what the mainnet price floors are denominated in. */
+const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" as Address;
 
 /**
  * Policies the protocol vouches for, keyed by lowercase address.
@@ -39,6 +43,56 @@ export const VOUCHED_POLICIES: Record<string, VouchedPolicy> = {
     impact: "soft",
     description:
       "Nobody can buy the occupant out for 7 days after they take the slot. Liquidation still works if they stop paying.",
+  },
+
+  // ── Base mainnet — the starter set deployed with the policy factories ────
+  //
+  // Present for reason 1, not reason 2: every one of these IS derivable, and
+  // `resolvePolicy` names them from the chain without help. They are listed so
+  // the create form's "Verified policy" picker has something to offer on
+  // mainnet — an editorial shortlist, not a naming fallback. Deleting them
+  // costs the picker, never a label.
+  "0x45b848850b386f1356ee95024a87cf42fbcd6f59": {
+    chainId: 8453,
+    tenureSeconds: 3600,
+    label: "1h minimum tenure",
+    impact: "soft",
+    description:
+      "Nobody can buy the occupant out for 1 hour after they take the slot. Liquidation still works if they stop paying.",
+  },
+  "0xb7a4156cb15a60f2dafb7a3edf0ed2defb12ab52": {
+    chainId: 8453,
+    tenureSeconds: 86400,
+    label: "1d minimum tenure",
+    impact: "soft",
+    description:
+      "Nobody can buy the occupant out for 1 day after they take the slot. Liquidation still works if they stop paying.",
+  },
+  "0xadbf68ba445dc8869249c90f23f58adb19e03749": {
+    chainId: 8453,
+    tenureSeconds: 604800,
+    label: "7d minimum tenure",
+    impact: "soft",
+    description:
+      "Nobody can buy the occupant out for 7 days after they take the slot. Liquidation still works if they stop paying.",
+  },
+  "0x0e1cdb54224b0ad085a1ef875783425f5cb84b89": {
+    chainId: 8453,
+    minPrice: 1_000_000n,
+    currency: USDC_BASE,
+    label: "$1 minimum price (USDC)",
+    impact: "near-pure",
+    description:
+      "Nobody may declare below 1 USDC on this slot. Forced sale is not delayed at all — anyone can still take it at any moment, provided they declare at least the floor.",
+  },
+  "0xe19bf9a474eedf83a92efb1605eaf8ef9c259638": {
+    chainId: 8453,
+    minPrice: 10_000_000n,
+    currency: USDC_BASE,
+    label: "$10 minimum price (USDC)",
+    impact: "near-pure",
+    description:
+      "Nobody may declare below 10 USDC on this slot. Forced sale is not delayed at all — anyone can still take it at any moment, provided they declare at least the floor.",
   },
 };
 

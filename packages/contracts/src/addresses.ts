@@ -85,6 +85,7 @@ export const MINIMUM_TENURE_POLICY_FACTORY: Partial<
   Record<number, `0x${string}`>
 > = {
   [baseSepolia.id]: "0x51650AB1c3aBc6614A38c622A322535b16cD764e",
+  [base.id]: "0xE322cDADB8fd511788F0fA25BffD794b7A946125",
 };
 
 /**
@@ -97,6 +98,7 @@ export const MINIMUM_PRICE_POLICY_FACTORY: Partial<
   Record<number, `0x${string}`>
 > = {
   [baseSepolia.id]: "0x83d86EDBC62187180A4f94A3099a98ABaa1dfe0c",
+  [base.id]: "0xF1cA0Fe72269AaEf1E5e34bfF484269f18e1b777",
 };
 
 /**
@@ -117,5 +119,9 @@ export const POLICY_FACTORIES: Partial<
   [baseSepolia.id]: [
     "0x51650AB1c3aBc6614A38c622A322535b16cD764e", // MinimumTenurePolicyFactory
     "0x83d86EDBC62187180A4f94A3099a98ABaa1dfe0c", // MinimumPricePolicyFactory
+  ],
+  [base.id]: [
+    "0xE322cDADB8fd511788F0fA25BffD794b7A946125", // MinimumTenurePolicyFactory
+    "0xF1cA0Fe72269AaEf1E5e34bfF484269f18e1b777", // MinimumPricePolicyFactory
   ],
 };

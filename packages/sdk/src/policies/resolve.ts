@@ -60,7 +60,11 @@ export async function resolvePolicy(
       label: vouched.label,
       description: vouched.description,
       impact: vouched.impact,
+      // Forwarded so a listed policy is no poorer than a derived one — this
+      // branch returns before the factory loop ever runs.
       tenureSeconds: vouched.tenureSeconds,
+      minPrice: vouched.minPrice,
+      currency: vouched.currency,
     };
   }
 

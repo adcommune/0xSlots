@@ -47,6 +47,11 @@ export interface ResolvedPolicy {
  * can be derived is derived; see `resolvePolicy`.
  *
  * A policy with a factory does not need an entry here to be named correctly.
+ *
+ * When one is listed anyway — to stock a "verified" picker — it must carry the
+ * same terms derivation would have produced. `resolvePolicy` checks this list
+ * FIRST and returns without touching the network, so a thin entry silently
+ * downgrades a policy that could have been read in full.
  */
 export interface VouchedPolicy {
   /** Chain this deployment lives on. A policy address is chain-specific. */
@@ -54,5 +59,10 @@ export interface VouchedPolicy {
   label: string;
   description: string;
   impact: PolicyImpact;
+  /** Protection window, for tenure policies. Mirrors `ResolvedPolicy`. */
   tenureSeconds?: number;
+  /** Floor in raw units, for price policies. Mirrors `ResolvedPolicy`. */
+  minPrice?: bigint;
+  /** Currency a price floor is denominated in. */
+  currency?: Address;
 }
