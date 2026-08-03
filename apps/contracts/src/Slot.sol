@@ -294,11 +294,13 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         address prev = _occupant;
         uint256 refund = _deposit;
 
-        // Flush collected tax to recipient
+        // Flush collected tax to recipient. Routed through `_distributeTax` so
+        // a module fee is honoured here exactly as it is in `collect()` and
+        // `liquidate()` — a voluntary exit is not a fee holiday.
         uint256 pendingTax = collectedTax;
         if (pendingTax > 0) {
             collectedTax = 0;
-            currency.safeTransfer(recipient, pendingTax);
+            _distributeTax(pendingTax);
         }
 
         // Clear slot
@@ -311,9 +313,7 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         // Apply pending updates (slot is now vacant)
         _applyPendingUpdates();
 
-        if (refund > 0) {
-            currency.safeTransfer(prev, refund);
-        }
+        if (refund > 0) _payOrCredit(prev, refund);
 
         _notifyModule(
             "onRelease",
@@ -438,10 +438,10 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         // Apply pending updates
         _applyPendingUpdates();
 
-        // Pay bounty
-        if (bounty > 0) {
-            currency.safeTransfer(msg.sender, bounty);
-        }
+        // Pay bounty. Credited rather than pushed for the same reason as the
+        // tax legs: a liquidator the currency refuses must not be able to fail
+        // the liquidation itself.
+        if (bounty > 0) _payOrCredit(msg.sender, bounty);
 
         _notifyModule(
             "onRelease",
@@ -778,7 +778,18 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         }
     }
 
-    /// @dev Query module fee and split tax between module and recipient
+    /// @dev Query module fee and split tax between module and recipient.
+    ///
+    ///      Both legs pay through `_payOrCredit`. `recipient` is chosen by
+    ///      whoever creates the slot and is never validated beyond being
+    ///      non-zero, so a plain `safeTransfer` here handed the creator a trap:
+    ///      point `recipient` at a contract that reverts on receipt (or let a
+    ///      blocklisting currency freeze it) and every path that flushes tax —
+    ///      `collect`, `release`, `liquidate` — reverts forever. An insolvent
+    ///      occupant then cannot be removed and cannot leave, because
+    ///      `release` flushes tax too. Crediting instead keeps liquidation
+    ///      unconditional, which is this protocol's first invariant, and leaves
+    ///      the recipient whole via `claim()` whenever they can receive again.
     function _distributeTax(uint256 amount) internal {
         uint256 moduleFee = 0;
         uint256 feeBps_ = 0;
@@ -807,11 +818,11 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
                 // No valid recipient — skip fee, send all to recipient
                 moduleFee = 0;
             } else {
-                currency.safeTransfer(feeTarget, moduleFee);
+                _payOrCredit(feeTarget, moduleFee);
                 emit ModuleFeePaid(module, moduleFee, feeBps_);
             }
         }
-        currency.safeTransfer(recipient, amount - moduleFee);
+        _payOrCredit(recipient, amount - moduleFee);
     }
 
     function _notifyModule(string memory name, bytes memory data) internal {

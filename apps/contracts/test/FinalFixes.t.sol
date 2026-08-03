@@ -422,4 +422,61 @@ contract FinalFixesTest is Test {
         assertGt(token.balanceOf(alice), aliceBefore + 100 ether - 1 ether, "pushed, not credited");
         assertEq(s.withdrawableOf(alice), 0, "nothing left pending");
     }
+
+    // ═══════════════════════════════════════════════════════════
+    // A blocked RECIPIENT must not brick the slot either
+    // ═══════════════════════════════════════════════════════════
+
+    /// @dev The counterpart to the finding above, on the other side of the
+    ///      ledger. `recipient` is chosen freely at creation and never
+    ///      validated beyond being non-zero, so pointing it at a contract that
+    ///      reverts on receipt — or letting a blocklisting currency freeze it —
+    ///      used to break every path that flushes tax. `collect` and
+    ///      `liquidate` reverted permanently, and because `release` flushes tax
+    ///      too, the occupant could not even leave voluntarily: a slot its
+    ///      creator could turn into a trap.
+    ///
+    ///      Liquidation being unconditional is this protocol's first
+    ///      invariant, so the tax legs credit rather than push.
+    function test_BlockedRecipient_DoesNotBrickLiquidation() public {
+        Slot s = _blockSlot(0);
+        _buyBlk(s, alice, 1 ether, 1000 ether);
+
+        // Burn the deposit down to nothing, then block the recipient.
+        vm.warp(block.timestamp + 400 days);
+        blk.setBlocked(recipient, true);
+        assertTrue(s.isInsolvent(), "fixture: occupant must be insolvent");
+        assertGt(s.taxOwed(), 0, "fixture: there must be tax to flush");
+
+        // Liquidation succeeds despite the recipient being unpayable.
+        vm.prank(bob);
+        s.liquidate();
+        assertEq(s.occupant(), address(0), "insolvent occupant must be removable");
+
+        // The recipient is not robbed — the tax is waiting for them.
+        uint256 owedToRecipient = s.withdrawableOf(recipient);
+        assertGt(owedToRecipient, 0, "tax must be credited, not lost");
+
+        // ...and reaches them once they can receive again.
+        blk.setBlocked(recipient, false);
+        s.claim(recipient);
+        assertEq(blk.balanceOf(recipient), owedToRecipient, "credit is claimable");
+        assertEq(s.withdrawableOf(recipient), 0, "credit cleared once paid");
+    }
+
+    /// @dev The same trap reached through the voluntary exit. `release` flushes
+    ///      collected tax before refunding, so a blocked recipient stopped an
+    ///      occupant leaving a slot they wanted no part of.
+    function test_BlockedRecipient_DoesNotTrapOccupantInRelease() public {
+        Slot s = _blockSlot(0);
+        _buyBlk(s, alice, 100 ether, 1000 ether);
+
+        vm.warp(block.timestamp + 10 days);
+        blk.setBlocked(recipient, true);
+
+        vm.prank(alice);
+        s.release();
+        assertEq(s.occupant(), address(0), "occupant must be able to leave");
+        assertGt(s.withdrawableOf(recipient), 0, "tax credited to the recipient");
+    }
 }
