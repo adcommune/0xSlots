@@ -111,6 +111,34 @@ export function useSlotAction(opts?: SlotActionCallbacks) {
     [opts?.onError],
   );
 
+  /**
+   * Run a read that has to succeed BEFORE any transaction is offered, and
+   * report a failure the same way `exec` reports a failed transaction.
+   *
+   * Without this the pre-flight reads in the policy flows below threw straight
+   * out of an un-awaited callback: the promise rejected with nobody listening,
+   * so the button stayed enabled and clicking it did nothing at all. Silence is
+   * the worst failure mode — a revert at least tells you something happened.
+   *
+   * The realistic trigger is a chain with no policy factory deployed, where
+   * `predict` cannot even be addressed. That is a configuration fact the user
+   * should be told, not a mystery.
+   */
+  const preflight = useCallback(
+    async <T,>(label: string, fn: () => Promise<T>): Promise<T | undefined> => {
+      try {
+        return await fn();
+      } catch (error) {
+        console.error(`[useSlotAction] ${label} failed:`, error);
+        setActiveAction(null);
+        labelRef.current = "";
+        opts?.onError?.(label, extractErrorMessage(error));
+        return undefined;
+      }
+    },
+    [opts?.onError],
+  );
+
   // ═══════════════════════════════════════════════════════════════════════════
   // Named actions — each calls one SDK method
   // ═══════════════════════════════════════════════════════════════════════════
@@ -128,8 +156,12 @@ export function useSlotAction(opts?: SlotActionCallbacks) {
    */
   const createSlotWithTenure = useCallback(
     async (params: CreateSlotParams, tenureSeconds: bigint) => {
-      const policy = await client.predictTenurePolicy(tenureSeconds);
-      const exists = await client.isTenurePolicyDeployed(tenureSeconds);
+      const pre = await preflight("Create slot", async () => ({
+        policy: await client.predictTenurePolicy(tenureSeconds),
+        exists: await client.isTenurePolicyDeployed(tenureSeconds),
+      }));
+      if (!pre) return undefined;
+      const { policy, exists } = pre;
       if (!exists) {
         const deployed = await exec("Deploy tenure policy", () =>
           client.deployTenurePolicy(tenureSeconds),
@@ -145,7 +177,7 @@ export function useSlotAction(opts?: SlotActionCallbacks) {
         }),
       );
     },
-    [client, exec],
+    [client, exec, preflight],
   );
 
   /**
@@ -159,11 +191,12 @@ export function useSlotAction(opts?: SlotActionCallbacks) {
    */
   const createSlotWithPriceFloor = useCallback(
     async (params: CreateSlotParams, minPrice: bigint) => {
-      const policy = await client.predictPricePolicy(params.currency, minPrice);
-      const exists = await client.isPricePolicyDeployed(
-        params.currency,
-        minPrice,
-      );
+      const pre = await preflight("Create slot", async () => ({
+        policy: await client.predictPricePolicy(params.currency, minPrice),
+        exists: await client.isPricePolicyDeployed(params.currency, minPrice),
+      }));
+      if (!pre) return undefined;
+      const { policy, exists } = pre;
       if (!exists) {
         const deployed = await exec("Deploy price policy", () =>
           client.deployPricePolicy(params.currency, minPrice),
@@ -179,7 +212,7 @@ export function useSlotAction(opts?: SlotActionCallbacks) {
         }),
       );
     },
-    [client, exec],
+    [client, exec, preflight],
   );
 
   const createSlots = useCallback(
