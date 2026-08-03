@@ -1,7 +1,7 @@
-import { Address, BigInt, ethereum } from "@graphprotocol/graph-ts";
-import { Account, AccountSlot, Currency, Module } from "../generated/schema";
+import { type Address, BigInt, ethereum } from "@graphprotocol/graph-ts";
 import { ERC20 } from "../generated/SlotFactory/ERC20";
 import { SplitV2 } from "../generated/SlotFactory/SplitV2";
+import { Account, AccountSlot, Currency, Module } from "../generated/schema";
 
 /**
  * Detect account type using ethereum.hasCode() + 0xSplits interface check.
@@ -11,7 +11,7 @@ import { SplitV2 } from "../generated/SlotFactory/SplitV2";
  * - CONTRACT: has code but not a split or delegated
  */
 function detectAccountType(address: Address, isTxSender: bool): string {
-  let hasCode = ethereum.hasCode(address);
+  const hasCode = ethereum.hasCode(address);
   if (!hasCode.inner) {
     return "EOA";
   }
@@ -23,8 +23,8 @@ function detectAccountType(address: Address, isTxSender: bool): string {
   }
 
   // Has code — check if it's a 0xSplits contract
-  let split = SplitV2.bind(address);
-  let splitResult = split.try_splitHash();
+  const split = SplitV2.bind(address);
+  const splitResult = split.try_splitHash();
   if (!splitResult.reverted) {
     return "SPLIT";
   }
@@ -32,8 +32,11 @@ function detectAccountType(address: Address, isTxSender: bool): string {
   return "CONTRACT";
 }
 
-export function getOrCreateAccount(address: Address, isTxSender: bool = false): Account {
-  let id = address.toHexString();
+export function getOrCreateAccount(
+  address: Address,
+  isTxSender: bool = false,
+): Account {
+  const id = address.toHexString();
   let account = Account.load(id);
   if (!account) {
     account = new Account(id);
@@ -54,9 +57,9 @@ export function getOrCreateAccount(address: Address, isTxSender: bool = false): 
 export function getOrCreateAccountSlot(
   accountAddress: Address,
   slotAddress: Address,
-  timestamp: BigInt
+  timestamp: BigInt,
 ): AccountSlot {
-  let id = accountAddress.toHexString() + "-" + slotAddress.toHexString();
+  const id = accountAddress.toHexString() + "-" + slotAddress.toHexString();
   let accountSlot = AccountSlot.load(id);
   if (!accountSlot) {
     accountSlot = new AccountSlot(id);
@@ -74,13 +77,13 @@ export function getOrCreateAccountSlot(
 }
 
 export function getOrCreateCurrency(address: Address): Currency {
-  let id = address.toHexString();
+  const id = address.toHexString();
   let currency = Currency.load(id);
   if (!currency) {
-    let erc20 = ERC20.bind(address);
-    let nameResult = erc20.try_name();
-    let symbolResult = erc20.try_symbol();
-    let decimalsResult = erc20.try_decimals();
+    const erc20 = ERC20.bind(address);
+    const nameResult = erc20.try_name();
+    const symbolResult = erc20.try_symbol();
+    const decimalsResult = erc20.try_decimals();
 
     currency = new Currency(id);
     currency.name = nameResult.reverted ? null : nameResult.value;
@@ -92,7 +95,7 @@ export function getOrCreateCurrency(address: Address): Currency {
 }
 
 export function getOrCreateModule(address: Address, factoryId: string): Module {
-  let id = address.toHexString();
+  const id = address.toHexString();
   let module = Module.load(id);
   if (!module) {
     module = new Module(id);

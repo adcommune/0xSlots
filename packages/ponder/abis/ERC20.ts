@@ -1,38 +1,38 @@
 export const ERC20Abi = [
   {
-    "type": "function",
-    "name": "name",
-    "inputs": [],
-    "outputs": [
+    type: "function",
+    name: "name",
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "string"
-      }
+        name: "",
+        type: "string",
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: "view",
   },
   {
-    "type": "function",
-    "name": "symbol",
-    "inputs": [],
-    "outputs": [
+    type: "function",
+    name: "symbol",
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "string"
-      }
+        name: "",
+        type: "string",
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: "view",
   },
   {
-    "type": "function",
-    "name": "decimals",
-    "inputs": [],
-    "outputs": [
+    type: "function",
+    name: "decimals",
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "uint8"
-      }
+        name: "",
+        type: "uint8",
+      },
     ],
-    "stateMutability": "view"
-  }
+    stateMutability: "view",
+  },
 ] as const;

@@ -246,7 +246,15 @@ contract SlotQueue is ReentrancyGuard {
     ///      called `sweepExpired` (or `fill`, which sweeps internally) yet,
     ///      `liveBidCount` has not been decremented and `isEmpty` still
     ///      reports `false` even though none of those bids could ever fill.
-    ///      An exclusivity policy gating on this MUST treat that as a
+      /// @dev NOTE: the QueueExclusivityPolicy that used to gate on this was
+    ///      removed — it held no terms of its own and forwarded every decision
+    ///      here, which made its address underivable and its trust hand-issued.
+    ///      Without it the queue is a convenience (pre-commit a bid, let a
+    ///      keeper fill it) rather than a priority guarantee: anyone can still
+    ///      take a vacant slot directly. Kept because that convenience stands
+    ///      on its own.
+    ///
+    ///      Any future policy gating on this MUST treat that as a
     ///      one-transaction inconvenience, not a design defect — anyone can
     ///      clear it permissionlessly by calling `sweepExpired`. It is not a
     ///      brick: the slot unblocks the moment someone (a bidder wanting

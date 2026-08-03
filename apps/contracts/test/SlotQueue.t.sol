@@ -9,7 +9,6 @@ import {Slot} from "../src/Slot.sol";
 import {SlotFactory} from "../src/SlotFactory.sol";
 import {SlotConfig, SlotInitParams} from "../src/interfaces/ISlot.sol";
 import {SlotQueue} from "../src/periphery/SlotQueue.sol";
-import {QueueExclusivityPolicy} from "../src/policies/QueueExclusivityPolicy.sol";
 
 contract MockERC20 is ERC20 {
     constructor() ERC20("Mock", "MCK") { _mint(msg.sender, 1_000_000 ether); }
@@ -368,89 +367,5 @@ contract SlotQueueTest is Test {
         queue.joinQueue(address(s), 80 ether, 10 ether, 1 ether, atCap);
         vm.stopPrank();
         assertEq(queue.liveBidCount(address(s)), 1);
-    }
-
-    /// @dev Slot wired to a QueueExclusivityPolicy `p`. `SlotQueue`'s
-    ///      constructor now takes the factory address (`new SlotQueue(address(factory))`,
-    ///      not the brief's original zero-arg form), so this test file's
-    ///      `queue` — built that way in `setUp` — can be handed straight to
-    ///      the policy's constructor unchanged.
-    function _policySlot(QueueExclusivityPolicy p) internal returns (Slot) {
-        return Slot(factory.createSlotV3(
-            recipient,
-            IERC20(address(token)),
-            SlotConfig({mutableTax: false, mutableModule: false, manager: address(0)}),
-            SlotInitParams({
-                taxPercentage: 100,
-                module: address(0),
-                liquidationBountyBps: 500,
-                minDepositSeconds: 0
-            }),
-            0,
-            address(p)
-        ));
-    }
-
-    /// The whole point: nobody front-runs the queue when the slot frees up.
-    function test_Exclusivity_BlocksDirectBuyWhenQueueNonEmpty() public {
-        QueueExclusivityPolicy p = new QueueExclusivityPolicy(queue);
-        Slot s = _policySlot(p);
-
-        vm.startPrank(bob);
-        token.approve(address(queue), type(uint256).max);
-        queue.joinQueue(address(s), 80 ether, 10 ether, 0, uint96(block.timestamp + 30 days));
-        vm.stopPrank();
-
-        vm.startPrank(alice);
-        token.approve(address(s), type(uint256).max);
-        vm.expectRevert(QueueExclusivityPolicy.QueueHasPriority.selector);
-        s.buy(alice, 10 ether, 100 ether);
-        vm.stopPrank();
-    }
-
-    /// Invariant: an empty queue must never freeze the slot.
-    function test_Exclusivity_EmptyQueueAllowsAnyone() public {
-        QueueExclusivityPolicy p = new QueueExclusivityPolicy(queue);
-        Slot s = _policySlot(p);
-
-        vm.startPrank(alice);
-        token.approve(address(s), type(uint256).max);
-        s.buy(alice, 10 ether, 100 ether);
-        vm.stopPrank();
-        assertEq(s.occupant(), alice);
-    }
-
-    function test_Exclusivity_QueueItselfCanFill() public {
-        QueueExclusivityPolicy p = new QueueExclusivityPolicy(queue);
-        Slot s = _policySlot(p);
-
-        vm.startPrank(bob);
-        token.approve(address(queue), type(uint256).max);
-        queue.joinQueue(address(s), 80 ether, 10 ether, 0, uint96(block.timestamp + 30 days));
-        vm.stopPrank();
-
-        queue.fill(address(s));
-        assertEq(s.occupant(), bob);
-    }
-
-    /// After the queue drains, the slot returns to open access.
-    function test_Exclusivity_ReopensAfterQueueDrains() public {
-        QueueExclusivityPolicy p = new QueueExclusivityPolicy(queue);
-        Slot s = _policySlot(p);
-
-        vm.startPrank(bob);
-        token.approve(address(queue), type(uint256).max);
-        queue.joinQueue(address(s), 80 ether, 10 ether, 0, uint96(block.timestamp + 30 days));
-        vm.stopPrank();
-
-        queue.fill(address(s));
-        vm.prank(bob);
-        s.release();
-
-        vm.startPrank(alice);
-        token.approve(address(s), type(uint256).max);
-        s.buy(alice, 10 ether, 100 ether);
-        vm.stopPrank();
-        assertEq(s.occupant(), alice);
     }
 }

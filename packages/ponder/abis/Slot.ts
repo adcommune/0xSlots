@@ -1,1171 +1,1171 @@
 export const SlotAbi = [
   {
-    "type": "constructor",
-    "inputs": [],
-    "stateMutability": "nonpayable"
+    type: "constructor",
+    inputs: [],
+    stateMutability: "nonpayable",
   },
   {
-    "type": "function",
-    "name": "BASIS_POINTS",
-    "inputs": [],
-    "outputs": [
+    type: "function",
+    name: "BASIS_POINTS",
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+        name: "",
+        type: "uint256",
+        internalType: "uint256",
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: "view",
   },
   {
-    "type": "function",
-    "name": "MONTH",
-    "inputs": [],
-    "outputs": [
+    type: "function",
+    name: "MONTH",
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+        name: "",
+        type: "uint256",
+        internalType: "uint256",
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: "view",
   },
   {
-    "type": "function",
-    "name": "buy",
-    "inputs": [
+    type: "function",
+    name: "buy",
+    inputs: [
       {
-        "name": "account",
-        "type": "address",
-        "internalType": "address"
+        name: "account",
+        type: "address",
+        internalType: "address",
       },
       {
-        "name": "depositAmount",
-        "type": "uint256",
-        "internalType": "uint256"
+        name: "depositAmount",
+        type: "uint256",
+        internalType: "uint256",
       },
       {
-        "name": "selfAssessedPrice",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+        name: "selfAssessedPrice",
+        type: "uint256",
+        internalType: "uint256",
+      },
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    outputs: [],
+    stateMutability: "nonpayable",
   },
   {
-    "type": "function",
-    "name": "cancelPendingUpdates",
-    "inputs": [],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    type: "function",
+    name: "cancelPendingUpdates",
+    inputs: [],
+    outputs: [],
+    stateMutability: "nonpayable",
   },
   {
-    "type": "function",
-    "name": "collect",
-    "inputs": [],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    type: "function",
+    name: "collect",
+    inputs: [],
+    outputs: [],
+    stateMutability: "nonpayable",
   },
   {
-    "type": "function",
-    "name": "collectedTax",
-    "inputs": [],
-    "outputs": [
+    type: "function",
+    name: "collectedTax",
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+        name: "",
+        type: "uint256",
+        internalType: "uint256",
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: "view",
   },
   {
-    "type": "function",
-    "name": "currency",
-    "inputs": [],
-    "outputs": [
+    type: "function",
+    name: "currency",
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "address",
-        "internalType": "contract IERC20"
-      }
+        name: "",
+        type: "address",
+        internalType: "contract IERC20",
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: "view",
   },
   {
-    "type": "function",
-    "name": "deposit",
-    "inputs": [],
-    "outputs": [
+    type: "function",
+    name: "deposit",
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+        name: "",
+        type: "uint256",
+        internalType: "uint256",
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: "view",
   },
   {
-    "type": "function",
-    "name": "factory",
-    "inputs": [],
-    "outputs": [
+    type: "function",
+    name: "factory",
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: "",
+        type: "address",
+        internalType: "address",
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: "view",
   },
   {
-    "type": "function",
-    "name": "getPendingUpdate",
-    "inputs": [],
-    "outputs": [
+    type: "function",
+    name: "getPendingUpdate",
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "tuple",
-        "internalType": "struct PendingUpdate",
-        "components": [
+        name: "",
+        type: "tuple",
+        internalType: "struct PendingUpdate",
+        components: [
           {
-            "name": "newTaxPercentage",
-            "type": "uint256",
-            "internalType": "uint256"
+            name: "newTaxPercentage",
+            type: "uint256",
+            internalType: "uint256",
           },
           {
-            "name": "newModule",
-            "type": "address",
-            "internalType": "address"
+            name: "newModule",
+            type: "address",
+            internalType: "address",
           },
           {
-            "name": "hasTaxUpdate",
-            "type": "bool",
-            "internalType": "bool"
+            name: "hasTaxUpdate",
+            type: "bool",
+            internalType: "bool",
           },
           {
-            "name": "hasModuleUpdate",
-            "type": "bool",
-            "internalType": "bool"
-          }
-        ]
-      }
+            name: "hasModuleUpdate",
+            type: "bool",
+            internalType: "bool",
+          },
+        ],
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: "view",
   },
   {
-    "type": "function",
-    "name": "getSlotInfo",
-    "inputs": [],
-    "outputs": [
+    type: "function",
+    name: "getSlotInfo",
+    inputs: [],
+    outputs: [
       {
-        "name": "info",
-        "type": "tuple",
-        "internalType": "struct SlotInfo",
-        "components": [
+        name: "info",
+        type: "tuple",
+        internalType: "struct SlotInfo",
+        components: [
           {
-            "name": "recipient",
-            "type": "address",
-            "internalType": "address"
+            name: "recipient",
+            type: "address",
+            internalType: "address",
           },
           {
-            "name": "currency",
-            "type": "address",
-            "internalType": "address"
+            name: "currency",
+            type: "address",
+            internalType: "address",
           },
           {
-            "name": "manager",
-            "type": "address",
-            "internalType": "address"
+            name: "manager",
+            type: "address",
+            internalType: "address",
           },
           {
-            "name": "mutableTax",
-            "type": "bool",
-            "internalType": "bool"
+            name: "mutableTax",
+            type: "bool",
+            internalType: "bool",
           },
           {
-            "name": "mutableModule",
-            "type": "bool",
-            "internalType": "bool"
+            name: "mutableModule",
+            type: "bool",
+            internalType: "bool",
           },
           {
-            "name": "occupant",
-            "type": "address",
-            "internalType": "address"
+            name: "occupant",
+            type: "address",
+            internalType: "address",
           },
           {
-            "name": "price",
-            "type": "uint256",
-            "internalType": "uint256"
+            name: "price",
+            type: "uint256",
+            internalType: "uint256",
           },
           {
-            "name": "taxPercentage",
-            "type": "uint256",
-            "internalType": "uint256"
+            name: "taxPercentage",
+            type: "uint256",
+            internalType: "uint256",
           },
           {
-            "name": "module",
-            "type": "address",
-            "internalType": "address"
+            name: "module",
+            type: "address",
+            internalType: "address",
           },
           {
-            "name": "liquidationBountyBps",
-            "type": "uint256",
-            "internalType": "uint256"
+            name: "liquidationBountyBps",
+            type: "uint256",
+            internalType: "uint256",
           },
           {
-            "name": "minDepositSeconds",
-            "type": "uint256",
-            "internalType": "uint256"
+            name: "minDepositSeconds",
+            type: "uint256",
+            internalType: "uint256",
           },
           {
-            "name": "deposit",
-            "type": "uint256",
-            "internalType": "uint256"
+            name: "deposit",
+            type: "uint256",
+            internalType: "uint256",
           },
           {
-            "name": "collectedTax",
-            "type": "uint256",
-            "internalType": "uint256"
+            name: "collectedTax",
+            type: "uint256",
+            internalType: "uint256",
           },
           {
-            "name": "taxOwed",
-            "type": "uint256",
-            "internalType": "uint256"
+            name: "taxOwed",
+            type: "uint256",
+            internalType: "uint256",
           },
           {
-            "name": "secondsUntilLiquidation",
-            "type": "uint256",
-            "internalType": "uint256"
+            name: "secondsUntilLiquidation",
+            type: "uint256",
+            internalType: "uint256",
           },
           {
-            "name": "insolvent",
-            "type": "bool",
-            "internalType": "bool"
+            name: "insolvent",
+            type: "bool",
+            internalType: "bool",
           },
           {
-            "name": "hasPendingTax",
-            "type": "bool",
-            "internalType": "bool"
+            name: "hasPendingTax",
+            type: "bool",
+            internalType: "bool",
           },
           {
-            "name": "pendingTaxPercentage",
-            "type": "uint256",
-            "internalType": "uint256"
+            name: "pendingTaxPercentage",
+            type: "uint256",
+            internalType: "uint256",
           },
           {
-            "name": "hasPendingModule",
-            "type": "bool",
-            "internalType": "bool"
+            name: "hasPendingModule",
+            type: "bool",
+            internalType: "bool",
           },
           {
-            "name": "pendingModule",
-            "type": "address",
-            "internalType": "address"
-          }
-        ]
-      }
+            name: "pendingModule",
+            type: "address",
+            internalType: "address",
+          },
+        ],
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: "view",
   },
   {
-    "type": "function",
-    "name": "initialize",
-    "inputs": [
+    type: "function",
+    name: "initialize",
+    inputs: [
       {
-        "name": "_recipient",
-        "type": "address",
-        "internalType": "address"
+        name: "_recipient",
+        type: "address",
+        internalType: "address",
       },
       {
-        "name": "_currency",
-        "type": "address",
-        "internalType": "contract IERC20"
+        name: "_currency",
+        type: "address",
+        internalType: "contract IERC20",
       },
       {
-        "name": "_config",
-        "type": "tuple",
-        "internalType": "struct SlotConfig",
-        "components": [
+        name: "_config",
+        type: "tuple",
+        internalType: "struct SlotConfig",
+        components: [
           {
-            "name": "mutableTax",
-            "type": "bool",
-            "internalType": "bool"
+            name: "mutableTax",
+            type: "bool",
+            internalType: "bool",
           },
           {
-            "name": "mutableModule",
-            "type": "bool",
-            "internalType": "bool"
+            name: "mutableModule",
+            type: "bool",
+            internalType: "bool",
           },
           {
-            "name": "manager",
-            "type": "address",
-            "internalType": "address"
-          }
-        ]
+            name: "manager",
+            type: "address",
+            internalType: "address",
+          },
+        ],
       },
       {
-        "name": "_init",
-        "type": "tuple",
-        "internalType": "struct SlotInitParams",
-        "components": [
+        name: "_init",
+        type: "tuple",
+        internalType: "struct SlotInitParams",
+        components: [
           {
-            "name": "taxPercentage",
-            "type": "uint256",
-            "internalType": "uint256"
+            name: "taxPercentage",
+            type: "uint256",
+            internalType: "uint256",
           },
           {
-            "name": "module",
-            "type": "address",
-            "internalType": "address"
+            name: "module",
+            type: "address",
+            internalType: "address",
           },
           {
-            "name": "liquidationBountyBps",
-            "type": "uint256",
-            "internalType": "uint256"
+            name: "liquidationBountyBps",
+            type: "uint256",
+            internalType: "uint256",
           },
           {
-            "name": "minDepositSeconds",
-            "type": "uint256",
-            "internalType": "uint256"
-          }
-        ]
-      }
+            name: "minDepositSeconds",
+            type: "uint256",
+            internalType: "uint256",
+          },
+        ],
+      },
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    outputs: [],
+    stateMutability: "nonpayable",
   },
   {
-    "type": "function",
-    "name": "initializeV2",
-    "inputs": [
+    type: "function",
+    name: "initializeV2",
+    inputs: [
       {
-        "name": "_factory",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: "_factory",
+        type: "address",
+        internalType: "address",
+      },
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    outputs: [],
+    stateMutability: "nonpayable",
   },
   {
-    "type": "function",
-    "name": "isInsolvent",
-    "inputs": [],
-    "outputs": [
+    type: "function",
+    name: "isInsolvent",
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "bool",
-        "internalType": "bool"
-      }
+        name: "",
+        type: "bool",
+        internalType: "bool",
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: "view",
   },
   {
-    "type": "function",
-    "name": "isVacant",
-    "inputs": [],
-    "outputs": [
+    type: "function",
+    name: "isVacant",
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "bool",
-        "internalType": "bool"
-      }
+        name: "",
+        type: "bool",
+        internalType: "bool",
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: "view",
   },
   {
-    "type": "function",
-    "name": "lastSettled",
-    "inputs": [],
-    "outputs": [
+    type: "function",
+    name: "lastSettled",
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+        name: "",
+        type: "uint256",
+        internalType: "uint256",
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: "view",
   },
   {
-    "type": "function",
-    "name": "liquidate",
-    "inputs": [],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    type: "function",
+    name: "liquidate",
+    inputs: [],
+    outputs: [],
+    stateMutability: "nonpayable",
   },
   {
-    "type": "function",
-    "name": "liquidationBountyBps",
-    "inputs": [],
-    "outputs": [
+    type: "function",
+    name: "liquidationBountyBps",
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+        name: "",
+        type: "uint256",
+        internalType: "uint256",
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: "view",
   },
   {
-    "type": "function",
-    "name": "manager",
-    "inputs": [],
-    "outputs": [
+    type: "function",
+    name: "manager",
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: "",
+        type: "address",
+        internalType: "address",
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: "view",
   },
   {
-    "type": "function",
-    "name": "minDepositSeconds",
-    "inputs": [],
-    "outputs": [
+    type: "function",
+    name: "minDepositSeconds",
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+        name: "",
+        type: "uint256",
+        internalType: "uint256",
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: "view",
   },
   {
-    "type": "function",
-    "name": "module",
-    "inputs": [],
-    "outputs": [
+    type: "function",
+    name: "module",
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: "",
+        type: "address",
+        internalType: "address",
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: "view",
   },
   {
-    "type": "function",
-    "name": "multicall",
-    "inputs": [
+    type: "function",
+    name: "multicall",
+    inputs: [
       {
-        "name": "data",
-        "type": "bytes[]",
-        "internalType": "bytes[]"
-      }
+        name: "data",
+        type: "bytes[]",
+        internalType: "bytes[]",
+      },
     ],
-    "outputs": [
+    outputs: [
       {
-        "name": "results",
-        "type": "bytes[]",
-        "internalType": "bytes[]"
-      }
+        name: "results",
+        type: "bytes[]",
+        internalType: "bytes[]",
+      },
     ],
-    "stateMutability": "nonpayable"
+    stateMutability: "nonpayable",
   },
   {
-    "type": "function",
-    "name": "mutableModule",
-    "inputs": [],
-    "outputs": [
+    type: "function",
+    name: "mutableModule",
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "bool",
-        "internalType": "bool"
-      }
+        name: "",
+        type: "bool",
+        internalType: "bool",
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: "view",
   },
   {
-    "type": "function",
-    "name": "mutableTax",
-    "inputs": [],
-    "outputs": [
+    type: "function",
+    name: "mutableTax",
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "bool",
-        "internalType": "bool"
-      }
+        name: "",
+        type: "bool",
+        internalType: "bool",
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: "view",
   },
   {
-    "type": "function",
-    "name": "occupant",
-    "inputs": [],
-    "outputs": [
+    type: "function",
+    name: "occupant",
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: "",
+        type: "address",
+        internalType: "address",
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: "view",
   },
   {
-    "type": "function",
-    "name": "pendingUpdate",
-    "inputs": [],
-    "outputs": [
+    type: "function",
+    name: "pendingUpdate",
+    inputs: [],
+    outputs: [
       {
-        "name": "newTaxPercentage",
-        "type": "uint256",
-        "internalType": "uint256"
+        name: "newTaxPercentage",
+        type: "uint256",
+        internalType: "uint256",
       },
       {
-        "name": "newModule",
-        "type": "address",
-        "internalType": "address"
+        name: "newModule",
+        type: "address",
+        internalType: "address",
       },
       {
-        "name": "hasTaxUpdate",
-        "type": "bool",
-        "internalType": "bool"
+        name: "hasTaxUpdate",
+        type: "bool",
+        internalType: "bool",
       },
       {
-        "name": "hasModuleUpdate",
-        "type": "bool",
-        "internalType": "bool"
-      }
+        name: "hasModuleUpdate",
+        type: "bool",
+        internalType: "bool",
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: "view",
   },
   {
-    "type": "function",
-    "name": "price",
-    "inputs": [],
-    "outputs": [
+    type: "function",
+    name: "price",
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+        name: "",
+        type: "uint256",
+        internalType: "uint256",
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: "view",
   },
   {
-    "type": "function",
-    "name": "proposeModuleUpdate",
-    "inputs": [
+    type: "function",
+    name: "proposeModuleUpdate",
+    inputs: [
       {
-        "name": "newModule",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: "newModule",
+        type: "address",
+        internalType: "address",
+      },
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    outputs: [],
+    stateMutability: "nonpayable",
   },
   {
-    "type": "function",
-    "name": "proposeTaxUpdate",
-    "inputs": [
+    type: "function",
+    name: "proposeTaxUpdate",
+    inputs: [
       {
-        "name": "newPct",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+        name: "newPct",
+        type: "uint256",
+        internalType: "uint256",
+      },
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    outputs: [],
+    stateMutability: "nonpayable",
   },
   {
-    "type": "function",
-    "name": "recipient",
-    "inputs": [],
-    "outputs": [
+    type: "function",
+    name: "recipient",
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: "",
+        type: "address",
+        internalType: "address",
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: "view",
   },
   {
-    "type": "function",
-    "name": "release",
-    "inputs": [],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    type: "function",
+    name: "release",
+    inputs: [],
+    outputs: [],
+    stateMutability: "nonpayable",
   },
   {
-    "type": "function",
-    "name": "secondsUntilLiquidation",
-    "inputs": [],
-    "outputs": [
+    type: "function",
+    name: "secondsUntilLiquidation",
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+        name: "",
+        type: "uint256",
+        internalType: "uint256",
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: "view",
   },
   {
-    "type": "function",
-    "name": "selfAssess",
-    "inputs": [
+    type: "function",
+    name: "selfAssess",
+    inputs: [
       {
-        "name": "newPrice",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+        name: "newPrice",
+        type: "uint256",
+        internalType: "uint256",
+      },
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    outputs: [],
+    stateMutability: "nonpayable",
   },
   {
-    "type": "function",
-    "name": "setLiquidationBounty",
-    "inputs": [
+    type: "function",
+    name: "setLiquidationBounty",
+    inputs: [
       {
-        "name": "newBps",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+        name: "newBps",
+        type: "uint256",
+        internalType: "uint256",
+      },
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    outputs: [],
+    stateMutability: "nonpayable",
   },
   {
-    "type": "function",
-    "name": "taxOwed",
-    "inputs": [],
-    "outputs": [
+    type: "function",
+    name: "taxOwed",
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+        name: "",
+        type: "uint256",
+        internalType: "uint256",
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: "view",
   },
   {
-    "type": "function",
-    "name": "taxPercentage",
-    "inputs": [],
-    "outputs": [
+    type: "function",
+    name: "taxPercentage",
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+        name: "",
+        type: "uint256",
+        internalType: "uint256",
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: "view",
   },
   {
-    "type": "function",
-    "name": "topUp",
-    "inputs": [
+    type: "function",
+    name: "topUp",
+    inputs: [
       {
-        "name": "amount",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+        name: "amount",
+        type: "uint256",
+        internalType: "uint256",
+      },
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    outputs: [],
+    stateMutability: "nonpayable",
   },
   {
-    "type": "function",
-    "name": "withdraw",
-    "inputs": [
+    type: "function",
+    name: "withdraw",
+    inputs: [
       {
-        "name": "amount",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+        name: "amount",
+        type: "uint256",
+        internalType: "uint256",
+      },
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    outputs: [],
+    stateMutability: "nonpayable",
   },
   {
-    "type": "event",
-    "name": "Bought",
-    "inputs": [
+    type: "event",
+    name: "Bought",
+    inputs: [
       {
-        "name": "buyer",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
+        name: "buyer",
+        type: "address",
+        indexed: true,
+        internalType: "address",
       },
       {
-        "name": "previousOccupant",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
+        name: "previousOccupant",
+        type: "address",
+        indexed: true,
+        internalType: "address",
       },
       {
-        "name": "price",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
+        name: "price",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
       },
       {
-        "name": "deposit",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
+        name: "deposit",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
       },
       {
-        "name": "selfAssessedPrice",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      }
+        name: "selfAssessedPrice",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "Deposited",
-    "inputs": [
+    type: "event",
+    name: "Deposited",
+    inputs: [
       {
-        "name": "depositor",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
+        name: "depositor",
+        type: "address",
+        indexed: true,
+        internalType: "address",
       },
       {
-        "name": "amount",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      }
+        name: "amount",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "Initialized",
-    "inputs": [
+    type: "event",
+    name: "Initialized",
+    inputs: [
       {
-        "name": "version",
-        "type": "uint64",
-        "indexed": false,
-        "internalType": "uint64"
-      }
+        name: "version",
+        type: "uint64",
+        indexed: false,
+        internalType: "uint64",
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "Liquidated",
-    "inputs": [
+    type: "event",
+    name: "Liquidated",
+    inputs: [
       {
-        "name": "liquidator",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
+        name: "liquidator",
+        type: "address",
+        indexed: true,
+        internalType: "address",
       },
       {
-        "name": "occupant",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
+        name: "occupant",
+        type: "address",
+        indexed: true,
+        internalType: "address",
       },
       {
-        "name": "bounty",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      }
+        name: "bounty",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "LiquidationBountyUpdated",
-    "inputs": [
+    type: "event",
+    name: "LiquidationBountyUpdated",
+    inputs: [
       {
-        "name": "newBps",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      }
+        name: "newBps",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "ModuleCallFailed",
-    "inputs": [
+    type: "event",
+    name: "ModuleCallFailed",
+    inputs: [
       {
-        "name": "callbackName",
-        "type": "string",
-        "indexed": false,
-        "internalType": "string"
-      }
+        name: "callbackName",
+        type: "string",
+        indexed: false,
+        internalType: "string",
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "ModuleFeePaid",
-    "inputs": [
+    type: "event",
+    name: "ModuleFeePaid",
+    inputs: [
       {
-        "name": "module",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
+        name: "module",
+        type: "address",
+        indexed: true,
+        internalType: "address",
       },
       {
-        "name": "amount",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
+        name: "amount",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
       },
       {
-        "name": "feeBps",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      }
+        name: "feeBps",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "ModuleUpdateProposed",
-    "inputs": [
+    type: "event",
+    name: "ModuleUpdateProposed",
+    inputs: [
       {
-        "name": "newModule",
-        "type": "address",
-        "indexed": false,
-        "internalType": "address"
-      }
+        name: "newModule",
+        type: "address",
+        indexed: false,
+        internalType: "address",
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "PendingUpdateApplied",
-    "inputs": [
+    type: "event",
+    name: "PendingUpdateApplied",
+    inputs: [
       {
-        "name": "newTaxPercentage",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
+        name: "newTaxPercentage",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
       },
       {
-        "name": "newModule",
-        "type": "address",
-        "indexed": false,
-        "internalType": "address"
-      }
+        name: "newModule",
+        type: "address",
+        indexed: false,
+        internalType: "address",
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "PendingUpdateCancelled",
-    "inputs": [],
-    "anonymous": false
+    type: "event",
+    name: "PendingUpdateCancelled",
+    inputs: [],
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "PriceUpdated",
-    "inputs": [
+    type: "event",
+    name: "PriceUpdated",
+    inputs: [
       {
-        "name": "oldPrice",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
+        name: "oldPrice",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
       },
       {
-        "name": "newPrice",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      }
+        name: "newPrice",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "Released",
-    "inputs": [
+    type: "event",
+    name: "Released",
+    inputs: [
       {
-        "name": "occupant",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
+        name: "occupant",
+        type: "address",
+        indexed: true,
+        internalType: "address",
       },
       {
-        "name": "refund",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      }
+        name: "refund",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "Settled",
-    "inputs": [
+    type: "event",
+    name: "Settled",
+    inputs: [
       {
-        "name": "taxOwed",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
+        name: "taxOwed",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
       },
       {
-        "name": "taxPaid",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
+        name: "taxPaid",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
       },
       {
-        "name": "depositRemaining",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      }
+        name: "depositRemaining",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "SlotCreated",
-    "inputs": [
+    type: "event",
+    name: "SlotCreated",
+    inputs: [
       {
-        "name": "slot",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
+        name: "slot",
+        type: "address",
+        indexed: true,
+        internalType: "address",
       },
       {
-        "name": "recipient",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
+        name: "recipient",
+        type: "address",
+        indexed: true,
+        internalType: "address",
       },
       {
-        "name": "currency",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
+        name: "currency",
+        type: "address",
+        indexed: true,
+        internalType: "address",
       },
       {
-        "name": "config",
-        "type": "tuple",
-        "indexed": false,
-        "internalType": "struct SlotConfig",
-        "components": [
+        name: "config",
+        type: "tuple",
+        indexed: false,
+        internalType: "struct SlotConfig",
+        components: [
           {
-            "name": "mutableTax",
-            "type": "bool",
-            "internalType": "bool"
+            name: "mutableTax",
+            type: "bool",
+            internalType: "bool",
           },
           {
-            "name": "mutableModule",
-            "type": "bool",
-            "internalType": "bool"
+            name: "mutableModule",
+            type: "bool",
+            internalType: "bool",
           },
           {
-            "name": "manager",
-            "type": "address",
-            "internalType": "address"
-          }
-        ]
+            name: "manager",
+            type: "address",
+            internalType: "address",
+          },
+        ],
       },
       {
-        "name": "initParams",
-        "type": "tuple",
-        "indexed": false,
-        "internalType": "struct SlotInitParams",
-        "components": [
+        name: "initParams",
+        type: "tuple",
+        indexed: false,
+        internalType: "struct SlotInitParams",
+        components: [
           {
-            "name": "taxPercentage",
-            "type": "uint256",
-            "internalType": "uint256"
+            name: "taxPercentage",
+            type: "uint256",
+            internalType: "uint256",
           },
           {
-            "name": "module",
-            "type": "address",
-            "internalType": "address"
+            name: "module",
+            type: "address",
+            internalType: "address",
           },
           {
-            "name": "liquidationBountyBps",
-            "type": "uint256",
-            "internalType": "uint256"
+            name: "liquidationBountyBps",
+            type: "uint256",
+            internalType: "uint256",
           },
           {
-            "name": "minDepositSeconds",
-            "type": "uint256",
-            "internalType": "uint256"
-          }
-        ]
-      }
+            name: "minDepositSeconds",
+            type: "uint256",
+            internalType: "uint256",
+          },
+        ],
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "TaxCollected",
-    "inputs": [
+    type: "event",
+    name: "TaxCollected",
+    inputs: [
       {
-        "name": "recipient",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
+        name: "recipient",
+        type: "address",
+        indexed: true,
+        internalType: "address",
       },
       {
-        "name": "amount",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      }
+        name: "amount",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "TaxUpdateProposed",
-    "inputs": [
+    type: "event",
+    name: "TaxUpdateProposed",
+    inputs: [
       {
-        "name": "newPercentage",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      }
+        name: "newPercentage",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "Withdrawn",
-    "inputs": [
+    type: "event",
+    name: "Withdrawn",
+    inputs: [
       {
-        "name": "occupant",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
+        name: "occupant",
+        type: "address",
+        indexed: true,
+        internalType: "address",
       },
       {
-        "name": "amount",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      }
+        name: "amount",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "error",
-    "name": "AddressEmptyCode",
-    "inputs": [
+    type: "error",
+    name: "AddressEmptyCode",
+    inputs: [
       {
-        "name": "target",
-        "type": "address",
-        "internalType": "address"
-      }
-    ]
+        name: "target",
+        type: "address",
+        internalType: "address",
+      },
+    ],
   },
   {
-    "type": "error",
-    "name": "CannotBuyFromYourself",
-    "inputs": []
+    type: "error",
+    name: "CannotBuyFromYourself",
+    inputs: [],
   },
   {
-    "type": "error",
-    "name": "FailedCall",
-    "inputs": []
+    type: "error",
+    name: "FailedCall",
+    inputs: [],
   },
   {
-    "type": "error",
-    "name": "InsufficientDeposit",
-    "inputs": []
+    type: "error",
+    name: "InsufficientDeposit",
+    inputs: [],
   },
   {
-    "type": "error",
-    "name": "InvalidCurrency",
-    "inputs": []
+    type: "error",
+    name: "InvalidCurrency",
+    inputs: [],
   },
   {
-    "type": "error",
-    "name": "InvalidInitialization",
-    "inputs": []
+    type: "error",
+    name: "InvalidInitialization",
+    inputs: [],
   },
   {
-    "type": "error",
-    "name": "InvalidLiquidationBounty",
-    "inputs": []
+    type: "error",
+    name: "InvalidLiquidationBounty",
+    inputs: [],
   },
   {
-    "type": "error",
-    "name": "InvalidPrice",
-    "inputs": []
+    type: "error",
+    name: "InvalidPrice",
+    inputs: [],
   },
   {
-    "type": "error",
-    "name": "InvalidRecipient",
-    "inputs": []
+    type: "error",
+    name: "InvalidRecipient",
+    inputs: [],
   },
   {
-    "type": "error",
-    "name": "InvalidTaxPercentage",
-    "inputs": []
+    type: "error",
+    name: "InvalidTaxPercentage",
+    inputs: [],
   },
   {
-    "type": "error",
-    "name": "ModuleNotMutable",
-    "inputs": []
+    type: "error",
+    name: "ModuleNotMutable",
+    inputs: [],
   },
   {
-    "type": "error",
-    "name": "NoPendingUpdate",
-    "inputs": []
+    type: "error",
+    name: "NoPendingUpdate",
+    inputs: [],
   },
   {
-    "type": "error",
-    "name": "NotInitializing",
-    "inputs": []
+    type: "error",
+    name: "NotInitializing",
+    inputs: [],
   },
   {
-    "type": "error",
-    "name": "NotInsolvent",
-    "inputs": []
+    type: "error",
+    name: "NotInsolvent",
+    inputs: [],
   },
   {
-    "type": "error",
-    "name": "NotManager",
-    "inputs": []
+    type: "error",
+    name: "NotManager",
+    inputs: [],
   },
   {
-    "type": "error",
-    "name": "NotOccupant",
-    "inputs": []
+    type: "error",
+    name: "NotOccupant",
+    inputs: [],
   },
   {
-    "type": "error",
-    "name": "NothingToCollect",
-    "inputs": []
+    type: "error",
+    name: "NothingToCollect",
+    inputs: [],
   },
   {
-    "type": "error",
-    "name": "ReentrancyGuardReentrantCall",
-    "inputs": []
+    type: "error",
+    name: "ReentrancyGuardReentrantCall",
+    inputs: [],
   },
   {
-    "type": "error",
-    "name": "SafeERC20FailedOperation",
-    "inputs": [
+    type: "error",
+    name: "SafeERC20FailedOperation",
+    inputs: [
       {
-        "name": "token",
-        "type": "address",
-        "internalType": "address"
-      }
-    ]
+        name: "token",
+        type: "address",
+        internalType: "address",
+      },
+    ],
   },
   {
-    "type": "error",
-    "name": "TaxNotMutable",
-    "inputs": []
-  }
+    type: "error",
+    name: "TaxNotMutable",
+    inputs: [],
+  },
 ] as const;

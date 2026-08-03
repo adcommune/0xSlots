@@ -1,8 +1,8 @@
 import { Address, BigInt } from "@graphprotocol/graph-ts";
-import { FeedCreated } from "../generated/FeedHub/FeedHub";
 import { Feed as FeedContract } from "../generated/FeedHub/Feed";
+import type { FeedCreated } from "../generated/FeedHub/FeedHub";
+import { Feed, FeedCreatedEvent, FeedHub } from "../generated/schema";
 import { Feed as FeedTemplate } from "../generated/templates";
-import { FeedHub, Feed, FeedCreatedEvent } from "../generated/schema";
 import { applyFeedMetadata } from "./feed";
 
 function getOrCreateFeedHub(address: string): FeedHub {
@@ -16,26 +16,26 @@ function getOrCreateFeedHub(address: string): FeedHub {
 }
 
 export function handleFeedCreated(event: FeedCreated): void {
-  let hub = getOrCreateFeedHub(event.address.toHexString());
+  const hub = getOrCreateFeedHub(event.address.toHexString());
   hub.feedCount = hub.feedCount.plus(BigInt.fromI32(1));
   hub.save();
 
-  let feedAddress = event.params.feed;
-  let feed = new Feed(feedAddress.toHexString());
+  const feedAddress = event.params.feed;
+  const feed = new Feed(feedAddress.toHexString());
   feed.hub = hub.id;
   feed.index = event.params.index;
   feed.owner = event.params.owner;
 
-  let contract = FeedContract.bind(feedAddress);
+  const contract = FeedContract.bind(feedAddress);
 
-  let nameResult = contract.try_name();
+  const nameResult = contract.try_name();
   feed.onchainName = nameResult.reverted ? "" : nameResult.value;
 
-  let metadataURIResult = contract.try_metadataURI();
-  let metadataURI = metadataURIResult.reverted ? "" : metadataURIResult.value;
+  const metadataURIResult = contract.try_metadataURI();
+  const metadataURI = metadataURIResult.reverted ? "" : metadataURIResult.value;
   feed.metadataURI = metadataURI;
 
-  let recipientResult = contract.try_feedRecipient();
+  const recipientResult = contract.try_feedRecipient();
   feed.recipient = recipientResult.reverted
     ? Address.zero()
     : recipientResult.value;
@@ -54,9 +54,9 @@ export function handleFeedCreated(event: FeedCreated): void {
 
   feed.save();
 
-  let evId =
+  const evId =
     event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
-  let ev = new FeedCreatedEvent(evId);
+  const ev = new FeedCreatedEvent(evId);
   ev.feed = feed.id;
   ev.hub = event.address;
   ev.owner = event.params.owner;

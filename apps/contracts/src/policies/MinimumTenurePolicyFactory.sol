@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
+import {IPolicyFactory} from "../interfaces/IPolicyFactory.sol";
 import {MinimumTenurePolicy} from "./MinimumTenurePolicy.sol";
 
 /// @title MinimumTenurePolicyFactory
@@ -23,7 +24,7 @@ import {MinimumTenurePolicy} from "./MinimumTenurePolicy.sol";
 ///      `predict` is a pure address computation, so a client can resolve the
 ///      policy for any duration without a transaction and skip `getOrDeploy`
 ///      entirely when that address already has code.
-contract MinimumTenurePolicyFactory {
+contract MinimumTenurePolicyFactory is IPolicyFactory {
     event TenurePolicyDeployed(
         address indexed policy,
         uint256 indexed tenureSeconds
@@ -66,5 +67,32 @@ contract MinimumTenurePolicyFactory {
     /// @dev Lets a client decide between one transaction and two.
     function isDeployed(uint256 tenureSeconds) external view returns (bool) {
         return predict(tenureSeconds).code.length != 0;
+    }
+
+    // ─── IPolicyFactory ─────────────────────────────────────────────────────
+
+    /// @inheritdoc IPolicyFactory
+    function policyKind() external pure returns (string memory) {
+        return "MinimumTenurePolicy";
+    }
+
+    /// @inheritdoc IPolicyFactory
+    /// @dev Reading `tenureSeconds()` off an untrusted address proves nothing on
+    ///      its own — anything can return a number. The proof is that
+    ///      `predict()` of that number lands back on the address we were asked
+    ///      about, which only a real deployment from this factory can do.
+    function verify(address policy) external view returns (bool) {
+        // `try` does NOT catch this: for a call to an address with no code the
+        // compiler's extcodesize check reverts before the call is even made, and
+        // that revert lands outside the try/catch. The interface requires false,
+        // not a revert, because callers loop over factories.
+        if (policy.code.length == 0) return false;
+
+        try MinimumTenurePolicy(policy).tenureSeconds() returns (uint256 s) {
+            if (s == 0) return false;
+            return predict(s) == policy;
+        } catch {
+            return false;
+        }
     }
 }

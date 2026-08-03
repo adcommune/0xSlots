@@ -7,13 +7,13 @@ import {
   slotDeployedEvent,
 } from "ponder:schema";
 import {
-  ZERO_ADDR,
   evtId,
   getOrCreateAccount,
   getOrCreateCurrency,
   getOrCreateModule,
   lower,
   tryFetchIpfsJson,
+  ZERO_ADDR,
 } from "./helpers";
 
 ponder.on("SlotFactory:SlotDeployed", async ({ event, context }) => {

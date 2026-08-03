@@ -1,22 +1,22 @@
 import { Address, BigInt, JSONValueKind, json } from "@graphprotocol/graph-ts";
 import {
-  NameUpdated,
+  Feed,
+  FeedMetadataURIUpdatedEvent,
+  FeedNameUpdatedEvent,
+  FeedRecipientUpdatedEvent,
+  FeedSlotAddedEvent,
+  FeedSlotRemovedEvent,
+  Slot,
+} from "../generated/schema";
+import type {
   MetadataURIUpdated,
+  NameUpdated,
   RecipientUpdated,
   SlotAdded,
   SlotRemoved,
 } from "../generated/templates/Feed/Feed";
-import {
-  Feed,
-  Slot,
-  FeedNameUpdatedEvent,
-  FeedMetadataURIUpdatedEvent,
-  FeedRecipientUpdatedEvent,
-  FeedSlotAddedEvent,
-  FeedSlotRemovedEvent,
-} from "../generated/schema";
-import { resolveContent, extractCid } from "./metadata";
 import { getOrCreateAccount, getOrCreateCurrency } from "./helpers";
+import { extractCid, resolveContent } from "./metadata";
 
 /**
  * Resolve a Feed's `metadataURI` JSON and populate its metadata fields.
@@ -37,19 +37,19 @@ export function applyFeedMetadata(feed: Feed, metadataURI: string): void {
 
   if (metadataURI.length > 0) {
     feed.metadataCid = extractCid(metadataURI);
-    let content = resolveContent(metadataURI);
+    const content = resolveContent(metadataURI);
     if (content) {
       feed.metadataRaw = content;
-      let result = json.try_fromString(content);
+      const result = json.try_fromString(content);
       if (!result.isError) {
-        let obj = result.value.toObject();
+        const obj = result.value.toObject();
 
-        let name = obj.get("name");
+        const name = obj.get("name");
         if (name && !name.isNull() && name.kind == JSONValueKind.STRING) {
           feed.metadataName = name.toString();
         }
 
-        let description = obj.get("description");
+        const description = obj.get("description");
         if (
           description &&
           !description.isNull() &&
@@ -58,17 +58,17 @@ export function applyFeedMetadata(feed: Feed, metadataURI: string): void {
           feed.description = description.toString();
         }
 
-        let image = obj.get("image");
+        const image = obj.get("image");
         if (image && !image.isNull() && image.kind == JSONValueKind.STRING) {
           feed.image = image.toString();
         }
 
-        let banner = obj.get("banner");
+        const banner = obj.get("banner");
         if (banner && !banner.isNull() && banner.kind == JSONValueKind.STRING) {
           feed.banner = banner.toString();
         }
 
-        let externalLink = obj.get("externalLink");
+        const externalLink = obj.get("externalLink");
         if (
           externalLink &&
           !externalLink.isNull() &&
@@ -80,21 +80,25 @@ export function applyFeedMetadata(feed: Feed, metadataURI: string): void {
     }
   }
 
-  feed.displayName = feed.metadataName ? (feed.metadataName as string) : feed.onchainName;
+  feed.displayName = feed.metadataName
+    ? (feed.metadataName as string)
+    : feed.onchainName;
 }
 
 export function handleNameUpdated(event: NameUpdated): void {
-  let feed = Feed.load(event.address.toHexString());
+  const feed = Feed.load(event.address.toHexString());
   if (feed == null) return;
 
   feed.onchainName = event.params.name;
-  feed.displayName = feed.metadataName ? (feed.metadataName as string) : feed.onchainName;
+  feed.displayName = feed.metadataName
+    ? (feed.metadataName as string)
+    : feed.onchainName;
   feed.updatedAt = event.block.timestamp;
   feed.save();
 
-  let evId =
+  const evId =
     event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
-  let ev = new FeedNameUpdatedEvent(evId);
+  const ev = new FeedNameUpdatedEvent(evId);
   ev.feed = feed.id;
   ev.name = event.params.name;
   ev.blockNumber = event.block.number;
@@ -104,7 +108,7 @@ export function handleNameUpdated(event: NameUpdated): void {
 }
 
 export function handleMetadataURIUpdated(event: MetadataURIUpdated): void {
-  let feed = Feed.load(event.address.toHexString());
+  const feed = Feed.load(event.address.toHexString());
   if (feed == null) return;
 
   feed.metadataURI = event.params.uri;
@@ -112,9 +116,9 @@ export function handleMetadataURIUpdated(event: MetadataURIUpdated): void {
   feed.updatedAt = event.block.timestamp;
   feed.save();
 
-  let evId =
+  const evId =
     event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
-  let ev = new FeedMetadataURIUpdatedEvent(evId);
+  const ev = new FeedMetadataURIUpdatedEvent(evId);
   ev.feed = feed.id;
   ev.uri = event.params.uri;
   ev.blockNumber = event.block.number;
@@ -124,16 +128,16 @@ export function handleMetadataURIUpdated(event: MetadataURIUpdated): void {
 }
 
 export function handleRecipientUpdated(event: RecipientUpdated): void {
-  let feed = Feed.load(event.address.toHexString());
+  const feed = Feed.load(event.address.toHexString());
   if (feed == null) return;
 
   feed.recipient = event.params.recipient;
   feed.updatedAt = event.block.timestamp;
   feed.save();
 
-  let evId =
+  const evId =
     event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
-  let ev = new FeedRecipientUpdatedEvent(evId);
+  const ev = new FeedRecipientUpdatedEvent(evId);
   ev.feed = feed.id;
   ev.recipient = event.params.recipient;
   ev.blockNumber = event.block.number;
@@ -143,10 +147,10 @@ export function handleRecipientUpdated(event: RecipientUpdated): void {
 }
 
 export function handleSlotAdded(event: SlotAdded): void {
-  let feed = Feed.load(event.address.toHexString());
+  const feed = Feed.load(event.address.toHexString());
   if (feed == null) return;
 
-  let slotId = event.params.slot.toHexString();
+  const slotId = event.params.slot.toHexString();
   let slot = Slot.load(slotId);
   if (slot == null) {
     // Normally the Slot is already created by handleSlotDeployed (factory.ts)
@@ -155,8 +159,8 @@ export function handleSlotAdded(event: SlotAdded): void {
     // required fields are satisfied; handleSlotDeployed running later would
     // overwrite these with real values.
     slot = new Slot(slotId);
-    let zeroAccount = getOrCreateAccount(Address.zero());
-    let zeroCurrency = getOrCreateCurrency(Address.zero());
+    const zeroAccount = getOrCreateAccount(Address.zero());
+    const zeroCurrency = getOrCreateCurrency(Address.zero());
     slot.recipient = Address.zero();
     slot.recipientAccount = zeroAccount.id;
     slot.currency = zeroCurrency.id;
@@ -185,9 +189,9 @@ export function handleSlotAdded(event: SlotAdded): void {
   feed.updatedAt = event.block.timestamp;
   feed.save();
 
-  let evId =
+  const evId =
     event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
-  let ev = new FeedSlotAddedEvent(evId);
+  const ev = new FeedSlotAddedEvent(evId);
   ev.feed = feed.id;
   ev.slot = event.params.slot;
   ev.blockNumber = event.block.number;
@@ -197,10 +201,10 @@ export function handleSlotAdded(event: SlotAdded): void {
 }
 
 export function handleSlotRemoved(event: SlotRemoved): void {
-  let feed = Feed.load(event.address.toHexString());
+  const feed = Feed.load(event.address.toHexString());
   if (feed == null) return;
 
-  let slot = Slot.load(event.params.slot.toHexString());
+  const slot = Slot.load(event.params.slot.toHexString());
   if (slot != null) {
     slot.feed = null;
     slot.updatedAt = event.block.timestamp;
@@ -213,9 +217,9 @@ export function handleSlotRemoved(event: SlotRemoved): void {
   feed.updatedAt = event.block.timestamp;
   feed.save();
 
-  let evId =
+  const evId =
     event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
-  let ev = new FeedSlotRemovedEvent(evId);
+  const ev = new FeedSlotRemovedEvent(evId);
   ev.feed = feed.id;
   ev.slot = event.params.slot;
   ev.blockNumber = event.block.number;

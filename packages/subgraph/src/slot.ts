@@ -1,52 +1,61 @@
-import { BigInt, Bytes, Address, dataSource } from "@graphprotocol/graph-ts";
 import {
-  Bought,
-  Released,
-  Liquidated,
-  PriceUpdated,
-  Deposited,
-  Withdrawn,
-  Settled,
-  TaxCollected,
-  TaxUpdateProposed,
-  ModuleUpdateProposed,
-  PendingUpdateApplied,
-  PendingUpdateCancelled,
-  LiquidationBountyUpdated,
-  ModuleFeePaid,
-  TransferScheduled,
-  SlotConfiguredV3,
-  OperatorSet,
-  PolicyUpdateProposed,
-  PolicyUpdateApplied,
-  RefundCredited,
-  RefundClaimed,
-} from "../generated/templates/Slot/Slot";
+  Address,
+  BigInt,
+  type Bytes,
+  dataSource,
+} from "@graphprotocol/graph-ts";
 import {
-  Slot,
   BoughtEvent,
-  ReleasedEvent,
-  LiquidatedEvent,
-  PriceUpdatedEvent,
   DepositedEvent,
-  WithdrawnEvent,
+  LiquidatedEvent,
+  Module,
+  ModuleFeePaidEvent,
+  ModuleUpdateProposedEvent,
+  OperatorSetEvent,
+  PendingUpdateCancelledEvent,
+  PolicyUpdateAppliedEvent,
+  PolicyUpdateProposedEvent,
+  PriceUpdatedEvent,
+  RefundClaimedEvent,
+  RefundCreditedEvent,
+  ReleasedEvent,
   SettledEvent,
+  Slot,
+  SlotOperator,
+  SlotRefund,
   TaxCollectedEvent,
   TaxUpdateProposedEvent,
-  ModuleUpdateProposedEvent,
-  PendingUpdateCancelledEvent,
-  ModuleFeePaidEvent,
-  Module,
   TransferScheduledEvent,
-  OperatorSetEvent,
-  SlotOperator,
-  PolicyUpdateProposedEvent,
-  PolicyUpdateAppliedEvent,
-  RefundCreditedEvent,
-  RefundClaimedEvent,
-  SlotRefund,
+  WithdrawnEvent,
 } from "../generated/schema";
-import { getOrCreateAccount, getOrCreateAccountSlot, getOrCreateModule } from "./helpers";
+import type {
+  Bought,
+  Deposited,
+  Liquidated,
+  LiquidationBountyUpdated,
+  ModuleFeePaid,
+  ModuleUpdateProposed,
+  OperatorSet,
+  PendingUpdateApplied,
+  PendingUpdateCancelled,
+  PolicyUpdateApplied,
+  PolicyUpdateProposed,
+  PriceUpdated,
+  RefundClaimed,
+  RefundCredited,
+  Released,
+  Settled,
+  SlotConfiguredV3,
+  TaxCollected,
+  TaxUpdateProposed,
+  TransferScheduled,
+  Withdrawn,
+} from "../generated/templates/Slot/Slot";
+import {
+  getOrCreateAccount,
+  getOrCreateAccountSlot,
+  getOrCreateModule,
+} from "./helpers";
 
 function evtId(txHash: Bytes, logIndex: BigInt): string {
   return txHash.toHexString() + "-" + logIndex.toString();
@@ -57,18 +66,25 @@ function getSlot(address: Address): Slot {
 }
 
 export function handleBought(event: Bought): void {
-  let slot = getSlot(event.address);
+  const slot = getSlot(event.address);
 
   // Decrement previous occupant count & finalize hold time
-  let zeroAddr = Address.zero();
-  if (slot.occupant !== null && Address.fromBytes(slot.occupant as Bytes) != zeroAddr) {
-    let prevAddr = Address.fromBytes(slot.occupant as Bytes);
-    let prevAccount = getOrCreateAccount(prevAddr);
+  const zeroAddr = Address.zero();
+  if (
+    slot.occupant !== null &&
+    Address.fromBytes(slot.occupant as Bytes) != zeroAddr
+  ) {
+    const prevAddr = Address.fromBytes(slot.occupant as Bytes);
+    const prevAccount = getOrCreateAccount(prevAddr);
     prevAccount.occupiedCount -= 1;
 
-    let prevAS = getOrCreateAccountSlot(prevAddr, event.address, event.block.timestamp);
+    const prevAS = getOrCreateAccountSlot(
+      prevAddr,
+      event.address,
+      event.block.timestamp,
+    );
     if (prevAS.lastOccupiedAt !== null) {
-      let held = event.block.timestamp.minus(prevAS.lastOccupiedAt as BigInt);
+      const held = event.block.timestamp.minus(prevAS.lastOccupiedAt as BigInt);
       prevAS.holdTime = prevAS.holdTime.plus(held);
       prevAccount.totalHoldTime = prevAccount.totalHoldTime.plus(held);
     }
@@ -83,11 +99,15 @@ export function handleBought(event: Bought): void {
   // another occupies, which is how SlotQueue fills on a bidder's behalf. On an
   // epoch slot this event also fires in a LATER transaction than the buy, sent
   // by whoever happened to materialise the transfer. Never read tx.from here.
-  let buyerAccount = getOrCreateAccount(event.params.buyer, true);
+  const buyerAccount = getOrCreateAccount(event.params.buyer, true);
   buyerAccount.occupiedCount += 1;
   buyerAccount.save();
 
-  let buyerAS = getOrCreateAccountSlot(event.params.buyer, event.address, event.block.timestamp);
+  const buyerAS = getOrCreateAccountSlot(
+    event.params.buyer,
+    event.address,
+    event.block.timestamp,
+  );
   buyerAS.lastOccupiedAt = event.block.timestamp;
   buyerAS.lastInteractedAt = event.block.timestamp;
   buyerAS.save();
@@ -120,7 +140,7 @@ export function handleBought(event: Bought): void {
   slot.updatedAt = event.block.timestamp;
   slot.save();
 
-  let ev = new BoughtEvent(evtId(event.transaction.hash, event.logIndex));
+  const ev = new BoughtEvent(evtId(event.transaction.hash, event.logIndex));
   ev.slot = slot.id;
   ev.currency = slot.currency;
   ev.buyer = event.params.buyer;
@@ -135,16 +155,20 @@ export function handleBought(event: Bought): void {
 }
 
 export function handleReleased(event: Released): void {
-  let slot = getSlot(event.address);
+  const slot = getSlot(event.address);
 
   if (slot.occupant !== null) {
-    let prevAddr = Address.fromBytes(slot.occupant as Bytes);
-    let prevAccount = getOrCreateAccount(prevAddr);
+    const prevAddr = Address.fromBytes(slot.occupant as Bytes);
+    const prevAccount = getOrCreateAccount(prevAddr);
     prevAccount.occupiedCount -= 1;
 
-    let prevAS = getOrCreateAccountSlot(prevAddr, event.address, event.block.timestamp);
+    const prevAS = getOrCreateAccountSlot(
+      prevAddr,
+      event.address,
+      event.block.timestamp,
+    );
     if (prevAS.lastOccupiedAt !== null) {
-      let held = event.block.timestamp.minus(prevAS.lastOccupiedAt as BigInt);
+      const held = event.block.timestamp.minus(prevAS.lastOccupiedAt as BigInt);
       prevAS.holdTime = prevAS.holdTime.plus(held);
       prevAccount.totalHoldTime = prevAccount.totalHoldTime.plus(held);
     }
@@ -168,7 +192,7 @@ export function handleReleased(event: Released): void {
   slot.updatedAt = event.block.timestamp;
   slot.save();
 
-  let ev = new ReleasedEvent(evtId(event.transaction.hash, event.logIndex));
+  const ev = new ReleasedEvent(evtId(event.transaction.hash, event.logIndex));
   ev.slot = slot.id;
   ev.currency = slot.currency;
   ev.occupant = event.params.occupant;
@@ -180,16 +204,20 @@ export function handleReleased(event: Released): void {
 }
 
 export function handleLiquidated(event: Liquidated): void {
-  let slot = getSlot(event.address);
+  const slot = getSlot(event.address);
 
   if (slot.occupant !== null) {
-    let prevAddr = Address.fromBytes(slot.occupant as Bytes);
-    let prevAccount = getOrCreateAccount(prevAddr);
+    const prevAddr = Address.fromBytes(slot.occupant as Bytes);
+    const prevAccount = getOrCreateAccount(prevAddr);
     prevAccount.occupiedCount -= 1;
 
-    let prevAS = getOrCreateAccountSlot(prevAddr, event.address, event.block.timestamp);
+    const prevAS = getOrCreateAccountSlot(
+      prevAddr,
+      event.address,
+      event.block.timestamp,
+    );
     if (prevAS.lastOccupiedAt !== null) {
-      let held = event.block.timestamp.minus(prevAS.lastOccupiedAt as BigInt);
+      const held = event.block.timestamp.minus(prevAS.lastOccupiedAt as BigInt);
       prevAS.holdTime = prevAS.holdTime.plus(held);
       prevAccount.totalHoldTime = prevAccount.totalHoldTime.plus(held);
     }
@@ -213,7 +241,7 @@ export function handleLiquidated(event: Liquidated): void {
   slot.updatedAt = event.block.timestamp;
   slot.save();
 
-  let ev = new LiquidatedEvent(evtId(event.transaction.hash, event.logIndex));
+  const ev = new LiquidatedEvent(evtId(event.transaction.hash, event.logIndex));
   ev.slot = slot.id;
   ev.currency = slot.currency;
   ev.liquidator = event.params.liquidator;
@@ -226,12 +254,14 @@ export function handleLiquidated(event: Liquidated): void {
 }
 
 export function handlePriceUpdated(event: PriceUpdated): void {
-  let slot = getSlot(event.address);
+  const slot = getSlot(event.address);
   slot.price = event.params.newPrice;
   slot.updatedAt = event.block.timestamp;
   slot.save();
 
-  let ev = new PriceUpdatedEvent(evtId(event.transaction.hash, event.logIndex));
+  const ev = new PriceUpdatedEvent(
+    evtId(event.transaction.hash, event.logIndex),
+  );
   ev.slot = slot.id;
   ev.currency = slot.currency;
   ev.oldPrice = event.params.oldPrice;
@@ -243,12 +273,12 @@ export function handlePriceUpdated(event: PriceUpdated): void {
 }
 
 export function handleDeposited(event: Deposited): void {
-  let slot = getSlot(event.address);
+  const slot = getSlot(event.address);
   slot.deposit = slot.deposit.plus(event.params.amount);
   slot.updatedAt = event.block.timestamp;
   slot.save();
 
-  let ev = new DepositedEvent(evtId(event.transaction.hash, event.logIndex));
+  const ev = new DepositedEvent(evtId(event.transaction.hash, event.logIndex));
   ev.slot = slot.id;
   ev.currency = slot.currency;
   ev.depositor = event.params.depositor;
@@ -260,12 +290,12 @@ export function handleDeposited(event: Deposited): void {
 }
 
 export function handleWithdrawn(event: Withdrawn): void {
-  let slot = getSlot(event.address);
+  const slot = getSlot(event.address);
   slot.deposit = slot.deposit.minus(event.params.amount);
   slot.updatedAt = event.block.timestamp;
   slot.save();
 
-  let ev = new WithdrawnEvent(evtId(event.transaction.hash, event.logIndex));
+  const ev = new WithdrawnEvent(evtId(event.transaction.hash, event.logIndex));
   ev.slot = slot.id;
   ev.currency = slot.currency;
   ev.occupant = event.params.occupant;
@@ -277,21 +307,25 @@ export function handleWithdrawn(event: Withdrawn): void {
 }
 
 export function handleSettled(event: Settled): void {
-  let slot = getSlot(event.address);
+  const slot = getSlot(event.address);
   slot.deposit = event.params.depositRemaining;
   slot.updatedAt = event.block.timestamp;
   slot.save();
 
   // Track tax paid on the current occupant (per-slot, since currency is immutable per slot)
   if (slot.occupant !== null) {
-    let occAddr = Address.fromBytes(slot.occupant as Bytes);
-    let occAS = getOrCreateAccountSlot(occAddr, event.address, event.block.timestamp);
+    const occAddr = Address.fromBytes(slot.occupant as Bytes);
+    const occAS = getOrCreateAccountSlot(
+      occAddr,
+      event.address,
+      event.block.timestamp,
+    );
     occAS.taxPaid = occAS.taxPaid.plus(event.params.taxPaid);
     occAS.lastInteractedAt = event.block.timestamp;
     occAS.save();
   }
 
-  let ev = new SettledEvent(evtId(event.transaction.hash, event.logIndex));
+  const ev = new SettledEvent(evtId(event.transaction.hash, event.logIndex));
   ev.slot = slot.id;
   ev.currency = slot.currency;
   ev.taxOwed = event.params.taxOwed;
@@ -304,13 +338,15 @@ export function handleSettled(event: Settled): void {
 }
 
 export function handleTaxCollected(event: TaxCollected): void {
-  let slot = getSlot(event.address);
+  const slot = getSlot(event.address);
   slot.collectedTax = BigInt.zero();
   slot.totalCollected = slot.totalCollected.plus(event.params.amount);
   slot.updatedAt = event.block.timestamp;
   slot.save();
 
-  let ev = new TaxCollectedEvent(evtId(event.transaction.hash, event.logIndex));
+  const ev = new TaxCollectedEvent(
+    evtId(event.transaction.hash, event.logIndex),
+  );
   ev.slot = slot.id;
   ev.currency = slot.currency;
   ev.recipient = event.params.recipient;
@@ -322,7 +358,9 @@ export function handleTaxCollected(event: TaxCollected): void {
 }
 
 export function handleTaxUpdateProposed(event: TaxUpdateProposed): void {
-  let ev = new TaxUpdateProposedEvent(evtId(event.transaction.hash, event.logIndex));
+  const ev = new TaxUpdateProposedEvent(
+    evtId(event.transaction.hash, event.logIndex),
+  );
   ev.slot = event.address.toHexString();
   ev.newPercentage = event.params.newPercentage;
   ev.timestamp = event.block.timestamp;
@@ -332,7 +370,9 @@ export function handleTaxUpdateProposed(event: TaxUpdateProposed): void {
 }
 
 export function handleModuleUpdateProposed(event: ModuleUpdateProposed): void {
-  let ev = new ModuleUpdateProposedEvent(evtId(event.transaction.hash, event.logIndex));
+  const ev = new ModuleUpdateProposedEvent(
+    evtId(event.transaction.hash, event.logIndex),
+  );
   ev.slot = event.address.toHexString();
   ev.newModule = event.params.newModule;
   ev.timestamp = event.block.timestamp;
@@ -341,8 +381,12 @@ export function handleModuleUpdateProposed(event: ModuleUpdateProposed): void {
   ev.save();
 }
 
-export function handlePendingUpdateCancelled(event: PendingUpdateCancelled): void {
-  let ev = new PendingUpdateCancelledEvent(evtId(event.transaction.hash, event.logIndex));
+export function handlePendingUpdateCancelled(
+  event: PendingUpdateCancelled,
+): void {
+  const ev = new PendingUpdateCancelledEvent(
+    evtId(event.transaction.hash, event.logIndex),
+  );
   ev.slot = event.address.toHexString();
   ev.timestamp = event.block.timestamp;
   ev.blockNumber = event.block.number;
@@ -351,7 +395,7 @@ export function handlePendingUpdateCancelled(event: PendingUpdateCancelled): voi
 }
 
 export function handlePendingUpdateApplied(event: PendingUpdateApplied): void {
-  let slot = getSlot(event.address);
+  const slot = getSlot(event.address);
   slot.taxPercentage = event.params.newTaxPercentage;
   const moduleAddr = event.params.newModule;
   if (moduleAddr.equals(Address.zero())) {
@@ -365,23 +409,27 @@ export function handlePendingUpdateApplied(event: PendingUpdateApplied): void {
   slot.save();
 }
 
-export function handleLiquidationBountyUpdated(event: LiquidationBountyUpdated): void {
-  let slot = getSlot(event.address);
+export function handleLiquidationBountyUpdated(
+  event: LiquidationBountyUpdated,
+): void {
+  const slot = getSlot(event.address);
   slot.liquidationBountyBps = event.params.newBps;
   slot.updatedAt = event.block.timestamp;
   slot.save();
 }
 
 export function handleModuleFeePaid(event: ModuleFeePaid): void {
-  let slot = getSlot(event.address);
-  let moduleId = event.params.module.toHexString();
-  let mod = Module.load(moduleId);
+  const slot = getSlot(event.address);
+  const moduleId = event.params.module.toHexString();
+  const mod = Module.load(moduleId);
   if (mod) {
     mod.totalFeesCollected = mod.totalFeesCollected.plus(event.params.amount);
     mod.save();
   }
 
-  let ev = new ModuleFeePaidEvent(evtId(event.transaction.hash, event.logIndex));
+  const ev = new ModuleFeePaidEvent(
+    evtId(event.transaction.hash, event.logIndex),
+  );
   ev.slot = slot.id;
   ev.currency = slot.currency;
   ev.module = moduleId;
@@ -404,7 +452,7 @@ export function handleModuleFeePaid(event: ModuleFeePaid): void {
  * subgraph can never tell an hourly slot from an instant-buy one.
  */
 export function handleSlotConfiguredV3(event: SlotConfiguredV3): void {
-  let slot = getSlot(event.address);
+  const slot = getSlot(event.address);
   slot.epochSeconds = event.params.epochSeconds;
   if (event.params.occupancyPolicy.equals(Address.zero())) {
     slot.occupancyPolicy = null;
@@ -428,7 +476,7 @@ export function handleSlotConfiguredV3(event: SlotConfiguredV3): void {
  * exactly why these fields are exposed for clients to resolve against.
  */
 export function handleTransferScheduled(event: TransferScheduled): void {
-  let slot = getSlot(event.address);
+  const slot = getSlot(event.address);
   slot.pendingBuyer = event.params.buyer;
   slot.pendingEffectiveAt = event.params.effectiveAt;
   slot.pendingPrice = event.params.price;
@@ -436,8 +484,8 @@ export function handleTransferScheduled(event: TransferScheduled): void {
   slot.updatedAt = event.block.timestamp;
   slot.save();
 
-  let ev = new TransferScheduledEvent(
-    evtId(event.transaction.hash, event.logIndex)
+  const ev = new TransferScheduledEvent(
+    evtId(event.transaction.hash, event.logIndex),
   );
   ev.slot = slot.id;
   ev.currency = slot.currency;
@@ -452,9 +500,9 @@ export function handleTransferScheduled(event: TransferScheduled): void {
 }
 
 export function handleOperatorSet(event: OperatorSet): void {
-  let slot = getSlot(event.address);
+  const slot = getSlot(event.address);
 
-  let id =
+  const id =
     slot.id +
     "-" +
     event.params.occupant.toHexString() +
@@ -472,7 +520,9 @@ export function handleOperatorSet(event: OperatorSet): void {
   op.updatedAt = event.block.timestamp;
   op.save();
 
-  let ev = new OperatorSetEvent(evtId(event.transaction.hash, event.logIndex));
+  const ev = new OperatorSetEvent(
+    evtId(event.transaction.hash, event.logIndex),
+  );
   ev.slot = slot.id;
   ev.occupant = event.params.occupant;
   ev.operator = event.params.operator;
@@ -483,17 +533,15 @@ export function handleOperatorSet(event: OperatorSet): void {
   ev.save();
 }
 
-export function handlePolicyUpdateProposed(
-  event: PolicyUpdateProposed
-): void {
-  let slot = getSlot(event.address);
+export function handlePolicyUpdateProposed(event: PolicyUpdateProposed): void {
+  const slot = getSlot(event.address);
   slot.pendingPolicy = event.params.newPolicy;
   slot.hasPendingPolicy = true;
   slot.updatedAt = event.block.timestamp;
   slot.save();
 
-  let ev = new PolicyUpdateProposedEvent(
-    evtId(event.transaction.hash, event.logIndex)
+  const ev = new PolicyUpdateProposedEvent(
+    evtId(event.transaction.hash, event.logIndex),
   );
   ev.slot = slot.id;
   ev.newPolicy = event.params.newPolicy;
@@ -504,7 +552,7 @@ export function handlePolicyUpdateProposed(
 }
 
 export function handlePolicyUpdateApplied(event: PolicyUpdateApplied): void {
-  let slot = getSlot(event.address);
+  const slot = getSlot(event.address);
   if (event.params.newPolicy.equals(Address.zero())) {
     slot.occupancyPolicy = null;
   } else {
@@ -515,8 +563,8 @@ export function handlePolicyUpdateApplied(event: PolicyUpdateApplied): void {
   slot.updatedAt = event.block.timestamp;
   slot.save();
 
-  let ev = new PolicyUpdateAppliedEvent(
-    evtId(event.transaction.hash, event.logIndex)
+  const ev = new PolicyUpdateAppliedEvent(
+    evtId(event.transaction.hash, event.logIndex),
   );
   ev.slot = slot.id;
   ev.newPolicy = event.params.newPolicy;
@@ -529,9 +577,9 @@ export function handlePolicyUpdateApplied(event: PolicyUpdateApplied): void {
 function getSlotRefund(
   slotId: string,
   account: Bytes,
-  timestamp: BigInt
+  timestamp: BigInt,
 ): SlotRefund {
-  let id = slotId + "-" + account.toHexString();
+  const id = slotId + "-" + account.toHexString();
   let r = SlotRefund.load(id);
   if (r == null) {
     r = new SlotRefund(id);
@@ -552,14 +600,14 @@ function getSlotRefund(
  * until they call `claim`.
  */
 export function handleRefundCredited(event: RefundCredited): void {
-  let slot = getSlot(event.address);
-  let r = getSlotRefund(slot.id, event.params.account, event.block.timestamp);
+  const slot = getSlot(event.address);
+  const r = getSlotRefund(slot.id, event.params.account, event.block.timestamp);
   r.credited = r.credited.plus(event.params.amount);
   r.outstanding = r.outstanding.plus(event.params.amount);
   r.save();
 
-  let ev = new RefundCreditedEvent(
-    evtId(event.transaction.hash, event.logIndex)
+  const ev = new RefundCreditedEvent(
+    evtId(event.transaction.hash, event.logIndex),
   );
   ev.slot = slot.id;
   ev.currency = slot.currency;
@@ -572,14 +620,14 @@ export function handleRefundCredited(event: RefundCredited): void {
 }
 
 export function handleRefundClaimed(event: RefundClaimed): void {
-  let slot = getSlot(event.address);
-  let r = getSlotRefund(slot.id, event.params.account, event.block.timestamp);
+  const slot = getSlot(event.address);
+  const r = getSlotRefund(slot.id, event.params.account, event.block.timestamp);
   r.claimed = r.claimed.plus(event.params.amount);
   r.outstanding = r.outstanding.minus(event.params.amount);
   r.save();
 
-  let ev = new RefundClaimedEvent(
-    evtId(event.transaction.hash, event.logIndex)
+  const ev = new RefundClaimedEvent(
+    evtId(event.transaction.hash, event.logIndex),
   );
   ev.slot = slot.id;
   ev.currency = slot.currency;

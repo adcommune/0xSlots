@@ -1,30 +1,33 @@
+import {
+  type SlotConfig,
+  type SlotInitParams,
+  SlotsChain,
+  SlotsClient,
+} from "@0xslots/sdk";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { z } from "zod";
 import {
+  type Address,
   createPublicClient,
   createWalletClient,
-  http,
-  formatUnits,
-  parseUnits,
-  type Address,
   erc20Abi,
+  formatUnits,
+  http,
+  parseUnits,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { baseSepolia } from "viem/chains";
-import {
-  SlotsClient,
-  SlotsChain,
-  type SlotConfig,
-  type SlotInitParams,
-} from "@0xslots/sdk";
+import { z } from "zod";
+
 // @0xslots/contracts used internally by SDK
 // ── Config ──────────────────────────────────────────────────────────────────
 const RPC_URL =
   process.env.RPC_URL ||
   "https://base-sepolia.g.alchemy.com/v2/4XrtaFg8OqFaNxv45MreCFT3ekifcxWm";
 const PRIVATE_KEY = process.env.PRIVATE_KEY;
-const CHAIN_ID = Number(process.env.CHAIN_ID || SlotsChain.BASE_SEPOLIA) as SlotsChain;
+const CHAIN_ID = Number(
+  process.env.CHAIN_ID || SlotsChain.BASE_SEPOLIA,
+) as SlotsChain;
 
 const chain = baseSepolia;
 const publicClient = createPublicClient({ chain, transport: http(RPC_URL) });
@@ -112,7 +115,7 @@ server.tool(
       hasPendingModule: info.hasPendingModule,
       pendingModule: info.hasPendingModule ? info.pendingModule : null,
     });
-  }
+  },
 );
 
 server.tool(
@@ -140,7 +143,7 @@ server.tool(
     }
     const data = await client.getSlots({ first: first || 20 });
     return ok(data);
-  }
+  },
 );
 
 server.tool(
@@ -152,7 +155,7 @@ server.tool(
   async ({ first }) => {
     const data = await client.getRecentEvents({ first: first || 20 });
     return ok(data);
-  }
+  },
 );
 
 server.tool(
@@ -160,7 +163,10 @@ server.tool(
   "Get all activity for a specific slot (all event types)",
   {
     slot: z.string().describe("Slot contract address"),
-    first: z.number().optional().describe("Number of results per type (default 10)"),
+    first: z
+      .number()
+      .optional()
+      .describe("Number of results per type (default 10)"),
   },
   async ({ slot, first }) => {
     const data = await client.getSlotActivity({
@@ -168,7 +174,7 @@ server.tool(
       first: first || 10,
     });
     return ok(data);
-  }
+  },
 );
 
 server.tool(
@@ -178,7 +184,7 @@ server.tool(
   async () => {
     const data = await client.getModules({});
     return ok(data);
-  }
+  },
 );
 
 server.tool(
@@ -188,7 +194,7 @@ server.tool(
   async ({ address }) => {
     const data = await client.getAccount({ id: address.toLowerCase() });
     return ok(data);
-  }
+  },
 );
 
 server.tool(
@@ -198,7 +204,7 @@ server.tool(
   async () => {
     const data = await client.getFactory();
     return ok(data);
-  }
+  },
 );
 
 server.tool(
@@ -208,7 +214,7 @@ server.tool(
   async () => {
     const data = await client.getMeta();
     return ok(data);
-  }
+  },
 );
 
 server.tool(
@@ -220,7 +226,7 @@ server.tool(
       slotId: slot.toLowerCase(),
     });
     return ok(data);
-  }
+  },
 );
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -232,9 +238,14 @@ server.tool(
   "Buy or force-buy a slot. Auto-handles ERC20 approval. Provide self-assessed price and deposit.",
   {
     slot: z.string().describe("Slot contract address"),
-    selfAssessedPrice: z.string().describe("Your self-assessed price (in token units, e.g. '100')"),
+    selfAssessedPrice: z
+      .string()
+      .describe("Your self-assessed price (in token units, e.g. '100')"),
     deposit: z.string().describe("Deposit amount (in token units)"),
-    decimals: z.number().optional().describe("Token decimals (default 6 for USDC)"),
+    decimals: z
+      .number()
+      .optional()
+      .describe("Token decimals (default 6 for USDC)"),
   },
   async ({ slot, selfAssessedPrice, deposit, decimals: dec }) => {
     const decimals = dec || 6;
@@ -245,9 +256,9 @@ server.tool(
     });
     const receipt = await publicClient.waitForTransactionReceipt({ hash });
     return msg(
-      `Slot bought! Price: ${selfAssessedPrice}, Deposit: ${deposit}\ntx: ${hash}\nStatus: ${receipt.status}`
+      `Slot bought! Price: ${selfAssessedPrice}, Deposit: ${deposit}\ntx: ${hash}\nStatus: ${receipt.status}`,
     );
-  }
+  },
 );
 
 server.tool(
@@ -258,7 +269,7 @@ server.tool(
     const hash = await client.release(slot as Address);
     const receipt = await publicClient.waitForTransactionReceipt({ hash });
     return msg(`Slot released! tx: ${hash}\nStatus: ${receipt.status}`);
-  }
+  },
 );
 
 server.tool(
@@ -271,10 +282,13 @@ server.tool(
   },
   async ({ slot, amount, decimals: dec }) => {
     const decimals = dec || 6;
-    const hash = await client.topUp(slot as Address, parseUnits(amount, decimals));
+    const hash = await client.topUp(
+      slot as Address,
+      parseUnits(amount, decimals),
+    );
     const receipt = await publicClient.waitForTransactionReceipt({ hash });
     return msg(`Deposited ${amount}! tx: ${hash}\nStatus: ${receipt.status}`);
-  }
+  },
 );
 
 server.tool(
@@ -287,10 +301,13 @@ server.tool(
   },
   async ({ slot, amount, decimals: dec }) => {
     const decimals = dec || 6;
-    const hash = await client.withdraw(slot as Address, parseUnits(amount, decimals));
+    const hash = await client.withdraw(
+      slot as Address,
+      parseUnits(amount, decimals),
+    );
     const receipt = await publicClient.waitForTransactionReceipt({ hash });
     return msg(`Withdrawn ${amount}! tx: ${hash}\nStatus: ${receipt.status}`);
-  }
+  },
 );
 
 server.tool(
@@ -303,10 +320,15 @@ server.tool(
   },
   async ({ slot, newPrice, decimals: dec }) => {
     const decimals = dec || 6;
-    const hash = await client.selfAssess(slot as Address, parseUnits(newPrice, decimals));
+    const hash = await client.selfAssess(
+      slot as Address,
+      parseUnits(newPrice, decimals),
+    );
     const receipt = await publicClient.waitForTransactionReceipt({ hash });
-    return msg(`Price updated to ${newPrice}! tx: ${hash}\nStatus: ${receipt.status}`);
-  }
+    return msg(
+      `Price updated to ${newPrice}! tx: ${hash}\nStatus: ${receipt.status}`,
+    );
+  },
 );
 
 server.tool(
@@ -317,7 +339,7 @@ server.tool(
     const hash = await client.collect(slot as Address);
     const receipt = await publicClient.waitForTransactionReceipt({ hash });
     return msg(`Tax collected! tx: ${hash}\nStatus: ${receipt.status}`);
-  }
+  },
 );
 
 server.tool(
@@ -327,8 +349,10 @@ server.tool(
   async ({ slots }) => {
     const hash = await client.collectAll(slots as Address[]);
     const receipt = await publicClient.waitForTransactionReceipt({ hash });
-    return msg(`Batch collect done! tx: ${hash}\nStatus: ${receipt.status}\nSlots processed: ${slots.length}`);
-  }
+    return msg(
+      `Batch collect done! tx: ${hash}\nStatus: ${receipt.status}\nSlots processed: ${slots.length}`,
+    );
+  },
 );
 
 server.tool(
@@ -339,7 +363,7 @@ server.tool(
     const hash = await client.liquidate(slot as Address);
     const receipt = await publicClient.waitForTransactionReceipt({ hash });
     return msg(`Slot liquidated! tx: ${hash}\nStatus: ${receipt.status}`);
-  }
+  },
 );
 
 server.tool(
@@ -350,20 +374,39 @@ server.tool(
     currency: z.string().describe("ERC20 token address for payments"),
     mutableTax: z.boolean().describe("Can tax be changed by manager?"),
     mutableModule: z.boolean().describe("Can module be changed by manager?"),
-    manager: z.string().optional().describe("Manager address (required if mutableTax or mutableModule)"),
-    taxPercentage: z.number().describe("Tax rate in basis points (e.g. 1000 = 10%)"),
+    manager: z
+      .string()
+      .optional()
+      .describe("Manager address (required if mutableTax or mutableModule)"),
+    taxPercentage: z
+      .number()
+      .describe("Tax rate in basis points (e.g. 1000 = 10%)"),
     module: z.string().optional().describe("Module address (default: none)"),
-    liquidationBountyBps: z.number().optional().describe("Liquidation bounty in bps (default 0)"),
-    minDepositSeconds: z.number().optional().describe("Minimum deposit in seconds (default 86400 = 1 day)"),
+    liquidationBountyBps: z
+      .number()
+      .optional()
+      .describe("Liquidation bounty in bps (default 0)"),
+    minDepositSeconds: z
+      .number()
+      .optional()
+      .describe("Minimum deposit in seconds (default 86400 = 1 day)"),
   },
   async ({
-    recipient, currency, mutableTax, mutableModule, manager,
-    taxPercentage, module, liquidationBountyBps, minDepositSeconds,
+    recipient,
+    currency,
+    mutableTax,
+    mutableModule,
+    manager,
+    taxPercentage,
+    module,
+    liquidationBountyBps,
+    minDepositSeconds,
   }) => {
     const wallet = getWalletClient();
-    const mgr = (mutableTax || mutableModule)
-      ? ((manager as Address) || wallet.account!.address)
-      : "0x0000000000000000000000000000000000000000";
+    const mgr =
+      mutableTax || mutableModule
+        ? (manager as Address) || wallet.account!.address
+        : "0x0000000000000000000000000000000000000000";
 
     const hash = await client.createSlot({
       recipient: recipient as Address,
@@ -375,14 +418,15 @@ server.tool(
       },
       initParams: {
         taxPercentage: BigInt(taxPercentage),
-        module: (module || "0x0000000000000000000000000000000000000000") as Address,
+        module: (module ||
+          "0x0000000000000000000000000000000000000000") as Address,
         liquidationBountyBps: BigInt(liquidationBountyBps || 0),
         minDepositSeconds: BigInt(minDepositSeconds || 86400),
       },
     });
     const receipt = await publicClient.waitForTransactionReceipt({ hash });
     return msg(`Slot created!\ntx: ${hash}\nStatus: ${receipt.status}`);
-  }
+  },
 );
 
 server.tool(
@@ -395,11 +439,11 @@ server.tool(
   async ({ slot, uri }) => {
     const hash = await client.modules.metadata.updateMetadata(
       slot as Address,
-      uri
+      uri,
     );
     const receipt = await publicClient.waitForTransactionReceipt({ hash });
     return msg(`Metadata updated! tx: ${hash}\nStatus: ${receipt.status}`);
-  }
+  },
 );
 
 server.tool(
@@ -416,7 +460,7 @@ server.tool(
       chain: chain.name,
       chainId: chain.id,
     });
-  }
+  },
 );
 
 // ── Start ───────────────────────────────────────────────────────────────────

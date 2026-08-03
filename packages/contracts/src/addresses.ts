@@ -84,7 +84,7 @@ export function getSupportedChainIds(): SupportedChainId[] {
 export const MINIMUM_TENURE_POLICY_FACTORY: Partial<
   Record<number, `0x${string}`>
 > = {
-  [baseSepolia.id]: "0xDCCb7ac7A342bF09e36CeDE60eAA937d72D3a2Ea",
+  [baseSepolia.id]: "0x51650AB1c3aBc6614A38c622A322535b16cD764e",
 };
 
 /**
@@ -96,5 +96,26 @@ export const MINIMUM_TENURE_POLICY_FACTORY: Partial<
 export const MINIMUM_PRICE_POLICY_FACTORY: Partial<
   Record<number, `0x${string}`>
 > = {
-  [baseSepolia.id]: "0x2Bb831D6FDf48189CFa5Fd23e75B56135c61c963",
+  [baseSepolia.id]: "0x83d86EDBC62187180A4f94A3099a98ABaa1dfe0c",
+};
+
+/**
+ * Every `IPolicyFactory` on a chain, in the order a resolver should try them.
+ *
+ * Policy resolution is a loop: ask each factory "did you make this?" until one
+ * says yes. That is the whole reason `IPolicyFactory` exists — a client needs
+ * no per-kind knowledge to decide whether an address is a genuine policy.
+ *
+ * Superseded factories belong here too if their policies should keep resolving.
+ * The ones from before `IPolicyFactory` are deliberately absent: they have no
+ * `verify()`, so slots still pointing at their policies read as unrecognised,
+ * which is the honest answer.
+ */
+export const POLICY_FACTORIES: Partial<
+  Record<number, readonly `0x${string}`[]>
+> = {
+  [baseSepolia.id]: [
+    "0x51650AB1c3aBc6614A38c622A322535b16cD764e", // MinimumTenurePolicyFactory
+    "0x83d86EDBC62187180A4f94A3099a98ABaa1dfe0c", // MinimumPricePolicyFactory
+  ],
 };

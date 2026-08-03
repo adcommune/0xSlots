@@ -6,17 +6,17 @@ import {
   json,
   log,
 } from "@graphprotocol/graph-ts";
-import {
-  SlotDeployed,
-  ModuleVerified,
+import type {
   AdminTransferred,
+  ModuleVerified,
+  SlotDeployed,
 } from "../generated/SlotFactory/SlotFactory";
+import { Factory, Module, Slot, SlotDeployedEvent } from "../generated/schema";
 import {
-  Slot as SlotTemplate,
-  MetadataModule as MetadataModuleTemplate,
   FeedPostModule as FeedPostModuleTemplate,
+  MetadataModule as MetadataModuleTemplate,
+  Slot as SlotTemplate,
 } from "../generated/templates";
-import { Factory, Slot, Module, SlotDeployedEvent } from "../generated/schema";
 import {
   getOrCreateAccount,
   getOrCreateCurrency,
@@ -34,21 +34,21 @@ function getOrCreateFactory(address: string): Factory {
 }
 
 export function handleSlotDeployed(event: SlotDeployed): void {
-  let factory = getOrCreateFactory(event.address.toHexString());
+  const factory = getOrCreateFactory(event.address.toHexString());
   factory.slotCount = factory.slotCount.plus(BigInt.fromI32(1));
   factory.save();
 
-  let slotAddress = event.params.slot.toHexString();
-  let slot = new Slot(slotAddress);
+  const slotAddress = event.params.slot.toHexString();
+  const slot = new Slot(slotAddress);
 
-  let recipientAccount = getOrCreateAccount(event.params.recipient);
+  const recipientAccount = getOrCreateAccount(event.params.recipient);
   recipientAccount.slotCount += 1;
   recipientAccount.save();
 
   slot.recipient = event.params.recipient;
   slot.recipientAccount = recipientAccount.id;
   slot.occupantAccount = null;
-  let currency = getOrCreateCurrency(event.params.currency);
+  const currency = getOrCreateCurrency(event.params.currency);
   slot.currency = currency.id;
 
   // Config
@@ -97,9 +97,9 @@ export function handleSlotDeployed(event: SlotDeployed): void {
   slot.save();
 
   // Record deploy event
-  let evId =
+  const evId =
     event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
-  let ev = new SlotDeployedEvent(evId);
+  const ev = new SlotDeployedEvent(evId);
   ev.slot = slot.id;
   ev.recipient = event.params.recipient;
   ev.currency = currency.id;
@@ -117,7 +117,7 @@ export function handleSlotDeployed(event: SlotDeployed): void {
   ev.save();
 
   // Start indexing events on this slot contract
-  let context = new DataSourceContext();
+  const context = new DataSourceContext();
   context.setString("factory", event.address.toHexString());
   SlotTemplate.createWithContext(event.params.slot, context);
 
@@ -129,9 +129,9 @@ export function handleSlotDeployed(event: SlotDeployed): void {
 }
 
 export function handleModuleVerified(event: ModuleVerified): void {
-  let id = event.params.module.toHexString();
+  const id = event.params.module.toHexString();
   let module = Module.load(id);
-  let wasVerified = module ? module.verified : false;
+  const wasVerified = module ? module.verified : false;
   if (!module) {
     module = new Module(id);
     module.factory = event.address.toHexString();
@@ -142,7 +142,7 @@ export function handleModuleVerified(event: ModuleVerified): void {
   module.version = event.params.version;
   module.feeBps = event.params.feeBps;
 
-  let uri = event.params.moduleURI;
+  const uri = event.params.moduleURI;
   module.moduleURI = uri;
   if (uri.length > 0) {
     let hash: string | null = null;
@@ -152,14 +152,14 @@ export function handleModuleVerified(event: ModuleVerified): void {
       hash = uri;
     }
     if (hash) {
-      let data = ipfs.cat(hash);
+      const data = ipfs.cat(hash);
       if (data) {
-        let result = json.try_fromString(data.toString());
+        const result = json.try_fromString(data.toString());
         if (!result.isError) {
-          let obj = result.value.toObject();
-          let img = obj.get("image");
+          const obj = result.value.toObject();
+          const img = obj.get("image");
           if (img && !img.isNull()) module.image = img.toString();
-          let desc = obj.get("description");
+          const desc = obj.get("description");
           if (desc && !desc.isNull()) module.description = desc.toString();
         }
       }

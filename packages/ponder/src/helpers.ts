@@ -1,6 +1,6 @@
 import type { Context } from "ponder:registry";
 import { account, accountSlot, currency, module } from "ponder:schema";
-import { type Address, type Hex, getAddress, toFunctionSelector } from "viem";
+import { type Address, getAddress, type Hex, toFunctionSelector } from "viem";
 import { ERC20Abi } from "../abis";
 
 // Function selector for splitHash() — used to detect 0xSplits contracts
@@ -107,8 +107,10 @@ export async function getOrCreateCurrency(ctx: Context, addressRaw: Hex) {
           { address: checksum, abi, functionName: "decimals" },
         ],
       });
-      if (n.status === "success" && typeof n.result === "string") name = n.result;
-      if (s.status === "success" && typeof s.result === "string") symbol = s.result;
+      if (n.status === "success" && typeof n.result === "string")
+        name = n.result;
+      if (s.status === "success" && typeof s.result === "string")
+        symbol = s.result;
       if (d.status === "success") {
         if (typeof d.result === "number") decimals = d.result;
         else if (typeof d.result === "bigint") decimals = Number(d.result);

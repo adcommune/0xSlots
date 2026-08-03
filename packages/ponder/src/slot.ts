@@ -19,12 +19,12 @@ import {
 } from "ponder:schema";
 import type { Hex } from "viem";
 import {
-  ZERO_ADDR,
   evtId,
   getOrCreateAccount,
   getOrCreateAccountSlot,
   getOrCreateModule,
   lower,
+  ZERO_ADDR,
 } from "./helpers";
 
 async function loadSlot(context: Context, addr: Hex) {
@@ -369,11 +369,9 @@ ponder.on("Slot:ModuleFeePaid", async ({ event, context }) => {
 
   const mod = await context.db.find(module, { id: moduleId });
   if (mod) {
-    await context.db
-      .update(module, { id: moduleId })
-      .set((row) => ({
-        totalFeesCollected: row.totalFeesCollected + event.args.amount,
-      }));
+    await context.db.update(module, { id: moduleId }).set((row) => ({
+      totalFeesCollected: row.totalFeesCollected + event.args.amount,
+    }));
   }
 
   await context.db.insert(moduleFeePaidEvent).values({

@@ -9,10 +9,16 @@ import type { VouchedPolicy } from "./types";
  * `resolvePolicy` derives names on-chain now, so an entry here is only needed
  * for a policy with no factory to verify it against.
  *
- * What it is still for, and both matter:
+ * What it is still for:
  *   1. Populating a "verified policy" picker — an editorial judgement.
- *   2. Naming policies `resolvePolicy` cannot derive: one with no factory, or
- *      one deployed outside its factory so the CREATE2 provenance check fails.
+ *   2. Naming a policy `resolvePolicy` cannot derive — one deployed outside its
+ *      factory, so the CREATE2 provenance check rightly refuses it.
+ *
+ * Note what is NOT a reason any more: a policy with no factory at all. Those
+ * were "pointer" policies, holding no terms of their own and forwarding every
+ * decision to some other contract. They have been removed — see the commit that
+ * deleted QueueExclusivityPolicy. Every policy now carries its own terms, which
+ * is what makes its address derivable and this list nearly empty.
  */
 export const VOUCHED_POLICIES: Record<string, VouchedPolicy> = {
   // Base Sepolia — deployed 2026-07-29, block 44825297.
@@ -33,14 +39,6 @@ export const VOUCHED_POLICIES: Record<string, VouchedPolicy> = {
     impact: "soft",
     description:
       "Nobody can buy the occupant out for 7 days after they take the slot. Liquidation still works if they stop paying.",
-  },
-  // No factory at all, so this is the only way it can be named.
-  "0x0c8501c02b88bfcb10d9a2de6a40abce342eb1cd": {
-    chainId: 84532,
-    label: "Queue priority",
-    impact: "near-pure",
-    description:
-      "When the slot frees up it goes to whoever queued first, rather than to whoever is fastest. Buying an occupied slot is unaffected.",
   },
 };
 

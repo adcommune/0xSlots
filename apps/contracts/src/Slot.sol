@@ -293,8 +293,8 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         // epoch's news — a worse dynamic than the one it replaced.
         //
         // Occupancy timing now lives entirely in IOccupancyPolicy vetoes, which
-        // is where it can be expressed without a second phase: MinimumTenure
-        // for "not yet", QueueExclusivity for "first queued, not fastest".
+        // is where it can be expressed without a second phase — MinimumTenure
+        // for "not yet", MinimumPrice for "not below this".
         //
         // `epochSeconds` is ignored. `initializeV3` rejects a non-zero value
         // outright, and the storage below it may never be reclaimed — see the

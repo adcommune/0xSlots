@@ -1,14 +1,14 @@
 import { BigInt } from "@graphprotocol/graph-ts";
-import { CollectionDeployed } from "../generated/ERC721SlotsFactory/ERC721SlotsFactory";
-import { ERC721Slots as ERC721SlotsTemplate } from "../generated/templates";
+import type { CollectionDeployed } from "../generated/ERC721SlotsFactory/ERC721SlotsFactory";
 import { NFTCollection } from "../generated/schema";
+import { ERC721Slots as ERC721SlotsTemplate } from "../generated/templates";
 import { getOrCreateCurrency } from "./helpers";
 
 export function handleCollectionDeployed(event: CollectionDeployed): void {
-  let id = event.params.collection.toHexString();
-  let collection = new NFTCollection(id);
+  const id = event.params.collection.toHexString();
+  const collection = new NFTCollection(id);
 
-  let currency = getOrCreateCurrency(event.params.currency);
+  const currency = getOrCreateCurrency(event.params.currency);
 
   collection.name = event.params.name;
   collection.symbol = event.params.symbol;

@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
+import {IPolicyFactory} from "../interfaces/IPolicyFactory.sol";
 import {MinimumPricePolicy} from "./MinimumPricePolicy.sol";
 
 /// @title MinimumPricePolicyFactory
@@ -29,7 +30,7 @@ import {MinimumPricePolicy} from "./MinimumPricePolicy.sol";
 ///      whoever first wants those terms; every later slot reuses the address.
 ///      `predict` resolves it without a transaction, so a client can skip
 ///      `getOrDeploy` entirely when the address already has code.
-contract MinimumPricePolicyFactory {
+contract MinimumPricePolicyFactory is IPolicyFactory {
     event PricePolicyDeployed(
         address indexed policy,
         address indexed currency,
@@ -88,6 +89,37 @@ contract MinimumPricePolicyFactory {
         uint256 minPrice
     ) external view returns (bool) {
         return predict(currency, minPrice).code.length != 0;
+    }
+
+    // ─── IPolicyFactory ─────────────────────────────────────────────────────
+
+    /// @inheritdoc IPolicyFactory
+    function policyKind() external pure returns (string memory) {
+        return "MinimumPricePolicy";
+    }
+
+    /// @inheritdoc IPolicyFactory
+    /// @dev Two reads rather than one, because the terms are two values and the
+    ///      policy exposes them separately. Nested `try` is the price of not
+    ///      changing the deployed policies — see the note in IPolicyFactory
+    ///      about why a shared `terms()` getter was not added instead.
+    function verify(address policy) external view returns (bool) {
+        // `try` does NOT catch this: for a call to an address with no code the
+        // compiler's extcodesize check reverts before the call is even made, and
+        // that revert lands outside the try/catch. The interface requires false,
+        // not a revert, because callers loop over factories.
+        if (policy.code.length == 0) return false;
+
+        try MinimumPricePolicy(policy).minPrice() returns (uint256 p) {
+            if (p == 0) return false;
+            try MinimumPricePolicy(policy).currency() returns (IERC20 c) {
+                return predict(address(c), p) == policy;
+            } catch {
+                return false;
+            }
+        } catch {
+            return false;
+        }
     }
 
     /// @dev Two parameters, one 32-byte salt. Hashed rather than packed so the

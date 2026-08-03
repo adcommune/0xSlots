@@ -18,6 +18,7 @@ export { metadataModuleAbi } from "./abis/metadata-module";
 export { minimumPricePolicyAbi } from "./abis/minimumPricePolicy";
 export { minimumPricePolicyFactoryAbi } from "./abis/minimumPricePolicyFactory";
 export { minimumTenurePolicyFactoryAbi } from "./abis/minimumTenurePolicyFactory";
+export { policyFactoryAbi } from "./abis/policyFactory";
 // Re-export addresses and utilities
 export {
   batchCollectorAddress,
@@ -31,6 +32,7 @@ export {
   isSlotsHubDeployed,
   MINIMUM_PRICE_POLICY_FACTORY,
   MINIMUM_TENURE_POLICY_FACTORY,
+  POLICY_FACTORIES,
   type SupportedChainId,
   slotFactoryAddress,
 } from "./addresses";

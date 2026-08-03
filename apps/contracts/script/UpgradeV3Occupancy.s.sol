@@ -6,7 +6,6 @@ import {Slot} from "../src/Slot.sol";
 import {SlotFactory} from "../src/SlotFactory.sol";
 import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 import {MinimumTenurePolicy} from "../src/policies/MinimumTenurePolicy.sol";
-import {QueueExclusivityPolicy} from "../src/policies/QueueExclusivityPolicy.sol";
 import {SlotQueue} from "../src/periphery/SlotQueue.sol";
 
 /**
@@ -172,14 +171,11 @@ contract UpgradeV3Occupancy is BaseScript {
         // 5 ── reference policies and the queue peripheral
         MinimumTenurePolicy tenure = new MinimumTenurePolicy(TENURE_SECONDS);
         SlotQueue queue = new SlotQueue(address(factory));
-        QueueExclusivityPolicy exclusivity = new QueueExclusivityPolicy(queue);
 
         factory.setPolicyVerified(address(tenure), true);
-        factory.setPolicyVerified(address(exclusivity), true);
 
         console2.log("MinimumTenurePolicy   ", address(tenure));
         console2.log("SlotQueue             ", address(queue));
-        console2.log("QueueExclusivityPolicy", address(exclusivity));
 
         // ── postconditions ──
         require(
