@@ -18,11 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  VOUCHED_POLICIES,
-  type VouchedPolicy,
-  vouchedPoliciesForChain,
-} from "@/config/policies";
+import { getVouchedPolicy, vouchedPoliciesForChain } from "@/config/policies";
 import { useChain } from "@/context/chain";
 import { AddressInput } from "../address-input";
 import { useErc20Check } from "../hooks/use-erc20-check";
@@ -227,16 +223,16 @@ export function OccupancySection() {
                   <SelectValue placeholder="Choose a policy" />
                 </SelectTrigger>
                 <SelectContent>
-                  {vouchedForChain.map(([addr, p]: [string, VouchedPolicy]) => (
-                    <SelectItem key={addr} value={addr}>
+                  {vouchedForChain.map((p) => (
+                    <SelectItem key={p.address} value={p.address}>
                       {p.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              {field.value && VOUCHED_POLICIES[field.value.toLowerCase()] && (
+              {getVouchedPolicy(field.value, chainId) && (
                 <FormDescription>
-                  {VOUCHED_POLICIES[field.value.toLowerCase()].description}
+                  {getVouchedPolicy(field.value, chainId)?.description}
                 </FormDescription>
               )}
               <FormMessage />

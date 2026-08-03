@@ -16,7 +16,9 @@ export type {
   VouchedPolicy,
 } from "./types";
 export {
+  getVouchedPolicy,
   SLOT_QUEUE_ADDRESSES,
-  VOUCHED_POLICIES,
+  searchVouchedPolicies,
+  type VouchedPolicyEntry,
   vouchedPoliciesForChain,
 } from "./vouched";

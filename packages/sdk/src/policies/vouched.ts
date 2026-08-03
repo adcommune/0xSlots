@@ -44,12 +44,64 @@ export const VOUCHED_POLICIES: Record<string, VouchedPolicy> = {
   },
 };
 
-/** Vouched policies available on a given chain, for a picker. */
-export function vouchedPoliciesForChain(
+/**
+ * ── Accessors ─────────────────────────────────────────────────────────────
+ *
+ * Reach for these rather than indexing `VOUCHED_POLICIES` directly. The record
+ * is keyed by LOWERCASE address, so every raw read needs its own
+ * `.toLowerCase()` and silently misses if you forget — and, worse, carries no
+ * chain check even though a policy address means nothing on another chain.
+ * That is why `VOUCHED_POLICIES` is not exported from the package root.
+ */
+
+/** An address paired with its entry, which is what a picker wants. */
+export interface VouchedPolicyEntry extends VouchedPolicy {
+  address: string;
+}
+
+/**
+ * Look up one vouched policy.
+ *
+ * Case-insensitive, and chain-checked: an entry only matches on the chain it
+ * was deployed to. Two different chains can reuse an address, and naming a
+ * Base Sepolia policy on mainnet would be worse than leaving it unnamed.
+ */
+export function getVouchedPolicy(
+  address: string | null | undefined,
   chainId: number,
-): Array<[string, VouchedPolicy]> {
-  return Object.entries(VOUCHED_POLICIES).filter(
-    ([, p]) => p.chainId === chainId,
+): VouchedPolicyEntry | undefined {
+  if (!address) return undefined;
+  const key = address.toLowerCase();
+  const entry = VOUCHED_POLICIES[key];
+  if (!entry || entry.chainId !== chainId) return undefined;
+  return { ...entry, address: key };
+}
+
+/** Vouched policies available on a given chain, for a picker. */
+export function vouchedPoliciesForChain(chainId: number): VouchedPolicyEntry[] {
+  return Object.entries(VOUCHED_POLICIES)
+    .filter(([, p]) => p.chainId === chainId)
+    .map(([address, p]) => ({ ...p, address }));
+}
+
+/**
+ * Vouched policies on a chain whose label or description matches `query`.
+ *
+ * Substring, case-insensitive; an empty query returns everything on the chain,
+ * so a picker can use this for both its initial list and its filtered one.
+ */
+export function searchVouchedPolicies(
+  chainId: number,
+  query: string,
+): VouchedPolicyEntry[] {
+  const q = query.trim().toLowerCase();
+  const all = vouchedPoliciesForChain(chainId);
+  if (!q) return all;
+  return all.filter(
+    (p) =>
+      p.label.toLowerCase().includes(q) ||
+      p.description.toLowerCase().includes(q) ||
+      p.address.includes(q),
   );
 }
 

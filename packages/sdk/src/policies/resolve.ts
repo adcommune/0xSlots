@@ -8,7 +8,7 @@ import {
 import { type Address, erc20Abi, formatUnits, type PublicClient } from "viem";
 import { formatDuration } from "./format";
 import type { ResolvedPolicy } from "./types";
-import { VOUCHED_POLICIES } from "./vouched";
+import { getVouchedPolicy } from "./vouched";
 
 /**
  * Name an occupancy policy from its address alone.
@@ -43,11 +43,11 @@ export async function resolvePolicy(
   chainId: number,
   address: Address,
 ): Promise<ResolvedPolicy> {
-  const key = address.toLowerCase();
-
   // Hand-vouched entries first: no network, and they cover policies that have
-  // no factory to verify against.
-  const vouched = VOUCHED_POLICIES[key];
+  // no factory to verify against. Chain-checked — an address means nothing on
+  // a chain it was not deployed to, and a confident wrong name is worse than
+  // no name.
+  const vouched = getVouchedPolicy(address, chainId);
   if (vouched) {
     return {
       address,

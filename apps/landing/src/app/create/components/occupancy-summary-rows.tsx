@@ -4,7 +4,7 @@ import { getChainTokens } from "@0xslots/sdk";
 import { ShieldCheck } from "lucide-react";
 import { useFormContext } from "react-hook-form";
 import { isAddress } from "viem";
-import { VOUCHED_POLICIES } from "@/config/policies";
+import { getVouchedPolicy } from "@/config/policies";
 import { useChain } from "@/context/chain";
 import { truncateAddress } from "@/utils";
 import { type CreateSlotFormValues, formatValueUnit } from "../schema";
@@ -38,7 +38,7 @@ export function OccupancySummaryRows() {
         return `min ${minPriceValue} ${symbol ?? ""}`.trim();
       case "known":
         return occupancyPolicy
-          ? (VOUCHED_POLICIES[occupancyPolicy.toLowerCase()]?.label ??
+          ? (getVouchedPolicy(occupancyPolicy, chainId)?.label ??
               truncateAddress(occupancyPolicy))
           : "—";
       case "custom":
