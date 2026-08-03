@@ -243,6 +243,60 @@ contract OccupancyPolicyTest is Test {
         assertEq(Slot(s).occupant(), bob);
     }
 
+    /// @dev Pins the documented limit of condition 1. The tenure escrow is
+    ///      checked at entry and never again, and `Slot.withdraw` consults no
+    ///      policy — only the core's own `minDepositSeconds` floor. So the
+    ///      escrow binds exactly as far as that floor reaches and no further:
+    ///      here Alice funds 7 days of protection, withdraws back down to the
+    ///      1-day floor, and keeps all 7 days of it.
+    ///
+    ///      Asserted rather than fixed because the economics survive it.
+    ///      Protection outlives solvency, but liquidation is never vetoable, so
+    ///      from day 1 onward Alice can be removed by anyone. What the leak
+    ///      actually costs is the BUYOUT channel: days 1–7 a rival must
+    ///      liquidate to vacancy instead of buying at the declared price. A
+    ///      slot that needs the escrow to bind for its whole term sets
+    ///      `minDepositSeconds >= tenureSeconds`, moving the floor into the
+    ///      core where `withdraw` does enforce it.
+    function test_Tenure_ProtectionOutlivesTheEscrowDownToTheCoreFloor() public {
+        MinimumTenurePolicy p = new MinimumTenurePolicy(7 days);
+        address s = _tenureSlot(p);
+        uint256 need = _tenureCost(100 ether, 7 days);
+        uint256 floor = _tenureCost(100 ether, 1 days); // == minDepositSeconds
+
+        vm.startPrank(alice);
+        token.approve(s, type(uint256).max);
+        Slot(s).buy(alice, need, 100 ether);
+        // The core floor is the only thing stopping a full withdrawal.
+        vm.expectRevert(Slot.InsufficientDeposit.selector);
+        Slot(s).withdraw(need);
+        Slot(s).withdraw(need - floor);
+        vm.stopPrank();
+        assertEq(Slot(s).deposit(), floor, "escrow drained to the core floor");
+
+        // One day funded, seven days protected. Past the runway Alice is
+        // insolvent — and still cannot be bought out.
+        vm.warp(block.timestamp + 2 days);
+        assertTrue(Slot(s).isInsolvent(), "runway exhausted");
+
+        vm.startPrank(bob);
+        token.approve(s, type(uint256).max);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                MinimumTenurePolicy.TenureNotElapsed.selector,
+                Slot(s).occupiedSince() + 7 days
+            )
+        );
+        Slot(s).buy(bob, need, 100 ether);
+        vm.stopPrank();
+        assertEq(Slot(s).occupant(), alice, "protection outlived the escrow");
+
+        // The backstop that keeps this sound: liquidation ignores the policy.
+        vm.prank(bob);
+        Slot(s).liquidate();
+        assertEq(Slot(s).occupant(), address(0), "liquidated inside the window");
+    }
+
     function test_Tenure_RejectsUnderfundedBuy() public {
         MinimumTenurePolicy p = new MinimumTenurePolicy(7 days);
         address s = _tenureSlot(p);

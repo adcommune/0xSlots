@@ -12,10 +12,28 @@ import {IOccupancyPolicy, OccupancyContext} from "../interfaces/IOccupancyPolicy
 ///      Harberger impact: SOFT. Forced sale is delayed, not removed — a
 ///      dishonestly low price is still punished, just `tenureSeconds` later.
 ///      Two conditions keep it sound and both are enforced here:
-///        1. Protection is pre-paid — the buyer must escrow the full tenure's tax.
+///        1. Entry is funded — the buyer must escrow the full tenure's tax at
+///           the moment of purchase.
 ///        2. Price cannot be cut while protected, or the occupant would declare
 ///           high, drop to dust on day 1, and pay nothing for the window.
 ///      Liquidation is unaffected: insolvency always ends tenure.
+///
+///      ── What condition 1 does NOT guarantee ───────────────────────────────
+///      It is checked at entry and never again. `Slot.withdraw` consults no
+///      policy — only the core's own `minDepositSeconds` floor — so the escrow
+///      binds exactly as far as that floor reaches. An occupant can escrow the
+///      full tenure, withdraw straight back down to the floor, and keep the
+///      whole protection window. See
+///      `test_Tenure_ProtectionOutlivesTheEscrowDownToTheCoreFloor`.
+///
+///      This is a leak in the mechanism, not in the economics. Liquidation is
+///      never vetoable, so an occupant who withdraws is removable from the
+///      moment their runway ends. What the leak costs is the BUYOUT channel:
+///      for the rest of the window a rival must liquidate to vacancy rather
+///      than buy at the declared price. A slot that wants condition 1 to bind
+///      for its full term sets `minDepositSeconds >= tenureSeconds` at
+///      creation, which moves the floor into the core where `withdraw`
+///      enforces it.
 contract MinimumTenurePolicy is IOccupancyPolicy {
     uint256 public constant BASIS_POINTS = 10_000;
     uint256 public constant MONTH = 30 days;
