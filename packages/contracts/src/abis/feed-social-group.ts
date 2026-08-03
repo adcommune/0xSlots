@@ -42,9 +42,7 @@ export const feedSocialGroupAbi = [
   {
     type: "function",
     name: "setFeedModule",
-    inputs: [
-      { name: "_feedModule", type: "address", internalType: "address" },
-    ],
+    inputs: [{ name: "_feedModule", type: "address", internalType: "address" }],
     outputs: [],
     stateMutability: "nonpayable",
   },

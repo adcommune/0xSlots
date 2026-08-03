@@ -39,6 +39,7 @@ export type ModuleMode = (typeof moduleModes)[number];
 export const occupancyPolicyModes = [
   "none",
   "tenure",
+  "price",
   "known",
   "custom",
 ] as const;
@@ -96,6 +97,15 @@ export const createSlotSchema = z
         "Must be greater than zero",
       ),
     tenureUnit: z.enum(timeDenominations),
+    // Only read when occupancyPolicyMode === "price". Denominated in the slot's
+    // own currency; the policy contract is deployed on demand at a CREATE2
+    // address derived from (currency, minPrice).
+    minPriceValue: z
+      .string()
+      .refine(
+        (v) => !Number.isNaN(Number(v)) && Number(v) > 0,
+        "Must be greater than zero",
+      ),
     occupancyPolicy: z.string().refine(isValidAddressOrEns, {
       message: "Enter a valid address (0x…) or ENS name",
     }),
@@ -202,6 +212,7 @@ export const defaultValues: CreateSlotFormValues = {
   occupancyPolicyMode: "none",
   tenureValue: "7",
   tenureUnit: "days",
+  minPriceValue: "1",
   occupancyPolicy: "",
   mutableTax: false,
   mutableModule: false,

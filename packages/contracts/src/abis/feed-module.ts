@@ -78,7 +78,12 @@ export const feedModuleAbi = [
     type: "event",
     name: "RouterUpdated",
     inputs: [
-      { name: "router", type: "address", indexed: true, internalType: "address" },
+      {
+        name: "router",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
       { name: "trusted", type: "bool", indexed: false, internalType: "bool" },
     ],
     anonymous: false,

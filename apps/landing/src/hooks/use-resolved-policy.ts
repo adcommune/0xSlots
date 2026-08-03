@@ -1,11 +1,14 @@
 "use client";
 
 import {
+  MINIMUM_PRICE_POLICY_FACTORY,
   MINIMUM_TENURE_POLICY_FACTORY,
+  minimumPricePolicyAbi,
+  minimumPricePolicyFactoryAbi,
   minimumTenurePolicyFactoryAbi,
 } from "@0xslots/contracts";
 import { useQuery } from "@tanstack/react-query";
-import type { Address } from "viem";
+import { type Address, erc20Abi, formatUnits } from "viem";
 import { usePublicClient } from "wagmi";
 import { KNOWN_POLICIES, type KnownPolicy } from "@/config/policies";
 import { formatDuration } from "@/hooks/use-duration";
@@ -43,11 +46,16 @@ export function useResolvedPolicy(
   const publicClient = usePublicClient({ chainId });
   const address = policyAddress?.toLowerCase() ?? null;
   const known = address ? KNOWN_POLICIES[address] : undefined;
-  const factory = MINIMUM_TENURE_POLICY_FACTORY[chainId];
+  const tenureFactory = MINIMUM_TENURE_POLICY_FACTORY[chainId];
+  const priceFactory = MINIMUM_PRICE_POLICY_FACTORY[chainId];
 
   // Skip the network entirely for the hand-curated entries and when there is
   // no policy at all — the common cases.
-  const enabled = !!address && !known && !!factory && !!publicClient;
+  const enabled =
+    !!address &&
+    !known &&
+    !!publicClient &&
+    (!!tenureFactory || !!priceFactory);
 
   const { data, isLoading } = useQuery({
     queryKey: ["occupancy-policy", chainId, address],
@@ -56,37 +64,19 @@ export function useResolvedPolicy(
     gcTime: Number.POSITIVE_INFINITY,
     retry: false,
     queryFn: async (): Promise<KnownPolicy | null> => {
-      try {
-        const tenureSeconds = (await publicClient!.readContract({
-          address: address as Address,
-          abi: TENURE_SECONDS_ABI,
-          functionName: "tenureSeconds",
-        })) as bigint;
-
-        if (tenureSeconds <= 0n) return null;
-
-        const predicted = (await publicClient!.readContract({
-          address: factory as Address,
-          abi: minimumTenurePolicyFactoryAbi,
-          functionName: "predict",
-          args: [tenureSeconds],
-        })) as Address;
-
-        // Provenance check — see above.
-        if (predicted.toLowerCase() !== address) return null;
-
-        const human = formatDuration(Number(tenureSeconds));
-        return {
-          chainId,
-          tenureSeconds: Number(tenureSeconds),
-          label: `${human} minimum tenure`,
-          impact: "soft",
-          description: `Nobody can buy the occupant out for ${human} after they take the slot. Liquidation still works if they stop paying.`,
-        };
-      } catch {
-        // Not a tenure policy, or not readable. Stays unrecognised.
-        return null;
-      }
+      const tenure = await resolveTenure(
+        publicClient!,
+        address as Address,
+        tenureFactory,
+        chainId,
+      );
+      if (tenure) return tenure;
+      return resolvePrice(
+        publicClient!,
+        address as Address,
+        priceFactory,
+        chainId,
+      );
     },
   });
 
@@ -94,6 +84,112 @@ export function useResolvedPolicy(
     policy: known ?? data ?? undefined,
     isLoading: enabled && isLoading,
   };
+}
+
+/**
+ * A minimum-tenure policy, if that is what this address is.
+ *
+ * The `predict` equality is the provenance check: CREATE2 binds the address to
+ * the init code AND the salt, so only the genuine policy for that exact
+ * duration can sit there. Anything else stays unrecognised.
+ */
+async function resolveTenure(
+  client: NonNullable<ReturnType<typeof usePublicClient>>,
+  address: Address,
+  factory: `0x${string}` | undefined,
+  chainId: number,
+): Promise<KnownPolicy | null> {
+  if (!factory) return null;
+  try {
+    const tenureSeconds = (await client.readContract({
+      address,
+      abi: TENURE_SECONDS_ABI,
+      functionName: "tenureSeconds",
+    })) as bigint;
+    if (tenureSeconds <= 0n) return null;
+
+    const predicted = (await client.readContract({
+      address: factory,
+      abi: minimumTenurePolicyFactoryAbi,
+      functionName: "predict",
+      args: [tenureSeconds],
+    })) as Address;
+    if (predicted.toLowerCase() !== address.toLowerCase()) return null;
+
+    const human = formatDuration(Number(tenureSeconds));
+    return {
+      chainId,
+      tenureSeconds: Number(tenureSeconds),
+      label: `${human} minimum tenure`,
+      impact: "soft",
+      description: `Nobody can buy the occupant out for ${human} after they take the slot. Liquidation still works if they stop paying.`,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * A minimum-price policy, if that is what this address is.
+ *
+ * Same provenance check. The symbol and decimals are read from the policy's
+ * bound currency rather than the slot's, because the policy is the thing being
+ * named — and a mismatched pairing reverts on-chain anyway.
+ */
+async function resolvePrice(
+  client: NonNullable<ReturnType<typeof usePublicClient>>,
+  address: Address,
+  factory: `0x${string}` | undefined,
+  chainId: number,
+): Promise<KnownPolicy | null> {
+  if (!factory) return null;
+  try {
+    const [minPrice, currency] = (await Promise.all([
+      client.readContract({
+        address,
+        abi: minimumPricePolicyAbi,
+        functionName: "minPrice",
+      }),
+      client.readContract({
+        address,
+        abi: minimumPricePolicyAbi,
+        functionName: "currency",
+      }),
+    ])) as [bigint, Address];
+    if (minPrice <= 0n) return null;
+
+    const predicted = (await client.readContract({
+      address: factory,
+      abi: minimumPricePolicyFactoryAbi,
+      functionName: "predict",
+      args: [currency, minPrice],
+    })) as Address;
+    if (predicted.toLowerCase() !== address.toLowerCase()) return null;
+
+    const [symbol, decimals] = (await Promise.all([
+      client.readContract({
+        address: currency,
+        abi: erc20Abi,
+        functionName: "symbol",
+      }),
+      client.readContract({
+        address: currency,
+        abi: erc20Abi,
+        functionName: "decimals",
+      }),
+    ])) as [string, number];
+
+    const human = `${formatUnits(minPrice, decimals)} ${symbol}`;
+    return {
+      chainId,
+      label: `${human} minimum price`,
+      // Forced sale is never delayed — only the declared value is floored.
+      impact: "near-pure",
+      description: `Nobody can declare below ${human} on this slot. Buying is never delayed: anyone can take it at any moment, as long as they declare at least that much.`,
+    };
+  } catch {
+    return null;
+  }
 }
 
 const TENURE_SECONDS_ABI = [

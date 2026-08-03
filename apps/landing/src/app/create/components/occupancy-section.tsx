@@ -1,5 +1,6 @@
 "use client";
 
+import { getChainTokens } from "@0xslots/sdk";
 import { ShieldCheck } from "lucide-react";
 import { useFormContext } from "react-hook-form";
 import {
@@ -20,6 +21,7 @@ import {
 import { KNOWN_POLICIES, knownPoliciesForChain } from "@/config/policies";
 import { useChain } from "@/context/chain";
 import { AddressInput } from "../address-input";
+import { useErc20Check } from "../hooks/use-erc20-check";
 import {
   type CreateSlotFormValues,
   formatValueUnit,
@@ -44,6 +46,20 @@ export function OccupancySection() {
   const knownForChain = knownPoliciesForChain(chainId);
 
   const tenureUnit = form.watch("tenureUnit");
+
+  // A price floor is a bare number until you say what it is denominated in, so
+  // the input has to name the slot's own currency. The policy enforces the same
+  // pairing on-chain and reverts `WrongCurrency` on a mismatch.
+  const currencyMode = form.watch("currencyMode");
+  const presetCurrency = form.watch("presetCurrency");
+  const customCurrency = form.watch("customCurrency");
+  const presetToken = getChainTokens(chainId).find(
+    (t) => t.address === presetCurrency,
+  );
+  const custom = useErc20Check(currencyMode === "custom" ? customCurrency : "");
+  const currencySymbol =
+    currencyMode === "preset" ? presetToken?.symbol : custom.data?.symbol;
+  const minPriceValue = form.watch("minPriceValue");
 
   return (
     <div className="space-y-4">
@@ -73,6 +89,7 @@ export function OccupancySection() {
               <SelectContent>
                 <SelectItem value="none">None</SelectItem>
                 <SelectItem value="tenure">Minimum tenure</SelectItem>
+                <SelectItem value="price">Minimum price</SelectItem>
                 <SelectItem value="known" disabled={knownForChain.length === 0}>
                   Verified policy
                   {knownForChain.length === 0 && " — none on this chain"}
@@ -134,6 +151,42 @@ export function OccupancySection() {
               </FormDescription>
               <FormDescription className="text-amber-600 dark:text-amber-500">
                 Softens Harberger — forced sale is delayed, not removed.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
+
+      {policyMode === "price" && (
+        <FormField
+          control={form.control}
+          name="minPriceValue"
+          render={({ field }) => (
+            <FormItem>
+              <div className="flex items-center gap-2">
+                <Input
+                  {...field}
+                  type="text"
+                  inputMode="decimal"
+                  className="flex-1"
+                />
+                <span className="text-sm text-muted-foreground w-28">
+                  {currencySymbol ?? "—"}
+                </span>
+              </div>
+              <FormDescription>
+                Nobody may declare below {field.value} {currencySymbol ?? ""} on
+                this slot — not the first occupant, not anyone who takes it
+                later. It guarantees you a minimum tax base rather than the slot
+                being parked on at a token valuation.{" "}
+                <strong>Buying is never delayed</strong>: anyone can take the
+                slot at any moment, as long as they declare at least this much.
+              </FormDescription>
+              <FormDescription className="text-amber-600 dark:text-amber-500">
+                Set it above what the slot is really worth and nobody can take
+                it at all — it sits empty and earns you nothing instead of a
+                little. Treat it like a reserve price, not a target.
               </FormDescription>
               <FormMessage />
             </FormItem>

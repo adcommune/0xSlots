@@ -1,9 +1,11 @@
 "use client";
 
+import { getChainTokens } from "@0xslots/sdk";
 import { ShieldCheck } from "lucide-react";
 import { useFormContext } from "react-hook-form";
 import { isAddress } from "viem";
 import { KNOWN_POLICIES } from "@/config/policies";
+import { useChain } from "@/context/chain";
 import { truncateAddress } from "@/utils";
 import { type CreateSlotFormValues, formatValueUnit } from "../schema";
 
@@ -20,11 +22,20 @@ export function OccupancySummaryRows() {
   const tenureValue = form.watch("tenureValue");
   const tenureUnit = form.watch("tenureUnit");
   const occupancyPolicy = form.watch("occupancyPolicy");
+  const minPriceValue = form.watch("minPriceValue");
+
+  const { chainId } = useChain();
+  const presetCurrency = form.watch("presetCurrency");
+  const symbol = getChainTokens(chainId).find(
+    (t) => t.address === presetCurrency,
+  )?.symbol;
 
   const policyLabel = (() => {
     switch (policyMode) {
       case "tenure":
         return `${formatValueUnit(tenureValue, tenureUnit)} min.`;
+      case "price":
+        return `min ${minPriceValue} ${symbol ?? ""}`.trim();
       case "known":
         return occupancyPolicy
           ? (KNOWN_POLICIES[occupancyPolicy.toLowerCase()]?.label ??

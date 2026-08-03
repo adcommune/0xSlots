@@ -16,12 +16,14 @@ import { useNavigation } from "@/context/navigation";
 import { useSlotAction } from "@/hooks/use-slot-action";
 import { useSplitClient } from "@/hooks/use-split-client";
 import { resolveEnsAddress } from "@/lib/ens";
+import { toRawUnits } from "@/utils";
 import { useResolveAddress } from "./address-input";
 import { MobileBottomBar } from "./components/mobile-bottom-bar";
 import { StepExtra } from "./components/step-extra";
 import { StepParameters } from "./components/step-parameters";
 import { StepRecipient } from "./components/step-recipient";
 import { SummaryCard } from "./components/summary-card";
+import { useErc20Check } from "./hooks/use-erc20-check";
 import {
   type CreateSlotFormValues,
   createSlotSchema,
@@ -45,6 +47,7 @@ export default function CreatePage() {
     createSlot: sdkCreateSlot,
     createSlotV3: sdkCreateSlotV3,
     createSlotWithTenure: sdkCreateSlotWithTenure,
+    createSlotWithPriceFloor: sdkCreateSlotWithPriceFloor,
     createSlots: sdkCreateSlots,
     isPending,
     isConfirming,
@@ -81,6 +84,21 @@ export default function CreatePage() {
   const watchedMutableModule = form.watch("mutableModule");
 
   const needsManager = watchedMutableTax || watchedMutableModule;
+
+  // A price floor is denominated in the slot's own currency, so converting it
+  // to raw units needs THAT token's decimals — 1 USDC is 1e6, 1 WETH is 1e18.
+  const watchedCurrencyMode = form.watch("currencyMode");
+  const watchedPresetCurrency = form.watch("presetCurrency");
+  const presetTokenInfo = getChainTokens(selectedChainId).find(
+    (t) => t.address === watchedPresetCurrency,
+  );
+  const customTokenInfo = useErc20Check(
+    watchedCurrencyMode === "custom" ? watchedCustomCurrency : "",
+  );
+  const currencyDecimals =
+    (watchedCurrencyMode === "preset"
+      ? presetTokenInfo?.decimals
+      : customTokenInfo.data?.decimals) ?? 18;
 
   // ENS resolution for submission
   const recipientResolved = useResolveAddress(watchedRecipient);
@@ -216,7 +234,9 @@ export default function CreatePage() {
         : zeroAddress
     ) as Address;
     const usesOccupancyLayer =
-      occupancyPolicy !== zeroAddress || data.occupancyPolicyMode === "tenure";
+      occupancyPolicy !== zeroAddress ||
+      data.occupancyPolicyMode === "tenure" ||
+      data.occupancyPolicyMode === "price";
 
     // Minimum tenure resolves to a policy contract deployed on demand at a
     // CREATE2 address derived from the duration, so the hook handles deploy +
@@ -231,6 +251,21 @@ export default function CreatePage() {
           epochSeconds,
         },
         toSeconds(data.tenureValue, data.tenureUnit),
+      );
+    } else if (slotCount === 1 && data.occupancyPolicyMode === "price") {
+      // Same on-demand deploy as tenure, keyed on (currency, minPrice). The
+      // floor is denominated in the slot's own currency, so it has to be
+      // converted with THAT token's decimals — 1 USDC is 1e6, 1 WETH is 1e18,
+      // and the policy rejects a mismatched pairing on-chain.
+      sdkCreateSlotWithPriceFloor(
+        {
+          recipient: recipient as Address,
+          currency: currency as Address,
+          config,
+          initParams,
+          epochSeconds,
+        },
+        toRawUnits(data.minPriceValue, currencyDecimals),
       );
     } else if (slotCount === 1 && usesOccupancyLayer) {
       // createSlotV3 has no batch counterpart — SlotInitParams could not be

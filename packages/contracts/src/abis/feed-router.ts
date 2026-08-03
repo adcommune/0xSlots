@@ -51,7 +51,12 @@ export const feedRouterAbi = [
     name: "FeedEvent",
     inputs: [
       { name: "slot", type: "address", indexed: true, internalType: "address" },
-      { name: "eventType", type: "uint8", indexed: true, internalType: "uint8" },
+      {
+        name: "eventType",
+        type: "uint8",
+        indexed: true,
+        internalType: "uint8",
+      },
       { name: "data", type: "bytes", indexed: false, internalType: "bytes" },
     ],
     anonymous: false,

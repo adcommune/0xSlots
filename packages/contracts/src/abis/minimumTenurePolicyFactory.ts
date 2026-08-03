@@ -1,83 +1,83 @@
 export const minimumTenurePolicyFactoryAbi = [
   {
-    "type": "function",
-    "name": "getOrDeploy",
-    "inputs": [
+    type: "function",
+    name: "getOrDeploy",
+    inputs: [
       {
-        "name": "tenureSeconds",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+        name: "tenureSeconds",
+        type: "uint256",
+        internalType: "uint256",
+      },
     ],
-    "outputs": [
+    outputs: [
       {
-        "name": "policy",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: "policy",
+        type: "address",
+        internalType: "address",
+      },
     ],
-    "stateMutability": "nonpayable"
+    stateMutability: "nonpayable",
   },
   {
-    "type": "function",
-    "name": "isDeployed",
-    "inputs": [
+    type: "function",
+    name: "isDeployed",
+    inputs: [
       {
-        "name": "tenureSeconds",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+        name: "tenureSeconds",
+        type: "uint256",
+        internalType: "uint256",
+      },
     ],
-    "outputs": [
+    outputs: [
       {
-        "name": "",
-        "type": "bool",
-        "internalType": "bool"
-      }
+        name: "",
+        type: "bool",
+        internalType: "bool",
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: "view",
   },
   {
-    "type": "function",
-    "name": "predict",
-    "inputs": [
+    type: "function",
+    name: "predict",
+    inputs: [
       {
-        "name": "tenureSeconds",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+        name: "tenureSeconds",
+        type: "uint256",
+        internalType: "uint256",
+      },
     ],
-    "outputs": [
+    outputs: [
       {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: "",
+        type: "address",
+        internalType: "address",
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: "view",
   },
   {
-    "type": "event",
-    "name": "TenurePolicyDeployed",
-    "inputs": [
+    type: "event",
+    name: "TenurePolicyDeployed",
+    inputs: [
       {
-        "name": "policy",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
+        name: "policy",
+        type: "address",
+        indexed: true,
+        internalType: "address",
       },
       {
-        "name": "tenureSeconds",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      }
+        name: "tenureSeconds",
+        type: "uint256",
+        indexed: true,
+        internalType: "uint256",
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "error",
-    "name": "InvalidTenure",
-    "inputs": []
-  }
+    type: "error",
+    name: "InvalidTenure",
+    inputs: [],
+  },
 ] as const;

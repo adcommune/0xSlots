@@ -1,4 +1,4 @@
-import { Address } from "viem";
+import type { Address } from "viem";
 import { base, baseSepolia } from "viem/chains";
 
 /**
@@ -81,6 +81,20 @@ export function getSupportedChainIds(): SupportedChainId[] {
  * a CREATE2 address derived from that duration, so any tenure is available
  * without the policy needing mutable per-slot storage.
  */
-export const MINIMUM_TENURE_POLICY_FACTORY: Partial<Record<number, `0x${string}`>> = {
+export const MINIMUM_TENURE_POLICY_FACTORY: Partial<
+  Record<number, `0x${string}`>
+> = {
   [baseSepolia.id]: "0xDCCb7ac7A342bF09e36CeDE60eAA937d72D3a2Ea",
+};
+
+/**
+ * MinimumPricePolicyFactory — deploys one MinimumPricePolicy per
+ * (currency, minPrice) pair at a CREATE2 address derived from that pair. The
+ * currency is part of the key because the floor is a bare integer whose
+ * meaning depends entirely on the token's decimals.
+ */
+export const MINIMUM_PRICE_POLICY_FACTORY: Partial<
+  Record<number, `0x${string}`>
+> = {
+  [baseSepolia.id]: "0x2Bb831D6FDf48189CFa5Fd23e75B56135c61c963",
 };

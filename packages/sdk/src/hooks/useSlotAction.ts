@@ -154,6 +154,40 @@ export function useSlotAction(opts?: SlotActionCallbacks) {
     [client, exec],
   );
 
+  /**
+   * Ensure the price-floor policy for `(currency, minPrice)` exists, then
+   * create the slot pointing at it. Two transactions only the first time
+   * anyone uses those exact terms; afterwards the policy already exists and
+   * this is a single tx.
+   *
+   * `currency` must be the slot's own currency — the policy checks it on every
+   * call and reverts `WrongCurrency` otherwise.
+   */
+  const createSlotWithPriceFloor = useCallback(
+    async (
+      params: Omit<CreateSlotV3Params, "occupancyPolicy">,
+      minPrice: bigint,
+    ) => {
+      const policy = await client.predictPricePolicy(params.currency, minPrice);
+      const exists = await client.isPricePolicyDeployed(
+        params.currency,
+        minPrice,
+      );
+      if (!exists) {
+        const deployed = await exec("Deploy price policy", () =>
+          client.deployPricePolicy(params.currency, minPrice),
+        );
+        // Bail on a rejected or reverted deploy: `createSlotV3` requires code
+        // at `policy` and would otherwise fail a second time, more confusingly.
+        if (!deployed) return undefined;
+      }
+      return exec("Create slot", () =>
+        client.createSlotV3({ ...params, occupancyPolicy: policy }),
+      );
+    },
+    [client, exec],
+  );
+
   const createSlots = useCallback(
     (params: CreateSlotsParams) =>
       exec("Create slots", () => client.createSlots(params)),
@@ -229,6 +263,7 @@ export function useSlotAction(opts?: SlotActionCallbacks) {
     createSlot,
     createSlotV3,
     createSlotWithTenure,
+    createSlotWithPriceFloor,
     createSlots,
     buy,
     selfAssess,
