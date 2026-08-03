@@ -16,6 +16,7 @@ fragment SlotFields on Slot {
   manager
   mutableTax
   mutableModule
+  mutablePolicy
   taxPercentage
   module {
     id

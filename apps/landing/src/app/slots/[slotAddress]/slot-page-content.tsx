@@ -507,6 +507,30 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
                                 <span className="text-muted-foreground flex items-center gap-1.5">
                                   <ShieldCheck className="size-3 text-violet-500" />{" "}
                                   Occupancy policy
+                                  {/* Read from the subgraph, not `slot`:
+                                      `getSlotInfo` still returns only
+                                      mutableTax/mutableModule, so the on-chain
+                                      struct cannot answer this yet. */}
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <span
+                                          className={`inline-flex items-center rounded px-1 py-0.5 text-[10px] font-medium cursor-default ${subgraphSlot?.mutablePolicy ? "bg-amber-100 text-amber-700" : "bg-muted text-muted-foreground"}`}
+                                        >
+                                          {subgraphSlot?.mutablePolicy ? (
+                                            <LockOpen className="size-2.5" />
+                                          ) : (
+                                            <Lock className="size-2.5" />
+                                          )}
+                                        </span>
+                                      </TooltipTrigger>
+                                      <TooltipContent side="top">
+                                        {subgraphSlot?.mutablePolicy
+                                          ? "Mutable — the manager can change who may take this slot, and on what terms"
+                                          : "Immutable — the occupancy terms are fixed forever"}
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
                                 </span>
                                 <span className="text-xs">
                                   {knownPolicy?.label ??

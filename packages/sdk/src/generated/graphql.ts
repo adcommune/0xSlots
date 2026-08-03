@@ -217,6 +217,7 @@ export type AccountSlot_OrderBy =
   | "slot__manager"
   | "slot__minDepositSeconds"
   | "slot__mutableModule"
+  | "slot__mutablePolicy"
   | "slot__mutableTax"
   | "slot__occupancyPolicy"
   | "slot__occupant"
@@ -487,6 +488,7 @@ export type BoughtEvent_OrderBy =
   | "slot__manager"
   | "slot__minDepositSeconds"
   | "slot__mutableModule"
+  | "slot__mutablePolicy"
   | "slot__mutableTax"
   | "slot__occupancyPolicy"
   | "slot__occupant"
@@ -713,6 +715,7 @@ export type DepositedEvent_OrderBy =
   | "slot__manager"
   | "slot__minDepositSeconds"
   | "slot__mutableModule"
+  | "slot__mutablePolicy"
   | "slot__mutableTax"
   | "slot__occupancyPolicy"
   | "slot__occupant"
@@ -2005,6 +2008,7 @@ export type LiquidatedEvent_OrderBy =
   | "slot__manager"
   | "slot__minDepositSeconds"
   | "slot__mutableModule"
+  | "slot__mutablePolicy"
   | "slot__mutableTax"
   | "slot__occupancyPolicy"
   | "slot__occupant"
@@ -2244,6 +2248,7 @@ export type MetadataSlot_OrderBy =
   | "slot__manager"
   | "slot__minDepositSeconds"
   | "slot__mutableModule"
+  | "slot__mutablePolicy"
   | "slot__mutableTax"
   | "slot__occupancyPolicy"
   | "slot__occupant"
@@ -2478,6 +2483,7 @@ export type MetadataUpdatedEvent_OrderBy =
   | "slot__manager"
   | "slot__minDepositSeconds"
   | "slot__mutableModule"
+  | "slot__mutablePolicy"
   | "slot__mutableTax"
   | "slot__occupancyPolicy"
   | "slot__occupant"
@@ -2686,6 +2692,7 @@ export type ModuleFeePaidEvent_OrderBy =
   | "slot__manager"
   | "slot__minDepositSeconds"
   | "slot__mutableModule"
+  | "slot__mutablePolicy"
   | "slot__mutableTax"
   | "slot__occupancyPolicy"
   | "slot__occupant"
@@ -2802,6 +2809,7 @@ export type ModuleUpdateProposedEvent_OrderBy =
   | "slot__manager"
   | "slot__minDepositSeconds"
   | "slot__mutableModule"
+  | "slot__mutablePolicy"
   | "slot__mutableTax"
   | "slot__occupancyPolicy"
   | "slot__occupant"
@@ -3303,6 +3311,7 @@ export type NftToken_OrderBy =
   | "slot__manager"
   | "slot__minDepositSeconds"
   | "slot__mutableModule"
+  | "slot__mutablePolicy"
   | "slot__mutableTax"
   | "slot__occupancyPolicy"
   | "slot__occupant"
@@ -3441,6 +3450,7 @@ export type OperatorSetEvent_OrderBy =
   | "slot__manager"
   | "slot__minDepositSeconds"
   | "slot__mutableModule"
+  | "slot__mutablePolicy"
   | "slot__mutableTax"
   | "slot__occupancyPolicy"
   | "slot__occupant"
@@ -3548,6 +3558,7 @@ export type PendingUpdateCancelledEvent_OrderBy =
   | "slot__manager"
   | "slot__minDepositSeconds"
   | "slot__mutableModule"
+  | "slot__mutablePolicy"
   | "slot__mutableTax"
   | "slot__occupancyPolicy"
   | "slot__occupant"
@@ -3664,6 +3675,7 @@ export type PolicyUpdateAppliedEvent_OrderBy =
   | "slot__manager"
   | "slot__minDepositSeconds"
   | "slot__mutableModule"
+  | "slot__mutablePolicy"
   | "slot__mutableTax"
   | "slot__occupancyPolicy"
   | "slot__occupant"
@@ -3780,6 +3792,7 @@ export type PolicyUpdateProposedEvent_OrderBy =
   | "slot__manager"
   | "slot__minDepositSeconds"
   | "slot__mutableModule"
+  | "slot__mutablePolicy"
   | "slot__mutableTax"
   | "slot__occupancyPolicy"
   | "slot__occupant"
@@ -3931,6 +3944,7 @@ export type PriceUpdatedEvent_OrderBy =
   | "slot__manager"
   | "slot__minDepositSeconds"
   | "slot__mutableModule"
+  | "slot__mutablePolicy"
   | "slot__mutableTax"
   | "slot__occupancyPolicy"
   | "slot__occupant"
@@ -4808,6 +4822,7 @@ export type RefundClaimedEvent_OrderBy =
   | "slot__manager"
   | "slot__minDepositSeconds"
   | "slot__mutableModule"
+  | "slot__mutablePolicy"
   | "slot__mutableTax"
   | "slot__occupancyPolicy"
   | "slot__occupant"
@@ -4966,6 +4981,7 @@ export type RefundCreditedEvent_OrderBy =
   | "slot__manager"
   | "slot__minDepositSeconds"
   | "slot__mutableModule"
+  | "slot__mutablePolicy"
   | "slot__mutableTax"
   | "slot__occupancyPolicy"
   | "slot__occupant"
@@ -5119,6 +5135,7 @@ export type ReleasedEvent_OrderBy =
   | "slot__manager"
   | "slot__minDepositSeconds"
   | "slot__mutableModule"
+  | "slot__mutablePolicy"
   | "slot__mutableTax"
   | "slot__occupancyPolicy"
   | "slot__occupant"
@@ -5278,6 +5295,7 @@ export type SettledEvent_OrderBy =
   | "slot__manager"
   | "slot__minDepositSeconds"
   | "slot__mutableModule"
+  | "slot__mutablePolicy"
   | "slot__mutableTax"
   | "slot__occupancyPolicy"
   | "slot__occupant"
@@ -5321,6 +5339,7 @@ export type Slot = {
   moduleFees: Array<ModuleFeePaidEvent>;
   moduleUpdateProposals: Array<ModuleUpdateProposedEvent>;
   mutableModule: Scalars["Boolean"]["output"];
+  mutablePolicy: Scalars["Boolean"]["output"];
   mutableTax: Scalars["Boolean"]["output"];
   occupancyPolicy?: Maybe<Scalars["Bytes"]["output"]>;
   occupant?: Maybe<Scalars["Bytes"]["output"]>;
@@ -5462,6 +5481,7 @@ export type SlotDeployedEvent = {
   minDepositSeconds: Scalars["BigInt"]["output"];
   module: Scalars["Bytes"]["output"];
   mutableModule: Scalars["Boolean"]["output"];
+  mutablePolicy: Scalars["Boolean"]["output"];
   mutableTax: Scalars["Boolean"]["output"];
   recipient: Scalars["Bytes"]["output"];
   slot: Slot;
@@ -5561,6 +5581,10 @@ export type SlotDeployedEvent_Filter = {
   mutableModule_in?: InputMaybe<Array<Scalars["Boolean"]["input"]>>;
   mutableModule_not?: InputMaybe<Scalars["Boolean"]["input"]>;
   mutableModule_not_in?: InputMaybe<Array<Scalars["Boolean"]["input"]>>;
+  mutablePolicy?: InputMaybe<Scalars["Boolean"]["input"]>;
+  mutablePolicy_in?: InputMaybe<Array<Scalars["Boolean"]["input"]>>;
+  mutablePolicy_not?: InputMaybe<Scalars["Boolean"]["input"]>;
+  mutablePolicy_not_in?: InputMaybe<Array<Scalars["Boolean"]["input"]>>;
   mutableTax?: InputMaybe<Scalars["Boolean"]["input"]>;
   mutableTax_in?: InputMaybe<Array<Scalars["Boolean"]["input"]>>;
   mutableTax_not?: InputMaybe<Scalars["Boolean"]["input"]>;
@@ -5639,6 +5663,7 @@ export type SlotDeployedEvent_OrderBy =
   | "minDepositSeconds"
   | "module"
   | "mutableModule"
+  | "mutablePolicy"
   | "mutableTax"
   | "recipient"
   | "slot"
@@ -5654,6 +5679,7 @@ export type SlotDeployedEvent_OrderBy =
   | "slot__manager"
   | "slot__minDepositSeconds"
   | "slot__mutableModule"
+  | "slot__mutablePolicy"
   | "slot__mutableTax"
   | "slot__occupancyPolicy"
   | "slot__occupant"
@@ -5769,6 +5795,7 @@ export type SlotOperator_OrderBy =
   | "slot__manager"
   | "slot__minDepositSeconds"
   | "slot__mutableModule"
+  | "slot__mutablePolicy"
   | "slot__mutableTax"
   | "slot__occupancyPolicy"
   | "slot__occupant"
@@ -5894,6 +5921,7 @@ export type SlotRefund_OrderBy =
   | "slot__manager"
   | "slot__minDepositSeconds"
   | "slot__mutableModule"
+  | "slot__mutablePolicy"
   | "slot__mutableTax"
   | "slot__occupancyPolicy"
   | "slot__occupant"
@@ -6072,6 +6100,10 @@ export type Slot_Filter = {
   mutableModule_in?: InputMaybe<Array<Scalars["Boolean"]["input"]>>;
   mutableModule_not?: InputMaybe<Scalars["Boolean"]["input"]>;
   mutableModule_not_in?: InputMaybe<Array<Scalars["Boolean"]["input"]>>;
+  mutablePolicy?: InputMaybe<Scalars["Boolean"]["input"]>;
+  mutablePolicy_in?: InputMaybe<Array<Scalars["Boolean"]["input"]>>;
+  mutablePolicy_not?: InputMaybe<Scalars["Boolean"]["input"]>;
+  mutablePolicy_not_in?: InputMaybe<Array<Scalars["Boolean"]["input"]>>;
   mutableTax?: InputMaybe<Scalars["Boolean"]["input"]>;
   mutableTax_in?: InputMaybe<Array<Scalars["Boolean"]["input"]>>;
   mutableTax_not?: InputMaybe<Scalars["Boolean"]["input"]>;
@@ -6267,6 +6299,7 @@ export type Slot_OrderBy =
   | "deployEvent__minDepositSeconds"
   | "deployEvent__module"
   | "deployEvent__mutableModule"
+  | "deployEvent__mutablePolicy"
   | "deployEvent__mutableTax"
   | "deployEvent__recipient"
   | "deployEvent__taxPercentage"
@@ -6327,6 +6360,7 @@ export type Slot_OrderBy =
   | "module__verified"
   | "module__version"
   | "mutableModule"
+  | "mutablePolicy"
   | "mutableTax"
   | "occupancyPolicy"
   | "occupant"
@@ -6500,6 +6534,7 @@ export type TaxCollectedEvent_OrderBy =
   | "slot__manager"
   | "slot__minDepositSeconds"
   | "slot__mutableModule"
+  | "slot__mutablePolicy"
   | "slot__mutableTax"
   | "slot__occupancyPolicy"
   | "slot__occupant"
@@ -6614,6 +6649,7 @@ export type TaxUpdateProposedEvent_OrderBy =
   | "slot__manager"
   | "slot__minDepositSeconds"
   | "slot__mutableModule"
+  | "slot__mutablePolicy"
   | "slot__mutableTax"
   | "slot__occupancyPolicy"
   | "slot__occupant"
@@ -6792,6 +6828,7 @@ export type TransferScheduledEvent_OrderBy =
   | "slot__manager"
   | "slot__minDepositSeconds"
   | "slot__mutableModule"
+  | "slot__mutablePolicy"
   | "slot__mutableTax"
   | "slot__occupancyPolicy"
   | "slot__occupant"
@@ -6945,6 +6982,7 @@ export type WithdrawnEvent_OrderBy =
   | "slot__manager"
   | "slot__minDepositSeconds"
   | "slot__mutableModule"
+  | "slot__mutablePolicy"
   | "slot__mutableTax"
   | "slot__occupancyPolicy"
   | "slot__occupant"
@@ -8004,6 +8042,7 @@ export type SlotFieldsFragment = {
   manager: string;
   mutableTax: boolean;
   mutableModule: boolean;
+  mutablePolicy: boolean;
   taxPercentage: string;
   occupant?: string | null;
   isOccupied: boolean;
@@ -8073,6 +8112,7 @@ export type GetSlotsQuery = {
     manager: string;
     mutableTax: boolean;
     mutableModule: boolean;
+    mutablePolicy: boolean;
     taxPercentage: string;
     occupant?: string | null;
     isOccupied: boolean;
@@ -8139,6 +8179,7 @@ export type GetSlotQuery = {
     manager: string;
     mutableTax: boolean;
     mutableModule: boolean;
+    mutablePolicy: boolean;
     taxPercentage: string;
     occupant?: string | null;
     isOccupied: boolean;
@@ -8209,6 +8250,7 @@ export type GetSlotsByRecipientQuery = {
     manager: string;
     mutableTax: boolean;
     mutableModule: boolean;
+    mutablePolicy: boolean;
     taxPercentage: string;
     occupant?: string | null;
     isOccupied: boolean;
@@ -8279,6 +8321,7 @@ export type GetSlotsByOccupantQuery = {
     manager: string;
     mutableTax: boolean;
     mutableModule: boolean;
+    mutablePolicy: boolean;
     taxPercentage: string;
     occupant?: string | null;
     isOccupied: boolean;
@@ -8363,6 +8406,7 @@ export type GetSlotsWithMetadataQuery = {
     manager: string;
     mutableTax: boolean;
     mutableModule: boolean;
+    mutablePolicy: boolean;
     taxPercentage: string;
     occupant?: string | null;
     isOccupied: boolean;
@@ -8522,6 +8566,7 @@ export const SlotFieldsFragmentDoc = gql`
   manager
   mutableTax
   mutableModule
+  mutablePolicy
   taxPercentage
   module {
     id

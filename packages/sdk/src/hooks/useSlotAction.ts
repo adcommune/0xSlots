@@ -127,10 +127,7 @@ export function useSlotAction(opts?: SlotActionCallbacks) {
    * duration — afterwards the policy already exists and this is a single tx.
    */
   const createSlotWithTenure = useCallback(
-    async (
-      params: CreateSlotParams,
-      tenureSeconds: bigint,
-    ) => {
+    async (params: CreateSlotParams, tenureSeconds: bigint) => {
       const policy = await client.predictTenurePolicy(tenureSeconds);
       const exists = await client.isTenurePolicyDeployed(tenureSeconds);
       if (!exists) {
@@ -161,10 +158,7 @@ export function useSlotAction(opts?: SlotActionCallbacks) {
    * call and reverts `WrongCurrency` otherwise.
    */
   const createSlotWithPriceFloor = useCallback(
-    async (
-      params: CreateSlotParams,
-      minPrice: bigint,
-    ) => {
+    async (params: CreateSlotParams, minPrice: bigint) => {
       const policy = await client.predictPricePolicy(params.currency, minPrice);
       const exists = await client.isPricePolicyDeployed(
         params.currency,
