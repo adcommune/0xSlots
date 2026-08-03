@@ -1,6 +1,6 @@
 import { Address, BigInt } from "@graphprotocol/graph-ts";
 import { Feed as FeedContract } from "../generated/FeedHub/Feed";
-import type { FeedCreated } from "../generated/FeedHub/FeedHub";
+import { FeedCreated } from "../generated/FeedHub/FeedHub";
 import { Feed, FeedCreatedEvent, FeedHub } from "../generated/schema";
 import { Feed as FeedTemplate } from "../generated/templates";
 import { applyFeedMetadata } from "./feed";

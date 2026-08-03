@@ -11,7 +11,6 @@ import {Slot} from "../src/Slot.sol";
 import {SlotFactory} from "../src/SlotFactory.sol";
 import {SlotConfig, SlotInitParams} from "../src/interfaces/ISlot.sol";
 import {IOccupancyPolicy, OccupancyContext} from "../src/interfaces/IOccupancyPolicy.sol";
-import {SlotQueue} from "../src/periphery/SlotQueue.sol";
 
 contract FFMockERC20 is ERC20 {
     constructor() ERC20("Mock", "MCK") { _mint(msg.sender, 1_000_000 ether); }
@@ -79,7 +78,8 @@ contract FinalFixesTest is Test {
             taxPercentage: 100,
             module: address(0),
             liquidationBountyBps: 500,
-            minDepositSeconds: 0
+            minDepositSeconds: 0,
+            occupancyPolicy: address(0)
         });
     }
 
@@ -87,7 +87,7 @@ contract FinalFixesTest is Test {
         return Slot(factory.createSlot(
             recipient,
             IERC20(address(token)),
-            SlotConfig({mutableTax: false, mutableModule: false, manager: address(0)}),
+            SlotConfig({mutableTax: false, mutableModule: false, mutablePolicy: false, manager: address(0)}),
             _init()
         ));
     }
@@ -98,14 +98,11 @@ contract FinalFixesTest is Test {
     ///      (offset 20); layout verified against the live Base Sepolia
     ///      bytecode. See NoEpochs.t.sol.
     function _epochSlot(uint64 epoch) internal returns (Slot s) {
-        s = Slot(factory.createSlotV3(
+        s = Slot(factory.createSlot(
             recipient,
             IERC20(address(token)),
-            SlotConfig({mutableTax: false, mutableModule: false, manager: address(0)}),
-            _init(),
-            0,
-            address(0)
-        ));
+            SlotConfig({mutableTax: false, mutableModule: false, mutablePolicy: false, manager: address(0)}),
+            _init()));
         vm.store(
             address(s),
             bytes32(uint256(15)),
@@ -122,231 +119,131 @@ contract FinalFixesTest is Test {
     }
 
     // ═══════════════════════════════════════════════════════════
-    // FINDING 1 — initializeV3 must be factory-only
+    // A slot's founding terms are set once, by the factory, at creation
     // ═══════════════════════════════════════════════════════════
 
-    /// @dev `reinitializer(3)` only requires the stored version be below 3.
-    ///      Every slot from `createSlot`/`createSlots` sits at version 2, so
-    ///      without a caller check an arbitrary EOA could install a deny-all
-    ///      policy and an absurd `epochSeconds`, permanently ending forced sale
-    ///      and stranding the next buyer's escrow ~584 billion years out.
-    function test_InitializeV3_RejectsNonFactoryCaller() public {
+    /// @dev This replaces a family of tests covering a capture vector that no
+    ///      longer exists. `factory` used to be set by a separate,
+    ///      unauthenticated call, so a slot that had not made that call yet
+    ///      could be claimed by anyone — who could then install a deny-all
+    ///      policy through the factory gate and permanently end forced sale.
+    ///
+    ///      `initialize` now sets recipient, terms, policy and factory in the
+    ///      proxy constructor, and it is the ONLY initializer. There is no
+    ///      moment at which a slot exists half-configured, and no second
+    ///      entry point to reach.
+    function test_Initialize_IsTheOnlyInitializerAndRunsOnce() public {
         Slot s = _slot();
+
+        assertEq(s.factory(), address(factory), "factory set at creation");
+
+        // No second bite: OZ's initializer has already consumed version 1.
+        vm.prank(attacker);
+        vm.expectRevert();
+        s.initialize(
+            attacker,
+            IERC20(address(token)),
+            SlotConfig({mutableTax: false, mutableModule: false, mutablePolicy: false, manager: address(0)}),
+            _init(),
+            attacker
+        );
+
+        assertEq(s.factory(), address(factory), "factory unchanged");
+        assertEq(s.recipient(), recipient, "recipient unchanged");
+    }
+
+    /// @dev A policy is part of a slot's founding terms. An immutable slot
+    ///      cannot be given one afterwards by anyone — not the attacker, not
+    ///      the admin, not the factory — because no path exists to do it.
+    function test_Policy_CannotBeInstalledRetroactively() public {
+        Slot s = _slot(); // created with no policy, mutableModule false
         FFDenyAllPolicy deny = new FFDenyAllPolicy();
 
+        // No manager exists on an immutable slot, so `onlyManager` refuses
+        // everyone — there is simply nobody who could install one.
         vm.prank(attacker);
-        vm.expectRevert(Slot.NotFactory.selector);
-        s.initializeV3(type(uint64).max, address(deny));
+        vm.expectRevert(Slot.NotManager.selector);
+        s.proposePolicyUpdate(address(deny));
 
-        // The hijack never landed: state is untouched and the slot is still
-        // freely buyable — forced sale intact.
-        assertEq(s.epochSeconds(), 0, "epochSeconds untouched");
-        assertEq(s.occupancyPolicy(), address(0), "policy untouched");
+        assertEq(s.manager(), address(0), "no manager to authorise one");
+        assertEq(s.occupancyPolicy(), address(0), "still policy-free");
         _buy(s, alice, 10 ether, 100 ether);
-        assertEq(s.occupant(), alice);
+        assertEq(s.occupant(), alice, "forced sale intact");
     }
 
-    /// @dev The factory itself is still allowed — the gate is a caller check,
-    ///      not a blanket freeze.
-    function test_InitializeV3_FactoryIsAllowed() public {
-        Slot s = _slot();
+    /// @dev A slot whose creator chose mutability CAN gain one, through the
+    ///      manager-gated path. That is the difference the flag buys.
+    function test_Policy_CanBeProposedWhenMutable() public {
         FFDenyAllPolicy p = new FFDenyAllPolicy();
-        vm.prank(address(factory));
-        s.initializeV3(0, address(p));
+        Slot s = Slot(factory.createSlot(
+            recipient,
+            IERC20(address(token)),
+            SlotConfig({mutableTax: false, mutableModule: false, mutablePolicy: true, manager: address(this)}),
+            _init()
+        ));
+
+        s.proposePolicyUpdate(address(p));
+        (address pending, bool has) = s.pendingPolicyUpdate();
+        assertEq(pending, address(p));
+        assertTrue(has);
+    }
+
+    /// @dev The two flags gate different promises and must not be one flag.
+    ///      A slot may reasonably want a swappable ad module on occupancy terms
+    ///      that are fixed forever — the common case, and the one that was
+    ///      inexpressible while `proposePolicyUpdate` read `mutableModule`.
+    function test_MutableModule_DoesNotImplyMutablePolicy() public {
+        FFDenyAllPolicy p = new FFDenyAllPolicy();
+        Slot s = Slot(factory.createSlot(
+            recipient,
+            IERC20(address(token)),
+            SlotConfig({mutableTax: false, mutableModule: true, mutablePolicy: false, manager: address(this)}),
+            _init()
+        ));
+
+        // The module may move...
+        s.proposeModuleUpdate(address(0));
+
+        // ...but the occupancy terms may not.
+        vm.expectRevert(Slot.PolicyNotMutable.selector);
+        s.proposePolicyUpdate(address(p));
+        assertEq(s.occupancyPolicy(), address(0));
+    }
+
+    /// @dev And the reverse: fixed utility, negotiable occupancy.
+    function test_MutablePolicy_DoesNotImplyMutableModule() public {
+        Slot s = Slot(factory.createSlot(
+            recipient,
+            IERC20(address(token)),
+            SlotConfig({mutableTax: false, mutableModule: false, mutablePolicy: true, manager: address(this)}),
+            _init()
+        ));
+
+        vm.expectRevert(Slot.ModuleNotMutable.selector);
+        s.proposeModuleUpdate(address(0));
+    }
+
+    /// @dev A policy passed at creation lands immediately — no second call, no
+    ///      side-channel event for indexers, because `SlotDeployed` already
+    ///      carries the whole init tuple.
+    function test_Policy_SetAtCreation() public {
+        FFDenyAllPolicy p = new FFDenyAllPolicy();
+        SlotInitParams memory init = _init();
+        init.occupancyPolicy = address(p);
+
+        Slot s = Slot(factory.createSlot(
+            recipient,
+            IERC20(address(token)),
+            SlotConfig({mutableTax: false, mutableModule: false, mutablePolicy: false, manager: address(0)}),
+            init
+        ));
+
         assertEq(s.occupancyPolicy(), address(p));
-    }
-
-    /// @dev Epoch scheduling was removed, so a non-zero value is rejected
-    ///      rather than written into storage nothing honours.
-    function test_InitializeV3_RejectsNonZeroEpoch() public {
-        Slot s = _slot();
-        vm.prank(address(factory));
-        vm.expectRevert(Slot.EpochsRemoved.selector);
-        s.initializeV3(3600, address(0));
-    }
-
-    /// @dev `SlotConfiguredV3` is the ONLY on-chain signal carrying a slot's
-    ///      epoch length and occupancy policy — `createSlotV3` emits the pre-v3
-    ///      `SlotDeployed`, whose `SlotInitParams` tuple was deliberately not
-    ///      extended (doing so would change the factory's selector and break
-    ///      every published ABI). Without this event those two fields are
-    ///      invisible to the subgraph and Ponder.
-    event SlotConfiguredV3(uint64 epochSeconds, address occupancyPolicy);
-
-    function test_InitializeV3_EmitsConfigForIndexers() public {
-        Slot s = _slot();
-        FFDenyAllPolicy p = new FFDenyAllPolicy();
-
-        vm.expectEmit(false, false, false, true, address(s));
-        emit SlotConfiguredV3(0, address(p));
-
-        vm.prank(address(factory));
-        s.initializeV3(0, address(p));
-    }
-
-    // ═══════════════════════════════════════════════════════════
-    // ATOMIC BEACON UPGRADE + MIGRATION
-    // ═══════════════════════════════════════════════════════════
-
-    /// @dev Models the real Base Sepolia situation: occupied slots still on a v1
-    ///      implementation, where `factory()` does not even exist. Upgrading the
-    ///      beacon exposes them until they are migrated.
-    function _occupiedLegacySlot() internal returns (Slot) {
-        Slot s = _legacySlot();
         vm.startPrank(alice);
         token.approve(address(s), type(uint256).max);
+        vm.expectRevert(FFDenyAllPolicy.Denied.selector);
         s.buy(alice, 10 ether, 100 ether);
         vm.stopPrank();
-        return s;
-    }
-
-    /// THE window this whole mechanism exists to close: between a beacon upgrade
-    /// and migration, a v1 slot is capturable by anyone.
-    function test_TwoStepUpgrade_LeavesLegacySlotCapturable() public {
-        Slot s = _occupiedLegacySlot();
-
-        // Step 1 alone — beacon serves v3 code, slot still has factory == 0.
-        Slot newImpl = new Slot();
-        factory.beacon().transferOwnership(address(factory));
-        factory.upgradeBeacon(address(newImpl));
-
-        // Attacker takes it before the admin's second transaction lands. The
-        // absurd epoch that used to be part of this capture is rejected now,
-        // but the deny-all policy alone still ends forced sale — the window is
-        // narrower, not closed.
-        FFDenyAllPolicy deny = new FFDenyAllPolicy();
-        vm.startPrank(attacker);
-        s.initializeV2(attacker);
-        s.initializeV3(0, address(deny));
-        vm.stopPrank();
-
-        assertEq(s.factory(), attacker, "attacker owns the factory pointer");
-        assertEq(s.occupancyPolicy(), address(deny), "deny-all installed");
-
-        // Forced sale is over: nobody can ever buy this slot again.
-        vm.startPrank(bob);
-        token.approve(address(s), type(uint256).max);
-        vm.expectRevert(FFDenyAllPolicy.Denied.selector);
-        s.buy(bob, 10 ether, 200 ether);
-        vm.stopPrank();
-    }
-
-    /// The same scenario through the atomic path — no window, no capture.
-    function test_AtomicUpgradeAndMigrate_ClosesTheWindow() public {
-        Slot s = _occupiedLegacySlot();
-        address occupantBefore = s.occupant();
-        uint256 priceBefore = s.price();
-
-        Slot newImpl = new Slot();
-        factory.beacon().transferOwnership(address(factory));
-
-        address[] memory slots = new address[](1);
-        slots[0] = address(s);
-        factory.upgradeBeaconAndMigrateV3(address(newImpl), slots, 0, address(0));
-
-        // Migrated: factory is the real one, config is set, occupancy survived.
-        assertEq(s.factory(), address(factory));
-        assertEq(s.epochSeconds(), 0);
-        assertEq(s.occupant(), occupantBefore, "occupancy survived the upgrade");
-        assertEq(s.price(), priceBefore, "price survived the upgrade");
-
-        // The capture is now unreachable — both initializers are spent.
-        vm.startPrank(attacker);
-        vm.expectRevert();
-        s.initializeV2(attacker);
-        vm.expectRevert();
-        s.initializeV3(type(uint64).max, address(0));
-        vm.stopPrank();
-    }
-
-    function test_UpgradeBeacon_RejectsNonAdmin() public {
-        Slot newImpl = new Slot();
-        factory.beacon().transferOwnership(address(factory));
-        vm.prank(attacker);
-        vm.expectRevert(SlotFactory.NotAdmin.selector);
-        factory.upgradeBeacon(address(newImpl));
-    }
-
-    /// The migration path must be indexable too — legacy slots brought up to v3
-    /// by the admin have to surface their config the same way.
-    function test_MigrateSlotsV3_EmitsConfigForIndexers() public {
-        Slot s = _legacySlot();
-        address[] memory slots = new address[](1);
-        slots[0] = address(s);
-
-        vm.expectEmit(false, false, false, true, address(s));
-        emit SlotConfiguredV3(0, address(0));
-
-        factory.migrateSlotsV3(slots, 0, address(0));
-        assertEq(s.epochSeconds(), 0);
-    }
-
-    /// @dev A "legacy" slot: a bare BeaconProxy that only ever ran v1
-    ///      `initialize`, exactly like the slots deployed before the v2 beacon
-    ///      upgrade. `factory` is still address(0) there, which must be
-    ///      rejected outright rather than treated as "anyone may call".
-    function _legacySlot() internal returns (Slot) {
-        bytes memory initData = abi.encodeCall(
-            Slot.initialize,
-            (
-                recipient,
-                IERC20(address(token)),
-                SlotConfig({mutableTax: false, mutableModule: false, manager: address(0)}),
-                _init()
-            )
-        );
-        return Slot(address(new BeaconProxy(address(factory.beacon()), initData)));
-    }
-
-    function test_InitializeV3_RejectsWhenFactoryUnset() public {
-        Slot s = _legacySlot();
-        assertEq(s.factory(), address(0), "sanity: legacy slot has no factory");
-
-        vm.prank(attacker);
-        vm.expectRevert(Slot.NotFactory.selector);
-        s.initializeV3(type(uint64).max, address(0));
-    }
-
-    /// @dev The admin migration path must still work end to end, including on
-    ///      a legacy v1 slot that has not yet been through `migrateSlots`.
-    function test_MigrateSlotsV3_AdminOnly_AndUpgradesLegacySlots() public {
-        Slot legacy = _legacySlot();
-        Slot v2Slot = _slot();
-        address[] memory slots = new address[](2);
-        slots[0] = address(legacy);
-        slots[1] = address(v2Slot);
-
-        vm.prank(attacker);
-        vm.expectRevert(SlotFactory.NotAdmin.selector);
-        factory.migrateSlotsV3(slots, 0, address(0));
-
-        factory.migrateSlotsV3(slots, 0, address(0));
-        assertEq(legacy.factory(), address(factory), "legacy v1 slot migrated to v3");
-        assertEq(legacy.factory(), address(factory), "legacy v1 slot got its factory");
-        assertEq(v2Slot.factory(), address(factory), "v2 slot migrated to v3");
-        assertTrue(factory.isSlot(address(legacy)));
-    }
-
-    /// @dev Documents the deliberate limit of the fix (see the note on
-    ///      `Slot.initializeV2`). A v1 slot has no root of trust naming its
-    ///      factory, so `initializeV2` stays open and an attacker who reaches
-    ///      an unmigrated slot first can still claim factory-hood and then
-    ///      reach `initializeV3`. Every slot on the migrated/created path —
-    ///      which is all of them once `migrateSlots` has run — is at version 2
-    ///      with `factory` already correct, and is closed by the gate above.
-    function test_InitializeV2_UnmigratedLegacySlot_RemainsClaimable() public {
-        Slot s = _legacySlot();
-        vm.prank(attacker);
-        s.initializeV2(attacker);
-        assertEq(s.factory(), attacker, "known, documented residual on v1 slots");
-
-        // ...whereas a slot that went through the factory is already at v2 and
-        // cannot be re-pointed at all.
-        Slot live = _slot();
-        vm.prank(attacker);
-        vm.expectRevert();
-        live.initializeV2(attacker);
-        assertEq(live.factory(), address(factory));
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -383,14 +280,11 @@ contract FinalFixesTest is Test {
         blk = new FFBlocklistERC20();
         blk.mint(alice, 10_000 ether);
         blk.mint(bob, 10_000 ether);
-        s = Slot(factory.createSlotV3(
+        s = Slot(factory.createSlot(
             recipient,
             IERC20(address(blk)),
-            SlotConfig({mutableTax: false, mutableModule: false, manager: address(0)}),
-            _init(),
-            0,
-            address(0)
-        ));
+            SlotConfig({mutableTax: false, mutableModule: false, mutablePolicy: false, manager: address(0)}),
+            _init()));
         if (epoch != 0) {
             vm.store(
                 address(s),

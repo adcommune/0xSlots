@@ -57,6 +57,7 @@ type Slot @entity(immutable: false) {
   currency: Currency!
   mutableTax: Boolean!
   mutableModule: Boolean!
+  mutablePolicy: Boolean!
   manager: Bytes!
   taxPercentage: BigInt!
   module: Module
@@ -179,6 +180,7 @@ type SlotDeployedEvent @entity(immutable: true) {
   manager: Bytes!
   mutableTax: Boolean!
   mutableModule: Boolean!
+  mutablePolicy: Boolean!
   taxPercentage: BigInt!
   module: Bytes!
   liquidationBountyBps: BigInt!

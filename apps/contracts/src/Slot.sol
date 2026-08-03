@@ -11,8 +11,16 @@ import {IOccupancyPolicy, OccupancyContext} from "./interfaces/IOccupancyPolicy.
 import {SlotConfig, SlotInitParams, PendingUpdate, SlotInfo, ISlotEvents, EVT_BOUGHT, EVT_RELEASED, EVT_LIQUIDATED, EVT_PRICE_UPDATED, EVT_DEPOSITED, EVT_WITHDRAWN, EVT_TAX_COLLECTED, EVT_SETTLED} from "./interfaces/ISlot.sol";
 import {SlotFactory} from "./SlotFactory.sol";
 
-/// @title Slot (v3) — Immutable & modular Harberger-taxed slot
+/// @title Slot — Immutable & modular Harberger-taxed slot
 /// @notice One slot = one contract. Deployed deterministically via SlotFactory.
+///
+/// @dev All slots share one implementation behind a beacon, so the storage
+///      layout below is APPEND-ONLY and permanent: 237 live proxies hold state
+///      at these exact offsets. Some of it is inert. It still cannot move.
+///
+///      Versioning lives in `reinitializer(n)` and nowhere else — not in
+///      function names, not in comments. The history of how the layout got this
+///      way is in git; what the chain still depends on is here.
 contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     using SafeERC20 for IERC20;
 
@@ -42,8 +50,6 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     error PolicyNotMutable();
     error NotFactory();
     error NothingToClaim();
-    /// @dev Epoch scheduling was removed in v4; `epochSeconds` must be zero.
-    error EpochsRemoved();
 
     // ═══════════════════════════════════════════════════════════
     // STORAGE — KEEP ORDER, APPEND ONLY
@@ -53,7 +59,8 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     address public recipient; // slot 0
     IERC20 public currency; // slot 1, offset 0
     bool public mutableTax; // slot 1, offset 20
-    bool public mutableModule; // slot 1, offset 21
+    bool public mutableModule; // slot 1, offset 21 — the UTILITY module
+    bool public mutablePolicy; // slot 1, offset 22 — the OCCUPANCY policy
     address public manager; // slot 2
 
     // --- Slot 3+: mutable state ---
@@ -70,18 +77,18 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
 
     PendingUpdate public pendingUpdate; // slots 12-13
 
-    /// @dev Legacy manual init flag — DO NOT REMOVE (preserves storage layout)
+    /// @dev INERT — a hand-rolled init flag that `reinitializer` replaced.
+    ///      Unreadable and unwritten, but packed with `factory` below, so it
+    ///      cannot be dropped without moving that.
     bool private _legacyInitialized; // slot 14, offset 0
 
-    // --- v2 storage (appended after beacon upgrade) ---
-    address public factory; // slot 14, offset 1
+    address public factory; // slot 14, offset 1 (PACKED with the flag above)
 
-    /// @dev NOTE: `_legacyInitialized` (slot 14 offset 0) and `factory`
-    ///      (slot 14 offset 1) are PACKED into one slot. First free slot is 15.
-
-    // --- v3 storage (appended after beacon upgrade) ---
     address public occupancyPolicy; // slot 15, offset 0
-    uint64 public epochSeconds;     // slot 15, offset 20 — vestigial, see below
+    /// @dev INERT — held an epoch length when a buy could be deferred to a
+    ///      clock boundary. Nothing reads it; `initialize` cannot set it and
+    ///      `SlotFactory` rejects a non-zero value. Six slots still carry one.
+    uint64 public epochSeconds;     // slot 15, offset 20
     uint256 public occupiedSince;   // slot 16
 
     struct PendingPolicyUpdate {
@@ -90,14 +97,12 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     }
     PendingPolicyUpdate public pendingPolicyUpdate; // slot 17
 
-    /// @notice DEAD STORAGE — never read, never written, never removable.
-    /// @dev Held a committed-but-not-yet-effective transfer under epoch
-    ///      scheduling. That was removed in v4 and every outstanding transfer
-    ///      was drained first, so these four slots are permanently zero.
+    /// @dev INERT — held a committed-but-not-yet-effective transfer. Every
+    ///      outstanding one was drained before the code that completed them was
+    ///      removed, so all four slots are permanently zero.
     ///
-    ///      They cannot be deleted: `isOperator` (22) and `withdrawableOf` (23)
-    ///      sit AFTER them, and removing the struct would shift both mappings
-    ///      on every live slot — silently voiding operator approvals and
+    ///      Deleting them would shift `isOperator` (22) and `withdrawableOf`
+    ///      (23) on every live proxy, silently voiding operator approvals and
     ///      unclaimed refunds. Guarded by
     ///      `test_StorageLayout_SurvivesDrainRemoval`.
     struct PendingTransfer {
@@ -131,91 +136,47 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         _disableInitializers();
     }
 
-    /// @notice v1 init — called by SlotFactory after beacon proxy deployment
-    /// @dev For new slots deployed after the v2 upgrade, initialize + initializeV2
-    ///      are both called atomically via multicall in the factory.
-    /// @dev Uses both legacy flag (for pre-upgrade slots) and OZ initializer (for new slots)
+    /// @notice Set up a slot. Called by `SlotFactory` in the proxy constructor.
+    /// @dev The only initializer, and the only place a slot's terms are set.
+    ///      Everything arrives at once — recipient, currency, tax, module,
+    ///      occupancy policy, factory — so there is no window in which a slot
+    ///      exists half-configured and no version to track.
+    ///
+    ///      A slot's policy is therefore part of its founding terms. One created
+    ///      without a policy is a plain-Harberger slot; it can still gain one
+    ///      later through `proposePolicyUpdate`, but only if its creator chose
+    ///      mutability. Nobody can install one retroactively over that choice.
     function initialize(
         address _recipient,
         IERC20 _currency,
         SlotConfig memory _config,
-        SlotInitParams memory _init
+        SlotInitParams memory _init,
+        address _factory
     ) external initializer {
-        // Guard against re-initialization on pre-upgrade slots where OZ version is 0
-        require(!_legacyInitialized, "already initialized");
-        _legacyInitialized = true;
         if (_recipient == address(0)) revert InvalidRecipient();
         if (address(_currency) == address(0)) revert InvalidCurrency();
         if (_init.taxPercentage == 0) revert InvalidTaxPercentage();
         if (_init.liquidationBountyBps > BASIS_POINTS)
             revert InvalidLiquidationBounty();
+        if (_init.occupancyPolicy != address(0) &&
+            _init.occupancyPolicy.code.length == 0)
+            revert InvalidModule_NoCode();
 
         recipient = _recipient;
         currency = _currency;
         mutableTax = _config.mutableTax;
         mutableModule = _config.mutableModule;
+        mutablePolicy = _config.mutablePolicy;
         manager = _config.manager;
 
         taxPercentage = _init.taxPercentage;
         module = _init.module;
         liquidationBountyBps = _init.liquidationBountyBps;
         minDepositSeconds = _init.minDepositSeconds;
+        occupancyPolicy = _init.occupancyPolicy;
 
-        lastSettled = block.timestamp;
-    }
-
-    /// @notice v2 upgrade — sets factory for protocol event emission
-    /// @dev DELIBERATELY LEFT UNAUTHENTICATED. A slot still at version 1 holds
-    ///      no root of trust that identifies the legitimate factory: the only
-    ///      unforgeable datum inside a BeaconProxy is its beacon address, and
-    ///      the beacon's owner is the protocol admin, not the factory — while
-    ///      `_deploySlot`/`migrateSlots` both call in AS the factory. Every
-    ///      candidate guard is therefore self-attested and forgeable:
-    ///      `msg.sender == _factory` is satisfied by any EOA passing its own
-    ///      address, and any "ask the caller about itself" check
-    ///      (`beacon()`, `admin()`, `isSlot()`) is trivially faked by a
-    ///      contract. Adding one would be theatre, not a control.
-    ///
-    ///      The residual exposure is confined to slots deployed BEFORE the v2
-    ///      beacon upgrade that were never migrated, and it predates this
-    ///      branch. `initializeV3` refuses to run while `factory` is
-    ///      address(0), so the mitigation is operational: run
-    ///      `migrateSlots`/`migrateSlotsV3` in the same admin transaction as
-    ///      the beacon upgrade, leaving no front-run window.
-    function initializeV2(address _factory) external reinitializer(2) {
         factory = _factory;
-    }
-
-    /// @notice v3 upgrade — sets the occupancy policy.
-    /// @dev `_epochSeconds` is retained for ABI compatibility and MUST be zero:
-    ///      epoch scheduling was removed in v4 and `buy()` no longer reads it.
-    ///      Accepting a non-zero value would write storage nothing honours,
-    ///      leaving the slot advertising a delay it does not apply.
-    /// @dev The policy defaults to zero, which is exactly pre-v3 behaviour.
-    /// @dev AUTHENTICATED. `reinitializer(3)` alone only checks the version is
-    ///      below 3 — every slot created by `createSlot`/`createSlots` (and
-    ///      every already-deployed slot after the v2 beacon upgrade) sits at
-    ///      version 2, so without this gate anyone could install a deny-all
-    ///      policy and/or an absurd `epochSeconds`, permanently ending forced
-    ///      sale and stranding the next buyer's escrow. `factory == address(0)`
-    ///      (a slot that never ran `initializeV2`) is rejected outright rather
-    ///      than left open — use `SlotFactory.migrateSlotsV3`.
-    function initializeV3(
-        uint64 _epochSeconds,
-        address _occupancyPolicy
-    ) external reinitializer(3) {
-        address f = factory;
-        if (f == address(0) || msg.sender != f) revert NotFactory();
-        if (_epochSeconds != 0) revert EpochsRemoved();
-        if (_occupancyPolicy != address(0) && _occupancyPolicy.code.length == 0)
-            revert InvalidModule_NoCode();
-        occupancyPolicy = _occupancyPolicy;
-
-        // Indexers cannot learn these any other way: `createSlotV3` emits the
-        // pre-v3 `SlotDeployed` (SlotInitParams was deliberately not extended,
-        // to preserve the factory's ABI and selector), so without this event a
-        // slot's epoch length and policy are invisible off-chain.
-        emit SlotConfiguredV3(_epochSeconds, _occupancyPolicy);
+        lastSettled = block.timestamp;
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -296,9 +257,9 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         // is where it can be expressed without a second phase — MinimumTenure
         // for "not yet", MinimumPrice for "not below this".
         //
-        // `epochSeconds` is ignored. `initializeV3` rejects a non-zero value
-        // outright, and the storage below it may never be reclaimed — see the
-        // note on `pendingTransfer`.
+        // A buy applies immediately. Timing lives in IOccupancyPolicy vetoes,
+        // which express it without a second phase — MinimumTenure for "not
+        // yet", MinimumPrice for "not below this".
 
         // Refund the outgoing occupant. Computed here, paid
         // after the state writes, and never allowed to revert: an outgoing
@@ -545,8 +506,12 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     }
 
     /// @notice Propose a new occupancy policy (applied on next ownership transition)
+    /// @dev Gated on `mutablePolicy`, NOT `mutableModule`. Swapping what a slot
+    ///      does and swapping whether it can be taken from you are different
+    ///      promises, and a holder who accepted the first has not accepted the
+    ///      second.
     function proposePolicyUpdate(address newPolicy) external onlyManager {
-        if (!mutableModule) revert ModuleNotMutable();
+        if (!mutablePolicy) revert PolicyNotMutable();
         if (newPolicy != address(0) && newPolicy.code.length == 0)
             revert InvalidModule_NoCode();
         pendingPolicyUpdate.newPolicy = newPolicy;

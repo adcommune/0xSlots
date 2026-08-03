@@ -45,7 +45,6 @@ export default function CreatePage() {
   const { chainId: selectedChainId } = useChain();
   const {
     createSlot: sdkCreateSlot,
-    createSlotV3: sdkCreateSlotV3,
     createSlotWithTenure: sdkCreateSlotWithTenure,
     createSlotWithPriceFloor: sdkCreateSlotWithPriceFloor,
     createSlots: sdkCreateSlots,
@@ -65,10 +64,9 @@ export default function CreatePage() {
     mode: "onChange",
   });
 
-  // createSlotV3 is single-slot only (SlotInitParams could not be extended
-  // without changing the factory's selector, so there is no batch counterpart).
-  // Clamp rather than let the batch path silently discard the policy the user
-  // just configured.
+  // A tenure or price policy may need deploying first, which the single-slot
+  // helpers handle and the batch path does not. Clamp rather than silently
+  // discard the policy the user just configured.
   const occupancyConfigured = form.watch("occupancyPolicyMode") !== "none";
   useEffect(() => {
     if (occupancyConfigured && slotCount !== 1) setSlotCount(1);
@@ -83,7 +81,10 @@ export default function CreatePage() {
   const watchedMutableTax = form.watch("mutableTax");
   const watchedMutableModule = form.watch("mutableModule");
 
-  const needsManager = watchedMutableTax || watchedMutableModule;
+  const watchedMutablePolicy = form.watch("mutablePolicy");
+
+  const needsManager =
+    watchedMutableTax || watchedMutableModule || watchedMutablePolicy;
 
   // A price floor is denominated in the slot's own currency, so converting it
   // to raw units needs THAT token's decimals — 1 USDC is 1e6, 1 WETH is 1e18.
@@ -206,9 +207,19 @@ export default function CreatePage() {
 
     if (!isAddress(recipient as string)) return;
 
+    // A policy chosen by address is known now. One chosen by duration or price
+    // floor is resolved by the helpers below, which overwrite this.
+    const occupancyPolicy = (
+      data.occupancyPolicyMode !== "none" &&
+      isAddress(data.occupancyPolicy as string)
+        ? data.occupancyPolicy
+        : zeroAddress
+    ) as Address;
+
     const config = {
       mutableTax: data.mutableTax,
       mutableModule: data.mutableModule,
+      mutablePolicy: data.mutablePolicy,
       manager: (isAddress(manager as string)
         ? manager
         : zeroAddress) as Address,
@@ -218,29 +229,13 @@ export default function CreatePage() {
       module: (isAddress(module as string) ? module : zeroAddress) as Address,
       liquidationBountyBps: percentToBps(data.liquidationBountyPercent),
       minDepositSeconds: toSeconds(data.minDepositValue, data.minDepositUnit),
+      occupancyPolicy,
     };
 
-    // Occupancy layer. Defaults to off, in which case createSlot is used and
-    // the result is byte-for-byte the slot this form always produced.
-    //
-    // Epoch scheduling was removed — occupancy timing is expressed entirely by
-    // policy vetoes now. The parameter is retained by the factory for ABI
-    // compatibility and must be zero.
-    const epochSeconds = 0n;
-    const occupancyPolicy = (
-      data.occupancyPolicyMode !== "none" &&
-      isAddress(data.occupancyPolicy as string)
-        ? data.occupancyPolicy
-        : zeroAddress
-    ) as Address;
-    const usesOccupancyLayer =
-      occupancyPolicy !== zeroAddress ||
-      data.occupancyPolicyMode === "tenure" ||
-      data.occupancyPolicyMode === "price";
-
-    // Minimum tenure resolves to a policy contract deployed on demand at a
-    // CREATE2 address derived from the duration, so the hook handles deploy +
-    // create. Every other mode already has a concrete address.
+    // A policy chosen by duration or by price floor lives at a CREATE2 address
+    // derived from those terms, so it may not exist yet — these helpers deploy
+    // it first when needed, then create. Every other mode already has a
+    // concrete address sitting in `initParams.occupancyPolicy`.
     if (slotCount === 1 && data.occupancyPolicyMode === "tenure") {
       sdkCreateSlotWithTenure(
         {
@@ -248,37 +243,22 @@ export default function CreatePage() {
           currency: currency as Address,
           config,
           initParams,
-          epochSeconds,
         },
         toSeconds(data.tenureValue, data.tenureUnit),
       );
     } else if (slotCount === 1 && data.occupancyPolicyMode === "price") {
-      // Same on-demand deploy as tenure, keyed on (currency, minPrice). The
-      // floor is denominated in the slot's own currency, so it has to be
-      // converted with THAT token's decimals — 1 USDC is 1e6, 1 WETH is 1e18,
-      // and the policy rejects a mismatched pairing on-chain.
+      // The floor is denominated in the slot's own currency, so it converts
+      // with THAT token's decimals — 1 USDC is 1e6, 1 WETH is 1e18 — and the
+      // policy rejects a mismatched pairing on-chain.
       sdkCreateSlotWithPriceFloor(
         {
           recipient: recipient as Address,
           currency: currency as Address,
           config,
           initParams,
-          epochSeconds,
         },
         toRawUnits(data.minPriceValue, currencyDecimals),
       );
-    } else if (slotCount === 1 && usesOccupancyLayer) {
-      // createSlotV3 has no batch counterpart — SlotInitParams could not be
-      // extended without changing the factory's selector, so the v3 entry point
-      // is single-slot only. Batch creation stays on the legacy path below.
-      sdkCreateSlotV3({
-        recipient: recipient as Address,
-        currency: currency as Address,
-        config,
-        initParams,
-        epochSeconds,
-        occupancyPolicy,
-      });
     } else if (slotCount === 1) {
       sdkCreateSlot({
         recipient: recipient as Address,

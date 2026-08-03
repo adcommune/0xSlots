@@ -91,6 +91,13 @@ export function SlotRow({
               TAX
             </Badge>
           )}
+          {/* TODO(subgraph): a POLICY badge belongs here. After the flag split
+              MOD covers only the utility module, so occupancy mutability — the
+              consequential one — currently has no signal at all. The field
+              exists on-chain and in the local subgraph schema, but SDK codegen
+              reads the DEPLOYED schema, so the fragment cannot select it until
+              the subgraph ships. Add `mutablePolicy` to SlotFields and render
+              it here immediately after that deploy. */}
           {slot.mutableModule && (
             <Badge variant="outline" className="text-[9px]">
               MOD

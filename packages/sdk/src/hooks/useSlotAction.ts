@@ -7,7 +7,6 @@ import type {
   BuyParams,
   CreateSlotParams,
   CreateSlotsParams,
-  CreateSlotV3Params,
   SlotsChain,
 } from "../client";
 import { useSlotsClient } from "./useSlotsClient";
@@ -122,11 +121,6 @@ export function useSlotAction(opts?: SlotActionCallbacks) {
       exec("Create slot", () => client.createSlot(params)),
     [exec, client],
   );
-  const createSlotV3 = useCallback(
-    (params: CreateSlotV3Params) =>
-      exec("Create slot", () => client.createSlotV3(params)),
-    [client, exec],
-  );
   /**
    * Ensure the minimum-tenure policy for `tenureSeconds` exists, then create the
    * slot pointing at it. Two transactions only the first time anyone uses that
@@ -134,7 +128,7 @@ export function useSlotAction(opts?: SlotActionCallbacks) {
    */
   const createSlotWithTenure = useCallback(
     async (
-      params: Omit<CreateSlotV3Params, "occupancyPolicy">,
+      params: CreateSlotParams,
       tenureSeconds: bigint,
     ) => {
       const policy = await client.predictTenurePolicy(tenureSeconds);
@@ -143,12 +137,15 @@ export function useSlotAction(opts?: SlotActionCallbacks) {
         const deployed = await exec("Deploy tenure policy", () =>
           client.deployTenurePolicy(tenureSeconds),
         );
-        // Bail on a rejected or reverted deploy: `createSlotV3` requires code at
+        // Bail on a rejected or reverted deploy: `createSlot` requires code at
         // `policy` and would otherwise fail a second time, more confusingly.
         if (!deployed) return undefined;
       }
       return exec("Create slot", () =>
-        client.createSlotV3({ ...params, occupancyPolicy: policy }),
+        client.createSlot({
+          ...params,
+          initParams: { ...params.initParams, occupancyPolicy: policy },
+        }),
       );
     },
     [client, exec],
@@ -165,7 +162,7 @@ export function useSlotAction(opts?: SlotActionCallbacks) {
    */
   const createSlotWithPriceFloor = useCallback(
     async (
-      params: Omit<CreateSlotV3Params, "occupancyPolicy">,
+      params: CreateSlotParams,
       minPrice: bigint,
     ) => {
       const policy = await client.predictPricePolicy(params.currency, minPrice);
@@ -182,7 +179,10 @@ export function useSlotAction(opts?: SlotActionCallbacks) {
         if (!deployed) return undefined;
       }
       return exec("Create slot", () =>
-        client.createSlotV3({ ...params, occupancyPolicy: policy }),
+        client.createSlot({
+          ...params,
+          initParams: { ...params.initParams, occupancyPolicy: policy },
+        }),
       );
     },
     [client, exec],
@@ -261,7 +261,6 @@ export function useSlotAction(opts?: SlotActionCallbacks) {
   return {
     // Actions
     createSlot,
-    createSlotV3,
     createSlotWithTenure,
     createSlotWithPriceFloor,
     createSlots,

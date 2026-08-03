@@ -76,14 +76,15 @@ contract FeedSocialGroupTest is Test {
         // ── Slot using FeedPostModule ──
         SlotConfig memory cfg = SlotConfig({
             mutableTax: false,
-            mutableModule: false,
+            mutableModule: false, mutablePolicy: false,
             manager: address(0)
         });
         SlotInitParams memory init = SlotInitParams({
             taxPercentage: 100,         // 1%/month
             module: address(feedModule),
             liquidationBountyBps: 0,
-            minDepositSeconds: 0
+            minDepositSeconds: 0,
+            occupancyPolicy: address(0)
         });
         slot = Slot(factory.createSlot(recipient, IERC20(address(token)), cfg, init));
 

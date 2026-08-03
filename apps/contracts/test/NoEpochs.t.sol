@@ -68,19 +68,17 @@ contract NoEpochsTest is Test {
             taxPercentage: 100,
             module: address(0),
             liquidationBountyBps: 500,
-            minDepositSeconds: 0
+            minDepositSeconds: 0,
+            occupancyPolicy: address(0)
         });
     }
 
     function _slot() internal returns (Slot) {
-        return Slot(factory.createSlotV3(
+        return Slot(factory.createSlot(
             recipient,
             IERC20(address(token)),
-            SlotConfig({mutableTax: false, mutableModule: false, manager: address(0)}),
-            _init(),
-            0,
-            address(0)
-        ));
+            SlotConfig({mutableTax: false, mutableModule: false, mutablePolicy: false, manager: address(0)}),
+            _init()));
     }
 
     /// @dev Forge a pre-upgrade slot: non-zero epochSeconds, which the factory
@@ -171,25 +169,6 @@ contract NoEpochsTest is Test {
         s.collect();
         _buy(s, bob, 100 ether, 200 ether);
         assertEq(s.occupant(), bob);
-    }
-
-    // ── 3. Creation rejects epochs ──────────────────────────────────────────
-
-    function test_CreateSlotV3_RejectsNonZeroEpoch() public {
-        vm.expectRevert(SlotFactory.EpochsRemoved.selector);
-        factory.createSlotV3(
-            recipient,
-            IERC20(address(token)),
-            SlotConfig({mutableTax: false, mutableModule: false, manager: address(0)}),
-            _init(),
-            HOUR,
-            address(0)
-        );
-    }
-
-    function test_CreateSlotV3_AcceptsZeroEpoch() public {
-        Slot s = _slot();
-        assertEq(s.epochSeconds(), 0);
     }
 
     // ── 4. Stage B: the drain path is gone, the storage is not ──────────────

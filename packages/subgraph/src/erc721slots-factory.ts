@@ -1,5 +1,5 @@
 import { BigInt } from "@graphprotocol/graph-ts";
-import type { CollectionDeployed } from "../generated/ERC721SlotsFactory/ERC721SlotsFactory";
+import { CollectionDeployed } from "../generated/ERC721SlotsFactory/ERC721SlotsFactory";
 import { NFTCollection } from "../generated/schema";
 import { ERC721Slots as ERC721SlotsTemplate } from "../generated/templates";
 import { getOrCreateCurrency } from "./helpers";

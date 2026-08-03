@@ -21,18 +21,28 @@ uint8 constant EVT_SETTLED = 8;
 // ═══════════════════════════════════════════════════════════
 
 /// @notice Immutable identity config — determines CREATE2 address
+/// @notice What, if anything, a manager may change after creation.
+/// @dev Three independent flags because they gate three different kinds of
+///      promise. `mutableModule` covers the UTILITY module — what the slot
+///      does. `mutablePolicy` covers the OCCUPANCY policy — whether forced sale
+///      applies and on what terms. Someone may reasonably want a swappable ad
+///      module on immutable occupancy terms; conflating the two would make that
+///      inexpressible, and would let a slot advertising "module can change"
+///      silently also reserve the right to change who can take it.
 struct SlotConfig {
     bool mutableTax;
     bool mutableModule;
-    address manager; // address(0) if both flags are false
+    bool mutablePolicy;
+    address manager; // address(0) if every flag is false
 }
 
 /// @notice Initial values set at creation
 struct SlotInitParams {
-    uint256 taxPercentage;       // basis points (100 = 1%)
-    address module;              // hook contract, address(0) for none
+    uint256 taxPercentage;        // basis points (100 = 1%)
+    address module;               // hook contract, address(0) for none
     uint256 liquidationBountyBps; // basis points, default 0
-    uint256 minDepositSeconds;   // minimum deposit to cover N seconds of tax
+    uint256 minDepositSeconds;    // minimum deposit to cover N seconds of tax
+    address occupancyPolicy;      // IOccupancyPolicy, address(0) for instant buy
 }
 
 /// @notice Complete slot state returned by getSlotInfo()
@@ -156,22 +166,9 @@ interface ISlotEvents {
 
     event ModuleCallFailed(string callbackName);
 
-    /// @notice Emitted by `initializeV3`. The only on-chain signal carrying a
-    ///         slot's epoch length and occupancy policy — `SlotDeployed` predates
-    ///         both and was intentionally left unchanged to preserve the
-    ///         factory's ABI.
-    event SlotConfiguredV3(uint64 epochSeconds, address occupancyPolicy);
-
     event PolicyUpdateProposed(address newPolicy);
 
     event PolicyUpdateApplied(address newPolicy);
-
-    event TransferScheduled(
-        address indexed buyer,
-        uint256 effectiveAt,
-        uint256 price,
-        uint256 deposit
-    );
 
     event OperatorSet(address indexed occupant, address indexed operator, bool approved);
 

@@ -121,12 +121,13 @@ contract TaxAttributionTest is Test {
         return Slot(factory.createSlot(
             recipient,
             IERC20(address(token)),
-            SlotConfig({mutableTax: false, mutableModule: false, manager: address(0)}),
+            SlotConfig({mutableTax: false, mutableModule: false, mutablePolicy: false, manager: address(0)}),
             SlotInitParams({
                 taxPercentage: 1000, // 10%/month
                 module: module,
                 liquidationBountyBps: 500,
-                minDepositSeconds: 0
+                minDepositSeconds: 0,
+            occupancyPolicy: address(0)
             })
         ));
     }

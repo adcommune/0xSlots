@@ -53,7 +53,7 @@ contract BatchCollectTest is Test {
 
         config = SlotConfig({
             mutableTax: false,
-            mutableModule: false,
+            mutableModule: false, mutablePolicy: false,
             manager: address(0)
         });
 
@@ -61,7 +61,8 @@ contract BatchCollectTest is Test {
             taxPercentage: 1000, // 10%
             module: address(0),
             liquidationBountyBps: 0,
-            minDepositSeconds: 86400 // 1 day
+            minDepositSeconds: 86400, // 1 day
+            occupancyPolicy: address(0)
         });
 
         // Fund buyer

@@ -80,17 +80,25 @@ contract OccupancyPolicyTest is Test {
         token.mint(bob, 1000 ether);
     }
 
+    /// @dev Same terms, plus a policy. A slot's policy is part of its founding
+    ///      tuple now, so a test that wants one passes it at creation.
+    function _initWith(address policy) internal pure returns (SlotInitParams memory p) {
+        p = _init();
+        p.occupancyPolicy = policy;
+    }
+
     function _init() internal pure returns (SlotInitParams memory) {
         return SlotInitParams({
             taxPercentage: 100,
             module: address(0),
             liquidationBountyBps: 500,
-            minDepositSeconds: 86400
+            minDepositSeconds: 86400,
+            occupancyPolicy: address(0)
         });
     }
 
     function _immutableConfig() internal pure returns (SlotConfig memory) {
-        return SlotConfig({mutableTax: false, mutableModule: false, manager: address(0)});
+        return SlotConfig({mutableTax: false, mutableModule: false, mutablePolicy: false, manager: address(0)});
     }
 
     /// No policy attached — behaviour must be byte-for-byte as today.
@@ -105,9 +113,8 @@ contract OccupancyPolicyTest is Test {
 
     function test_Policy_BlocksBuy() public {
         DenyAllPolicy policy = new DenyAllPolicy();
-        address s = factory.createSlotV3(
-            recipient, IERC20(address(token)), _immutableConfig(), _init(), 0, address(policy)
-        );
+        address s = factory.createSlot(
+            recipient, IERC20(address(token)), _immutableConfig(), _initWith(address(policy)));
         vm.startPrank(alice);
         token.approve(s, type(uint256).max);
         vm.expectRevert(DenyAllPolicy.Denied.selector);
@@ -117,9 +124,8 @@ contract OccupancyPolicyTest is Test {
 
     function test_AllowAllPolicy_ReceivesPopulatedContext() public {
         AllowAllPolicy allow = new AllowAllPolicy();
-        address s = factory.createSlotV3(
-            recipient, IERC20(address(token)), _immutableConfig(), _init(), 0, address(allow)
-        );
+        address s = factory.createSlot(
+            recipient, IERC20(address(token)), _immutableConfig(), _initWith(address(allow)));
         vm.startPrank(alice);
         token.approve(s, type(uint256).max);
         Slot(s).buy(alice, 10 ether, 100 ether);
@@ -132,9 +138,8 @@ contract OccupancyPolicyTest is Test {
     ///      reached. Hence a policy that permits buying but denies repricing.
     function test_Policy_BlocksSelfAssess() public {
         DenyPriceUpdatePolicy p = new DenyPriceUpdatePolicy();
-        address s = factory.createSlotV3(
-            recipient, IERC20(address(token)), _immutableConfig(), _init(), 0, address(p)
-        );
+        address s = factory.createSlot(
+            recipient, IERC20(address(token)), _immutableConfig(), _initWith(address(p)));
         vm.startPrank(alice);
         token.approve(s, type(uint256).max);
         Slot(s).buy(alice, 10 ether, 100 ether);
@@ -160,7 +165,8 @@ contract OccupancyPolicyTest is Test {
     }
 
     function test_ProposePolicyUpdate_AppliesOnTransition() public {
-        SlotConfig memory cfg = SlotConfig({mutableTax: false, mutableModule: true, manager: manager});
+        // mutablePolicy, not mutableModule — the two are separate promises.
+        SlotConfig memory cfg = SlotConfig({mutableTax: false, mutableModule: false, mutablePolicy: true, manager: manager});
         address s = factory.createSlot(recipient, IERC20(address(token)), cfg, _init());
 
         vm.startPrank(alice);
@@ -192,9 +198,8 @@ contract OccupancyPolicyTest is Test {
     }
 
     function _tenureSlot(MinimumTenurePolicy p) internal returns (address) {
-        return factory.createSlotV3(
-            recipient, IERC20(address(token)), _immutableConfig(), _init(), 0, address(p)
-        );
+        return factory.createSlot(
+            recipient, IERC20(address(token)), _immutableConfig(), _initWith(address(p)));
     }
 
     /// 1% monthly on 100 ether over 7 days = 100e18 * 100 * 604800 / (2592000 * 10000)

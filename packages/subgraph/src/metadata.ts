@@ -1,7 +1,7 @@
-import { type Address, BigInt, ipfs, json } from "@graphprotocol/graph-ts";
-import type { MetadataUpdated } from "../generated/MetadataModule/MetadataModule";
+import { Address, BigInt, ipfs, json } from "@graphprotocol/graph-ts";
+import { MetadataUpdated } from "../generated/MetadataModule/MetadataModule";
 import { MetadataSlot, MetadataUpdatedEvent, Slot } from "../generated/schema";
-import type { MetadataUpdated as MetadataUpdatedV2 } from "../generated/templates/FeedPostModule/FeedPostModuleV2";
+import { MetadataUpdated as MetadataUpdatedV2 } from "../generated/templates/FeedPostModule/FeedPostModuleV2";
 import { getOrCreateAccount, getOrCreateAccountSlot } from "./helpers";
 
 /**

@@ -2,14 +2,16 @@ import {
   Address,
   BigInt,
   DataSourceContext,
+  ethereum,
   ipfs,
   json,
   log,
 } from "@graphprotocol/graph-ts";
-import type {
+import {
   AdminTransferred,
   ModuleVerified,
   SlotDeployed,
+  SlotDeployed1,
 } from "../generated/SlotFactory/SlotFactory";
 import { Factory, Module, Slot, SlotDeployedEvent } from "../generated/schema";
 import {
@@ -33,38 +35,96 @@ function getOrCreateFactory(address: string): Factory {
   return factory;
 }
 
-export function handleSlotDeployed(event: SlotDeployed): void {
+/**
+ * Slots created before `SlotConfig.mutablePolicy` and
+ * `SlotInitParams.occupancyPolicy` existed.
+ *
+ * Those additions changed the event's tuple types and therefore its topic0, so
+ * this handler is the only thing that will ever see the 252 historical slots.
+ * It fills the two new fields with what those slots actually have: no policy,
+ * and occupancy that was never separately mutable.
+ */
+export function handleSlotDeployedLegacy(event: SlotDeployed): void {
+  _record(
+    event,
+    event.params.slot,
+    event.params.recipient,
+    event.params.currency,
+    event.params.config.mutableTax,
+    event.params.config.mutableModule,
+    false,
+    event.params.config.manager,
+    event.params.initParams.taxPercentage,
+    event.params.initParams.module,
+    event.params.initParams.liquidationBountyBps,
+    event.params.initParams.minDepositSeconds,
+    Address.zero()
+  );
+}
+
+/** Slots created with the current tuple. */
+export function handleSlotDeployed(event: SlotDeployed1): void {
+  _record(
+    event,
+    event.params.slot,
+    event.params.recipient,
+    event.params.currency,
+    event.params.config.mutableTax,
+    event.params.config.mutableModule,
+    event.params.config.mutablePolicy,
+    event.params.config.manager,
+    event.params.initParams.taxPercentage,
+    event.params.initParams.module,
+    event.params.initParams.liquidationBountyBps,
+    event.params.initParams.minDepositSeconds,
+    event.params.initParams.occupancyPolicy
+  );
+}
+
+function _record(
+  event: ethereum.Event,
+  slotAddr: Address,
+  recipientAddr: Address,
+  currencyAddr: Address,
+  mutableTax: boolean,
+  mutableModule: boolean,
+  mutablePolicy: boolean,
+  manager: Address,
+  taxPercentage: BigInt,
+  moduleAddr: Address,
+  liquidationBountyBps: BigInt,
+  minDepositSeconds: BigInt,
+  occupancyPolicy: Address
+): void {
   const factory = getOrCreateFactory(event.address.toHexString());
   factory.slotCount = factory.slotCount.plus(BigInt.fromI32(1));
   factory.save();
 
-  const slotAddress = event.params.slot.toHexString();
+  const slotAddress = slotAddr.toHexString();
   const slot = new Slot(slotAddress);
 
-  const recipientAccount = getOrCreateAccount(event.params.recipient);
+  const recipientAccount = getOrCreateAccount(recipientAddr);
   recipientAccount.slotCount += 1;
   recipientAccount.save();
 
-  slot.recipient = event.params.recipient;
+  slot.recipient = recipientAddr;
   slot.recipientAccount = recipientAccount.id;
   slot.occupantAccount = null;
-  const currency = getOrCreateCurrency(event.params.currency);
+  const currency = getOrCreateCurrency(currencyAddr);
   slot.currency = currency.id;
 
-  // Config
-  slot.mutableTax = event.params.config.mutableTax;
-  slot.mutableModule = event.params.config.mutableModule;
-  slot.manager = event.params.config.manager;
+  slot.mutableTax = mutableTax;
+  slot.mutableModule = mutableModule;
+  slot.mutablePolicy = mutablePolicy;
+  slot.manager = manager;
 
-  // Init params
-  slot.taxPercentage = event.params.initParams.taxPercentage;
-  const moduleAddr = event.params.initParams.module;
+  slot.taxPercentage = taxPercentage;
   if (!moduleAddr.equals(Address.zero())) {
     const mod = getOrCreateModule(moduleAddr, event.address.toHexString());
     slot.module = mod.id;
   }
-  slot.liquidationBountyBps = event.params.initParams.liquidationBountyBps;
-  slot.minDepositSeconds = event.params.initParams.minDepositSeconds;
+  slot.liquidationBountyBps = liquidationBountyBps;
+  slot.minDepositSeconds = minDepositSeconds;
 
   // State defaults
   slot.occupant = null;
@@ -74,14 +134,12 @@ export function handleSlotDeployed(event: SlotDeployed): void {
   slot.collectedTax = BigInt.zero();
   slot.totalCollected = BigInt.zero();
 
-  // v3 occupancy defaults. SlotDeployed carries neither epochSeconds nor
-  // occupancyPolicy — SlotInitParams was deliberately not extended, to keep the
-  // factory's ABI and selector stable. A slot created via createSlotV3 emits
-  // SlotConfiguredV3 immediately after this, which overwrites these; one
-  // created via the legacy createSlot keeps them, and they are the correct
-  // values for it (instant buy, no policy).
+  // The policy now arrives in this event. Legacy slots pass address(0), which
+  // is the truth for them: they were created before policies existed.
   slot.epochSeconds = BigInt.zero();
-  slot.occupancyPolicy = null;
+  slot.occupancyPolicy = occupancyPolicy.equals(Address.zero())
+    ? null
+    : occupancyPolicy;
   slot.occupiedSince = BigInt.zero();
   slot.pendingBuyer = null;
   slot.pendingEffectiveAt = null;
@@ -101,15 +159,16 @@ export function handleSlotDeployed(event: SlotDeployed): void {
     event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
   const ev = new SlotDeployedEvent(evId);
   ev.slot = slot.id;
-  ev.recipient = event.params.recipient;
+  ev.recipient = recipientAddr;
   ev.currency = currency.id;
-  ev.manager = event.params.config.manager;
-  ev.mutableTax = event.params.config.mutableTax;
-  ev.mutableModule = event.params.config.mutableModule;
-  ev.taxPercentage = event.params.initParams.taxPercentage;
-  ev.module = event.params.initParams.module;
-  ev.liquidationBountyBps = event.params.initParams.liquidationBountyBps;
-  ev.minDepositSeconds = event.params.initParams.minDepositSeconds;
+  ev.manager = manager;
+  ev.mutableTax = mutableTax;
+  ev.mutableModule = mutableModule;
+  ev.mutablePolicy = mutablePolicy;
+  ev.taxPercentage = taxPercentage;
+  ev.module = moduleAddr;
+  ev.liquidationBountyBps = liquidationBountyBps;
+  ev.minDepositSeconds = minDepositSeconds;
   ev.deployer = event.transaction.from;
   ev.timestamp = event.block.timestamp;
   ev.blockNumber = event.block.number;
@@ -119,7 +178,7 @@ export function handleSlotDeployed(event: SlotDeployed): void {
   // Start indexing events on this slot contract
   const context = new DataSourceContext();
   context.setString("factory", event.address.toHexString());
-  SlotTemplate.createWithContext(event.params.slot, context);
+  SlotTemplate.createWithContext(slotAddr, context);
 
   // If the slot uses a module, start indexing MetadataUpdated events from it
   if (!moduleAddr.equals(Address.zero())) {

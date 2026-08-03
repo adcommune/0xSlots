@@ -111,13 +111,15 @@ export const createSlotSchema = z
     }),
     mutableTax: z.boolean(),
     mutableModule: z.boolean(),
+    mutablePolicy: z.boolean(),
     manager: z.string().refine(isValidAddressOrEns, {
       message: "Enter a valid address (0x…) or ENS name",
     }),
   })
   .refine(
     (d) => {
-      if (d.mutableTax || d.mutableModule) return d.manager.length > 0;
+      if (d.mutableTax || d.mutableModule || d.mutablePolicy)
+        return d.manager.length > 0;
       return true;
     },
     {
@@ -216,6 +218,7 @@ export const defaultValues: CreateSlotFormValues = {
   occupancyPolicy: "",
   mutableTax: false,
   mutableModule: false,
+  mutablePolicy: false,
   manager: "",
 };
 

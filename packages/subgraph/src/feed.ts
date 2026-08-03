@@ -8,7 +8,7 @@ import {
   FeedSlotRemovedEvent,
   Slot,
 } from "../generated/schema";
-import type {
+import {
   MetadataURIUpdated,
   NameUpdated,
   RecipientUpdated,

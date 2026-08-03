@@ -13,7 +13,14 @@ import {IOccupancyPolicy} from "./interfaces/IOccupancyPolicy.sol";
 
 /// @title SlotFactory — Deploy Harberger-taxed slots via Beacon Proxy
 /// @notice UUPS-upgradeable factory. All slots delegate to a shared beacon.
-///         Upgrading the beacon upgrades all slots. Upgrading the factory upgrades deployment logic.
+///         Upgrading the beacon upgrades all slots.
+///
+/// @dev The creation surface is two functions — `createSlot` and `createSlots`
+///      — and is meant to stay that way. A new slot parameter goes into
+///      `SlotInitParams`, which both already carry, never into a new suffixed
+///      entry point. A versioned creator is a permanent tax on every caller,
+///      every published ABI and every integration, paid to avoid changing one
+///      struct once.
 contract SlotFactory is UUPSUpgradeable {
     // ═══════════════════════════════════════════════════════════
     // ERRORS
@@ -26,11 +33,6 @@ contract SlotFactory is UUPSUpgradeable {
     error NotAdmin();
     error AlreadyInitialized();
     error InvalidModule_NoCode();
-    /// @dev Epoch scheduling was removed in v4. The `epochSeconds` parameter is
-    ///      retained so the selector and every existing caller keep working,
-    ///      but a non-zero value is rejected rather than silently ignored — a
-    ///      caller asking for a delay should learn it will not happen.
-    error EpochsRemoved();
 
     // ═══════════════════════════════════════════════════════════
     // EVENTS
@@ -148,26 +150,6 @@ contract SlotFactory is UUPSUpgradeable {
         }
     }
 
-    /// @notice Deploy a Slot with v3 params (epoch length + occupancy policy).
-    /// @dev `createSlot` is retained unchanged — extending SlotInitParams would
-    ///      change the tuple signature and therefore the selector, breaking
-    ///      every published ABI.
-    function createSlotV3(
-        address recipient,
-        IERC20 currency,
-        SlotConfig memory config,
-        SlotInitParams memory initParams,
-        uint64 epochSeconds,
-        address occupancyPolicy
-    ) external returns (address slot) {
-        _validateConfig(config, initParams);
-        if (epochSeconds != 0) revert EpochsRemoved();
-        if (occupancyPolicy != address(0) && occupancyPolicy.code.length == 0)
-            revert InvalidModule_NoCode();
-        slot = _deploySlot(recipient, currency, config, initParams);
-        Slot(slot).initializeV3(epochSeconds, occupancyPolicy);
-    }
-
     // ═══════════════════════════════════════════════════════════
     // VIEWS
     // ═══════════════════════════════════════════════════════════
@@ -273,35 +255,6 @@ contract SlotFactory is UUPSUpgradeable {
         }
     }
 
-    /// @notice Migrate pre-existing slots: register + initializeV2 in one call (admin only)
-    function migrateSlots(address[] calldata slots) external onlyAdmin {
-        for (uint256 i = 0; i < slots.length; i++) {
-            isSlot[slots[i]] = true;
-            Slot(slots[i]).initializeV2(address(this));
-        }
-    }
-
-    /// @notice Migrate pre-existing slots to v3: register, ensure `factory` is
-    ///         set, then set epoch length + occupancy policy (admin only).
-    /// @dev `Slot.initializeV3` is authenticated on `msg.sender == factory`, so
-    ///      this is the ONLY way a legacy slot can reach v3. The `initializeV2`
-    ///      call is wrapped in try/catch because a slot already migrated to v2
-    ///      reverts there (`reinitializer(2)`), while one still at v1 needs it
-    ///      so that `factory` is populated before the v3 gate reads it.
-    function migrateSlotsV3(
-        address[] calldata slots,
-        uint64 epochSeconds,
-        address occupancyPolicy
-    ) external onlyAdmin {
-        if (occupancyPolicy != address(0) && occupancyPolicy.code.length == 0)
-            revert InvalidModule_NoCode();
-        for (uint256 i = 0; i < slots.length; i++) {
-            isSlot[slots[i]] = true;
-            try Slot(slots[i]).initializeV2(address(this)) {} catch {}
-            Slot(slots[i]).initializeV3(epochSeconds, occupancyPolicy);
-        }
-    }
-
     // ═══════════════════════════════════════════════════════════
     // BEACON UPGRADES
     // ═══════════════════════════════════════════════════════════
@@ -309,54 +262,13 @@ contract SlotFactory is UUPSUpgradeable {
     /// @notice Upgrade the beacon (admin only). Requires the factory to own it.
     /// @dev Beacon ownership starts with `admin` (see `initialize`). Transfer it
     ///      to this factory with `UpgradeableBeacon.transferOwnership` to enable
-    ///      this and `upgradeBeaconAndMigrateV3`. Authority is unchanged either
+    ///      this. Authority is unchanged either
     ///      way — `onlyAdmin` here is the same address that owned the beacon.
     function upgradeBeacon(address newImplementation) external onlyAdmin {
         beacon.upgradeTo(newImplementation);
         emit BeaconUpgraded(newImplementation);
     }
 
-    /// @notice Upgrade the beacon AND migrate legacy slots to v3 atomically.
-    /// @dev THIS ATOMICITY IS A SECURITY REQUIREMENT, not a convenience.
-    ///
-    ///      `Slot.initializeV2` is unauthenticated (a v1 slot has no unforgeable
-    ///      notion of its factory). So the instant the beacon serves v3 code, any
-    ///      slot still at v1 can be captured by an attacker calling
-    ///      `initializeV2(self)` — which sets `factory` to them — and then
-    ///      `initializeV3(absurdEpoch, denyAllPolicy)`, which passes the
-    ///      `msg.sender == factory` gate. That permanently ends forced sale on
-    ///      the slot and strands the next buyer's escrow, with no admin repair
-    ///      path (`initializeV3` is a one-shot reinitializer).
-    ///
-    ///      Doing the upgrade and the migration in two transactions leaves that
-    ///      window open in the mempool. Doing them here leaves no window at all.
-    ///
-    ///      Pass every not-yet-v2 slot on the chain. Slots already at v3 must be
-    ///      excluded — `initializeV3` reverts on them and would revert the batch.
-    function upgradeBeaconAndMigrateV3(
-        address newImplementation,
-        address[] calldata slots,
-        uint64 epochSeconds,
-        address occupancyPolicy
-    ) external onlyAdmin {
-        if (occupancyPolicy != address(0) && occupancyPolicy.code.length == 0)
-            revert InvalidModule_NoCode();
-
-        beacon.upgradeTo(newImplementation);
-        emit BeaconUpgraded(newImplementation);
-
-        for (uint256 i = 0; i < slots.length; i++) {
-            isSlot[slots[i]] = true;
-            try Slot(slots[i]).initializeV2(address(this)) {} catch {}
-            Slot(slots[i]).initializeV3(epochSeconds, occupancyPolicy);
-        }
-    }
-
-    // ═══════════════════════════════════════════════════════════
-    // UUPS
-    // ═══════════════════════════════════════════════════════════
-
-    /// @dev Only admin can authorize factory upgrades
     function _authorizeUpgrade(address) internal override onlyAdmin {}
 
     // ═══════════════════════════════════════════════════════════
@@ -367,7 +279,7 @@ contract SlotFactory is UUPSUpgradeable {
         SlotConfig memory config,
         SlotInitParams memory initParams
     ) internal view {
-        if (config.mutableTax || config.mutableModule) {
+        if (config.mutableTax || config.mutableModule || config.mutablePolicy) {
             if (config.manager == address(0))
                 revert InvalidConfig_ManagerRequired();
         } else {
@@ -388,14 +300,15 @@ contract SlotFactory is UUPSUpgradeable {
         SlotConfig memory config,
         SlotInitParams memory initParams
     ) internal returns (address slot) {
+        // `factory` is set inside `initialize` now, in the proxy constructor —
+        // atomically with creation, so a new slot is never briefly claimable.
         bytes memory initData = abi.encodeCall(
             Slot.initialize,
-            (recipient, currency, config, initParams)
+            (recipient, currency, config, initParams, address(this))
         );
         BeaconProxy proxy = new BeaconProxy(address(beacon), initData);
         slot = address(proxy);
         isSlot[slot] = true;
-        Slot(slot).initializeV2(address(this));
         emit SlotDeployed(
             slot,
             recipient,

@@ -62,19 +62,17 @@ contract MinimumPricePolicyTest is Test {
     }
 
     function _slot(IERC20 currency, address policy) internal returns (Slot) {
-        return Slot(factory.createSlotV3(
+        return Slot(factory.createSlot(
             recipient,
             currency,
-            SlotConfig({mutableTax: false, mutableModule: false, manager: address(0)}),
+            SlotConfig({mutableTax: false, mutableModule: false, mutablePolicy: false, manager: address(0)}),
             SlotInitParams({
                 taxPercentage: 100,
                 module: address(0),
                 liquidationBountyBps: 500,
-                minDepositSeconds: 0
-            }),
-            0,
-            policy
-        ));
+                minDepositSeconds: 0,
+            occupancyPolicy: policy
+            })));
     }
 
     function _buy(Slot s, address who, uint256 dep, uint256 px) internal {

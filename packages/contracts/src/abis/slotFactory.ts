@@ -123,90 +123,12 @@ export const slotFactoryAbi = [
             type: "uint256",
             internalType: "uint256",
           },
-        ],
-      },
-    ],
-    outputs: [
-      {
-        name: "slot",
-        type: "address",
-        internalType: "address",
-      },
-    ],
-    stateMutability: "nonpayable",
-  },
-  {
-    type: "function",
-    name: "createSlotV3",
-    inputs: [
-      {
-        name: "recipient",
-        type: "address",
-        internalType: "address",
-      },
-      {
-        name: "currency",
-        type: "address",
-        internalType: "contract IERC20",
-      },
-      {
-        name: "config",
-        type: "tuple",
-        internalType: "struct SlotConfig",
-        components: [
           {
-            name: "mutableTax",
-            type: "bool",
-            internalType: "bool",
-          },
-          {
-            name: "mutableModule",
-            type: "bool",
-            internalType: "bool",
-          },
-          {
-            name: "manager",
+            name: "occupancyPolicy",
             type: "address",
             internalType: "address",
           },
         ],
-      },
-      {
-        name: "initParams",
-        type: "tuple",
-        internalType: "struct SlotInitParams",
-        components: [
-          {
-            name: "taxPercentage",
-            type: "uint256",
-            internalType: "uint256",
-          },
-          {
-            name: "module",
-            type: "address",
-            internalType: "address",
-          },
-          {
-            name: "liquidationBountyBps",
-            type: "uint256",
-            internalType: "uint256",
-          },
-          {
-            name: "minDepositSeconds",
-            type: "uint256",
-            internalType: "uint256",
-          },
-        ],
-      },
-      {
-        name: "epochSeconds",
-        type: "uint64",
-        internalType: "uint64",
-      },
-      {
-        name: "occupancyPolicy",
-        type: "address",
-        internalType: "address",
       },
     ],
     outputs: [
@@ -278,6 +200,11 @@ export const slotFactoryAbi = [
             name: "minDepositSeconds",
             type: "uint256",
             internalType: "uint256",
+          },
+          {
+            name: "occupancyPolicy",
+            type: "address",
+            internalType: "address",
           },
         ],
       },
@@ -385,42 +312,6 @@ export const slotFactoryAbi = [
   },
   {
     type: "function",
-    name: "migrateSlots",
-    inputs: [
-      {
-        name: "slots",
-        type: "address[]",
-        internalType: "address[]",
-      },
-    ],
-    outputs: [],
-    stateMutability: "nonpayable",
-  },
-  {
-    type: "function",
-    name: "migrateSlotsV3",
-    inputs: [
-      {
-        name: "slots",
-        type: "address[]",
-        internalType: "address[]",
-      },
-      {
-        name: "epochSeconds",
-        type: "uint64",
-        internalType: "uint64",
-      },
-      {
-        name: "occupancyPolicy",
-        type: "address",
-        internalType: "address",
-      },
-    ],
-    outputs: [],
-    stateMutability: "nonpayable",
-  },
-  {
-    type: "function",
     name: "proxiableUUID",
     inputs: [],
     outputs: [
@@ -500,34 +391,6 @@ export const slotFactoryAbi = [
     inputs: [
       {
         name: "newImplementation",
-        type: "address",
-        internalType: "address",
-      },
-    ],
-    outputs: [],
-    stateMutability: "nonpayable",
-  },
-  {
-    type: "function",
-    name: "upgradeBeaconAndMigrateV3",
-    inputs: [
-      {
-        name: "newImplementation",
-        type: "address",
-        internalType: "address",
-      },
-      {
-        name: "slots",
-        type: "address[]",
-        internalType: "address[]",
-      },
-      {
-        name: "epochSeconds",
-        type: "uint64",
-        internalType: "uint64",
-      },
-      {
-        name: "occupancyPolicy",
         type: "address",
         internalType: "address",
       },
@@ -774,6 +637,11 @@ export const slotFactoryAbi = [
             type: "uint256",
             internalType: "uint256",
           },
+          {
+            name: "occupancyPolicy",
+            type: "address",
+            internalType: "address",
+          },
         ],
       },
     ],
@@ -872,11 +740,6 @@ export const slotFactoryAbi = [
   {
     type: "error",
     name: "InvalidModule_NoCode",
-    inputs: [],
-  },
-  {
-    type: "error",
-    name: "EpochsRemoved",
     inputs: [],
   },
   {

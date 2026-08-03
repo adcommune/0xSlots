@@ -14,7 +14,6 @@ export {
   getVouchedPolicy,
   type PolicyImpact,
   type ResolvedPolicy,
-  SLOT_QUEUE_ADDRESSES,
   searchVouchedPolicies,
   type VouchedPolicy,
   type VouchedPolicyEntry,

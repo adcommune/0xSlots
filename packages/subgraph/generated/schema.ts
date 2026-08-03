@@ -539,6 +539,19 @@ export class Slot extends Entity {
     this.set("mutableModule", Value.fromBoolean(value));
   }
 
+  get mutablePolicy(): boolean {
+    let value = this.get("mutablePolicy");
+    if (!value || value.kind == ValueKind.NULL) {
+      return false;
+    } else {
+      return value.toBoolean();
+    }
+  }
+
+  set mutablePolicy(value: boolean) {
+    this.set("mutablePolicy", Value.fromBoolean(value));
+  }
+
   get manager(): Bytes {
     let value = this.get("manager");
     if (!value || value.kind == ValueKind.NULL) {
@@ -798,23 +811,6 @@ export class Slot extends Entity {
       this.unset("pendingEffectiveAt");
     } else {
       this.set("pendingEffectiveAt", Value.fromBigInt(<BigInt>value));
-    }
-  }
-
-  get pendingCommittedAt(): BigInt | null {
-    let value = this.get("pendingCommittedAt");
-    if (!value || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toBigInt();
-    }
-  }
-
-  set pendingCommittedAt(value: BigInt | null) {
-    if (!value) {
-      this.unset("pendingCommittedAt");
-    } else {
-      this.set("pendingCommittedAt", Value.fromBigInt(<BigInt>value));
     }
   }
 
@@ -1721,6 +1717,19 @@ export class SlotDeployedEvent extends Entity {
 
   set mutableModule(value: boolean) {
     this.set("mutableModule", Value.fromBoolean(value));
+  }
+
+  get mutablePolicy(): boolean {
+    let value = this.get("mutablePolicy");
+    if (!value || value.kind == ValueKind.NULL) {
+      return false;
+    } else {
+      return value.toBoolean();
+    }
+  }
+
+  set mutablePolicy(value: boolean) {
+    this.set("mutablePolicy", Value.fromBoolean(value));
   }
 
   get taxPercentage(): BigInt {

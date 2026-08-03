@@ -1,4 +1,4 @@
-import { type Address, BigInt, ethereum } from "@graphprotocol/graph-ts";
+import { Address, BigInt, ethereum } from "@graphprotocol/graph-ts";
 import { ERC20 } from "../generated/SlotFactory/ERC20";
 import { SplitV2 } from "../generated/SlotFactory/SplitV2";
 import { Account, AccountSlot, Currency, Module } from "../generated/schema";

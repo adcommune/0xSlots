@@ -1,7 +1,7 @@
 import {
   Address,
   BigInt,
-  type Bytes,
+  Bytes,
   dataSource,
 } from "@graphprotocol/graph-ts";
 import {
@@ -28,7 +28,7 @@ import {
   TransferScheduledEvent,
   WithdrawnEvent,
 } from "../generated/schema";
-import type {
+import {
   Bought,
   Deposited,
   Liquidated,
@@ -96,7 +96,7 @@ export function handleBought(event: Bought): void {
 
   // Set new occupant. NOTE: `buyer` is the `account` argument to buy(), not
   // necessarily the tx sender — buy(account, ...) lets one address pay while
-  // another occupies, which is how SlotQueue fills on a bidder's behalf. On an
+  // another occupies, e.g. a keeper buying on a bidder's behalf. On an
   // epoch slot this event also fires in a LATER transaction than the buy, sent
   // by whoever happened to materialise the transfer. Never read tx.from here.
   const buyerAccount = getOrCreateAccount(event.params.buyer, true);

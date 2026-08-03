@@ -102,8 +102,3 @@ export function searchVouchedPolicies(
       p.address.includes(q),
   );
 }
-
-/** Peripheral contracts, for linking out from slot pages. */
-export const SLOT_QUEUE_ADDRESSES: Record<number, string> = {
-  84532: "0x83AFEf8eF55B4d624D5f61088FD095603913616d",
-};

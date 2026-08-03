@@ -86,7 +86,7 @@ contract DeployFeed is BaseScript {
         for (uint256 i = 0; i < slots.length; i++) {
             SlotConfig memory config = SlotConfig({
                 mutableTax: true,
-                mutableModule: false,
+                mutableModule: false, mutablePolicy: false,
                 manager: vm.addr(deployerPrivateKey)
             });
 
@@ -94,7 +94,8 @@ contract DeployFeed is BaseScript {
                 taxPercentage: slots[i].taxBps,
                 module: feedModule,
                 liquidationBountyBps: slots[i].liquidationBountyBps,
-                minDepositSeconds: slots[i].minDepositSeconds
+                minDepositSeconds: slots[i].minDepositSeconds,
+            occupancyPolicy: address(0)
             });
 
             address slot = f.createSlot(

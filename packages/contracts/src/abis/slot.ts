@@ -406,36 +406,15 @@ export const slotAbi = [
             type: "uint256",
             internalType: "uint256",
           },
+          {
+            name: "occupancyPolicy",
+            type: "address",
+            internalType: "address",
+          },
         ],
       },
-    ],
-    outputs: [],
-    stateMutability: "nonpayable",
-  },
-  {
-    type: "function",
-    name: "initializeV2",
-    inputs: [
       {
         name: "_factory",
-        type: "address",
-        internalType: "address",
-      },
-    ],
-    outputs: [],
-    stateMutability: "nonpayable",
-  },
-  {
-    type: "function",
-    name: "initializeV3",
-    inputs: [
-      {
-        name: "_epochSeconds",
-        type: "uint64",
-        internalType: "uint64",
-      },
-      {
-        name: "_occupancyPolicy",
         type: "address",
         internalType: "address",
       },
@@ -1265,50 +1244,6 @@ export const slotAbi = [
   },
   {
     type: "event",
-    name: "TaxPaid",
-    inputs: [
-      {
-        name: "occupant",
-        type: "address",
-        indexed: true,
-        internalType: "address",
-      },
-      {
-        name: "taxOwed",
-        type: "uint256",
-        indexed: false,
-        internalType: "uint256",
-      },
-      {
-        name: "taxPaid",
-        type: "uint256",
-        indexed: false,
-        internalType: "uint256",
-      },
-    ],
-    anonymous: false,
-  },
-  {
-    type: "event",
-    name: "SlotConfiguredV3",
-    inputs: [
-      {
-        name: "epochSeconds",
-        type: "uint64",
-        indexed: false,
-        internalType: "uint64",
-      },
-      {
-        name: "occupancyPolicy",
-        type: "address",
-        indexed: false,
-        internalType: "address",
-      },
-    ],
-    anonymous: false,
-  },
-  {
-    type: "event",
     name: "SlotCreated",
     inputs: [
       {
@@ -1378,6 +1313,11 @@ export const slotAbi = [
             type: "uint256",
             internalType: "uint256",
           },
+          {
+            name: "occupancyPolicy",
+            type: "address",
+            internalType: "address",
+          },
         ],
       },
     ],
@@ -1395,6 +1335,31 @@ export const slotAbi = [
       },
       {
         name: "amount",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "TaxPaid",
+    inputs: [
+      {
+        name: "occupant",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "taxOwed",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+      {
+        name: "taxPaid",
         type: "uint256",
         indexed: false,
         internalType: "uint256",
@@ -1512,11 +1477,6 @@ export const slotAbi = [
   },
   {
     type: "error",
-    name: "EpochsRemoved",
-    inputs: [],
-  },
-  {
-    type: "error",
     name: "NotInitializing",
     inputs: [],
   },
@@ -1543,11 +1503,6 @@ export const slotAbi = [
   {
     type: "error",
     name: "NothingToCollect",
-    inputs: [],
-  },
-  {
-    type: "error",
-    name: "PolicyNotMutable",
     inputs: [],
   },
   {

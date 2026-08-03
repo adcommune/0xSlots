@@ -62,7 +62,11 @@ export const SUBGRAPH_URLS: Record<SlotsChain, string> = {
 
 export interface SlotConfig {
   mutableTax: boolean;
+  /** The UTILITY module — what the slot does. */
   mutableModule: boolean;
+  /** The OCCUPANCY policy — whether forced sale applies, and on what terms. */
+  mutablePolicy: boolean;
+  /** address(0) when every flag is false. */
   manager: Address;
 }
 
@@ -71,6 +75,8 @@ export interface SlotInitParams {
   module: Address;
   liquidationBountyBps: bigint;
   minDepositSeconds: bigint;
+  /** IOccupancyPolicy address, or zero for plain instant buy. */
+  occupancyPolicy: Address;
 }
 
 export interface CreateSlotParams {
@@ -78,17 +84,6 @@ export interface CreateSlotParams {
   currency: Address;
   config: SlotConfig;
   initParams: SlotInitParams;
-}
-
-export interface CreateSlotV3Params extends CreateSlotParams {
-  /**
-   * Retained for ABI compatibility and MUST be zero. Epoch scheduling was
-   * removed in v4 and the factory rejects a non-zero value with
-   * `EpochsRemoved` rather than silently ignoring it.
-   */
-  epochSeconds: bigint;
-  /** IOccupancyPolicy address, or zero for none. */
-  occupancyPolicy: Address;
 }
 
 export interface CreateSlotsParams extends CreateSlotParams {
@@ -474,34 +469,6 @@ export class SlotsClient {
     });
   }
 
-  /**
-   * Deploy a slot with an occupancy policy.
-   *
-   * `createSlot` is kept as-is rather than extended because `SlotInitParams` is
-   * part of the factory's function signature — adding a field would change the
-   * selector and break every published ABI. Use this when either occupancy
-   * parameter is non-default; the two are otherwise identical.
-   *
-   * @returns Transaction hash.
-   */
-  async createSlotV3(params: CreateSlotV3Params): Promise<Hash> {
-    return this.wallet.writeContract({
-      address: this.factory,
-      abi: slotFactoryAbi,
-      functionName: "createSlotV3",
-      args: [
-        params.recipient,
-        params.currency,
-        params.config,
-        params.initParams,
-        params.epochSeconds,
-        params.occupancyPolicy,
-      ],
-      account: this.account,
-      chain: this.chain,
-    });
-  }
-
   // ─── Minimum tenure policies ───────────────────────────────────────────────
   //
   // MinimumTenurePolicy holds its window in an immutable constructor arg, so a
@@ -535,7 +502,7 @@ export class SlotsClient {
    * Idempotent — safe to call when another caller deployed it first.
    *
    * Waits for the receipt rather than returning on broadcast. Callers deploy a
-   * policy in order to immediately reference it, and `createSlotV3` reverts with
+   * policy in order to immediately reference it, and `createSlot` reverts with
    * `InvalidModule_NoCode` while the CREATE2 address is still empty — which
    * surfaces as an opaque RPC gas-limit rejection, because a wallet whose
    * estimation reverts falls back to the block gas limit.
@@ -591,7 +558,7 @@ export class SlotsClient {
    * Idempotent — safe to call when another caller deployed it first.
    *
    * Waits for the receipt for the same reason `deployTenurePolicy` does: the
-   * caller is about to reference this address in `createSlotV3`, which reverts
+   * caller is about to reference this address in `createSlot`, which reverts
    * `InvalidModule_NoCode` while the CREATE2 address is still empty.
    */
   async deployPricePolicy(currency: Address, minPrice: bigint): Promise<Hash> {

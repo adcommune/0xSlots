@@ -1,6 +1,6 @@
 import { BigInt } from "@graphprotocol/graph-ts";
 import { NFTCollection, NFTToken } from "../generated/schema";
-import type { TokenMinted } from "../generated/templates/ERC721Slots/ERC721Slots";
+import { TokenMinted } from "../generated/templates/ERC721Slots/ERC721Slots";
 
 export function handleTokenMinted(event: TokenMinted): void {
   const collectionId = event.address.toHexString();
