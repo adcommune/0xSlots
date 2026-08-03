@@ -18,7 +18,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { KNOWN_POLICIES, knownPoliciesForChain } from "@/config/policies";
+import {
+  VOUCHED_POLICIES,
+  type VouchedPolicy,
+  vouchedPoliciesForChain,
+} from "@/config/policies";
 import { useChain } from "@/context/chain";
 import { AddressInput } from "../address-input";
 import { useErc20Check } from "../hooks/use-erc20-check";
@@ -43,7 +47,7 @@ export function OccupancySection() {
 
   // A policy address is chain-specific — offering one from another chain would
   // produce a slot whose policy has no code.
-  const knownForChain = knownPoliciesForChain(chainId);
+  const vouchedForChain = vouchedPoliciesForChain(chainId);
 
   const tenureUnit = form.watch("tenureUnit");
 
@@ -90,9 +94,12 @@ export function OccupancySection() {
                 <SelectItem value="none">None</SelectItem>
                 <SelectItem value="tenure">Minimum tenure</SelectItem>
                 <SelectItem value="price">Minimum price</SelectItem>
-                <SelectItem value="known" disabled={knownForChain.length === 0}>
+                <SelectItem
+                  value="known"
+                  disabled={vouchedForChain.length === 0}
+                >
                   Verified policy
-                  {knownForChain.length === 0 && " — none on this chain"}
+                  {vouchedForChain.length === 0 && " — none on this chain"}
                 </SelectItem>
                 <SelectItem value="custom">Custom address</SelectItem>
               </SelectContent>
@@ -194,7 +201,7 @@ export function OccupancySection() {
         />
       )}
 
-      {policyMode === "known" && knownForChain.length === 0 && (
+      {policyMode === "known" && vouchedForChain.length === 0 && (
         <p className="text-sm text-muted-foreground rounded-md border border-dashed p-3">
           No verified policies are deployed on this chain yet. Switch to a chain
           that has them, or use{" "}
@@ -209,7 +216,7 @@ export function OccupancySection() {
         </p>
       )}
 
-      {policyMode === "known" && knownForChain.length > 0 && (
+      {policyMode === "known" && vouchedForChain.length > 0 && (
         <FormField
           control={form.control}
           name="occupancyPolicy"
@@ -220,16 +227,16 @@ export function OccupancySection() {
                   <SelectValue placeholder="Choose a policy" />
                 </SelectTrigger>
                 <SelectContent>
-                  {knownForChain.map(([addr, p]) => (
+                  {vouchedForChain.map(([addr, p]: [string, VouchedPolicy]) => (
                     <SelectItem key={addr} value={addr}>
                       {p.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              {field.value && KNOWN_POLICIES[field.value.toLowerCase()] && (
+              {field.value && VOUCHED_POLICIES[field.value.toLowerCase()] && (
                 <FormDescription>
-                  {KNOWN_POLICIES[field.value.toLowerCase()].description}
+                  {VOUCHED_POLICIES[field.value.toLowerCase()].description}
                 </FormDescription>
               )}
               <FormMessage />

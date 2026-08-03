@@ -20,6 +20,19 @@ export * from "./generated/graphql";
 export { FeedModuleClient } from "./modules/feed";
 // Modules
 export { MetadataModuleClient } from "./modules/metadata";
+// Occupancy policies — resolve an address into human-readable terms, plus the
+// hand-vouched list. See ./policies.
+export {
+  formatDuration,
+  type PolicyImpact,
+  type PolicyKindId,
+  type ResolvedPolicy,
+  resolvePolicy,
+  SLOT_QUEUE_ADDRESSES,
+  VOUCHED_POLICIES,
+  type VouchedPolicy,
+  vouchedPoliciesForChain,
+} from "./policies";
 // Tokens
 export {
   CHAIN_TOKENS,

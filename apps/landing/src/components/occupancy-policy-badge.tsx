@@ -64,6 +64,10 @@ export function OccupancyPolicyBadge({
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
+              {/* `resolvePolicy` always answers — an unrecognised address gets
+                  its own label and an "unknown" impact — so there is nothing to
+                  fall back to here. While the read is in flight `known` is
+                  undefined, which renders the neutral outline. */}
               <Badge
                 variant={known?.impact === "soft" ? "protected" : "outline"}
               >
@@ -71,8 +75,7 @@ export function OccupancyPolicyBadge({
               </Badge>
             </TooltipTrigger>
             <TooltipContent className="max-w-[16rem]">
-              {known?.description ??
-                "An occupancy rule this app doesn't recognise — how easily this slot can be bought out is unknown."}
+              {known?.description ?? "Reading this slot's occupancy rule…"}
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
