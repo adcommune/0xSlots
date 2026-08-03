@@ -22,8 +22,8 @@ import {Slot} from "../src/Slot.sol";
  *      beacon stays where it is.
  */
 contract AuditCapturable is BaseScript {
-    function check(address[] calldata slots) external {
-        vm.createSelectFork(forks[DeployementChain.BaseSepolia]);
+    function check(DeployementChain chain, address[] calldata slots) external {
+        vm.createSelectFork(forks[chain]);
 
         uint256 capturable;
         uint256 oldBytecode;
