@@ -104,12 +104,13 @@ contract Feed is Initializable, OwnableUpgradeable, IFeed {
             address[] memory created = ISlotFactory(slotFactory).createSlots(
                 _feedRecipient,
                 IERC20(currency),
-                SlotConfig({mutableTax: false, mutableModule: false, manager: address(0)}),
+                SlotConfig({mutableTax: false, mutableModule: false, mutablePolicy: false, manager: address(0)}),
                 SlotInitParams({
                     taxPercentage: tiers[t].taxPercentage,
                     module: feedModule,
                     liquidationBountyBps: tiers[t].liquidationBountyBps,
-                    minDepositSeconds: tiers[t].minDepositSeconds
+                    minDepositSeconds: tiers[t].minDepositSeconds,
+            occupancyPolicy: address(0)
                 }),
                 tiers[t].count
             );

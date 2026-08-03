@@ -6,6 +6,15 @@ export interface TokenInfo {
   name: string;
   symbol: string;
   decimals: number;
+  /**
+   * Test token with an unpermissioned `mint(address,uint256)`.
+   *
+   * Circle's testnet USDC is the real FiatToken — `mint` is gated to
+   * configured minters, so a testnet user has to leave the app for
+   * faucet.circle.com before they can buy anything. A faucet token avoids
+   * that dead end.
+   */
+  faucet?: boolean;
 }
 
 /**
@@ -14,6 +23,16 @@ export interface TokenInfo {
  */
 export const CHAIN_TOKENS: Record<SlotsChain, TokenInfo[]> = {
   [SlotsChain.BASE_SEPOLIA]: [
+    // Default: mintable, so a new testnet user can create AND buy a slot
+    // without leaving the app. Shared with the Feed app, so balances carry
+    // across both rather than fragmenting across two test tokens.
+    {
+      address: "0xFA28A416810e39a7142C7557e6e43407d765f627",
+      name: "Feed USDC",
+      symbol: "USDCf",
+      decimals: 6,
+      faucet: true,
+    },
     {
       address: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
       name: "USD Coin",
@@ -43,4 +62,9 @@ export function getChainTokens(chainId: number): TokenInfo[] {
  */
 export function getDefaultToken(chainId: number): TokenInfo | undefined {
   return getChainTokens(chainId)[0];
+}
+
+/** The faucet-enabled token for a chain, if it has one. */
+export function getFaucetToken(chainId: number): TokenInfo | undefined {
+  return getChainTokens(chainId).find((t) => t.faucet);
 }

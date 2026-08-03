@@ -2,21 +2,23 @@ import {
   Address,
   BigInt,
   DataSourceContext,
+  ethereum,
   ipfs,
   json,
   log,
 } from "@graphprotocol/graph-ts";
 import {
-  SlotDeployed,
-  ModuleVerified,
   AdminTransferred,
+  ModuleVerified,
+  SlotDeployed,
+  SlotDeployed1,
 } from "../generated/SlotFactory/SlotFactory";
+import { Factory, Module, Slot, SlotDeployedEvent } from "../generated/schema";
 import {
-  Slot as SlotTemplate,
-  MetadataModule as MetadataModuleTemplate,
   FeedPostModule as FeedPostModuleTemplate,
+  MetadataModule as MetadataModuleTemplate,
+  Slot as SlotTemplate,
 } from "../generated/templates";
-import { Factory, Slot, Module, SlotDeployedEvent } from "../generated/schema";
 import {
   getOrCreateAccount,
   getOrCreateCurrency,
@@ -33,38 +35,96 @@ function getOrCreateFactory(address: string): Factory {
   return factory;
 }
 
-export function handleSlotDeployed(event: SlotDeployed): void {
-  let factory = getOrCreateFactory(event.address.toHexString());
+/**
+ * Slots created before `SlotConfig.mutablePolicy` and
+ * `SlotInitParams.occupancyPolicy` existed.
+ *
+ * Those additions changed the event's tuple types and therefore its topic0, so
+ * this handler is the only thing that will ever see the 252 historical slots.
+ * It fills the two new fields with what those slots actually have: no policy,
+ * and occupancy that was never separately mutable.
+ */
+export function handleSlotDeployedLegacy(event: SlotDeployed): void {
+  _record(
+    event,
+    event.params.slot,
+    event.params.recipient,
+    event.params.currency,
+    event.params.config.mutableTax,
+    event.params.config.mutableModule,
+    false,
+    event.params.config.manager,
+    event.params.initParams.taxPercentage,
+    event.params.initParams.module,
+    event.params.initParams.liquidationBountyBps,
+    event.params.initParams.minDepositSeconds,
+    Address.zero()
+  );
+}
+
+/** Slots created with the current tuple. */
+export function handleSlotDeployed(event: SlotDeployed1): void {
+  _record(
+    event,
+    event.params.slot,
+    event.params.recipient,
+    event.params.currency,
+    event.params.config.mutableTax,
+    event.params.config.mutableModule,
+    event.params.config.mutablePolicy,
+    event.params.config.manager,
+    event.params.initParams.taxPercentage,
+    event.params.initParams.module,
+    event.params.initParams.liquidationBountyBps,
+    event.params.initParams.minDepositSeconds,
+    event.params.initParams.occupancyPolicy
+  );
+}
+
+function _record(
+  event: ethereum.Event,
+  slotAddr: Address,
+  recipientAddr: Address,
+  currencyAddr: Address,
+  mutableTax: boolean,
+  mutableModule: boolean,
+  mutablePolicy: boolean,
+  manager: Address,
+  taxPercentage: BigInt,
+  moduleAddr: Address,
+  liquidationBountyBps: BigInt,
+  minDepositSeconds: BigInt,
+  occupancyPolicy: Address
+): void {
+  const factory = getOrCreateFactory(event.address.toHexString());
   factory.slotCount = factory.slotCount.plus(BigInt.fromI32(1));
   factory.save();
 
-  let slotAddress = event.params.slot.toHexString();
-  let slot = new Slot(slotAddress);
+  const slotAddress = slotAddr.toHexString();
+  const slot = new Slot(slotAddress);
 
-  let recipientAccount = getOrCreateAccount(event.params.recipient);
+  const recipientAccount = getOrCreateAccount(recipientAddr);
   recipientAccount.slotCount += 1;
   recipientAccount.save();
 
-  slot.recipient = event.params.recipient;
+  slot.recipient = recipientAddr;
   slot.recipientAccount = recipientAccount.id;
   slot.occupantAccount = null;
-  let currency = getOrCreateCurrency(event.params.currency);
+  const currency = getOrCreateCurrency(currencyAddr);
   slot.currency = currency.id;
 
-  // Config
-  slot.mutableTax = event.params.config.mutableTax;
-  slot.mutableModule = event.params.config.mutableModule;
-  slot.manager = event.params.config.manager;
+  slot.mutableTax = mutableTax;
+  slot.mutableModule = mutableModule;
+  slot.mutablePolicy = mutablePolicy;
+  slot.manager = manager;
 
-  // Init params
-  slot.taxPercentage = event.params.initParams.taxPercentage;
-  const moduleAddr = event.params.initParams.module;
+  slot.taxPercentage = taxPercentage;
   if (!moduleAddr.equals(Address.zero())) {
     const mod = getOrCreateModule(moduleAddr, event.address.toHexString());
     slot.module = mod.id;
   }
-  slot.liquidationBountyBps = event.params.initParams.liquidationBountyBps;
-  slot.minDepositSeconds = event.params.initParams.minDepositSeconds;
+  slot.liquidationBountyBps = liquidationBountyBps;
+  slot.minDepositSeconds = minDepositSeconds;
 
   // State defaults
   slot.occupant = null;
@@ -74,6 +134,20 @@ export function handleSlotDeployed(event: SlotDeployed): void {
   slot.collectedTax = BigInt.zero();
   slot.totalCollected = BigInt.zero();
 
+  // The policy now arrives in this event. Legacy slots pass address(0), which
+  // is the truth for them: they were created before policies existed.
+  slot.epochSeconds = BigInt.zero();
+  slot.occupancyPolicy = occupancyPolicy.equals(Address.zero())
+    ? null
+    : occupancyPolicy;
+  slot.occupiedSince = BigInt.zero();
+  slot.pendingBuyer = null;
+  slot.pendingEffectiveAt = null;
+  slot.pendingPrice = null;
+  slot.pendingDeposit = null;
+  slot.pendingPolicy = null;
+  slot.hasPendingPolicy = false;
+
   slot.createdAt = event.block.timestamp;
   slot.createdTx = event.transaction.hash;
   slot.updatedAt = event.block.timestamp;
@@ -81,19 +155,20 @@ export function handleSlotDeployed(event: SlotDeployed): void {
   slot.save();
 
   // Record deploy event
-  let evId =
+  const evId =
     event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
-  let ev = new SlotDeployedEvent(evId);
+  const ev = new SlotDeployedEvent(evId);
   ev.slot = slot.id;
-  ev.recipient = event.params.recipient;
+  ev.recipient = recipientAddr;
   ev.currency = currency.id;
-  ev.manager = event.params.config.manager;
-  ev.mutableTax = event.params.config.mutableTax;
-  ev.mutableModule = event.params.config.mutableModule;
-  ev.taxPercentage = event.params.initParams.taxPercentage;
-  ev.module = event.params.initParams.module;
-  ev.liquidationBountyBps = event.params.initParams.liquidationBountyBps;
-  ev.minDepositSeconds = event.params.initParams.minDepositSeconds;
+  ev.manager = manager;
+  ev.mutableTax = mutableTax;
+  ev.mutableModule = mutableModule;
+  ev.mutablePolicy = mutablePolicy;
+  ev.taxPercentage = taxPercentage;
+  ev.module = moduleAddr;
+  ev.liquidationBountyBps = liquidationBountyBps;
+  ev.minDepositSeconds = minDepositSeconds;
   ev.deployer = event.transaction.from;
   ev.timestamp = event.block.timestamp;
   ev.blockNumber = event.block.number;
@@ -101,9 +176,9 @@ export function handleSlotDeployed(event: SlotDeployed): void {
   ev.save();
 
   // Start indexing events on this slot contract
-  let context = new DataSourceContext();
+  const context = new DataSourceContext();
   context.setString("factory", event.address.toHexString());
-  SlotTemplate.createWithContext(event.params.slot, context);
+  SlotTemplate.createWithContext(slotAddr, context);
 
   // If the slot uses a module, start indexing MetadataUpdated events from it
   if (!moduleAddr.equals(Address.zero())) {
@@ -113,9 +188,9 @@ export function handleSlotDeployed(event: SlotDeployed): void {
 }
 
 export function handleModuleVerified(event: ModuleVerified): void {
-  let id = event.params.module.toHexString();
+  const id = event.params.module.toHexString();
   let module = Module.load(id);
-  let wasVerified = module ? module.verified : false;
+  const wasVerified = module ? module.verified : false;
   if (!module) {
     module = new Module(id);
     module.factory = event.address.toHexString();
@@ -126,7 +201,7 @@ export function handleModuleVerified(event: ModuleVerified): void {
   module.version = event.params.version;
   module.feeBps = event.params.feeBps;
 
-  let uri = event.params.moduleURI;
+  const uri = event.params.moduleURI;
   module.moduleURI = uri;
   if (uri.length > 0) {
     let hash: string | null = null;
@@ -136,14 +211,14 @@ export function handleModuleVerified(event: ModuleVerified): void {
       hash = uri;
     }
     if (hash) {
-      let data = ipfs.cat(hash);
+      const data = ipfs.cat(hash);
       if (data) {
-        let result = json.try_fromString(data.toString());
+        const result = json.try_fromString(data.toString());
         if (!result.isError) {
-          let obj = result.value.toObject();
-          let img = obj.get("image");
+          const obj = result.value.toObject();
+          const img = obj.get("image");
           if (img && !img.isNull()) module.image = img.toString();
-          let desc = obj.get("description");
+          const desc = obj.get("description");
           if (desc && !desc.isNull()) module.description = desc.toString();
         }
       }

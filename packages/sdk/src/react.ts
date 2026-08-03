@@ -1,9 +1,9 @@
 "use client";
 
-export { useSlotsClient } from "./hooks/useSlotsClient";
-export { useSlotAction, type SlotActionCallbacks } from "./hooks/useSlotAction";
+export { type SlotActionCallbacks, useSlotAction } from "./hooks/useSlotAction";
 export {
+  type SlotOnChain,
   useSlotOnChain,
   useSlotsOnChain,
-  type SlotOnChain,
 } from "./hooks/useSlotOnChain";
+export { useSlotsClient } from "./hooks/useSlotsClient";

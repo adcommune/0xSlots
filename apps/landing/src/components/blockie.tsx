@@ -11,7 +11,10 @@ interface BlockieProps {
 
 export function Blockie({ address, size = 8, className }: BlockieProps) {
   const dataUrl = useMemo(
-    () => blockies.create({ seed: address.toLowerCase(), size, scale: 4 }).toDataURL(),
+    () =>
+      blockies
+        .create({ seed: address.toLowerCase(), size, scale: 4 })
+        .toDataURL(),
     [address, size],
   );
 

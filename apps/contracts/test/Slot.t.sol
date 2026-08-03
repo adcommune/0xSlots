@@ -30,6 +30,7 @@ contract MockModule is ISlotsModule {
     function onTransfer(uint256, address, address) external {}
     function onPriceUpdate(uint256, uint256, uint256) external {}
     function onRelease(uint256, address) external {}
+    function onSettle(uint256, address, uint256, uint256) external {}
     function supportsInterface(bytes4 id) external pure returns (bool) {
         return id == type(ISlotsModule).interfaceId || id == type(IERC165).interfaceId;
     }
@@ -67,7 +68,7 @@ contract SlotV3Test is Test {
     function _defaultConfig() internal view returns (SlotConfig memory) {
         return SlotConfig({
             mutableTax: true,
-            mutableModule: false,
+            mutableModule: false, mutablePolicy: false,
             manager: manager
         });
     }
@@ -75,7 +76,7 @@ contract SlotV3Test is Test {
     function _immutableConfig() internal pure returns (SlotConfig memory) {
         return SlotConfig({
             mutableTax: false,
-            mutableModule: false,
+            mutableModule: false, mutablePolicy: false,
             manager: address(0)
         });
     }
@@ -85,7 +86,8 @@ contract SlotV3Test is Test {
             taxPercentage: 100, // 1%
             module: address(0),
             liquidationBountyBps: 500, // 5%
-            minDepositSeconds: 86400  // 1 day
+            minDepositSeconds: 86400, // 1 day
+            occupancyPolicy: address(0)
         });
     }
 
@@ -155,7 +157,7 @@ contract SlotV3Test is Test {
     function test_immutableConfig_managerMustBeZero() public {
         SlotConfig memory config = SlotConfig({
             mutableTax: false,
-            mutableModule: false,
+            mutableModule: false, mutablePolicy: false,
             manager: manager // should fail
         });
         vm.expectRevert(SlotFactory.InvalidConfig_ManagerMustBeZero.selector);
@@ -165,7 +167,7 @@ contract SlotV3Test is Test {
     function test_mutableConfig_managerRequired() public {
         SlotConfig memory config = SlotConfig({
             mutableTax: true,
-            mutableModule: false,
+            mutableModule: false, mutablePolicy: false,
             manager: address(0) // should fail
         });
         vm.expectRevert(SlotFactory.InvalidConfig_ManagerRequired.selector);
@@ -524,7 +526,8 @@ contract SlotV3Test is Test {
             taxPercentage: 100,
             module: module,
             liquidationBountyBps: 500,
-            minDepositSeconds: 86400
+            minDepositSeconds: 86400,
+            occupancyPolicy: address(0)
         });
     }
 
@@ -585,7 +588,7 @@ contract SlotV3Test is Test {
     function test_proposeModuleUpdate_rejectsCodelessModule() public {
         SlotConfig memory config = SlotConfig({
             mutableTax: false,
-            mutableModule: true,
+            mutableModule: true, mutablePolicy: false,
             manager: manager
         });
         Slot slot = _createSlot(config);
@@ -599,7 +602,7 @@ contract SlotV3Test is Test {
     function test_proposeModuleUpdate_acceptsContractModule() public {
         SlotConfig memory config = SlotConfig({
             mutableTax: false,
-            mutableModule: true,
+            mutableModule: true, mutablePolicy: false,
             manager: manager
         });
         Slot slot = _createSlot(config);
@@ -618,7 +621,7 @@ contract SlotV3Test is Test {
         // otherwise managers can't undo a module assignment.
         SlotConfig memory config = SlotConfig({
             mutableTax: false,
-            mutableModule: true,
+            mutableModule: true, mutablePolicy: false,
             manager: manager
         });
         Slot slot = _createSlot(config);

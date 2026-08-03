@@ -1,7 +1,7 @@
-import { MetadataUpdated } from "../generated/MetadataModule/MetadataModule";
-import { MetadataUpdated as MetadataUpdatedV2 } from "../generated/templates/FeedPostModule/FeedPostModuleV2";
-import { Slot, MetadataSlot, MetadataUpdatedEvent } from "../generated/schema";
 import { Address, BigInt, ipfs, json } from "@graphprotocol/graph-ts";
+import { MetadataUpdated } from "../generated/MetadataModule/MetadataModule";
+import { MetadataSlot, MetadataUpdatedEvent, Slot } from "../generated/schema";
+import { MetadataUpdated as MetadataUpdatedV2 } from "../generated/templates/FeedPostModule/FeedPostModuleV2";
 import { getOrCreateAccount, getOrCreateAccountSlot } from "./helpers";
 
 /**
@@ -21,7 +21,7 @@ export function resolveContent(uri: string): string | null {
   }
 
   if (hash) {
-    let data = ipfs.cat(hash);
+    const data = ipfs.cat(hash);
     if (data) return data.toString();
   }
 
@@ -42,26 +42,26 @@ export function extractCid(uri: string): string | null {
  * Try to extract "type" from a JSON string.
  */
 function extractAdType(rawJson: string): string | null {
-  let result = json.try_fromString(rawJson);
+  const result = json.try_fromString(rawJson);
   if (result.isError) return null;
-  let obj = result.value.toObject();
-  let t = obj.get("type");
+  const obj = result.value.toObject();
+  const t = obj.get("type");
   if (t && !t.isNull()) return t.toString();
   return null;
 }
 
 export function handleMetadataUpdated(event: MetadataUpdated): void {
-  let slotId = event.params.slot.toHexString();
-  let slot = Slot.load(slotId);
+  const slotId = event.params.slot.toHexString();
+  const slot = Slot.load(slotId);
   if (slot == null) return;
 
   slot.updatedAt = event.block.timestamp;
   slot.save();
 
   // Resolve content once, reuse for both entities
-  let content = resolveContent(event.params.uri);
-  let adType: string | null = content ? extractAdType(content) : null;
-  let cid = extractCid(event.params.uri);
+  const content = resolveContent(event.params.uri);
+  const adType: string | null = content ? extractAdType(content) : null;
+  const cid = extractCid(event.params.uri);
 
   // Upsert MetadataSlot (mutable — latest state)
   let metadataSlot = MetadataSlot.load(slotId);
@@ -83,13 +83,13 @@ export function handleMetadataUpdated(event: MetadataUpdated): void {
   metadataSlot.save();
 
   // Track metadata update counts on Account & AccountSlot
-  let author = getOrCreateAccount(event.transaction.from, true);
+  const author = getOrCreateAccount(event.transaction.from, true);
   author.metadataUpdateCount = author.metadataUpdateCount.plus(
     BigInt.fromI32(1),
   );
   author.save();
 
-  let authorAS = getOrCreateAccountSlot(
+  const authorAS = getOrCreateAccountSlot(
     event.transaction.from,
     event.params.slot,
     event.block.timestamp,
@@ -101,9 +101,9 @@ export function handleMetadataUpdated(event: MetadataUpdated): void {
   authorAS.save();
 
   // Create immutable history event
-  let eventId =
+  const eventId =
     event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
-  let metadataEvent = new MetadataUpdatedEvent(eventId);
+  const metadataEvent = new MetadataUpdatedEvent(eventId);
   metadataEvent.slot = slotId;
   metadataEvent.author = author.id;
   metadataEvent.updatedBy = event.transaction.from;
@@ -122,17 +122,17 @@ export function handleMetadataUpdated(event: MetadataUpdated): void {
  * Uses event.params.updatedBy instead of event.transaction.from for attribution.
  */
 export function handleMetadataUpdatedV2(event: MetadataUpdatedV2): void {
-  let slotId = event.params.slot.toHexString();
-  let slot = Slot.load(slotId);
+  const slotId = event.params.slot.toHexString();
+  const slot = Slot.load(slotId);
   if (slot == null) return;
 
   slot.updatedAt = event.block.timestamp;
   slot.save();
 
-  let authorAddress: Address = event.params.updatedBy;
-  let content = resolveContent(event.params.uri);
-  let adType: string | null = content ? extractAdType(content) : null;
-  let cid = extractCid(event.params.uri);
+  const authorAddress: Address = event.params.updatedBy;
+  const content = resolveContent(event.params.uri);
+  const adType: string | null = content ? extractAdType(content) : null;
+  const cid = extractCid(event.params.uri);
 
   // Upsert MetadataSlot (mutable — latest state)
   let metadataSlot = MetadataSlot.load(slotId);
@@ -154,13 +154,13 @@ export function handleMetadataUpdatedV2(event: MetadataUpdatedV2): void {
   metadataSlot.save();
 
   // Track metadata update counts on Account & AccountSlot
-  let author = getOrCreateAccount(authorAddress, true);
+  const author = getOrCreateAccount(authorAddress, true);
   author.metadataUpdateCount = author.metadataUpdateCount.plus(
     BigInt.fromI32(1),
   );
   author.save();
 
-  let authorAS = getOrCreateAccountSlot(
+  const authorAS = getOrCreateAccountSlot(
     authorAddress,
     event.params.slot,
     event.block.timestamp,
@@ -172,9 +172,9 @@ export function handleMetadataUpdatedV2(event: MetadataUpdatedV2): void {
   authorAS.save();
 
   // Create immutable history event
-  let eventId =
+  const eventId =
     event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
-  let metadataEvent = new MetadataUpdatedEvent(eventId);
+  const metadataEvent = new MetadataUpdatedEvent(eventId);
   metadataEvent.slot = slotId;
   metadataEvent.author = author.id;
   metadataEvent.updatedBy = authorAddress;

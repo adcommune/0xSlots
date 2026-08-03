@@ -12,14 +12,16 @@ import {
 // Per-chain factory addresses (mirror packages/subgraph/config/*.json)
 // ──────────────────────────────────────────
 
-const BASE_SEPOLIA_SLOT_FACTORY = "0x6D87C1647f228Baf8DE0374FCd7FdEBF6900fdFF" as const;
+const BASE_SEPOLIA_SLOT_FACTORY =
+  "0x6D87C1647f228Baf8DE0374FCd7FdEBF6900fdFF" as const;
 const BASE_SEPOLIA_SLOT_FACTORY_START_BLOCK = 39341061;
 
 const BASE_SLOT_FACTORY = "0xbf2F890E8F5CCCB3A1D7c5030dBC1843B9E36B0e" as const;
 const BASE_SLOT_FACTORY_START_BLOCK = 43581441;
 
 // ERC721SlotsFactory — base-sepolia only for now
-const BASE_SEPOLIA_ERC721_FACTORY = "0x77aaDBcDaecFED7Fc542E5A68A0e77154367a9EB" as const;
+const BASE_SEPOLIA_ERC721_FACTORY =
+  "0x77aaDBcDaecFED7Fc542E5A68A0e77154367a9EB" as const;
 const BASE_SEPOLIA_ERC721_FACTORY_START_BLOCK = 39679046;
 
 // ──────────────────────────────────────────
@@ -39,7 +41,10 @@ const COLLECTION_DEPLOYED_EVENT = parseAbiItem(
 );
 
 // Helper: build per-chain factory() override for slot-factory-spawned contracts
-const slotChildAddress = (event: typeof SLOT_DEPLOYED_EVENT | typeof MODULE_VERIFIED_EVENT, parameter: "slot" | "module") => ({
+const slotChildAddress = (
+  event: typeof SLOT_DEPLOYED_EVENT | typeof MODULE_VERIFIED_EVENT,
+  parameter: "slot" | "module",
+) => ({
   baseSepolia: {
     address: factory({
       address: BASE_SEPOLIA_SLOT_FACTORY,

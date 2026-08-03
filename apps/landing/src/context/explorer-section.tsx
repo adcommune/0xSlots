@@ -20,10 +20,10 @@ export interface ExplorerSection {
 }
 
 export const EXPLORER_SECTIONS: ExplorerSection[] = [
-  { id: "events", label: "Events", icon: List },
   { id: "slots", label: "Slots", icon: LandPlot },
   { id: "recipients", label: "Recipients", icon: User },
   { id: "modules", label: "Modules", icon: FileBox },
+  { id: "events", label: "Events", icon: List },
 ];
 
 const DEFAULT_SECTION = EXPLORER_SECTIONS[0].id;

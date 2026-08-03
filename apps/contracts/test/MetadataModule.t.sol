@@ -78,14 +78,15 @@ contract MetadataModuleTest is Test {
     function _createSlotWithModule() internal returns (Slot) {
         SlotConfig memory config = SlotConfig({
             mutableTax: true,
-            mutableModule: true,
+            mutableModule: true, mutablePolicy: false,
             manager: manager
         });
         SlotInitParams memory init = SlotInitParams({
             taxPercentage: 100,
             module: address(module),
             liquidationBountyBps: 500,
-            minDepositSeconds: 86400
+            minDepositSeconds: 86400,
+            occupancyPolicy: address(0)
         });
         address addr = factory.createSlot(recipient, IERC20(address(token)), config, init);
         return Slot(addr);

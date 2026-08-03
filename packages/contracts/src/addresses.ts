@@ -1,4 +1,4 @@
-import { Address } from "viem";
+import type { Address } from "viem";
 import { base, baseSepolia } from "viem/chains";
 
 /**
@@ -75,3 +75,47 @@ export function isSlotsHubDeployed(chainId: number): boolean {
 export function getSupportedChainIds(): SupportedChainId[] {
   return Object.keys(slotFactoryAddress).map(Number) as SupportedChainId[];
 }
+
+/**
+ * MinimumTenurePolicyFactory — deploys one MinimumTenurePolicy per duration at
+ * a CREATE2 address derived from that duration, so any tenure is available
+ * without the policy needing mutable per-slot storage.
+ */
+export const MINIMUM_TENURE_POLICY_FACTORY: Partial<
+  Record<number, `0x${string}`>
+> = {
+  [baseSepolia.id]: "0x51650AB1c3aBc6614A38c622A322535b16cD764e",
+};
+
+/**
+ * MinimumPricePolicyFactory — deploys one MinimumPricePolicy per
+ * (currency, minPrice) pair at a CREATE2 address derived from that pair. The
+ * currency is part of the key because the floor is a bare integer whose
+ * meaning depends entirely on the token's decimals.
+ */
+export const MINIMUM_PRICE_POLICY_FACTORY: Partial<
+  Record<number, `0x${string}`>
+> = {
+  [baseSepolia.id]: "0x83d86EDBC62187180A4f94A3099a98ABaa1dfe0c",
+};
+
+/**
+ * Every `IPolicyFactory` on a chain, in the order a resolver should try them.
+ *
+ * Policy resolution is a loop: ask each factory "did you make this?" until one
+ * says yes. That is the whole reason `IPolicyFactory` exists — a client needs
+ * no per-kind knowledge to decide whether an address is a genuine policy.
+ *
+ * Superseded factories belong here too if their policies should keep resolving.
+ * The ones from before `IPolicyFactory` are deliberately absent: they have no
+ * `verify()`, so slots still pointing at their policies read as unrecognised,
+ * which is the honest answer.
+ */
+export const POLICY_FACTORIES: Partial<
+  Record<number, readonly `0x${string}`[]>
+> = {
+  [baseSepolia.id]: [
+    "0x51650AB1c3aBc6614A38c622A322535b16cD764e", // MinimumTenurePolicyFactory
+    "0x83d86EDBC62187180A4f94A3099a98ABaa1dfe0c", // MinimumPricePolicyFactory
+  ],
+};

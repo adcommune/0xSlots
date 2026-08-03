@@ -80,9 +80,16 @@ export function useSlotAction(opts?: SlotActionCallbacks) {
 
   /**
    * Execute an SDK method with shared pending/receipt tracking.
+   *
+   * Reports failures through `onError` rather than throwing, so a single action
+   * needs no try/catch at the call site. Returns the hash — or `undefined` when
+   * it failed, which is what a multi-step action must check before continuing.
    */
   const exec = useCallback(
-    async (label: string, fn: () => Promise<Hash>) => {
+    async (
+      label: string,
+      fn: () => Promise<Hash>,
+    ): Promise<Hash | undefined> => {
       labelRef.current = label;
       setActiveAction(label);
       setIsPending(true);
@@ -90,11 +97,13 @@ export function useSlotAction(opts?: SlotActionCallbacks) {
       try {
         const txHash = await fn();
         setHash(txHash);
+        return txHash;
       } catch (error) {
         console.error(`[useSlotAction] ${label} failed:`, error);
         setActiveAction(null);
         labelRef.current = "";
         opts?.onError?.(label, extractErrorMessage(error));
+        return undefined;
       } finally {
         setIsPending(false);
       }
@@ -112,6 +121,67 @@ export function useSlotAction(opts?: SlotActionCallbacks) {
       exec("Create slot", () => client.createSlot(params)),
     [exec, client],
   );
+  /**
+   * Ensure the minimum-tenure policy for `tenureSeconds` exists, then create the
+   * slot pointing at it. Two transactions only the first time anyone uses that
+   * duration — afterwards the policy already exists and this is a single tx.
+   */
+  const createSlotWithTenure = useCallback(
+    async (params: CreateSlotParams, tenureSeconds: bigint) => {
+      const policy = await client.predictTenurePolicy(tenureSeconds);
+      const exists = await client.isTenurePolicyDeployed(tenureSeconds);
+      if (!exists) {
+        const deployed = await exec("Deploy tenure policy", () =>
+          client.deployTenurePolicy(tenureSeconds),
+        );
+        // Bail on a rejected or reverted deploy: `createSlot` requires code at
+        // `policy` and would otherwise fail a second time, more confusingly.
+        if (!deployed) return undefined;
+      }
+      return exec("Create slot", () =>
+        client.createSlot({
+          ...params,
+          initParams: { ...params.initParams, occupancyPolicy: policy },
+        }),
+      );
+    },
+    [client, exec],
+  );
+
+  /**
+   * Ensure the price-floor policy for `(currency, minPrice)` exists, then
+   * create the slot pointing at it. Two transactions only the first time
+   * anyone uses those exact terms; afterwards the policy already exists and
+   * this is a single tx.
+   *
+   * `currency` must be the slot's own currency — the policy checks it on every
+   * call and reverts `WrongCurrency` otherwise.
+   */
+  const createSlotWithPriceFloor = useCallback(
+    async (params: CreateSlotParams, minPrice: bigint) => {
+      const policy = await client.predictPricePolicy(params.currency, minPrice);
+      const exists = await client.isPricePolicyDeployed(
+        params.currency,
+        minPrice,
+      );
+      if (!exists) {
+        const deployed = await exec("Deploy price policy", () =>
+          client.deployPricePolicy(params.currency, minPrice),
+        );
+        // Bail on a rejected or reverted deploy: `createSlotV3` requires code
+        // at `policy` and would otherwise fail a second time, more confusingly.
+        if (!deployed) return undefined;
+      }
+      return exec("Create slot", () =>
+        client.createSlot({
+          ...params,
+          initParams: { ...params.initParams, occupancyPolicy: policy },
+        }),
+      );
+    },
+    [client, exec],
+  );
+
   const createSlots = useCallback(
     (params: CreateSlotsParams) =>
       exec("Create slots", () => client.createSlots(params)),
@@ -185,6 +255,8 @@ export function useSlotAction(opts?: SlotActionCallbacks) {
   return {
     // Actions
     createSlot,
+    createSlotWithTenure,
+    createSlotWithPriceFloor,
     createSlots,
     buy,
     selfAssess,

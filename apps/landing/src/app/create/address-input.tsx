@@ -3,8 +3,8 @@
 import { forwardRef } from "react";
 import { getAddress, isAddress } from "viem";
 import { normalize } from "viem/ens";
-import { useEnsAddress } from "@/lib/ens";
 import { Input } from "@/components/ui/input";
+import { useEnsAddress } from "@/lib/ens";
 import { cn } from "@/lib/utils";
 
 export function useResolveAddress(input: string) {
@@ -56,7 +56,9 @@ export const AddressInput = forwardRef<HTMLInputElement, AddressInputProps>(
           type="text"
           placeholder={placeholder ?? "0x… or vitalik.eth"}
           value={value}
-          onChange={(e) => onChange(e.target.value.replace(/[^\x20-\x7E]/g, ""))}
+          onChange={(e) =>
+            onChange(e.target.value.replace(/[^\x20-\x7E]/g, ""))
+          }
           onBlur={onBlur}
           className={cn(
             "text-xs",

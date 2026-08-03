@@ -57,6 +57,7 @@ type Slot @entity(immutable: false) {
   currency: Currency!
   mutableTax: Boolean!
   mutableModule: Boolean!
+  mutablePolicy: Boolean!
   manager: Bytes!
   taxPercentage: BigInt!
   module: Module
@@ -70,6 +71,34 @@ type Slot @entity(immutable: false) {
   deposit: BigInt!
   collectedTax: BigInt!
   totalCollected: BigInt!
+
+  # ── v3 occupancy layer ───────────────────────────────────────────────────
+  # Sourced from SlotConfiguredV3, which initializeV3/migrateSlotsV3 emit.
+  # SlotDeployed predates both and carries neither.
+  epochSeconds: BigInt!
+  occupancyPolicy: Bytes # null = no policy, i.e. plain instant buy
+  occupiedSince: BigInt!
+
+  # Committed-but-not-yet-effective transfer (epochSeconds > 0 only).
+  #
+  # IMPORTANT FOR CONSUMERS: `occupant` above is the last MATERIALISED
+  # occupant. Transfers apply lazily on-chain — nothing runs at the boundary —
+  # so once `block.timestamp >= pendingEffectiveAt`, the chain already treats
+  # `pendingBuyer` as the occupant while this entity still shows the old one,
+  # until some transaction touches the slot.
+  #
+  # The subgraph cannot resolve this itself: GraphQL has no notion of "now" at
+  # query time. Callers must compute effective occupancy client-side —
+  # `@0xslots/sdk` exports `resolveEffectiveOccupancy` for exactly this.
+  pendingBuyer: Bytes
+  pendingEffectiveAt: BigInt
+  pendingPrice: BigInt
+  pendingDeposit: BigInt
+
+  # Pending manager-proposed policy swap (applies on next ownership transition)
+  pendingPolicy: Bytes
+  hasPendingPolicy: Boolean!
+
   createdAt: BigInt!
   createdTx: Bytes!
   updatedAt: BigInt!
@@ -105,7 +134,6 @@ type Module @entity(immutable: false) {
   totalFeesCollected: BigInt!
   feePayments: [ModuleFeePaidEvent!]! @derivedFrom(field: "module")
 }
-
 
 # ──────────────────────────────────────────
 # Metadata (mutable, one per slot with a MetadataModule)
@@ -152,6 +180,7 @@ type SlotDeployedEvent @entity(immutable: true) {
   manager: Bytes!
   mutableTax: Boolean!
   mutableModule: Boolean!
+  mutablePolicy: Boolean!
   taxPercentage: BigInt!
   module: Bytes!
   liquidationBountyBps: BigInt!
@@ -411,3 +440,109 @@ type NFTToken @entity(immutable: false) {
   mintedTx: Bytes!
 }
 
+# ═══════════════════════════════════════════════════════════════════════════
+# v3 OCCUPANCY LAYER
+# ═══════════════════════════════════════════════════════════════════════════
+
+"""
+A buy that committed but has not yet taken effect. On an epoch slot, `buy()`
+escrows funds and schedules the handover for the next boundary; the matching
+BoughtEvent fires later, in whatever transaction happens to materialise it.
+"""
+type TransferScheduledEvent @entity(immutable: true) {
+  id: ID!
+  slot: Slot!
+  currency: Currency!
+  buyer: Bytes!
+  effectiveAt: BigInt!
+  price: BigInt!
+  deposit: BigInt!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  tx: Bytes!
+}
+
+"""
+Operator delegation. An operator may selfAssess and topUp on the occupant's
+behalf; it may never withdraw or release.
+"""
+type OperatorSetEvent @entity(immutable: true) {
+  id: ID!
+  slot: Slot!
+  occupant: Bytes!
+  operator: Bytes!
+  approved: Boolean!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  tx: Bytes!
+}
+
+"""
+Current operator approvals, keyed slot-occupant-operator.
+"""
+type SlotOperator @entity(immutable: false) {
+  id: ID!
+  slot: Slot!
+  occupant: Bytes!
+  operator: Bytes!
+  approved: Boolean!
+  updatedAt: BigInt!
+}
+
+type PolicyUpdateProposedEvent @entity(immutable: true) {
+  id: ID!
+  slot: Slot!
+  newPolicy: Bytes!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  tx: Bytes!
+}
+
+type PolicyUpdateAppliedEvent @entity(immutable: true) {
+  id: ID!
+  slot: Slot!
+  newPolicy: Bytes!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  tx: Bytes!
+}
+
+"""
+A refund that could not be pushed (e.g. a blocklisting currency) and was
+credited for later claim instead. A non-zero balance here means someone is
+owed money by the slot.
+"""
+type RefundCreditedEvent @entity(immutable: true) {
+  id: ID!
+  slot: Slot!
+  currency: Currency!
+  account: Bytes!
+  amount: BigInt!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  tx: Bytes!
+}
+
+type RefundClaimedEvent @entity(immutable: true) {
+  id: ID!
+  slot: Slot!
+  currency: Currency!
+  account: Bytes!
+  amount: BigInt!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  tx: Bytes!
+}
+
+"""
+Outstanding claimable refund balance per slot-account.
+"""
+type SlotRefund @entity(immutable: false) {
+  id: ID!
+  slot: Slot!
+  account: Bytes!
+  credited: BigInt!
+  claimed: BigInt!
+  outstanding: BigInt!
+  updatedAt: BigInt!
+}

@@ -1,27 +1,29 @@
 "use client";
 
+import { getChainTokens } from "@0xslots/sdk";
 import { SplitV2Type } from "@0xsplits/splits-sdk/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Check, ChevronLeft, ChevronRight } from "lucide-react";
-import { useNavigation } from "@/context/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { type Address, getAddress, isAddress, zeroAddress } from "viem";
 import { useAccount, useSwitchChain } from "wagmi";
-import { resolveEnsAddress } from "@/lib/ens";
-import { getChainTokens } from "@0xslots/sdk";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { useChain } from "@/context/chain";
+import { useNavigation } from "@/context/navigation";
 import { useSlotAction } from "@/hooks/use-slot-action";
 import { useSplitClient } from "@/hooks/use-split-client";
+import { resolveEnsAddress } from "@/lib/ens";
+import { toRawUnits } from "@/utils";
 import { useResolveAddress } from "./address-input";
 import { MobileBottomBar } from "./components/mobile-bottom-bar";
 import { StepExtra } from "./components/step-extra";
 import { StepParameters } from "./components/step-parameters";
 import { StepRecipient } from "./components/step-recipient";
 import { SummaryCard } from "./components/summary-card";
+import { useErc20Check } from "./hooks/use-erc20-check";
 import {
   type CreateSlotFormValues,
   createSlotSchema,
@@ -43,6 +45,8 @@ export default function CreatePage() {
   const { chainId: selectedChainId } = useChain();
   const {
     createSlot: sdkCreateSlot,
+    createSlotWithTenure: sdkCreateSlotWithTenure,
+    createSlotWithPriceFloor: sdkCreateSlotWithPriceFloor,
     createSlots: sdkCreateSlots,
     isPending,
     isConfirming,
@@ -50,6 +54,7 @@ export default function CreatePage() {
   } = useSlotAction();
   const splitClient = useSplitClient();
   const [slotCount, setSlotCount] = useState(1);
+
   const [step, setStep] = useState(1);
   const [creatingSplit, setCreatingSplit] = useState(false);
 
@@ -58,6 +63,14 @@ export default function CreatePage() {
     defaultValues,
     mode: "onChange",
   });
+
+  // A tenure or price policy may need deploying first, which the single-slot
+  // helpers handle and the batch path does not. Clamp rather than silently
+  // discard the policy the user just configured.
+  const occupancyConfigured = form.watch("occupancyPolicyMode") !== "none";
+  useEffect(() => {
+    if (occupancyConfigured && slotCount !== 1) setSlotCount(1);
+  }, [occupancyConfigured, slotCount]);
 
   // Only watch what the page itself needs for submission logic
   const watchedRecipientMode = form.watch("recipientMode");
@@ -68,7 +81,25 @@ export default function CreatePage() {
   const watchedMutableTax = form.watch("mutableTax");
   const watchedMutableModule = form.watch("mutableModule");
 
-  const needsManager = watchedMutableTax || watchedMutableModule;
+  const watchedMutablePolicy = form.watch("mutablePolicy");
+
+  const needsManager =
+    watchedMutableTax || watchedMutableModule || watchedMutablePolicy;
+
+  // A price floor is denominated in the slot's own currency, so converting it
+  // to raw units needs THAT token's decimals — 1 USDC is 1e6, 1 WETH is 1e18.
+  const watchedCurrencyMode = form.watch("currencyMode");
+  const watchedPresetCurrency = form.watch("presetCurrency");
+  const presetTokenInfo = getChainTokens(selectedChainId).find(
+    (t) => t.address === watchedPresetCurrency,
+  );
+  const customTokenInfo = useErc20Check(
+    watchedCurrencyMode === "custom" ? watchedCustomCurrency : "",
+  );
+  const currencyDecimals =
+    (watchedCurrencyMode === "preset"
+      ? presetTokenInfo?.decimals
+      : customTokenInfo.data?.decimals) ?? 18;
 
   // ENS resolution for submission
   const recipientResolved = useResolveAddress(watchedRecipient);
@@ -160,8 +191,7 @@ export default function CreatePage() {
         if (deployed) {
           recipient = predictedAddress;
         } else {
-          const { splitAddress } =
-            await splitClient.createSplit(splitParams);
+          const { splitAddress } = await splitClient.createSplit(splitParams);
           recipient = splitAddress;
         }
       } catch (err) {
@@ -177,9 +207,19 @@ export default function CreatePage() {
 
     if (!isAddress(recipient as string)) return;
 
+    // A policy chosen by address is known now. One chosen by duration or price
+    // floor is resolved by the helpers below, which overwrite this.
+    const occupancyPolicy = (
+      data.occupancyPolicyMode !== "none" &&
+      isAddress(data.occupancyPolicy as string)
+        ? data.occupancyPolicy
+        : zeroAddress
+    ) as Address;
+
     const config = {
       mutableTax: data.mutableTax,
       mutableModule: data.mutableModule,
+      mutablePolicy: data.mutablePolicy,
       manager: (isAddress(manager as string)
         ? manager
         : zeroAddress) as Address,
@@ -189,9 +229,37 @@ export default function CreatePage() {
       module: (isAddress(module as string) ? module : zeroAddress) as Address,
       liquidationBountyBps: percentToBps(data.liquidationBountyPercent),
       minDepositSeconds: toSeconds(data.minDepositValue, data.minDepositUnit),
+      occupancyPolicy,
     };
 
-    if (slotCount === 1) {
+    // A policy chosen by duration or by price floor lives at a CREATE2 address
+    // derived from those terms, so it may not exist yet — these helpers deploy
+    // it first when needed, then create. Every other mode already has a
+    // concrete address sitting in `initParams.occupancyPolicy`.
+    if (slotCount === 1 && data.occupancyPolicyMode === "tenure") {
+      sdkCreateSlotWithTenure(
+        {
+          recipient: recipient as Address,
+          currency: currency as Address,
+          config,
+          initParams,
+        },
+        toSeconds(data.tenureValue, data.tenureUnit),
+      );
+    } else if (slotCount === 1 && data.occupancyPolicyMode === "price") {
+      // The floor is denominated in the slot's own currency, so it converts
+      // with THAT token's decimals — 1 USDC is 1e6, 1 WETH is 1e18 — and the
+      // policy rejects a mismatched pairing on-chain.
+      sdkCreateSlotWithPriceFloor(
+        {
+          recipient: recipient as Address,
+          currency: currency as Address,
+          config,
+          initParams,
+        },
+        toRawUnits(data.minPriceValue, currencyDecimals),
+      );
+    } else if (slotCount === 1) {
       sdkCreateSlot({
         recipient: recipient as Address,
         currency: currency as Address,

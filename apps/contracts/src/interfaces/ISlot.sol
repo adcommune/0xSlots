@@ -21,18 +21,28 @@ uint8 constant EVT_SETTLED = 8;
 // ═══════════════════════════════════════════════════════════
 
 /// @notice Immutable identity config — determines CREATE2 address
+/// @notice What, if anything, a manager may change after creation.
+/// @dev Three independent flags because they gate three different kinds of
+///      promise. `mutableModule` covers the UTILITY module — what the slot
+///      does. `mutablePolicy` covers the OCCUPANCY policy — whether forced sale
+///      applies and on what terms. Someone may reasonably want a swappable ad
+///      module on immutable occupancy terms; conflating the two would make that
+///      inexpressible, and would let a slot advertising "module can change"
+///      silently also reserve the right to change who can take it.
 struct SlotConfig {
     bool mutableTax;
     bool mutableModule;
-    address manager; // address(0) if both flags are false
+    bool mutablePolicy;
+    address manager; // address(0) if every flag is false
 }
 
 /// @notice Initial values set at creation
 struct SlotInitParams {
-    uint256 taxPercentage;       // basis points (100 = 1%)
-    address module;              // hook contract, address(0) for none
+    uint256 taxPercentage;        // basis points (100 = 1%)
+    address module;               // hook contract, address(0) for none
     uint256 liquidationBountyBps; // basis points, default 0
-    uint256 minDepositSeconds;   // minimum deposit to cover N seconds of tax
+    uint256 minDepositSeconds;    // minimum deposit to cover N seconds of tax
+    address occupancyPolicy;      // IOccupancyPolicy, address(0) for instant buy
 }
 
 /// @notice Complete slot state returned by getSlotInfo()
@@ -43,6 +53,7 @@ struct SlotInfo {
     address manager;
     bool mutableTax;
     bool mutableModule;
+    bool mutablePolicy;
     // State
     address occupant;
     uint256 price;
@@ -54,6 +65,9 @@ struct SlotInfo {
     uint256 deposit;
     uint256 collectedTax;
     uint256 taxOwed;
+    /// @dev When tax was last charged. `taxOwed` accrues from here, and it is
+    ///      the one financial fact a caller cannot derive from the others.
+    uint256 lastSettled;
     uint256 secondsUntilLiquidation;
     bool insolvent;
     // Module info (populated if module != address(0))
@@ -67,6 +81,15 @@ struct SlotInfo {
     uint256 pendingTaxPercentage;
     bool hasPendingModule;
     address pendingModule;
+    // Occupancy
+    //
+    // `epochSeconds` is deliberately absent. Six slots still carry a non-zero
+    // value in storage, nothing reads it, and surfacing a delay that is not
+    // applied would mislead rather than inform.
+    address occupancyPolicy;
+    uint256 occupiedSince;
+    bool hasPendingPolicy;
+    address pendingPolicy;
 }
 
 /// @notice Pending update for tax or module (applied on next ownership transition)
@@ -118,6 +141,26 @@ interface ISlotEvents {
 
     event Settled(uint256 taxOwed, uint256 taxPaid, uint256 depositRemaining);
 
+    /// @notice Tax actually taken from an occupant's deposit, attributed to them.
+    /// @dev `Settled` carries the same amounts but not WHO paid, so it cannot be
+    ///      reduced into a per-address ledger. This can.
+    ///
+    ///      Emitted as a NEW event rather than by extending `Settled`, because
+    ///      changing an existing event's signature changes its topic0 and would
+    ///      split historical indexing across two shapes.
+    ///
+    ///      `taxPaid` is the number that matters for accounting: it is capped by
+    ///      the remaining deposit, so it can be far less than `taxOwed` when an
+    ///      occupant is going insolvent. Anything reconstructing contributions
+    ///      from `price x time` computes `taxOwed` and will over-credit.
+    ///
+    ///      Gross of the module fee, which is skimmed later in `_distributeTax`.
+    event TaxPaid(
+        address indexed occupant,
+        uint256 taxOwed,
+        uint256 taxPaid
+    );
+
     event TaxUpdateProposed(uint256 newPercentage);
 
     event ModuleUpdateProposed(address newModule);
@@ -129,4 +172,16 @@ interface ISlotEvents {
     event LiquidationBountyUpdated(uint256 newBps);
 
     event ModuleCallFailed(string callbackName);
+
+    event PolicyUpdateProposed(address newPolicy);
+
+    event PolicyUpdateApplied(address newPolicy);
+
+    event OperatorSet(address indexed occupant, address indexed operator, bool approved);
+
+    /// @notice A refund could not be pushed and was credited for later `claim()`.
+    event RefundCredited(address indexed account, uint256 amount);
+
+    /// @notice A previously credited refund was claimed.
+    event RefundClaimed(address indexed account, uint256 amount);
 }

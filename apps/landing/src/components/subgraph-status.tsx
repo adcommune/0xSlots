@@ -41,9 +41,7 @@ export function SubgraphStatus() {
             <span className="text-[10px] text-red-500 font-mono">ERR</span>
           </div>
         </TooltipTrigger>
-        <TooltipContent>
-          Subgraph indexing error
-        </TooltipContent>
+        <TooltipContent>Subgraph indexing error</TooltipContent>
       </Tooltip>
     );
   }
@@ -58,9 +56,7 @@ export function SubgraphStatus() {
             </span>
           </div>
         </TooltipTrigger>
-        <TooltipContent>
-          Loading subgraph status...
-        </TooltipContent>
+        <TooltipContent>Loading subgraph status...</TooltipContent>
       </Tooltip>
     );
   }
@@ -109,7 +105,10 @@ export function SubgraphStatus() {
       </TooltipTrigger>
       <TooltipContent>
         <p>Subgraph indexer — block {meta.block.number}</p>
-        <p className="text-muted-foreground">Chain block {chainBlock.toString()} · {behind === 0 ? "fully synced" : `${behind} blocks behind`}</p>
+        <p className="text-muted-foreground">
+          Chain block {chainBlock.toString()} ·{" "}
+          {behind === 0 ? "fully synced" : `${behind} blocks behind`}
+        </p>
       </TooltipContent>
     </Tooltip>
   );

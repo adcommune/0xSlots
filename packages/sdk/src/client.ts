@@ -1,5 +1,9 @@
 import {
   getSlotsHubAddress,
+  MINIMUM_PRICE_POLICY_FACTORY,
+  MINIMUM_TENURE_POLICY_FACTORY,
+  minimumPricePolicyFactoryAbi,
+  minimumTenurePolicyFactoryAbi,
   slotAbi,
   slotFactoryAbi,
 } from "@0xslots/contracts";
@@ -15,8 +19,8 @@ import {
 } from "viem";
 import { SlotsError } from "./errors";
 import { getSdk } from "./generated/graphql";
-import { MetadataModuleClient } from "./modules/metadata";
 import { FeedModuleClient } from "./modules/feed";
+import { MetadataModuleClient } from "./modules/metadata";
 
 // ─── GraphQL Meta ─────────────────────────────────────────────────────────────
 
@@ -58,7 +62,11 @@ export const SUBGRAPH_URLS: Record<SlotsChain, string> = {
 
 export interface SlotConfig {
   mutableTax: boolean;
+  /** The UTILITY module — what the slot does. */
   mutableModule: boolean;
+  /** The OCCUPANCY policy — whether forced sale applies, and on what terms. */
+  mutablePolicy: boolean;
+  /** address(0) when every flag is false. */
   manager: Address;
 }
 
@@ -67,6 +75,8 @@ export interface SlotInitParams {
   module: Address;
   liquidationBountyBps: bigint;
   minDepositSeconds: bigint;
+  /** IOccupancyPolicy address, or zero for plain instant buy. */
+  occupancyPolicy: Address;
 }
 
 export interface CreateSlotParams {
@@ -333,9 +343,7 @@ export class SlotsClient {
   getAccountSlot(
     ...args: Parameters<ReturnType<typeof getSdk>["GetAccountSlot"]>
   ) {
-    return this.query("getAccountSlot", () =>
-      this.sdk.GetAccountSlot(...args),
-    );
+    return this.query("getAccountSlot", () => this.sdk.GetAccountSlot(...args));
   }
   /** Fetch a paginated list of account-slot interactions. */
   getAccountSlots(
@@ -459,6 +467,135 @@ export class SlotsClient {
       account: this.account,
       chain: this.chain,
     });
+  }
+
+  // ─── Minimum tenure policies ───────────────────────────────────────────────
+  //
+  // MinimumTenurePolicy holds its window in an immutable constructor arg, so a
+  // given duration is one contract at one address. The factory deploys that
+  // contract deterministically from the duration, which keeps the policy
+  // stateless (nobody can lengthen protection under a sitting occupant) while
+  // still allowing any duration. A duration is deployed once protocol-wide.
+
+  /** Address the tenure policy for `tenureSeconds` has, or would have. */
+  async predictTenurePolicy(tenureSeconds: bigint): Promise<Address> {
+    return this.publicClient.readContract({
+      address: this.tenurePolicyFactory(),
+      abi: minimumTenurePolicyFactoryAbi,
+      functionName: "predict",
+      args: [tenureSeconds],
+    }) as Promise<Address>;
+  }
+
+  /** Whether that policy already exists — lets callers skip a transaction. */
+  async isTenurePolicyDeployed(tenureSeconds: bigint): Promise<boolean> {
+    return this.publicClient.readContract({
+      address: this.tenurePolicyFactory(),
+      abi: minimumTenurePolicyFactoryAbi,
+      functionName: "isDeployed",
+      args: [tenureSeconds],
+    }) as Promise<boolean>;
+  }
+
+  /**
+   * Deploy the tenure policy for `tenureSeconds` if it does not exist yet.
+   * Idempotent — safe to call when another caller deployed it first.
+   *
+   * Waits for the receipt rather than returning on broadcast. Callers deploy a
+   * policy in order to immediately reference it, and `createSlot` reverts with
+   * `InvalidModule_NoCode` while the CREATE2 address is still empty — which
+   * surfaces as an opaque RPC gas-limit rejection, because a wallet whose
+   * estimation reverts falls back to the block gas limit.
+   */
+  async deployTenurePolicy(tenureSeconds: bigint): Promise<Hash> {
+    const hash = await this.wallet.writeContract({
+      address: this.tenurePolicyFactory(),
+      abi: minimumTenurePolicyFactoryAbi,
+      functionName: "getOrDeploy",
+      args: [tenureSeconds],
+      account: this.account,
+      chain: this.chain,
+    });
+    await this.publicClient.waitForTransactionReceipt({ hash });
+    return hash;
+  }
+
+  // ─── Minimum price policy ───────────────────────────────────────────────
+  //
+  // Same shape as tenure: the policy holds its terms in immutable constructor
+  // args, so (currency, minPrice) is one contract at one address. The currency
+  // is part of the key because the floor is a bare integer whose meaning
+  // depends entirely on that token's decimals.
+
+  /** Address the price policy for `(currency, minPrice)` has, or would have. */
+  async predictPricePolicy(
+    currency: Address,
+    minPrice: bigint,
+  ): Promise<Address> {
+    return this.publicClient.readContract({
+      address: this.pricePolicyFactory(),
+      abi: minimumPricePolicyFactoryAbi,
+      functionName: "predict",
+      args: [currency, minPrice],
+    }) as Promise<Address>;
+  }
+
+  /** Whether that policy already exists — lets callers skip a transaction. */
+  async isPricePolicyDeployed(
+    currency: Address,
+    minPrice: bigint,
+  ): Promise<boolean> {
+    return this.publicClient.readContract({
+      address: this.pricePolicyFactory(),
+      abi: minimumPricePolicyFactoryAbi,
+      functionName: "isDeployed",
+      args: [currency, minPrice],
+    }) as Promise<boolean>;
+  }
+
+  /**
+   * Deploy the price policy for `(currency, minPrice)` if it does not exist.
+   * Idempotent — safe to call when another caller deployed it first.
+   *
+   * Waits for the receipt for the same reason `deployTenurePolicy` does: the
+   * caller is about to reference this address in `createSlot`, which reverts
+   * `InvalidModule_NoCode` while the CREATE2 address is still empty.
+   */
+  async deployPricePolicy(currency: Address, minPrice: bigint): Promise<Hash> {
+    const hash = await this.wallet.writeContract({
+      address: this.pricePolicyFactory(),
+      abi: minimumPricePolicyFactoryAbi,
+      functionName: "getOrDeploy",
+      args: [currency, minPrice],
+      account: this.account,
+      chain: this.chain,
+    });
+    await this.publicClient.waitForTransactionReceipt({ hash });
+    return hash;
+  }
+
+  private pricePolicyFactory(): Address {
+    const addr = MINIMUM_PRICE_POLICY_FACTORY[this.chainId];
+    if (!addr)
+      throw new SlotsError(
+        "Resolve price policy factory",
+        new Error(
+          `No MinimumPricePolicyFactory deployed on chain ${this.chainId}`,
+        ),
+      );
+    return addr;
+  }
+
+  private tenurePolicyFactory(): Address {
+    const addr = MINIMUM_TENURE_POLICY_FACTORY[this.chainId];
+    if (!addr)
+      throw new SlotsError(
+        "Resolve tenure policy factory",
+        new Error(
+          `No MinimumTenurePolicyFactory deployed on chain ${this.chainId}`,
+        ),
+      );
+    return addr;
   }
 
   /**

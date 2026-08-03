@@ -12,12 +12,14 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { AddressInput } from "../address-input";
 import type { CreateSlotFormValues } from "../schema";
+import { OccupancySection } from "./occupancy-section";
 
 export function StepExtra() {
   const form = useFormContext<CreateSlotFormValues>();
   const mutableTax = form.watch("mutableTax");
   const mutableModule = form.watch("mutableModule");
-  const needsManager = mutableTax || mutableModule;
+  const mutablePolicy = form.watch("mutablePolicy");
+  const needsManager = mutableTax || mutableModule || mutablePolicy;
 
   return (
     <>
@@ -57,6 +59,26 @@ export function StepExtra() {
               </FormItem>
             )}
           />
+
+          {/* Separate from Mutable Module on purpose: that one governs what the
+              slot DOES, this one governs whether it can be taken from you and
+              on what terms. A holder who accepted a swappable ad module has not
+              accepted swappable occupancy. */}
+          <FormField
+            control={form.control}
+            name="mutablePolicy"
+            render={({ field }) => (
+              <FormItem className="flex items-center gap-2">
+                <Checkbox
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+                <FormLabel className="cursor-pointer mt-0!">
+                  Mutable Occupancy
+                </FormLabel>
+              </FormItem>
+            )}
+          />
         </div>
 
         {needsManager && (
@@ -86,6 +108,10 @@ export function StepExtra() {
           </p>
         )}
       </div>
+
+      <Separator />
+
+      <OccupancySection />
 
       <Separator />
 

@@ -7,11 +7,20 @@ import {Multicall} from "@openzeppelin/contracts/utils/Multicall.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ISlotsModule} from "./interfaces/ISlotsModule.sol";
+import {IOccupancyPolicy, OccupancyContext} from "./interfaces/IOccupancyPolicy.sol";
 import {SlotConfig, SlotInitParams, PendingUpdate, SlotInfo, ISlotEvents, EVT_BOUGHT, EVT_RELEASED, EVT_LIQUIDATED, EVT_PRICE_UPDATED, EVT_DEPOSITED, EVT_WITHDRAWN, EVT_TAX_COLLECTED, EVT_SETTLED} from "./interfaces/ISlot.sol";
 import {SlotFactory} from "./SlotFactory.sol";
 
-/// @title Slot (v3) — Immutable & modular Harberger-taxed slot
+/// @title Slot — Immutable & modular Harberger-taxed slot
 /// @notice One slot = one contract. Deployed deterministically via SlotFactory.
+///
+/// @dev All slots share one implementation behind a beacon, so the storage
+///      layout below is APPEND-ONLY and permanent: 237 live proxies hold state
+///      at these exact offsets. Some of it is inert. It still cannot move.
+///
+///      Versioning lives in `reinitializer(n)` and nowhere else — not in
+///      function names, not in comments. The history of how the layout got this
+///      way is in git; what the chain still depends on is here.
 contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     using SafeERC20 for IERC20;
 
@@ -38,6 +47,9 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     error InvalidRecipient();
     error InvalidCurrency();
     error InvalidModule_NoCode();
+    error PolicyNotMutable();
+    error NotFactory();
+    error NothingToClaim();
 
     // ═══════════════════════════════════════════════════════════
     // STORAGE — KEEP ORDER, APPEND ONLY
@@ -47,28 +59,73 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     address public recipient; // slot 0
     IERC20 public currency; // slot 1, offset 0
     bool public mutableTax; // slot 1, offset 20
-    bool public mutableModule; // slot 1, offset 21
+    bool public mutableModule; // slot 1, offset 21 — the UTILITY module
+    bool public mutablePolicy; // slot 1, offset 22 — the OCCUPANCY policy
     address public manager; // slot 2
 
     // --- Slot 3+: mutable state ---
-    address public occupant; // slot 3
-    uint256 public price; // slot 4
+    address private _occupant; // slot 3
+    uint256 private _price; // slot 4
     uint256 public taxPercentage; // slot 5
     address public module; // slot 6
     uint256 public liquidationBountyBps; // slot 7
     uint256 public minDepositSeconds; // slot 8
 
-    uint256 public deposit; // slot 9
+    uint256 private _deposit; // slot 9
     uint256 public lastSettled; // slot 10
     uint256 public collectedTax; // slot 11
 
     PendingUpdate public pendingUpdate; // slots 12-13
 
-    /// @dev Legacy manual init flag — DO NOT REMOVE (preserves storage layout)
-    bool private _legacyInitialized; // slot 14
+    /// @dev INERT — a hand-rolled init flag that `reinitializer` replaced.
+    ///      Unreadable and unwritten, but packed with `factory` below, so it
+    ///      cannot be dropped without moving that.
+    bool private _legacyInitialized; // slot 14, offset 0
 
-    // --- v2 storage (appended after beacon upgrade) ---
-    address public factory; // slot 15
+    address public factory; // slot 14, offset 1 (PACKED with the flag above)
+
+    address public occupancyPolicy; // slot 15, offset 0
+    /// @dev INERT — held an epoch length when a buy could be deferred to a
+    ///      clock boundary. Nothing reads it; `initialize` cannot set it and
+    ///      `SlotFactory` rejects a non-zero value. Six slots still carry one.
+    uint64 public epochSeconds;     // slot 15, offset 20
+    uint256 public occupiedSince;   // slot 16
+
+    struct PendingPolicyUpdate {
+        address newPolicy;
+        bool hasPolicyUpdate;
+    }
+    PendingPolicyUpdate public pendingPolicyUpdate; // slot 17
+
+    /// @dev INERT — held a committed-but-not-yet-effective transfer. Every
+    ///      outstanding one was drained before the code that completed them was
+    ///      removed, so all four slots are permanently zero.
+    ///
+    ///      Deleting them would shift `isOperator` (22) and `withdrawableOf`
+    ///      (23) on every live proxy, silently voiding operator approvals and
+    ///      unclaimed refunds. Guarded by
+    ///      `test_StorageLayout_SurvivesDrainRemoval`.
+    struct PendingTransfer {
+        address buyer;       // slot 18, offset 0
+        uint96 effectiveAt;  // slot 18, offset 20
+        uint256 deposit;     // slot 19
+        uint256 newPrice;    // slot 20
+        uint256 pricePaid;   // slot 21
+    }
+    PendingTransfer public pendingTransfer;
+
+    /// @notice occupant => operator => approved. Keyed by occupant so approvals
+    ///         survive leaving and re-entering, matching setApprovalForAll.
+    mapping(address => mapping(address => bool)) public isOperator; // slot 22
+
+    /// @notice Refunds that could not be pushed, claimable with `claim()`.
+    /// @dev Escape hatch for a refund recipient the currency refuses to pay —
+    ///      a USDC-style blocklist, a contract that reverts on receipt, a token
+    ///      returning false. A refund that reverts would otherwise brick the
+    ///      entry point that owes it — locking the outgoing occupant's deposit
+    ///      and the price paid. Crediting instead keeps the slot fully
+    ///      functional and the blocked party whole once they can receive again.
+    mapping(address => uint256) public withdrawableOf; // slot 23
 
     // ═══════════════════════════════════════════════════════════
     // INITIALIZATION
@@ -79,42 +136,47 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         _disableInitializers();
     }
 
-    /// @notice v1 init — called by SlotFactory after beacon proxy deployment
-    /// @dev For new slots deployed after the v2 upgrade, initialize + initializeV2
-    ///      are both called atomically via multicall in the factory.
-    /// @dev Uses both legacy flag (for pre-upgrade slots) and OZ initializer (for new slots)
+    /// @notice Set up a slot. Called by `SlotFactory` in the proxy constructor.
+    /// @dev The only initializer, and the only place a slot's terms are set.
+    ///      Everything arrives at once — recipient, currency, tax, module,
+    ///      occupancy policy, factory — so there is no window in which a slot
+    ///      exists half-configured and no version to track.
+    ///
+    ///      A slot's policy is therefore part of its founding terms. One created
+    ///      without a policy is a plain-Harberger slot; it can still gain one
+    ///      later through `proposePolicyUpdate`, but only if its creator chose
+    ///      mutability. Nobody can install one retroactively over that choice.
     function initialize(
         address _recipient,
         IERC20 _currency,
         SlotConfig memory _config,
-        SlotInitParams memory _init
+        SlotInitParams memory _init,
+        address _factory
     ) external initializer {
-        // Guard against re-initialization on pre-upgrade slots where OZ version is 0
-        require(!_legacyInitialized, "already initialized");
-        _legacyInitialized = true;
         if (_recipient == address(0)) revert InvalidRecipient();
         if (address(_currency) == address(0)) revert InvalidCurrency();
         if (_init.taxPercentage == 0) revert InvalidTaxPercentage();
         if (_init.liquidationBountyBps > BASIS_POINTS)
             revert InvalidLiquidationBounty();
+        if (_init.occupancyPolicy != address(0) &&
+            _init.occupancyPolicy.code.length == 0)
+            revert InvalidModule_NoCode();
 
         recipient = _recipient;
         currency = _currency;
         mutableTax = _config.mutableTax;
         mutableModule = _config.mutableModule;
+        mutablePolicy = _config.mutablePolicy;
         manager = _config.manager;
 
         taxPercentage = _init.taxPercentage;
         module = _init.module;
         liquidationBountyBps = _init.liquidationBountyBps;
         minDepositSeconds = _init.minDepositSeconds;
+        occupancyPolicy = _init.occupancyPolicy;
 
-        lastSettled = block.timestamp;
-    }
-
-    /// @notice v2 upgrade — sets factory for protocol event emission
-    function initializeV2(address _factory) external reinitializer(2) {
         factory = _factory;
+        lastSettled = block.timestamp;
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -127,7 +189,16 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     }
 
     modifier onlyOccupant() {
-        if (msg.sender != occupant) revert NotOccupant();
+        if (msg.sender != occupant()) revert NotOccupant();
+        _;
+    }
+
+    /// @dev Uses occupant(), not raw _occupant, so an epoch boundary that has
+    ///      passed but not yet been materialised still resolves approvals
+    ///      against the correct (incoming) occupant.
+    modifier onlyOccupantOrOperator() {
+        address occ = occupant();
+        if (msg.sender != occ && !isOperator[occ][msg.sender]) revert NotOccupant();
         _;
     }
 
@@ -146,77 +217,73 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     ) external nonReentrant {
         if (selfAssessedPrice == 0) revert InvalidPrice();
         if (account == address(0)) revert InvalidRecipient();
-        if (account == occupant) revert CannotBuyFromYourself();
 
-        uint256 currentPrice = price;
-        address prev = occupant;
+        // Settle first so the policy is asked about current, not stale, state.
+        // Stage 2 relies on this ordering too — see Task 6.
+        _settle();
 
-        // Settle outstanding tax
-        if (prev != address(0)) {
-            _settle();
+        if (account == _occupant) revert CannotBuyFromYourself();
+
+        if (occupancyPolicy != address(0)) {
+            IOccupancyPolicy(occupancyPolicy).checkBuy(
+                _occupancyCtx(account, selfAssessedPrice, depositAmount)
+            );
         }
 
-        // Apply pending updates (ownership is transitioning)
+        uint256 currentPrice = _price;
+        address prev = _occupant;
+
         _applyPendingUpdates();
 
-        // Enforce minimum deposit (using potentially updated tax rate)
         _enforceMinDeposit(depositAmount, selfAssessedPrice);
 
-        if (prev == address(0)) {
-            // Vacant: payer just deposits, no payment to anyone
-            if (depositAmount > 0) {
-                currency.safeTransferFrom(
-                    msg.sender,
-                    address(this),
-                    depositAmount
-                );
-            }
-        } else {
-            // Occupied: payer pays price + deposit in one transfer
-            uint256 totalFromBuyer = currentPrice + depositAmount;
-            if (totalFromBuyer > 0) {
-                currency.safeTransferFrom(
-                    msg.sender,
-                    address(this),
-                    totalFromBuyer
-                );
-            }
-
-            // Refund previous occupant: their remaining deposit + purchase price
-            uint256 refund = deposit + currentPrice;
-            deposit = 0;
-            if (refund > 0) {
-                currency.safeTransfer(prev, refund);
-            }
+        // Pull what the buyer owes. Vacant slots cost only the deposit.
+        uint256 owedByBuyer = prev == address(0)
+            ? depositAmount
+            : currentPrice + depositAmount;
+        if (owedByBuyer > 0) {
+            currency.safeTransferFrom(msg.sender, address(this), owedByBuyer);
         }
 
-        // Update state — account is the occupant, not msg.sender
-        occupant = account;
-        price = selfAssessedPrice;
-        deposit = depositAmount;
+        // Epoch scheduling was removed here. A buy used to be deferred to the
+        // next clock boundary when `epochSeconds > 0`, on the theory that it
+        // stopped an occupant being sniped by whoever's infrastructure was
+        // fastest. It did not: the first commit after a boundary locked
+        // everyone else out until the next one, so a two-second latency edge
+        // bought a full epoch of exclusivity at a price fixed before that
+        // epoch's news — a worse dynamic than the one it replaced.
+        //
+        // Occupancy timing now lives entirely in IOccupancyPolicy vetoes, which
+        // is where it can be expressed without a second phase — MinimumTenure
+        // for "not yet", MinimumPrice for "not below this".
+        //
+        // A buy applies immediately. Timing lives in IOccupancyPolicy vetoes,
+        // which express it without a second phase — MinimumTenure for "not
+        // yet", MinimumPrice for "not below this".
+
+        // Refund the outgoing occupant. Computed here, paid
+        // after the state writes, and never allowed to revert: an outgoing
+        // occupant the currency refuses to pay must not be able to veto their
+        // own forced sale.
+        uint256 refund = prev == address(0) ? 0 : _deposit + currentPrice;
+
+        _occupant = account;
+        _price = selfAssessedPrice;
+        _deposit = depositAmount;
+        occupiedSince = block.timestamp;
         lastSettled = block.timestamp;
+
+        if (refund > 0) _payOrCredit(prev, refund);
 
         _notifyModule(
             "onTransfer",
             abi.encodeCall(ISlotsModule.onTransfer, (0, prev, account))
         );
 
-        emit Bought(
-            account,
-            prev,
-            currentPrice,
-            depositAmount,
-            selfAssessedPrice
-        );
+        emit Bought(account, prev, currentPrice, depositAmount, selfAssessedPrice);
         _emitProtocolEvent(
             EVT_BOUGHT,
-            abi.encode(
-                account,
-                prev,
-                currentPrice,
-                depositAmount,
-                selfAssessedPrice
-            )
+            abi.encode(account, prev, currentPrice, depositAmount, selfAssessedPrice)
         );
     }
 
@@ -224,28 +291,29 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     function release() external nonReentrant onlyOccupant {
         _settle();
 
-        address prev = occupant;
-        uint256 refund = deposit;
+        address prev = _occupant;
+        uint256 refund = _deposit;
 
-        // Flush collected tax to recipient
+        // Flush collected tax to recipient. Routed through `_distributeTax` so
+        // a module fee is honoured here exactly as it is in `collect()` and
+        // `liquidate()` — a voluntary exit is not a fee holiday.
         uint256 pendingTax = collectedTax;
         if (pendingTax > 0) {
             collectedTax = 0;
-            currency.safeTransfer(recipient, pendingTax);
+            _distributeTax(pendingTax);
         }
 
         // Clear slot
-        occupant = address(0);
-        price = 0;
-        deposit = 0;
+        _occupant = address(0);
+        _price = 0;
+        occupiedSince = 0;
+        _deposit = 0;
         lastSettled = block.timestamp;
 
         // Apply pending updates (slot is now vacant)
         _applyPendingUpdates();
 
-        if (refund > 0) {
-            currency.safeTransfer(prev, refund);
-        }
+        if (refund > 0) _payOrCredit(prev, refund);
 
         _notifyModule(
             "onRelease",
@@ -256,14 +324,32 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         _emitProtocolEvent(EVT_RELEASED, abi.encode(prev, refund));
     }
 
-    /// @notice Occupant self-assesses a new price
-    function selfAssess(uint256 newPrice) external nonReentrant onlyOccupant {
+    /// @notice Delegate slot management to an operator (e.g. an agent).
+    /// @dev Operators may selfAssess and topUp. They may NOT withdraw or
+    ///      release — those move the position's principal and stay
+    ///      occupant-only. Bounded authority is the point.
+    function setOperator(address operator, bool approved) external {
+        isOperator[msg.sender][operator] = approved;
+        emit OperatorSet(msg.sender, operator, approved);
+    }
+
+    /// @notice Occupant (or an approved operator) self-assesses a new price
+    function selfAssess(uint256 newPrice) external nonReentrant onlyOccupantOrOperator {
         if (newPrice == 0) revert InvalidPrice();
 
+        // Settle first: materialises any matured transfer, so the guard below
+        // only rejects a genuinely still-pending one and the policy sees
+        // current state.
         _settle();
 
-        uint256 oldPrice = price;
-        price = newPrice;
+        if (occupancyPolicy != address(0)) {
+            IOccupancyPolicy(occupancyPolicy).checkPriceUpdate(
+                _occupancyCtx(occupant(), newPrice, deposit())
+            );
+        }
+
+        uint256 oldPrice = _price;
+        _price = newPrice;
 
         // Ensure remaining deposit still meets minimum after price change
         _enforceMinDepositExisting(newPrice);
@@ -282,11 +368,16 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     // ═══════════════════════════════════════════════════════════
 
     /// @notice Top up the occupant's deposit. Anyone can pay.
+    /// @dev Gates on the RESOLVING `occupant()`, not raw `_occupant`. On an
+    ///      epoch slot a matured-but-unmaterialised transfer leaves
+    ///      `_occupant` stale (possibly address(0), when the slot was bought
+    ///      out of vacancy), so a raw read would refuse to fund an occupancy
+    ///      that every getter already reports as live.
     function topUp(uint256 amount) external nonReentrant {
-        if (occupant == address(0)) revert NotOccupant();
+        if (occupant() == address(0)) revert NotOccupant();
         _settle();
         currency.safeTransferFrom(msg.sender, address(this), amount);
-        deposit += amount;
+        _deposit += amount;
         emit Deposited(msg.sender, amount);
         _emitProtocolEvent(EVT_DEPOSITED, abi.encode(msg.sender, amount));
     }
@@ -294,25 +385,35 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     /// @notice Occupant withdraws excess deposit
     function withdraw(uint256 amount) external nonReentrant onlyOccupant {
         _settle();
-        if (amount > deposit) revert InsufficientDeposit();
+        if (amount > _deposit) revert InsufficientDeposit();
 
-        uint256 remaining = deposit - amount;
-        uint256 minDep = _minDepositFor(price);
+        uint256 remaining = _deposit - amount;
+        uint256 minDep = _minDepositFor(_price);
         if (remaining < minDep) revert InsufficientDeposit();
 
-        deposit = remaining;
+        _deposit = remaining;
         currency.safeTransfer(msg.sender, amount);
         emit Withdrawn(msg.sender, amount);
         _emitProtocolEvent(EVT_WITHDRAWN, abi.encode(msg.sender, amount));
     }
 
     /// @notice Liquidate an insolvent occupant
+    /// @dev Gates on the RESOLVING `occupant()`. Reading raw `_occupant` here
+    ///      made a whole class of occupancy unliquidatable: buying a VACANT
+    ///      epoch slot with `minDepositSeconds == 0` and a zero deposit leaves
+    ///      `_occupant == address(0)` behind a pending transfer, so past the
+    ///      boundary `isInsolvent()` was true while `liquidate()` still
+    ///      reverted NotInsolvent — a free, unremovable occupancy. The spec's
+    ///      first invariant is that liquidation is never vetoable: insolvency
+    ///      always ends occupancy.
     function liquidate() external nonReentrant {
-        if (occupant == address(0)) revert NotInsolvent();
+        if (occupant() == address(0)) revert NotInsolvent();
         _settle();
-        if (deposit > 0) revert NotInsolvent();
+        if (_deposit > 0) revert NotInsolvent();
 
-        address prev = occupant;
+        // Read AFTER _settle(): materialisation has by now written the
+        // incoming buyer into `_occupant`, which is who is being liquidated.
+        address prev = _occupant;
 
         // Calculate bounty from collected tax
         uint256 bounty = 0;
@@ -329,17 +430,18 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         }
 
         // Clear slot
-        occupant = address(0);
-        price = 0;
+        _occupant = address(0);
+        _price = 0;
+        occupiedSince = 0;
         lastSettled = block.timestamp;
 
         // Apply pending updates
         _applyPendingUpdates();
 
-        // Pay bounty
-        if (bounty > 0) {
-            currency.safeTransfer(msg.sender, bounty);
-        }
+        // Pay bounty. Credited rather than pushed for the same reason as the
+        // tax legs: a liquidator the currency refuses must not be able to fail
+        // the liquidation itself.
+        if (bounty > 0) _payOrCredit(msg.sender, bounty);
 
         _notifyModule(
             "onRelease",
@@ -351,6 +453,18 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
             EVT_LIQUIDATED,
             abi.encode(msg.sender, prev, bounty)
         );
+    }
+
+    /// @notice Withdraw a refund that could not be pushed at the time.
+    /// @dev Permissionless in who may CALL it, but the funds always go to
+    ///      `account` — a keeper or the account itself can trigger it, nobody
+    ///      can redirect it.
+    function claim(address account) external nonReentrant {
+        uint256 amount = withdrawableOf[account];
+        if (amount == 0) revert NothingToClaim();
+        withdrawableOf[account] = 0;
+        currency.safeTransfer(account, amount);
+        emit RefundClaimed(account, amount);
     }
 
     /// @notice Flush accumulated tax to recipient (minus module fee if any)
@@ -391,11 +505,29 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         emit ModuleUpdateProposed(newModule);
     }
 
+    /// @notice Propose a new occupancy policy (applied on next ownership transition)
+    /// @dev Gated on `mutablePolicy`, NOT `mutableModule`. Swapping what a slot
+    ///      does and swapping whether it can be taken from you are different
+    ///      promises, and a holder who accepted the first has not accepted the
+    ///      second.
+    function proposePolicyUpdate(address newPolicy) external onlyManager {
+        if (!mutablePolicy) revert PolicyNotMutable();
+        if (newPolicy != address(0) && newPolicy.code.length == 0)
+            revert InvalidModule_NoCode();
+        pendingPolicyUpdate.newPolicy = newPolicy;
+        pendingPolicyUpdate.hasPolicyUpdate = true;
+        emit PolicyUpdateProposed(newPolicy);
+    }
+
     /// @notice Cancel all pending updates
     function cancelPendingUpdates() external onlyManager {
-        if (!pendingUpdate.hasTaxUpdate && !pendingUpdate.hasModuleUpdate)
-            revert NoPendingUpdate();
+        if (
+            !pendingUpdate.hasTaxUpdate &&
+            !pendingUpdate.hasModuleUpdate &&
+            !pendingPolicyUpdate.hasPolicyUpdate
+        ) revert NoPendingUpdate();
         delete pendingUpdate;
+        delete pendingPolicyUpdate;
         emit PendingUpdateCancelled();
     }
 
@@ -410,28 +542,44 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     // VIEW
     // ═══════════════════════════════════════════════════════════
 
+    /// @notice Current occupant. Hand-written rather than an auto-getter
+    ///         because `_occupant` is internal.
+    function occupant() public view returns (address) {
+        return _occupant;
+    }
+
+    function price() public view returns (uint256) {
+        return _price;
+    }
+
+    function deposit() public view returns (uint256) {
+        return _deposit;
+    }
+
     function taxOwed() public view returns (uint256) {
-        if (occupant == address(0)) return 0;
+        address occ = occupant();
+        if (occ == address(0)) return 0;
         uint256 elapsed = block.timestamp - lastSettled;
-        return (price * taxPercentage * elapsed) / (MONTH * BASIS_POINTS);
+        return (price() * taxPercentage * elapsed) / (MONTH * BASIS_POINTS);
     }
 
     function secondsUntilLiquidation() public view returns (uint256) {
-        if (occupant == address(0)) return type(uint256).max;
+        if (occupant() == address(0)) return type(uint256).max;
         uint256 owed = taxOwed();
-        uint256 remaining = deposit > owed ? deposit - owed : 0;
-        uint256 taxNumerator = price * taxPercentage;
+        uint256 dep = deposit();
+        uint256 remaining = dep > owed ? dep - owed : 0;
+        uint256 taxNumerator = price() * taxPercentage;
         if (taxNumerator == 0) return type(uint256).max;
         return (remaining * MONTH * BASIS_POINTS) / taxNumerator;
     }
 
     function isInsolvent() public view returns (bool) {
-        if (occupant == address(0)) return false;
-        return taxOwed() >= deposit;
+        if (occupant() == address(0)) return false;
+        return taxOwed() >= deposit();
     }
 
     function isVacant() public view returns (bool) {
-        return occupant == address(0);
+        return occupant() == address(0);
     }
 
     function getPendingUpdate() external view returns (PendingUpdate memory) {
@@ -445,17 +593,19 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         info.manager = manager;
         info.mutableTax = mutableTax;
         info.mutableModule = mutableModule;
+        info.mutablePolicy = mutablePolicy;
 
-        info.occupant = occupant;
-        info.price = price;
+        info.occupant = occupant();
+        info.price = price();
         info.taxPercentage = taxPercentage;
         info.module = module;
         info.liquidationBountyBps = liquidationBountyBps;
         info.minDepositSeconds = minDepositSeconds;
 
-        info.deposit = deposit;
+        info.deposit = deposit();
         info.collectedTax = collectedTax;
         info.taxOwed = taxOwed();
+        info.lastSettled = lastSettled;
         info.secondsUntilLiquidation = secondsUntilLiquidation();
         info.insolvent = isInsolvent();
 
@@ -475,39 +625,85 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         info.pendingTaxPercentage = pendingUpdate.newTaxPercentage;
         info.hasPendingModule = pendingUpdate.hasModuleUpdate;
         info.pendingModule = pendingUpdate.newModule;
+
+        info.occupancyPolicy = occupancyPolicy;
+        info.occupiedSince = occupiedSince;
+        info.hasPendingPolicy = pendingPolicyUpdate.hasPolicyUpdate;
+        info.pendingPolicy = pendingPolicyUpdate.newPolicy;
     }
 
     // ═══════════════════════════════════════════════════════════
     // INTERNAL
     // ═══════════════════════════════════════════════════════════
 
-    function _settle() internal {
-        if (occupant == address(0)) {
-            lastSettled = block.timestamp;
+    function _occupancyCtx(
+        address account,
+        uint256 newPrice,
+        uint256 depositAmount
+    ) internal view returns (OccupancyContext memory) {
+        return OccupancyContext({
+            slot: address(this),
+            caller: msg.sender,
+            account: account,
+            occupant: occupant(),
+            occupiedSince: occupiedSince,
+            taxPercentage: taxPercentage,
+            currentPrice: price(),
+            newPrice: newPrice,
+            depositAmount: depositAmount
+        });
+    }
+
+    /// @dev Accrue tax for the current occupant up to `upTo`.
+    function _accrue(uint256 upTo) internal {
+        if (upTo <= lastSettled) return;
+
+        if (_occupant == address(0)) {
+            lastSettled = upTo;
             return;
         }
-        uint256 elapsed = block.timestamp - lastSettled;
-        if (elapsed == 0) return;
 
-        uint256 owed = (price * taxPercentage * elapsed) /
-            (MONTH * BASIS_POINTS);
+        uint256 elapsed = upTo - lastSettled;
+        uint256 owed = (_price * taxPercentage * elapsed) / (MONTH * BASIS_POINTS);
 
         uint256 paid;
-        if (owed >= deposit) {
-            paid = deposit;
-            collectedTax += deposit;
-            deposit = 0;
+        if (owed >= _deposit) {
+            paid = _deposit;
+            collectedTax += _deposit;
+            _deposit = 0;
         } else {
             paid = owed;
-            deposit -= owed;
+            _deposit -= owed;
             collectedTax += owed;
         }
-        lastSettled = block.timestamp;
+        lastSettled = upTo;
 
-        emit Settled(owed, paid, deposit);
+        emit Settled(owed, paid, _deposit);
+
+        if (paid > 0) {
+            // Attributed to `_occupant`, which is still the payer here: every
+            // entry point calls `_settle()` before it reassigns occupancy, so
+            // a buy charges the OUTGOING occupant for their own tenure.
+            address payer = _occupant;
+            emit TaxPaid(payer, owed, paid);
+            _notifyModule(
+                "onSettle",
+                abi.encodeCall(ISlotsModule.onSettle, (0, payer, owed, paid))
+            );
+        }
+    }
+
+    function _settle() internal {
+        _accrue(block.timestamp);
     }
 
     function _applyPendingUpdates() internal {
+        if (pendingPolicyUpdate.hasPolicyUpdate) {
+            occupancyPolicy = pendingPolicyUpdate.newPolicy;
+            emit PolicyUpdateApplied(pendingPolicyUpdate.newPolicy);
+            delete pendingPolicyUpdate;
+        }
+
         if (!pendingUpdate.hasTaxUpdate && !pendingUpdate.hasModuleUpdate)
             return;
 
@@ -528,27 +724,72 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         emit PendingUpdateApplied(newTax, newMod);
     }
 
-    function _minDepositFor(uint256 _price) internal view returns (uint256) {
+    function _minDepositFor(uint256 price_) internal view returns (uint256) {
         if (minDepositSeconds == 0) return 0;
         return
-            (_price * taxPercentage * minDepositSeconds) /
+            (price_ * taxPercentage * minDepositSeconds) /
             (MONTH * BASIS_POINTS);
     }
 
     function _enforceMinDeposit(
         uint256 depositAmount,
-        uint256 _price
+        uint256 price_
     ) internal view {
-        uint256 minDep = _minDepositFor(_price);
+        uint256 minDep = _minDepositFor(price_);
         if (depositAmount < minDep) revert InsufficientDeposit();
     }
 
-    function _enforceMinDepositExisting(uint256 _price) internal view {
-        uint256 minDep = _minDepositFor(_price);
-        if (deposit < minDep) revert InsufficientDeposit();
+    function _enforceMinDepositExisting(uint256 price_) internal view {
+        uint256 minDep = _minDepositFor(price_);
+        if (_deposit < minDep) revert InsufficientDeposit();
     }
 
-    /// @dev Query module fee and split tax between module and recipient
+    /// @dev Pay `to`, and if the currency refuses, credit them instead so the
+    ///      slot itself never becomes unusable.
+    ///
+    ///      This is a try-push-then-credit, not a bare pull payment: the happy
+    ///      path (any well-behaved token, any unblocked recipient) still
+    ///      settles atomically, which is what every caller and integrator
+    ///      already expects, while a blocklisting token or a reverting
+    ///      recipient degrades to a claimable credit instead of bricking every
+    ///      entry point through `_settle()`.
+    ///
+    ///      Deliberately a raw `call` rather than `safeTransfer`: SafeERC20
+    ///      reverts internally and an internal library call cannot be
+    ///      try/caught. The success condition mirrors SafeERC20's — the call
+    ///      must succeed AND either return nothing or return true — with the
+    ///      extra requirement that the currency actually has code, so a
+    ///      codeless address can never be mistaken for a successful payment.
+    function _payOrCredit(address to, uint256 amount) internal {
+        if (amount == 0) return;
+
+        address token = address(currency);
+        bool paid;
+        if (token.code.length > 0) {
+            (bool ok, bytes memory data) = token.call(
+                abi.encodeCall(IERC20.transfer, (to, amount))
+            );
+            paid = ok && (data.length == 0 || abi.decode(data, (bool)));
+        }
+
+        if (!paid) {
+            withdrawableOf[to] += amount;
+            emit RefundCredited(to, amount);
+        }
+    }
+
+    /// @dev Query module fee and split tax between module and recipient.
+    ///
+    ///      Both legs pay through `_payOrCredit`. `recipient` is chosen by
+    ///      whoever creates the slot and is never validated beyond being
+    ///      non-zero, so a plain `safeTransfer` here handed the creator a trap:
+    ///      point `recipient` at a contract that reverts on receipt (or let a
+    ///      blocklisting currency freeze it) and every path that flushes tax —
+    ///      `collect`, `release`, `liquidate` — reverts forever. An insolvent
+    ///      occupant then cannot be removed and cannot leave, because
+    ///      `release` flushes tax too. Crediting instead keeps liquidation
+    ///      unconditional, which is this protocol's first invariant, and leaves
+    ///      the recipient whole via `claim()` whenever they can receive again.
     function _distributeTax(uint256 amount) internal {
         uint256 moduleFee = 0;
         uint256 feeBps_ = 0;
@@ -577,11 +818,11 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
                 // No valid recipient — skip fee, send all to recipient
                 moduleFee = 0;
             } else {
-                currency.safeTransfer(feeTarget, moduleFee);
+                _payOrCredit(feeTarget, moduleFee);
                 emit ModuleFeePaid(module, moduleFee, feeBps_);
             }
         }
-        currency.safeTransfer(recipient, amount - moduleFee);
+        _payOrCredit(recipient, amount - moduleFee);
     }
 
     function _notifyModule(string memory name, bytes memory data) internal {

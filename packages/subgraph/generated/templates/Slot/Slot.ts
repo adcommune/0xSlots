@@ -190,6 +190,32 @@ export class ModuleUpdateProposed__Params {
   }
 }
 
+export class OperatorSet extends ethereum.Event {
+  get params(): OperatorSet__Params {
+    return new OperatorSet__Params(this);
+  }
+}
+
+export class OperatorSet__Params {
+  _event: OperatorSet;
+
+  constructor(event: OperatorSet) {
+    this._event = event;
+  }
+
+  get occupant(): Address {
+    return this._event.parameters[0].value.toAddress();
+  }
+
+  get operator(): Address {
+    return this._event.parameters[1].value.toAddress();
+  }
+
+  get approved(): boolean {
+    return this._event.parameters[2].value.toBoolean();
+  }
+}
+
 export class PendingUpdateApplied extends ethereum.Event {
   get params(): PendingUpdateApplied__Params {
     return new PendingUpdateApplied__Params(this);
@@ -226,6 +252,42 @@ export class PendingUpdateCancelled__Params {
   }
 }
 
+export class PolicyUpdateApplied extends ethereum.Event {
+  get params(): PolicyUpdateApplied__Params {
+    return new PolicyUpdateApplied__Params(this);
+  }
+}
+
+export class PolicyUpdateApplied__Params {
+  _event: PolicyUpdateApplied;
+
+  constructor(event: PolicyUpdateApplied) {
+    this._event = event;
+  }
+
+  get newPolicy(): Address {
+    return this._event.parameters[0].value.toAddress();
+  }
+}
+
+export class PolicyUpdateProposed extends ethereum.Event {
+  get params(): PolicyUpdateProposed__Params {
+    return new PolicyUpdateProposed__Params(this);
+  }
+}
+
+export class PolicyUpdateProposed__Params {
+  _event: PolicyUpdateProposed;
+
+  constructor(event: PolicyUpdateProposed) {
+    this._event = event;
+  }
+
+  get newPolicy(): Address {
+    return this._event.parameters[0].value.toAddress();
+  }
+}
+
 export class PriceUpdated extends ethereum.Event {
   get params(): PriceUpdated__Params {
     return new PriceUpdated__Params(this);
@@ -244,6 +306,50 @@ export class PriceUpdated__Params {
   }
 
   get newPrice(): BigInt {
+    return this._event.parameters[1].value.toBigInt();
+  }
+}
+
+export class RefundClaimed extends ethereum.Event {
+  get params(): RefundClaimed__Params {
+    return new RefundClaimed__Params(this);
+  }
+}
+
+export class RefundClaimed__Params {
+  _event: RefundClaimed;
+
+  constructor(event: RefundClaimed) {
+    this._event = event;
+  }
+
+  get account(): Address {
+    return this._event.parameters[0].value.toAddress();
+  }
+
+  get amount(): BigInt {
+    return this._event.parameters[1].value.toBigInt();
+  }
+}
+
+export class RefundCredited extends ethereum.Event {
+  get params(): RefundCredited__Params {
+    return new RefundCredited__Params(this);
+  }
+}
+
+export class RefundCredited__Params {
+  _event: RefundCredited;
+
+  constructor(event: RefundCredited) {
+    this._event = event;
+  }
+
+  get account(): Address {
+    return this._event.parameters[0].value.toAddress();
+  }
+
+  get amount(): BigInt {
     return this._event.parameters[1].value.toBigInt();
   }
 }
@@ -293,6 +399,28 @@ export class Settled__Params {
 
   get depositRemaining(): BigInt {
     return this._event.parameters[2].value.toBigInt();
+  }
+}
+
+export class SlotConfiguredV3 extends ethereum.Event {
+  get params(): SlotConfiguredV3__Params {
+    return new SlotConfiguredV3__Params(this);
+  }
+}
+
+export class SlotConfiguredV3__Params {
+  _event: SlotConfiguredV3;
+
+  constructor(event: SlotConfiguredV3) {
+    this._event = event;
+  }
+
+  get epochSeconds(): BigInt {
+    return this._event.parameters[0].value.toBigInt();
+  }
+
+  get occupancyPolicy(): Address {
+    return this._event.parameters[1].value.toAddress();
   }
 }
 
@@ -406,6 +534,36 @@ export class TaxUpdateProposed__Params {
   }
 }
 
+export class TransferScheduled extends ethereum.Event {
+  get params(): TransferScheduled__Params {
+    return new TransferScheduled__Params(this);
+  }
+}
+
+export class TransferScheduled__Params {
+  _event: TransferScheduled;
+
+  constructor(event: TransferScheduled) {
+    this._event = event;
+  }
+
+  get buyer(): Address {
+    return this._event.parameters[0].value.toAddress();
+  }
+
+  get effectiveAt(): BigInt {
+    return this._event.parameters[1].value.toBigInt();
+  }
+
+  get price(): BigInt {
+    return this._event.parameters[2].value.toBigInt();
+  }
+
+  get deposit(): BigInt {
+    return this._event.parameters[3].value.toBigInt();
+  }
+}
+
 export class Withdrawn extends ethereum.Event {
   get params(): Withdrawn__Params {
     return new Withdrawn__Params(this);
@@ -511,20 +669,137 @@ export class Slot__getSlotInfoResultInfoStruct extends ethereum.Tuple {
     return this[15].toBoolean();
   }
 
+  get moduleName(): string {
+    return this[16].toString();
+  }
+
+  get moduleVersion(): string {
+    return this[17].toString();
+  }
+
+  get moduleFeeBps(): BigInt {
+    return this[18].toBigInt();
+  }
+
+  get moduleFeeRecipient(): Address {
+    return this[19].toAddress();
+  }
+
+  get moduleURI(): string {
+    return this[20].toString();
+  }
+
   get hasPendingTax(): boolean {
-    return this[16].toBoolean();
+    return this[21].toBoolean();
   }
 
   get pendingTaxPercentage(): BigInt {
-    return this[17].toBigInt();
+    return this[22].toBigInt();
   }
 
   get hasPendingModule(): boolean {
-    return this[18].toBoolean();
+    return this[23].toBoolean();
   }
 
   get pendingModule(): Address {
-    return this[19].toAddress();
+    return this[24].toAddress();
+  }
+
+  get occupancyPolicy(): Address {
+    return this[25].toAddress();
+  }
+
+  get epochSeconds(): BigInt {
+    return this[26].toBigInt();
+  }
+
+  get occupiedSince(): BigInt {
+    return this[27].toBigInt();
+  }
+
+  get hasPendingPolicy(): boolean {
+    return this[28].toBoolean();
+  }
+
+  get pendingPolicy(): Address {
+    return this[29].toAddress();
+  }
+}
+
+export class Slot__pendingPolicyUpdateResult {
+  value0: Address;
+  value1: boolean;
+
+  constructor(value0: Address, value1: boolean) {
+    this.value0 = value0;
+    this.value1 = value1;
+  }
+
+  toMap(): TypedMap<string, ethereum.Value> {
+    let map = new TypedMap<string, ethereum.Value>();
+    map.set("value0", ethereum.Value.fromAddress(this.value0));
+    map.set("value1", ethereum.Value.fromBoolean(this.value1));
+    return map;
+  }
+
+  getNewPolicy(): Address {
+    return this.value0;
+  }
+
+  getHasPolicyUpdate(): boolean {
+    return this.value1;
+  }
+}
+
+export class Slot__pendingTransferResult {
+  value0: Address;
+  value1: BigInt;
+  value2: BigInt;
+  value3: BigInt;
+  value4: BigInt;
+
+  constructor(
+    value0: Address,
+    value1: BigInt,
+    value2: BigInt,
+    value3: BigInt,
+    value4: BigInt,
+  ) {
+    this.value0 = value0;
+    this.value1 = value1;
+    this.value2 = value2;
+    this.value3 = value3;
+    this.value4 = value4;
+  }
+
+  toMap(): TypedMap<string, ethereum.Value> {
+    let map = new TypedMap<string, ethereum.Value>();
+    map.set("value0", ethereum.Value.fromAddress(this.value0));
+    map.set("value1", ethereum.Value.fromUnsignedBigInt(this.value1));
+    map.set("value2", ethereum.Value.fromUnsignedBigInt(this.value2));
+    map.set("value3", ethereum.Value.fromUnsignedBigInt(this.value3));
+    map.set("value4", ethereum.Value.fromUnsignedBigInt(this.value4));
+    return map;
+  }
+
+  getBuyer(): Address {
+    return this.value0;
+  }
+
+  getEffectiveAt(): BigInt {
+    return this.value1;
+  }
+
+  getDeposit(): BigInt {
+    return this.value2;
+  }
+
+  getNewPrice(): BigInt {
+    return this.value3;
+  }
+
+  getPricePaid(): BigInt {
+    return this.value4;
   }
 }
 
@@ -652,6 +927,21 @@ export class Slot extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toBigInt());
   }
 
+  epochSeconds(): BigInt {
+    let result = super.call("epochSeconds", "epochSeconds():(uint64)", []);
+
+    return result[0].toBigInt();
+  }
+
+  try_epochSeconds(): ethereum.CallResult<BigInt> {
+    let result = super.tryCall("epochSeconds", "epochSeconds():(uint64)", []);
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
   factory(): Address {
     let result = super.call("factory", "factory():(address)", []);
 
@@ -697,7 +987,7 @@ export class Slot extends ethereum.SmartContract {
   getSlotInfo(): Slot__getSlotInfoResultInfoStruct {
     let result = super.call(
       "getSlotInfo",
-      "getSlotInfo():((address,address,address,bool,bool,address,uint256,uint256,address,uint256,uint256,uint256,uint256,uint256,uint256,bool,bool,uint256,bool,address))",
+      "getSlotInfo():((address,address,address,bool,bool,address,uint256,uint256,address,uint256,uint256,uint256,uint256,uint256,uint256,bool,string,string,uint256,address,string,bool,uint256,bool,address,address,uint256,uint256,bool,address))",
       [],
     );
 
@@ -707,7 +997,7 @@ export class Slot extends ethereum.SmartContract {
   try_getSlotInfo(): ethereum.CallResult<Slot__getSlotInfoResultInfoStruct> {
     let result = super.tryCall(
       "getSlotInfo",
-      "getSlotInfo():((address,address,address,bool,bool,address,uint256,uint256,address,uint256,uint256,uint256,uint256,uint256,uint256,bool,bool,uint256,bool,address))",
+      "getSlotInfo():((address,address,address,bool,bool,address,uint256,uint256,address,uint256,uint256,uint256,uint256,uint256,uint256,bool,string,string,uint256,address,string,bool,uint256,bool,address,address,uint256,uint256,bool,address))",
       [],
     );
     if (result.reverted) {
@@ -727,6 +1017,32 @@ export class Slot extends ethereum.SmartContract {
 
   try_isInsolvent(): ethereum.CallResult<boolean> {
     let result = super.tryCall("isInsolvent", "isInsolvent():(bool)", []);
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBoolean());
+  }
+
+  isOperator(param0: Address, param1: Address): boolean {
+    let result = super.call(
+      "isOperator",
+      "isOperator(address,address):(bool)",
+      [ethereum.Value.fromAddress(param0), ethereum.Value.fromAddress(param1)],
+    );
+
+    return result[0].toBoolean();
+  }
+
+  try_isOperator(
+    param0: Address,
+    param1: Address,
+  ): ethereum.CallResult<boolean> {
+    let result = super.tryCall(
+      "isOperator",
+      "isOperator(address,address):(bool)",
+      [ethereum.Value.fromAddress(param0), ethereum.Value.fromAddress(param1)],
+    );
     if (result.reverted) {
       return new ethereum.CallResult();
     }
@@ -889,6 +1205,44 @@ export class Slot extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toBoolean());
   }
 
+  nextBoundary(): BigInt {
+    let result = super.call("nextBoundary", "nextBoundary():(uint256)", []);
+
+    return result[0].toBigInt();
+  }
+
+  try_nextBoundary(): ethereum.CallResult<BigInt> {
+    let result = super.tryCall("nextBoundary", "nextBoundary():(uint256)", []);
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
+  occupancyPolicy(): Address {
+    let result = super.call(
+      "occupancyPolicy",
+      "occupancyPolicy():(address)",
+      [],
+    );
+
+    return result[0].toAddress();
+  }
+
+  try_occupancyPolicy(): ethereum.CallResult<Address> {
+    let result = super.tryCall(
+      "occupancyPolicy",
+      "occupancyPolicy():(address)",
+      [],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toAddress());
+  }
+
   occupant(): Address {
     let result = super.call("occupant", "occupant():(address)", []);
 
@@ -902,6 +1256,93 @@ export class Slot extends ethereum.SmartContract {
     }
     let value = result.value;
     return ethereum.CallResult.fromValue(value[0].toAddress());
+  }
+
+  occupiedSince(): BigInt {
+    let result = super.call("occupiedSince", "occupiedSince():(uint256)", []);
+
+    return result[0].toBigInt();
+  }
+
+  try_occupiedSince(): ethereum.CallResult<BigInt> {
+    let result = super.tryCall(
+      "occupiedSince",
+      "occupiedSince():(uint256)",
+      [],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
+  pendingPolicyUpdate(): Slot__pendingPolicyUpdateResult {
+    let result = super.call(
+      "pendingPolicyUpdate",
+      "pendingPolicyUpdate():(address,bool)",
+      [],
+    );
+
+    return new Slot__pendingPolicyUpdateResult(
+      result[0].toAddress(),
+      result[1].toBoolean(),
+    );
+  }
+
+  try_pendingPolicyUpdate(): ethereum.CallResult<Slot__pendingPolicyUpdateResult> {
+    let result = super.tryCall(
+      "pendingPolicyUpdate",
+      "pendingPolicyUpdate():(address,bool)",
+      [],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(
+      new Slot__pendingPolicyUpdateResult(
+        value[0].toAddress(),
+        value[1].toBoolean(),
+      ),
+    );
+  }
+
+  pendingTransfer(): Slot__pendingTransferResult {
+    let result = super.call(
+      "pendingTransfer",
+      "pendingTransfer():(address,uint96,uint256,uint256,uint256)",
+      [],
+    );
+
+    return new Slot__pendingTransferResult(
+      result[0].toAddress(),
+      result[1].toBigInt(),
+      result[2].toBigInt(),
+      result[3].toBigInt(),
+      result[4].toBigInt(),
+    );
+  }
+
+  try_pendingTransfer(): ethereum.CallResult<Slot__pendingTransferResult> {
+    let result = super.tryCall(
+      "pendingTransfer",
+      "pendingTransfer():(address,uint96,uint256,uint256,uint256)",
+      [],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(
+      new Slot__pendingTransferResult(
+        value[0].toAddress(),
+        value[1].toBigInt(),
+        value[2].toBigInt(),
+        value[3].toBigInt(),
+        value[4].toBigInt(),
+      ),
+    );
   }
 
   pendingUpdate(): Slot__pendingUpdateResult {
@@ -1025,6 +1466,29 @@ export class Slot extends ethereum.SmartContract {
     let value = result.value;
     return ethereum.CallResult.fromValue(value[0].toBigInt());
   }
+
+  withdrawableOf(param0: Address): BigInt {
+    let result = super.call(
+      "withdrawableOf",
+      "withdrawableOf(address):(uint256)",
+      [ethereum.Value.fromAddress(param0)],
+    );
+
+    return result[0].toBigInt();
+  }
+
+  try_withdrawableOf(param0: Address): ethereum.CallResult<BigInt> {
+    let result = super.tryCall(
+      "withdrawableOf",
+      "withdrawableOf(address):(uint256)",
+      [ethereum.Value.fromAddress(param0)],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
 }
 
 export class ConstructorCall extends ethereum.Call {
@@ -1113,6 +1577,36 @@ export class CancelPendingUpdatesCall__Outputs {
   _call: CancelPendingUpdatesCall;
 
   constructor(call: CancelPendingUpdatesCall) {
+    this._call = call;
+  }
+}
+
+export class ClaimCall extends ethereum.Call {
+  get inputs(): ClaimCall__Inputs {
+    return new ClaimCall__Inputs(this);
+  }
+
+  get outputs(): ClaimCall__Outputs {
+    return new ClaimCall__Outputs(this);
+  }
+}
+
+export class ClaimCall__Inputs {
+  _call: ClaimCall;
+
+  constructor(call: ClaimCall) {
+    this._call = call;
+  }
+
+  get account(): Address {
+    return this._call.inputValues[0].value.toAddress();
+  }
+}
+
+export class ClaimCall__Outputs {
+  _call: ClaimCall;
+
+  constructor(call: ClaimCall) {
     this._call = call;
   }
 }
@@ -1251,6 +1745,40 @@ export class InitializeV2Call__Outputs {
   }
 }
 
+export class InitializeV3Call extends ethereum.Call {
+  get inputs(): InitializeV3Call__Inputs {
+    return new InitializeV3Call__Inputs(this);
+  }
+
+  get outputs(): InitializeV3Call__Outputs {
+    return new InitializeV3Call__Outputs(this);
+  }
+}
+
+export class InitializeV3Call__Inputs {
+  _call: InitializeV3Call;
+
+  constructor(call: InitializeV3Call) {
+    this._call = call;
+  }
+
+  get _epochSeconds(): BigInt {
+    return this._call.inputValues[0].value.toBigInt();
+  }
+
+  get _occupancyPolicy(): Address {
+    return this._call.inputValues[1].value.toAddress();
+  }
+}
+
+export class InitializeV3Call__Outputs {
+  _call: InitializeV3Call;
+
+  constructor(call: InitializeV3Call) {
+    this._call = call;
+  }
+}
+
 export class LiquidateCall extends ethereum.Call {
   get inputs(): LiquidateCall__Inputs {
     return new LiquidateCall__Inputs(this);
@@ -1337,6 +1865,36 @@ export class ProposeModuleUpdateCall__Outputs {
   _call: ProposeModuleUpdateCall;
 
   constructor(call: ProposeModuleUpdateCall) {
+    this._call = call;
+  }
+}
+
+export class ProposePolicyUpdateCall extends ethereum.Call {
+  get inputs(): ProposePolicyUpdateCall__Inputs {
+    return new ProposePolicyUpdateCall__Inputs(this);
+  }
+
+  get outputs(): ProposePolicyUpdateCall__Outputs {
+    return new ProposePolicyUpdateCall__Outputs(this);
+  }
+}
+
+export class ProposePolicyUpdateCall__Inputs {
+  _call: ProposePolicyUpdateCall;
+
+  constructor(call: ProposePolicyUpdateCall) {
+    this._call = call;
+  }
+
+  get newPolicy(): Address {
+    return this._call.inputValues[0].value.toAddress();
+  }
+}
+
+export class ProposePolicyUpdateCall__Outputs {
+  _call: ProposePolicyUpdateCall;
+
+  constructor(call: ProposePolicyUpdateCall) {
     this._call = call;
   }
 }
@@ -1453,6 +2011,40 @@ export class SetLiquidationBountyCall__Outputs {
   _call: SetLiquidationBountyCall;
 
   constructor(call: SetLiquidationBountyCall) {
+    this._call = call;
+  }
+}
+
+export class SetOperatorCall extends ethereum.Call {
+  get inputs(): SetOperatorCall__Inputs {
+    return new SetOperatorCall__Inputs(this);
+  }
+
+  get outputs(): SetOperatorCall__Outputs {
+    return new SetOperatorCall__Outputs(this);
+  }
+}
+
+export class SetOperatorCall__Inputs {
+  _call: SetOperatorCall;
+
+  constructor(call: SetOperatorCall) {
+    this._call = call;
+  }
+
+  get operator(): Address {
+    return this._call.inputValues[0].value.toAddress();
+  }
+
+  get approved(): boolean {
+    return this._call.inputValues[1].value.toBoolean();
+  }
+}
+
+export class SetOperatorCall__Outputs {
+  _call: SetOperatorCall;
+
+  constructor(call: SetOperatorCall) {
     this._call = call;
   }
 }

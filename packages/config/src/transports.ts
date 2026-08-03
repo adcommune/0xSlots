@@ -12,7 +12,10 @@ export const ALCHEMY_SUBDOMAINS: Record<number, string> = {
 };
 
 /** Build an Alchemy RPC URL for a given chain */
-export function alchemyRpcUrl(chainId: number, apiKey: string): string | undefined {
+export function alchemyRpcUrl(
+  chainId: number,
+  apiKey: string,
+): string | undefined {
   const sub = ALCHEMY_SUBDOMAINS[chainId];
   return sub ? `https://${sub}.g.alchemy.com/v2/${apiKey}` : undefined;
 }
@@ -36,7 +39,7 @@ export function alchemyTransports(
 
 export function getChainClient(chainId: number, alchemyKey: string) {
   return createPublicClient({
-    chain: appChains.find(c => c.id === chainId),
-    transport: alchemyTransport(chainId, alchemyKey)
-  })
+    chain: appChains.find((c) => c.id === chainId),
+    transport: alchemyTransport(chainId, alchemyKey),
+  });
 }

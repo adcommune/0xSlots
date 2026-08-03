@@ -35,7 +35,7 @@ contract CreateTestSlot is BaseScript {
 
         SlotConfig memory config = SlotConfig({
             mutableTax: false,
-            mutableModule: false,
+            mutableModule: false, mutablePolicy: false,
             manager: address(0)
         });
 
@@ -43,7 +43,8 @@ contract CreateTestSlot is BaseScript {
             taxPercentage: 100, // 1%
             module: address(0),
             liquidationBountyBps: 0,
-            minDepositSeconds: 0
+            minDepositSeconds: 0,
+            occupancyPolicy: address(0)
         });
 
         address slot = factory.createSlot(

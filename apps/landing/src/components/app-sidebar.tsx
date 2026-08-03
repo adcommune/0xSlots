@@ -6,6 +6,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 
 import { SubgraphStatus } from "@/components/subgraph-status";
+import { TestnetFaucet } from "@/components/testnet-faucet";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -129,6 +130,10 @@ export function AppSidebar() {
         </SidebarMenu>
 
         <SidebarSeparator />
+
+        {/* Renders only on chains with a mintable currency, so it disappears
+            on mainnet without needing a testnet check here. */}
+        <TestnetFaucet />
 
         <div className="flex items-center justify-between px-2 pb-1">
           <DropdownMenu>

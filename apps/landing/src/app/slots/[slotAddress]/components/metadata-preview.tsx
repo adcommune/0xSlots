@@ -14,7 +14,13 @@ function isUrl(value: unknown): boolean {
   return value.startsWith("http://") || value.startsWith("https://");
 }
 
-function FieldValue({ value, fieldKey }: { value: unknown; fieldKey?: string }) {
+function FieldValue({
+  value,
+  fieldKey,
+}: {
+  value: unknown;
+  fieldKey?: string;
+}) {
   if (value == null || value === "") {
     return <span className="text-muted-foreground italic">—</span>;
   }
@@ -57,7 +63,11 @@ function FieldList({ fields }: { fields: Record<string, unknown> }) {
   );
 }
 
-export function MetadataPreview({ type, data, metadata }: MetadataPreviewProps) {
+export function MetadataPreview({
+  type,
+  data,
+  metadata,
+}: MetadataPreviewProps) {
   return (
     <div className="rounded-md border bg-muted/30 p-3 space-y-3">
       <div className="flex items-center gap-2">

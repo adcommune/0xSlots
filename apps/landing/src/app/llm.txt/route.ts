@@ -1,10 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-const content = readFileSync(
-  join(process.cwd(), "public", "llm.txt"),
-  "utf-8",
-);
+const content = readFileSync(join(process.cwd(), "public", "llm.txt"), "utf-8");
 
 export function GET() {
   return new Response(content, {

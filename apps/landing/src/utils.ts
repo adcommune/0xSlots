@@ -17,7 +17,10 @@ export const truncateAddress = (address: string) => {
  *                  use scientific notation (e.g. 1.2e-7)
  * - 0           → "0"
  */
-export function formatAmount(raw: string | bigint, decimals: number = 18): string {
+export function formatAmount(
+  raw: string | bigint,
+  decimals: number = 18,
+): string {
   const val = typeof raw === "bigint" ? raw : BigInt(raw || "0");
   if (val === 0n) return "0";
   const formatted = formatUnits(val, decimals);

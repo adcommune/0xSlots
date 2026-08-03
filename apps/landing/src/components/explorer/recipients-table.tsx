@@ -1,6 +1,5 @@
 "use client";
 
-import { useNavigation } from "@/context/navigation";
 import { AccountTypeIcon } from "@/components/account-type-icon";
 import { EnsAddress } from "@/components/ens-address";
 import { RefreshButton } from "@/components/refresh-button";
@@ -14,6 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useNavigation } from "@/context/navigation";
 import { useAccounts } from "@/hooks/use-v3";
 
 export function RecipientsTable() {

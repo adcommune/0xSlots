@@ -1,6 +1,6 @@
+import { getChainTokens } from "@0xslots/sdk";
 import { AlertCircle, Check, HandCoins, Loader2 } from "lucide-react";
 import { useFormContext } from "react-hook-form";
-import { getChainTokens } from "@0xslots/sdk";
 import {
   FormField,
   FormItem,
@@ -8,8 +8,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useErc20Check } from "../hooks/use-erc20-check";
-import { useModuleCheck } from "../hooks/use-module-check";
 import {
   Select,
   SelectContent,
@@ -19,9 +17,11 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { useChain } from "@/context/chain";
-import { normalizeDecimal, truncateAddress } from "@/utils";
 import { useModules } from "@/hooks/use-v3";
+import { normalizeDecimal, truncateAddress } from "@/utils";
 import { AddressInput } from "../address-input";
+import { useErc20Check } from "../hooks/use-erc20-check";
+import { useModuleCheck } from "../hooks/use-module-check";
 import { type CreateSlotFormValues, timeDenominations } from "../schema";
 
 export function StepParameters() {
@@ -50,7 +50,7 @@ export function StepParameters() {
           const selectValue =
             field.value === "custom"
               ? "custom"
-              : presetCurrency ?? chainTokens[0]?.address ?? "";
+              : (presetCurrency ?? chainTokens[0]?.address ?? "");
 
           return (
             <FormItem>
@@ -72,7 +72,9 @@ export function StepParameters() {
                 <SelectContent>
                   {chainTokens.map((token) => (
                     <SelectItem key={token.address} value={token.address}>
-                      <span>{token.name} ({token.symbol})</span>
+                      <span>
+                        {token.name} ({token.symbol})
+                      </span>
                       <span className="block text-xs text-muted-foreground">
                         {token.address.slice(0, 6)}...{token.address.slice(-3)}
                       </span>
@@ -108,7 +110,8 @@ export function StepParameters() {
               {erc20.data && (
                 <p className="flex items-center gap-1.5 text-[10px] text-green-600">
                   <Check className="size-3" />
-                  {erc20.data.name} ({erc20.data.symbol}) · {erc20.data.decimals} decimals
+                  {erc20.data.name} ({erc20.data.symbol}) ·{" "}
+                  {erc20.data.decimals} decimals
                 </p>
               )}
               {erc20.isError && erc20.isValidAddress && (
@@ -135,7 +138,8 @@ export function StepParameters() {
                 <HandCoins className="size-3.5" /> Tax Rate
               </FormLabel>
               <span className="text-sm font-semibold">
-                {parseFloat(normalizeDecimal(field.value)).toFixed(1) || "0"}%/mo
+                {parseFloat(normalizeDecimal(field.value)).toFixed(1) || "0"}
+                %/mo
               </span>
             </div>
             <input

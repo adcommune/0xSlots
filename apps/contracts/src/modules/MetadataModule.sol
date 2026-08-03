@@ -60,6 +60,9 @@ contract MetadataModule is
         _clearMetadata(msg.sender);
     }
 
+    /// @dev Not an accounting module — nothing to record when tax moves.
+    function onSettle(uint256, address, uint256, uint256) external override {}
+
     /// @notice No fee for metadata module
     function feeBps() external pure override returns (uint256) {
         return 0;

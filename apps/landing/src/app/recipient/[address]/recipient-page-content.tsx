@@ -1,10 +1,9 @@
 "use client";
 
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { Banknote, Check, Copy, HandCoins, LandPlot } from "lucide-react";
 import { useState } from "react";
 import { formatUnits } from "viem";
-import { useSuspenseQuery } from "@tanstack/react-query";
-import { useEnsAvatar, useEnsName } from "@/lib/ens";
 import { AccountTypeIcon } from "@/components/account-type-icon";
 import { Blockie } from "@/components/blockie";
 import { PageHeader } from "@/components/page-header";
@@ -25,6 +24,7 @@ import { useChain } from "@/context/chain";
 import { NavLink, useNavigation } from "@/context/navigation";
 import { slotsByRecipientQueryOptions } from "@/hooks/slot-queries";
 import { useSlotsOnChain } from "@/hooks/use-slot-onchain";
+import { useEnsAvatar, useEnsName } from "@/lib/ens";
 import { formatBalance, truncateAddress } from "@/utils";
 
 export function RecipientPageContent({ address }: { address: string }) {
@@ -39,8 +39,10 @@ export function RecipientPageContent({ address }: { address: string }) {
   const slotAddresses = subgraphSlots?.map((s) => s.id) ?? [];
 
   // Live on-chain data for all slots via multicall
-  const { data: slots, isLoading: onchainLoading } =
-    useSlotsOnChain(slotAddresses, selectedChainId);
+  const { data: slots, isLoading: onchainLoading } = useSlotsOnChain(
+    slotAddresses,
+    selectedChainId,
+  );
 
   const { data: ensName } = useEnsName(address);
   const { data: ensAvatar } = useEnsAvatar(ensName);

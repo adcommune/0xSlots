@@ -184,6 +184,84 @@ export class Upgraded__Params {
   }
 }
 
+export class SlotDeployed1 extends ethereum.Event {
+  get params(): SlotDeployed1__Params {
+    return new SlotDeployed1__Params(this);
+  }
+}
+
+export class SlotDeployed1__Params {
+  _event: SlotDeployed1;
+
+  constructor(event: SlotDeployed1) {
+    this._event = event;
+  }
+
+  get slot(): Address {
+    return this._event.parameters[0].value.toAddress();
+  }
+
+  get recipient(): Address {
+    return this._event.parameters[1].value.toAddress();
+  }
+
+  get currency(): Address {
+    return this._event.parameters[2].value.toAddress();
+  }
+
+  get config(): SlotDeployed1ConfigStruct {
+    return changetype<SlotDeployed1ConfigStruct>(
+      this._event.parameters[3].value.toTuple(),
+    );
+  }
+
+  get initParams(): SlotDeployed1InitParamsStruct {
+    return changetype<SlotDeployed1InitParamsStruct>(
+      this._event.parameters[4].value.toTuple(),
+    );
+  }
+}
+
+export class SlotDeployed1ConfigStruct extends ethereum.Tuple {
+  get mutableTax(): boolean {
+    return this[0].toBoolean();
+  }
+
+  get mutableModule(): boolean {
+    return this[1].toBoolean();
+  }
+
+  get mutablePolicy(): boolean {
+    return this[2].toBoolean();
+  }
+
+  get manager(): Address {
+    return this[3].toAddress();
+  }
+}
+
+export class SlotDeployed1InitParamsStruct extends ethereum.Tuple {
+  get taxPercentage(): BigInt {
+    return this[0].toBigInt();
+  }
+
+  get module(): Address {
+    return this[1].toAddress();
+  }
+
+  get liquidationBountyBps(): BigInt {
+    return this[2].toBigInt();
+  }
+
+  get minDepositSeconds(): BigInt {
+    return this[3].toBigInt();
+  }
+
+  get occupancyPolicy(): Address {
+    return this[4].toAddress();
+  }
+}
+
 export class SlotFactory__createSlotInputConfigStruct extends ethereum.Tuple {
   get mutableTax(): boolean {
     return this[0].toBoolean();

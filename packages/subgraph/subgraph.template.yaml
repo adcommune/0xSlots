@@ -31,7 +31,14 @@ dataSources:
         - name: SplitV2
           file: ./abis/SplitV2.json
       eventHandlers:
+        # Two signatures, both live. The first is the only record of the 252
+        # slots created before SlotConfig gained `mutablePolicy` and
+        # SlotInitParams gained `occupancyPolicy`; adding those fields changed
+        # the tuple types and therefore topic0, so a single handler would make
+        # one era or the other invisible. Both write the same entity.
         - event: SlotDeployed(indexed address,indexed address,indexed address,(bool,bool,address),(uint256,address,uint256,uint256))
+          handler: handleSlotDeployedLegacy
+        - event: SlotDeployed(indexed address,indexed address,indexed address,(bool,bool,bool,address),(uint256,address,uint256,uint256,address))
           handler: handleSlotDeployed
         - event: ModuleVerified(indexed address,bool,string,string,uint256,string)
           handler: handleModuleVerified
@@ -63,7 +70,14 @@ dataSources:
         - name: SplitV2
           file: ./abis/SplitV2.json
       eventHandlers:
+        # Two signatures, both live. The first is the only record of the 252
+        # slots created before SlotConfig gained `mutablePolicy` and
+        # SlotInitParams gained `occupancyPolicy`; adding those fields changed
+        # the tuple types and therefore topic0, so a single handler would make
+        # one era or the other invisible. Both write the same entity.
         - event: SlotDeployed(indexed address,indexed address,indexed address,(bool,bool,address),(uint256,address,uint256,uint256))
+          handler: handleSlotDeployedLegacy
+        - event: SlotDeployed(indexed address,indexed address,indexed address,(bool,bool,bool,address),(uint256,address,uint256,uint256,address))
           handler: handleSlotDeployed
         - event: ModuleVerified(indexed address,bool,string,string,uint256,string)
           handler: handleModuleVerified
@@ -169,6 +183,21 @@ templates:
           handler: handleLiquidationBountyUpdated
         - event: ModuleFeePaid(indexed address,uint256,uint256)
           handler: handleModuleFeePaid
+        # ── v3 occupancy layer ──
+        - event: SlotConfiguredV3(uint64,address)
+          handler: handleSlotConfiguredV3
+        - event: TransferScheduled(indexed address,uint256,uint256,uint256)
+          handler: handleTransferScheduled
+        - event: OperatorSet(indexed address,indexed address,bool)
+          handler: handleOperatorSet
+        - event: PolicyUpdateProposed(address)
+          handler: handlePolicyUpdateProposed
+        - event: PolicyUpdateApplied(address)
+          handler: handlePolicyUpdateApplied
+        - event: RefundCredited(indexed address,uint256)
+          handler: handleRefundCredited
+        - event: RefundClaimed(indexed address,uint256)
+          handler: handleRefundClaimed
       file: ./src/slot.ts
   - kind: ethereum
     name: MetadataModule

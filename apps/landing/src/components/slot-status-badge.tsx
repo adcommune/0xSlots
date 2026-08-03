@@ -7,7 +7,11 @@ export function SlotStatusBadge({
   occupant: string | null | undefined;
   insolvent: boolean;
 }) {
-  const variant = insolvent ? "destructive" : occupant ? "default" : "secondary";
+  const variant = insolvent
+    ? "destructive"
+    : occupant
+      ? "default"
+      : "secondary";
   const label = insolvent ? "INSOLVENT" : occupant ? "OCCUPIED" : "VACANT";
 
   return (

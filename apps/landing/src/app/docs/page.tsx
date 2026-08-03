@@ -1,6 +1,6 @@
 import Image from "next/image";
-import { NavLink } from "@/context/navigation";
 import { Button } from "@/components/ui/button";
+import { NavLink } from "@/context/navigation";
 
 export default function DocsPage() {
   return (

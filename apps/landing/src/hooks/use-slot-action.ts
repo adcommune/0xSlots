@@ -1,14 +1,14 @@
 "use client";
 
-import { useSlotAction as useSlotActionBase } from "@0xslots/sdk/react";
 import type { SlotsChain } from "@0xslots/sdk";
+import { useSlotAction as useSlotActionBase } from "@0xslots/sdk/react";
 import { useCallback } from "react";
 import { toast } from "sonner";
 import type { Address } from "viem";
 import { useChain } from "@/context/chain";
 import { usePostTxRefresh } from "./use-post-tx-refresh";
-import useIPFSUpload from "./use-upload";
 import { useSlotsClient } from "./use-slots-client";
+import useIPFSUpload from "./use-upload";
 
 export function useSlotAction() {
   const { chainId } = useChain();

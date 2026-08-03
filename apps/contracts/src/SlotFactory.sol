@@ -9,10 +9,18 @@ import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.s
 import {Slot} from "./Slot.sol";
 import {SlotConfig, SlotInitParams, ISlotEvents} from "./interfaces/ISlot.sol";
 import {ISlotsModule} from "./interfaces/ISlotsModule.sol";
+import {IOccupancyPolicy} from "./interfaces/IOccupancyPolicy.sol";
 
 /// @title SlotFactory — Deploy Harberger-taxed slots via Beacon Proxy
 /// @notice UUPS-upgradeable factory. All slots delegate to a shared beacon.
-///         Upgrading the beacon upgrades all slots. Upgrading the factory upgrades deployment logic.
+///         Upgrading the beacon upgrades all slots.
+///
+/// @dev The creation surface is two functions — `createSlot` and `createSlots`
+///      — and is meant to stay that way. A new slot parameter goes into
+///      `SlotInitParams`, which both already carry, never into a new suffixed
+///      entry point. A versioned creator is a permanent tax on every caller,
+///      every published ABI and every integration, paid to avoid changing one
+///      struct once.
 contract SlotFactory is UUPSUpgradeable {
     // ═══════════════════════════════════════════════════════════
     // ERRORS
@@ -51,6 +59,7 @@ contract SlotFactory is UUPSUpgradeable {
         address indexed newAdmin
     );
     event SlotEvent(address indexed slot, uint8 indexed eventType, bytes data);
+    event BeaconUpgraded(address indexed newImplementation);
 
     // ═══════════════════════════════════════════════════════════
     // STATE
@@ -182,6 +191,32 @@ contract SlotFactory is UUPSUpgradeable {
     }
 
     // ═══════════════════════════════════════════════════════════
+    // OCCUPANCY POLICY REGISTRY (informational, non-blocking)
+    // ═══════════════════════════════════════════════════════════
+
+    /// @notice Verified occupancy policies (informational, non-blocking)
+    mapping(address => bool) public verifiedPolicies;
+
+    event PolicyVerified(
+        address indexed policy,
+        bool verified,
+        string name,
+        string version,
+        string policyURI
+    );
+
+    /// @notice Mark an occupancy policy verified/unverified (admin only)
+    function setPolicyVerified(address _policy, bool verified) external onlyAdmin {
+        IOccupancyPolicy p = IOccupancyPolicy(_policy);
+        require(
+            p.supportsInterface(type(IOccupancyPolicy).interfaceId),
+            "not IOccupancyPolicy"
+        );
+        verifiedPolicies[_policy] = verified;
+        emit PolicyVerified(_policy, verified, p.name(), p.version(), p.policyURI());
+    }
+
+    // ═══════════════════════════════════════════════════════════
     // BATCH OPERATIONS
     // ═══════════════════════════════════════════════════════════
 
@@ -220,19 +255,20 @@ contract SlotFactory is UUPSUpgradeable {
         }
     }
 
-    /// @notice Migrate pre-existing slots: register + initializeV2 in one call (admin only)
-    function migrateSlots(address[] calldata slots) external onlyAdmin {
-        for (uint256 i = 0; i < slots.length; i++) {
-            isSlot[slots[i]] = true;
-            Slot(slots[i]).initializeV2(address(this));
-        }
+    // ═══════════════════════════════════════════════════════════
+    // BEACON UPGRADES
+    // ═══════════════════════════════════════════════════════════
+
+    /// @notice Upgrade the beacon (admin only). Requires the factory to own it.
+    /// @dev Beacon ownership starts with `admin` (see `initialize`). Transfer it
+    ///      to this factory with `UpgradeableBeacon.transferOwnership` to enable
+    ///      this. Authority is unchanged either
+    ///      way — `onlyAdmin` here is the same address that owned the beacon.
+    function upgradeBeacon(address newImplementation) external onlyAdmin {
+        beacon.upgradeTo(newImplementation);
+        emit BeaconUpgraded(newImplementation);
     }
 
-    // ═══════════════════════════════════════════════════════════
-    // UUPS
-    // ═══════════════════════════════════════════════════════════
-
-    /// @dev Only admin can authorize factory upgrades
     function _authorizeUpgrade(address) internal override onlyAdmin {}
 
     // ═══════════════════════════════════════════════════════════
@@ -243,7 +279,7 @@ contract SlotFactory is UUPSUpgradeable {
         SlotConfig memory config,
         SlotInitParams memory initParams
     ) internal view {
-        if (config.mutableTax || config.mutableModule) {
+        if (config.mutableTax || config.mutableModule || config.mutablePolicy) {
             if (config.manager == address(0))
                 revert InvalidConfig_ManagerRequired();
         } else {
@@ -264,14 +300,15 @@ contract SlotFactory is UUPSUpgradeable {
         SlotConfig memory config,
         SlotInitParams memory initParams
     ) internal returns (address slot) {
+        // `factory` is set inside `initialize` now, in the proxy constructor —
+        // atomically with creation, so a new slot is never briefly claimable.
         bytes memory initData = abi.encodeCall(
             Slot.initialize,
-            (recipient, currency, config, initParams)
+            (recipient, currency, config, initParams, address(this))
         );
         BeaconProxy proxy = new BeaconProxy(address(beacon), initData);
         slot = address(proxy);
         isSlot[slot] = true;
-        Slot(slot).initializeV2(address(this));
         emit SlotDeployed(
             slot,
             recipient,

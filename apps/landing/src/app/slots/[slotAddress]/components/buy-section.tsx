@@ -46,7 +46,9 @@ export function BuySection({
   }
 
   const effectivePrice = buyPrice || currentPriceRaw;
-  const priceForMin = effectivePrice ? toRawUnits(effectivePrice, decimals) : 0n;
+  const priceForMin = effectivePrice
+    ? toRawUnits(effectivePrice, decimals)
+    : 0n;
   const minDep = computeMinDeposit(priceForMin);
   const effectiveDeposit = buyDeposit || (minDep !== "0" ? minDep : "");
 

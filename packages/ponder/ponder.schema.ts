@@ -1,4 +1,10 @@
-import { onchainTable, onchainEnum, primaryKey, relations, index } from "ponder";
+import {
+  index,
+  onchainEnum,
+  onchainTable,
+  primaryKey,
+  relations,
+} from "ponder";
 
 // ──────────────────────────────────────────
 // Enums

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { Eye, Globe, Loader2, MousePointerClick } from "lucide-react";
+import { useState } from "react";
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
 import {
   type ChartConfig,

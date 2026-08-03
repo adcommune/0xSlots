@@ -23,6 +23,7 @@ import {
   RefreshCw,
   Settings,
   Shield,
+  ShieldCheck,
   Sparkles,
   Timer,
   User,
@@ -33,6 +34,8 @@ import { useEffect, useState } from "react";
 import { type Address, zeroAddress } from "viem";
 import { useAccount, useSwitchChain } from "wagmi";
 import { AccountTypeIcon } from "@/components/account-type-icon";
+import { EnsIdentity } from "@/components/ens-identity";
+import { TenureMeter } from "@/components/occupancy-timeline";
 import { PageHeader } from "@/components/page-header";
 import { SplitRecipientsBar } from "@/components/split-recipients-bar";
 import {
@@ -63,6 +66,11 @@ import {
   slotQueryOptions,
 } from "@/hooks/slot-queries";
 import { useCurrencyBalance } from "@/hooks/use-currency-balance";
+import {
+  formatDuration as formatShortDuration,
+  useNow,
+} from "@/hooks/use-duration";
+import { useResolvedPolicy } from "@/hooks/use-resolved-policy";
 import { useSlotAction } from "@/hooks/use-slot-action";
 import { useSlotOnChain } from "@/hooks/use-slot-onchain";
 import { useModules } from "@/hooks/use-v3";
@@ -73,7 +81,6 @@ import {
   toRawUnits,
   truncateAddress,
 } from "@/utils";
-
 import { BuySection } from "./components/buy-section";
 import { DepositSlider } from "./components/deposit-slider";
 import {
@@ -97,6 +104,18 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
   const { data: subgraphSlot } = useSuspenseQuery(
     slotQueryOptions(selectedChainId, slotAddress),
   );
+  // Wall clock for the tenure meter. Above the isLoading/!slot early returns —
+  // hooks cannot be conditional — and only ticking when there is something
+  // time-positioned to draw.
+  const nowSeconds = useNow(!!slot?.occupancyPolicy);
+  // Static map first, then the chain — see use-resolved-policy. This drives the
+  // tenure meter, so an unresolvable policy correctly draws nothing rather than
+  // a meter with an invented window.
+  const { policy: knownPolicy } = useResolvedPolicy(
+    slot?.occupancyPolicy,
+    selectedChainId,
+  );
+
   const { data: activityData } = useSuspenseQuery(
     slotActivityQueryOptions(selectedChainId, slotAddress),
   );
@@ -269,8 +288,8 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
             <p className="text-xs text-muted-foreground">
               {isOccupied
                 ? `Occupied by ${truncateAddress(slot.occupant!)}`
-                : "Vacant"}{" "}
-              · {chain?.name}
+                : "Vacant"}
+              {chain?.name ? ` · ${chain.name}` : ""}
             </p>
             {role && (
               <Badge variant="outline" className={role.badge}>
@@ -366,7 +385,11 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
                             href={`/recipient/${slot.recipient}`}
                             className="text-primary hover:underline text-xs"
                           >
-                            {truncateAddress(slot.recipient)}
+                            <EnsIdentity
+                              address={slot.recipient}
+                              size={16}
+                              nameClassName="text-xs"
+                            />
                           </NavLink>
                           <button
                             type="button"
@@ -470,6 +493,62 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
                           {formatBps(slot.liquidationBountyBps.toString())}
                         </span>
                       </div>
+
+                      {slot.occupancyPolicy && (
+                        <>
+                          <div className="border-t" />
+
+                          {/* Occupancy terms, shown rather than described — a
+                              protection window is a position in time, which a
+                              reader takes in far quicker from a picture. */}
+                          {slot.occupancyPolicy && (
+                            <div className="space-y-2">
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground flex items-center gap-1.5">
+                                  <ShieldCheck className="size-3 text-violet-500" />{" "}
+                                  Occupancy policy
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <span
+                                          className={`inline-flex items-center rounded px-1 py-0.5 text-[10px] font-medium cursor-default ${slot.mutablePolicy ? "bg-amber-100 text-amber-700" : "bg-muted text-muted-foreground"}`}
+                                        >
+                                          {slot.mutablePolicy ? (
+                                            <LockOpen className="size-2.5" />
+                                          ) : (
+                                            <Lock className="size-2.5" />
+                                          )}
+                                        </span>
+                                      </TooltipTrigger>
+                                      <TooltipContent side="top">
+                                        {slot.mutablePolicy
+                                          ? "Mutable — the manager can change who may take this slot, and on what terms"
+                                          : "Immutable — the occupancy terms are fixed forever"}
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                </span>
+                                <span className="text-xs">
+                                  {knownPolicy?.label ??
+                                    truncateAddress(slot.occupancyPolicy)}
+                                </span>
+                              </div>
+                              {knownPolicy?.tenureSeconds && isOccupied && (
+                                <TenureMeter
+                                  tenureSeconds={knownPolicy.tenureSeconds}
+                                  occupiedSince={Number(slot.occupiedSince)}
+                                  now={nowSeconds}
+                                />
+                              )}
+                              {knownPolicy && (
+                                <p className="text-[11px] text-muted-foreground">
+                                  {knownPolicy.description}
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        </>
+                      )}
 
                       <div className="border-t" />
 
@@ -1017,8 +1096,8 @@ export function SlotPageContent({ slotAddress }: { slotAddress: string }) {
                         <AlertDialogTitle>Release this slot?</AlertDialogTitle>
                         <AlertDialogDescription>
                           This will give up your occupancy and return your
-                          remaining deposit. You will lose your position and
-                          someone else can claim the slot.
+                          remaining deposit. You lose your position and the slot
+                          becomes claimable by anyone straight away.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>

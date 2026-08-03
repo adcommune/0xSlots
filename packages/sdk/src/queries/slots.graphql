@@ -1,15 +1,41 @@
 fragment SlotFields on Slot {
   id
   recipient
-  recipientAccount { id type slotCount occupiedCount }
-  currency { id name symbol decimals }
+  recipientAccount {
+    id
+    type
+    slotCount
+    occupiedCount
+  }
+  currency {
+    id
+    name
+    symbol
+    decimals
+  }
   manager
   mutableTax
   mutableModule
+  mutablePolicy
   taxPercentage
-  module { id verified name version feeBps moduleURI image description totalFeesCollected }
+  module {
+    id
+    verified
+    name
+    version
+    feeBps
+    moduleURI
+    image
+    description
+    totalFeesCollected
+  }
   occupant
-  occupantAccount { id type slotCount occupiedCount }
+  occupantAccount {
+    id
+    type
+    slotCount
+    occupiedCount
+  }
   isOccupied
   price
   deposit
@@ -17,6 +43,23 @@ fragment SlotFields on Slot {
   totalCollected
   liquidationBountyBps
   minDepositSeconds
+
+  # Occupancy layer.
+  # `occupant` above is safe to render directly: epoch scheduling was removed in
+  # v4, so a buy is indexed the moment it lands.
+  #
+  # The subgraph still exposes pendingBuyer/pendingEffectiveAt/pendingPrice/
+  # pendingDeposit and they are still indexed — dropping them from the schema
+  # would force a destructive resync for no gain — but they are permanently
+  # zero and nothing should read them. Not selected here.
+  #
+  # pendingPolicy/hasPendingPolicy are unrelated and still live: they describe a
+  # queued POLICY change, which is a different mechanism.
+  occupancyPolicy
+  occupiedSince
+  pendingPolicy
+  hasPendingPolicy
+
   createdAt
   createdTx
   updatedAt

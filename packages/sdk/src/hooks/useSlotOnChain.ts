@@ -12,6 +12,7 @@ export type SlotOnChain = {
   manager: string;
   mutableTax: boolean;
   mutableModule: boolean;
+  mutablePolicy: boolean;
   // State
   occupant: string | null;
   price: bigint;
@@ -23,6 +24,7 @@ export type SlotOnChain = {
   deposit: bigint;
   collectedTax: bigint;
   taxOwed: bigint;
+  lastSettled: bigint;
   secondsUntilLiquidation: bigint;
   insolvent: boolean;
   // Pending
@@ -30,6 +32,11 @@ export type SlotOnChain = {
   pendingTaxPercentage: bigint;
   hasPendingModule: boolean;
   pendingModule: string;
+  // v3 occupancy layer
+  occupancyPolicy: string | null;
+  occupiedSince: bigint;
+  hasPendingPolicy: boolean;
+  pendingPolicy: string | null;
   // Currency metadata
   currencyName?: string;
   currencySymbol?: string;
@@ -44,6 +51,7 @@ type SlotInfoResult = {
   manager: string;
   mutableTax: boolean;
   mutableModule: boolean;
+  mutablePolicy: boolean;
   occupant: string;
   price: bigint;
   taxPercentage: bigint;
@@ -53,12 +61,17 @@ type SlotInfoResult = {
   deposit: bigint;
   collectedTax: bigint;
   taxOwed: bigint;
+  lastSettled: bigint;
   secondsUntilLiquidation: bigint;
   insolvent: boolean;
   hasPendingTax: boolean;
   pendingTaxPercentage: bigint;
   hasPendingModule: boolean;
   pendingModule: string;
+  occupancyPolicy: string;
+  occupiedSince: bigint;
+  hasPendingPolicy: boolean;
+  pendingPolicy: string;
 };
 
 function parseSlotInfo(
@@ -73,6 +86,7 @@ function parseSlotInfo(
     manager: info.manager.toLowerCase(),
     mutableTax: info.mutableTax,
     mutableModule: info.mutableModule,
+    mutablePolicy: info.mutablePolicy,
     occupant:
       info.occupant === ZERO_ADDRESS ? null : info.occupant.toLowerCase(),
     price: info.price,
@@ -83,12 +97,26 @@ function parseSlotInfo(
     deposit: info.deposit,
     collectedTax: info.collectedTax,
     taxOwed: info.taxOwed,
+    lastSettled: info.lastSettled,
     secondsUntilLiquidation: info.secondsUntilLiquidation,
     insolvent: info.insolvent,
     hasPendingTax: info.hasPendingTax,
     pendingTaxPercentage: info.pendingTaxPercentage,
     hasPendingModule: info.hasPendingModule,
     pendingModule: info.pendingModule.toLowerCase(),
+    // Occupancy layer. `epochSeconds` is deliberately absent from SlotInfo:
+    // six slots still carry a value in storage, nothing reads it, and
+    // reporting a delay that is never applied would mislead.
+    occupancyPolicy:
+      info.occupancyPolicy === ZERO_ADDRESS
+        ? null
+        : info.occupancyPolicy.toLowerCase(),
+    occupiedSince: info.occupiedSince,
+    hasPendingPolicy: info.hasPendingPolicy,
+    pendingPolicy:
+      info.pendingPolicy === ZERO_ADDRESS
+        ? null
+        : info.pendingPolicy.toLowerCase(),
     currencyName: currencyMeta?.name,
     currencySymbol: currencyMeta?.symbol,
     currencyDecimals: currencyMeta?.decimals,
@@ -103,7 +131,10 @@ function parseSlotInfo(
  * @param slotAddress - The slot contract address
  * @param chainId - The chain ID to read from
  */
-export function useSlotOnChain(slotAddress: string, chainId: number): {
+export function useSlotOnChain(
+  slotAddress: string,
+  chainId: number,
+): {
   data: SlotOnChain | null;
   isLoading: boolean;
   refetch: () => void;
@@ -130,9 +161,24 @@ export function useSlotOnChain(slotAddress: string, chainId: number): {
   const { data: currencyMeta, isLoading: metaLoading } = useReadContracts({
     contracts: currencyAddr
       ? [
-          { address: currencyAddr, abi: erc20Abi, functionName: "name", chainId },
-          { address: currencyAddr, abi: erc20Abi, functionName: "symbol", chainId },
-          { address: currencyAddr, abi: erc20Abi, functionName: "decimals", chainId },
+          {
+            address: currencyAddr,
+            abi: erc20Abi,
+            functionName: "name",
+            chainId,
+          },
+          {
+            address: currencyAddr,
+            abi: erc20Abi,
+            functionName: "symbol",
+            chainId,
+          },
+          {
+            address: currencyAddr,
+            abi: erc20Abi,
+            functionName: "decimals",
+            chainId,
+          },
         ]
       : [],
     query: { enabled: !!currencyAddr, staleTime: Infinity },
@@ -163,7 +209,10 @@ export function useSlotOnChain(slotAddress: string, chainId: number): {
  * @param slotAddresses - Array of slot contract addresses
  * @param chainId - The chain ID to read from
  */
-export function useSlotsOnChain(slotAddresses: string[], chainId: number): {
+export function useSlotsOnChain(
+  slotAddresses: string[],
+  chainId: number,
+): {
   data: SlotOnChain[];
   isLoading: boolean;
   refetch: () => void;
@@ -195,17 +244,25 @@ export function useSlotsOnChain(slotAddresses: string[], chainId: number): {
   if (infos) {
     for (const r of infos) {
       if (r.result)
-        currencies.add(
-          (r.result as SlotInfoResult).currency.toLowerCase(),
-        );
+        currencies.add((r.result as SlotInfoResult).currency.toLowerCase());
     }
   }
   const currencyList = Array.from(currencies);
 
   const { data: metaResults, isLoading: metaLoading } = useReadContracts({
     contracts: currencyList.flatMap((c) => [
-      { address: c as Address, abi: erc20Abi, functionName: "name" as const, chainId },
-      { address: c as Address, abi: erc20Abi, functionName: "symbol" as const, chainId },
+      {
+        address: c as Address,
+        abi: erc20Abi,
+        functionName: "name" as const,
+        chainId,
+      },
+      {
+        address: c as Address,
+        abi: erc20Abi,
+        functionName: "symbol" as const,
+        chainId,
+      },
       {
         address: c as Address,
         abi: erc20Abi,

@@ -14,7 +14,8 @@
       "!**/dist",
       "!**/build",
       "!**/.medusa",
-      "!**/.turbo"
+      "!**/.turbo",
+      "!**/packages/subgraph"
     ]
   },
   "formatter": {

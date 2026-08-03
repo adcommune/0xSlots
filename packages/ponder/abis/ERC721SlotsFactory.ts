@@ -1,77 +1,77 @@
 export const ERC721SlotsFactoryAbi = [
   {
-    "type": "event",
-    "name": "AdminTransferred",
-    "inputs": [
+    type: "event",
+    name: "AdminTransferred",
+    inputs: [
       {
-        "name": "previousAdmin",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
+        name: "previousAdmin",
+        type: "address",
+        indexed: true,
+        internalType: "address",
       },
       {
-        "name": "newAdmin",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      }
+        name: "newAdmin",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "CollectionDeployed",
-    "inputs": [
+    type: "event",
+    name: "CollectionDeployed",
+    inputs: [
       {
-        "name": "collection",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
+        name: "collection",
+        type: "address",
+        indexed: true,
+        internalType: "address",
       },
       {
-        "name": "creator",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
+        name: "creator",
+        type: "address",
+        indexed: true,
+        internalType: "address",
       },
       {
-        "name": "currency",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
+        name: "currency",
+        type: "address",
+        indexed: true,
+        internalType: "address",
       },
       {
-        "name": "name",
-        "type": "string",
-        "indexed": false,
-        "internalType": "string"
+        name: "name",
+        type: "string",
+        indexed: false,
+        internalType: "string",
       },
       {
-        "name": "symbol",
-        "type": "string",
-        "indexed": false,
-        "internalType": "string"
+        name: "symbol",
+        type: "string",
+        indexed: false,
+        internalType: "string",
       },
       {
-        "name": "slotFactory",
-        "type": "address",
-        "indexed": false,
-        "internalType": "address"
-      }
+        name: "slotFactory",
+        type: "address",
+        indexed: false,
+        internalType: "address",
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "Upgraded",
-    "inputs": [
+    type: "event",
+    name: "Upgraded",
+    inputs: [
       {
-        "name": "implementation",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      }
+        name: "implementation",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
     ],
-    "anonymous": false
-  }
+    anonymous: false,
+  },
 ] as const;

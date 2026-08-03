@@ -1,7 +1,7 @@
 "use client";
 
-import { useEnsName } from "@/lib/ens";
 import { NavLink } from "@/context/navigation";
+import { useEnsName } from "@/lib/ens";
 import { truncateAddress } from "@/utils";
 
 export function EnsAddress({

@@ -9,10 +9,18 @@ function isValidAddressOrEns(val: string) {
   return false;
 }
 
-export const timeDenominations = ["hours", "days", "months"] as const;
+export const timeDenominations = [
+  "seconds",
+  "minutes",
+  "hours",
+  "days",
+  "months",
+] as const;
 export type TimeDenomination = (typeof timeDenominations)[number];
 
 export const TIME_MULTIPLIERS: Record<TimeDenomination, number> = {
+  seconds: 1,
+  minutes: 60,
   hours: 3600,
   days: 86400,
   months: 2592000, // 30 days
@@ -27,6 +35,15 @@ export type SplitRecipientInput = z.infer<typeof splitRecipientSchema>;
 
 export const moduleModes = ["none", "verified", "custom"] as const;
 export type ModuleMode = (typeof moduleModes)[number];
+
+export const occupancyPolicyModes = [
+  "none",
+  "tenure",
+  "price",
+  "known",
+  "custom",
+] as const;
+export type OccupancyPolicyMode = (typeof occupancyPolicyModes)[number];
 
 export const createSlotSchema = z
   .object({
@@ -67,15 +84,42 @@ export const createSlotSchema = z
     module: z.string().refine(isValidAddressOrEns, {
       message: "Enter a valid address (0x…) or ENS name",
     }),
+    // ── Occupancy layer ──
+    // Timing is expressed entirely by policy vetoes; there is no scheduling
+    // dial. "none" means instant buy, which is what every pre-v3 slot does.
+    occupancyPolicyMode: z.enum(occupancyPolicyModes),
+    // Only read when occupancyPolicyMode === "tenure". The policy contract for
+    // this duration is deployed on demand at a CREATE2 address derived from it.
+    tenureValue: z
+      .string()
+      .refine(
+        (v) => !isNaN(Number(v)) && Number(v) > 0,
+        "Must be greater than zero",
+      ),
+    tenureUnit: z.enum(timeDenominations),
+    // Only read when occupancyPolicyMode === "price". Denominated in the slot's
+    // own currency; the policy contract is deployed on demand at a CREATE2
+    // address derived from (currency, minPrice).
+    minPriceValue: z
+      .string()
+      .refine(
+        (v) => !Number.isNaN(Number(v)) && Number(v) > 0,
+        "Must be greater than zero",
+      ),
+    occupancyPolicy: z.string().refine(isValidAddressOrEns, {
+      message: "Enter a valid address (0x…) or ENS name",
+    }),
     mutableTax: z.boolean(),
     mutableModule: z.boolean(),
+    mutablePolicy: z.boolean(),
     manager: z.string().refine(isValidAddressOrEns, {
       message: "Enter a valid address (0x…) or ENS name",
     }),
   })
   .refine(
     (d) => {
-      if (d.mutableTax || d.mutableModule) return d.manager.length > 0;
+      if (d.mutableTax || d.mutableModule || d.mutablePolicy)
+        return d.manager.length > 0;
       return true;
     },
     {
@@ -165,8 +209,16 @@ export const defaultValues: CreateSlotFormValues = {
   minDepositValue: "1",
   minDepositUnit: "days",
   module: "",
+  // Default to instant buy — the pre-v3 behaviour. A policy is opt-in, so an
+  // unchanged form produces exactly the slot it always did.
+  occupancyPolicyMode: "none",
+  tenureValue: "7",
+  tenureUnit: "days",
+  minPriceValue: "1",
+  occupancyPolicy: "",
   mutableTax: false,
   mutableModule: false,
+  mutablePolicy: false,
   manager: "",
 };
 
@@ -178,4 +230,14 @@ export function percentToBps(percent: string): bigint {
 /** ("1", "days") → 86400n */
 export function toSeconds(value: string, unit: TimeDenomination): bigint {
   return BigInt(Math.round(Number(value) * TIME_MULTIPLIERS[unit]));
+}
+
+/**
+ * ("1", "hours") → "1 hour". Echoes back what was typed rather than
+ * normalising it, so "90 minutes" does not come back as "1h 30m" and leave the
+ * reader checking whether the form understood them.
+ */
+export function formatValueUnit(value: string, unit: TimeDenomination): string {
+  const singular = Number(value) === 1 ? unit.replace(/s$/, "") : unit;
+  return `${value} ${singular}`;
 }

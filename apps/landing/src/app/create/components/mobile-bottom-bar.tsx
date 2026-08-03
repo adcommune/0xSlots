@@ -1,8 +1,15 @@
-import { ChevronUp, Clock, Coins, HandCoins, Puzzle, Sparkles } from "lucide-react";
+import { getChainTokens } from "@0xslots/sdk";
+import {
+  ChevronUp,
+  Clock,
+  Coins,
+  HandCoins,
+  Puzzle,
+  Sparkles,
+} from "lucide-react";
 import { useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { isAddress } from "viem";
-import { getChainTokens } from "@0xslots/sdk";
 import { useAccount } from "wagmi";
 import { SplitBar } from "@/components/split-recipients-bar";
 import { Button } from "@/components/ui/button";
@@ -20,6 +27,7 @@ import { truncateAddress } from "@/utils";
 import { useResolveAddress } from "../address-input";
 import { useErc20Check } from "../hooks/use-erc20-check";
 import type { CreateSlotFormValues } from "../schema";
+import { OccupancySummaryRows } from "./occupancy-summary-rows";
 import { SlotCounter } from "./slot-counter";
 import { SubmitButton, type SubmitState } from "./submit-button";
 
@@ -67,9 +75,7 @@ export function MobileBottomBar({
   // Currency resolution
   const chainTokens = getChainTokens(chainId);
   const presetToken = chainTokens.find((t) => t.address === presetCurrency);
-  const erc20 = useErc20Check(
-    currencyMode === "custom" ? customCurrency : "",
-  );
+  const erc20 = useErc20Check(currencyMode === "custom" ? customCurrency : "");
   const currencyLabel =
     currencyMode === "preset" && presetToken
       ? presetToken.symbol
@@ -181,7 +187,9 @@ export function MobileBottomBar({
                     <Puzzle className="size-3" /> Module
                   </span>
                   <span className="font-semibold text-xs truncate max-w-32">
-                    {moduleMode === "verified" ? "Metadata" : truncateAddress(module)}
+                    {moduleMode === "verified"
+                      ? "Metadata"
+                      : truncateAddress(module)}
                   </span>
                 </div>
               )}
@@ -205,6 +213,8 @@ export function MobileBottomBar({
                   {minDepositValue || "0"} {minDepositUnit}
                 </span>
               </div>
+
+              <OccupancySummaryRows />
 
               {/* Mutable — only show if something is mutable */}
               {hasMutable && (

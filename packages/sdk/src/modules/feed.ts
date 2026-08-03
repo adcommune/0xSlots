@@ -4,19 +4,19 @@ import {
   feedRouterAddress,
   feedSocialGroupAbi,
   feedSocialGroupAddress,
+  slotAbi,
 } from "@0xslots/contracts";
 import {
   type Address,
   type Chain,
+  erc20Abi,
   type Hash,
   type PublicClient,
   type WalletClient,
-  erc20Abi,
 } from "viem";
-import { SlotsError } from "../errors";
-import { getSdk } from "../generated/graphql";
 import type { SlotsChain } from "../client";
-import { slotAbi } from "@0xslots/contracts";
+import { SlotsError } from "../errors";
+import type { getSdk } from "../generated/graphql";
 
 const EXPECTED_MODULE_NAME = "FeedPostModule";
 

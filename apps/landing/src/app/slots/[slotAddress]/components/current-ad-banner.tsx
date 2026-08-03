@@ -6,8 +6,8 @@ import {
   type AdContent,
   adTypeIcons,
   adTypeLabels,
-  imageFieldNames,
   humanizeKey,
+  imageFieldNames,
 } from "../lib/ad-helpers";
 
 interface CurrentAdBannerProps {
@@ -61,9 +61,7 @@ export function CurrentAdBanner({ ad, uri }: CurrentAdBannerProps) {
         )}
 
         <div className="flex-1 min-w-0 space-y-0.5">
-          {title && (
-            <p className="text-sm font-medium truncate">{title}</p>
-          )}
+          {title && <p className="text-sm font-medium truncate">{title}</p>}
           {description && (
             <p className="text-xs text-muted-foreground line-clamp-2">
               {description}

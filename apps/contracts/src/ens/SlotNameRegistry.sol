@@ -121,14 +121,15 @@ contract SlotNameRegistry is Ownable {
             currency,
             SlotConfig({
                 mutableTax: false,
-                mutableModule: false,
+                mutableModule: false, mutablePolicy: false,
                 manager: address(0)
             }),
             SlotInitParams({
                 taxPercentage: taxPercentage,
                 module: metadataModule,
                 liquidationBountyBps: liquidationBountyBps,
-                minDepositSeconds: minDepositSeconds
+                minDepositSeconds: minDepositSeconds,
+            occupancyPolicy: address(0)
             })
         );
 
