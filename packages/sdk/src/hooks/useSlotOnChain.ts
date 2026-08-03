@@ -12,6 +12,7 @@ export type SlotOnChain = {
   manager: string;
   mutableTax: boolean;
   mutableModule: boolean;
+  mutablePolicy: boolean;
   // State
   occupant: string | null;
   price: bigint;
@@ -23,6 +24,7 @@ export type SlotOnChain = {
   deposit: bigint;
   collectedTax: bigint;
   taxOwed: bigint;
+  lastSettled: bigint;
   secondsUntilLiquidation: bigint;
   insolvent: boolean;
   // Pending
@@ -32,7 +34,6 @@ export type SlotOnChain = {
   pendingModule: string;
   // v3 occupancy layer
   occupancyPolicy: string | null;
-  epochSeconds: bigint;
   occupiedSince: bigint;
   hasPendingPolicy: boolean;
   pendingPolicy: string | null;
@@ -50,6 +51,7 @@ type SlotInfoResult = {
   manager: string;
   mutableTax: boolean;
   mutableModule: boolean;
+  mutablePolicy: boolean;
   occupant: string;
   price: bigint;
   taxPercentage: bigint;
@@ -59,6 +61,7 @@ type SlotInfoResult = {
   deposit: bigint;
   collectedTax: bigint;
   taxOwed: bigint;
+  lastSettled: bigint;
   secondsUntilLiquidation: bigint;
   insolvent: boolean;
   hasPendingTax: boolean;
@@ -66,7 +69,6 @@ type SlotInfoResult = {
   hasPendingModule: boolean;
   pendingModule: string;
   occupancyPolicy: string;
-  epochSeconds: bigint;
   occupiedSince: bigint;
   hasPendingPolicy: boolean;
   pendingPolicy: string;
@@ -84,6 +86,7 @@ function parseSlotInfo(
     manager: info.manager.toLowerCase(),
     mutableTax: info.mutableTax,
     mutableModule: info.mutableModule,
+    mutablePolicy: info.mutablePolicy,
     occupant:
       info.occupant === ZERO_ADDRESS ? null : info.occupant.toLowerCase(),
     price: info.price,
@@ -94,20 +97,20 @@ function parseSlotInfo(
     deposit: info.deposit,
     collectedTax: info.collectedTax,
     taxOwed: info.taxOwed,
+    lastSettled: info.lastSettled,
     secondsUntilLiquidation: info.secondsUntilLiquidation,
     insolvent: info.insolvent,
     hasPendingTax: info.hasPendingTax,
     pendingTaxPercentage: info.pendingTaxPercentage,
     hasPendingModule: info.hasPendingModule,
     pendingModule: info.pendingModule.toLowerCase(),
-    // Occupancy layer. `epochSeconds` is vestigial since v4 — scheduling was
-    // removed and `buy()` ignores it — but stays readable for slots created
-    // before that upgrade.
+    // Occupancy layer. `epochSeconds` is deliberately absent from SlotInfo:
+    // six slots still carry a value in storage, nothing reads it, and
+    // reporting a delay that is never applied would mislead.
     occupancyPolicy:
       info.occupancyPolicy === ZERO_ADDRESS
         ? null
         : info.occupancyPolicy.toLowerCase(),
-    epochSeconds: info.epochSeconds,
     occupiedSince: info.occupiedSince,
     hasPendingPolicy: info.hasPendingPolicy,
     pendingPolicy:

@@ -593,6 +593,7 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         info.manager = manager;
         info.mutableTax = mutableTax;
         info.mutableModule = mutableModule;
+        info.mutablePolicy = mutablePolicy;
 
         info.occupant = occupant();
         info.price = price();
@@ -604,6 +605,7 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         info.deposit = deposit();
         info.collectedTax = collectedTax;
         info.taxOwed = taxOwed();
+        info.lastSettled = lastSettled;
         info.secondsUntilLiquidation = secondsUntilLiquidation();
         info.insolvent = isInsolvent();
 
@@ -625,7 +627,6 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         info.pendingModule = pendingUpdate.newModule;
 
         info.occupancyPolicy = occupancyPolicy;
-        info.epochSeconds = epochSeconds;
         info.occupiedSince = occupiedSince;
         info.hasPendingPolicy = pendingPolicyUpdate.hasPolicyUpdate;
         info.pendingPolicy = pendingPolicyUpdate.newPolicy;

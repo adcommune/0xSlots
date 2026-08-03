@@ -24,10 +24,17 @@ import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/Upgradeabl
  *      itself and, in the same call, upgrades the beacon — so the pair is
  *      never observably mismatched.
  *
- *      Pass `factoryImpl = address(0)` when only the slot implementation
- *      changed; the beacon is then upgraded on its own.
+ *      Set `UPGRADE_FACTORY = false` when only the slot implementation
+ *      changed; the beacon is then upgraded on its own and the factory keeps
+ *      the implementation it already has. Redeploying identical factory code
+ *      would only churn the address recorded in deployments.json.
  */
 contract UpgradeSlotImplementation is BaseScript {
+    /// @dev True only when the change touches `Slot.initialize`'s signature or
+    ///      anything else the factory calls into. A `SlotInfo`-only change does
+    ///      not: the factory never reads that struct.
+    bool internal constant UPGRADE_FACTORY = false;
+
     function run() external broadcastOn(DeployementChain.BaseSepolia) {
         SlotFactory factory = SlotFactory(_readDeployment("SlotFactoryV3"));
         UpgradeableBeacon beacon = UpgradeableBeacon(factory.beacon());
@@ -37,16 +44,24 @@ contract UpgradeSlotImplementation is BaseScript {
         console2.log("impl (before)", beacon.implementation());
 
         Slot slotImpl = new Slot();
-        SlotFactory factoryImpl = new SlotFactory();
         console2.log("slot impl    ", address(slotImpl));
-        console2.log("factory impl ", address(factoryImpl));
 
-        // One transaction: the factory swaps its own implementation and then,
-        // as the new code, points the beacon at the new slot implementation.
-        factory.upgradeToAndCall(
-            address(factoryImpl),
-            abi.encodeCall(SlotFactory.upgradeBeacon, (address(slotImpl)))
-        );
+        if (UPGRADE_FACTORY) {
+            // One transaction: the factory swaps its own implementation and
+            // then, as the new code, points the beacon at the new slot
+            // implementation — the pair is never observably mismatched.
+            SlotFactory factoryImpl = new SlotFactory();
+            console2.log("factory impl ", address(factoryImpl));
+            factory.upgradeToAndCall(
+                address(factoryImpl),
+                abi.encodeCall(SlotFactory.upgradeBeacon, (address(slotImpl)))
+            );
+            _saveDeployment(address(factoryImpl), "SlotFactoryImplementation");
+        } else {
+            // The beacon is owned by the factory, so the upgrade goes through
+            // it. Deployer is the factory owner.
+            factory.upgradeBeacon(address(slotImpl));
+        }
 
         require(
             beacon.implementation() == address(slotImpl),
@@ -55,6 +70,5 @@ contract UpgradeSlotImplementation is BaseScript {
         console2.log("impl (after) ", beacon.implementation());
 
         _saveDeployment(address(slotImpl), "SlotImplementation");
-        _saveDeployment(address(factoryImpl), "SlotFactoryImplementation");
     }
 }

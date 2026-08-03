@@ -53,6 +53,7 @@ struct SlotInfo {
     address manager;
     bool mutableTax;
     bool mutableModule;
+    bool mutablePolicy;
     // State
     address occupant;
     uint256 price;
@@ -64,6 +65,9 @@ struct SlotInfo {
     uint256 deposit;
     uint256 collectedTax;
     uint256 taxOwed;
+    /// @dev When tax was last charged. `taxOwed` accrues from here, and it is
+    ///      the one financial fact a caller cannot derive from the others.
+    uint256 lastSettled;
     uint256 secondsUntilLiquidation;
     bool insolvent;
     // Module info (populated if module != address(0))
@@ -77,9 +81,12 @@ struct SlotInfo {
     uint256 pendingTaxPercentage;
     bool hasPendingModule;
     address pendingModule;
-    // v3
+    // Occupancy
+    //
+    // `epochSeconds` is deliberately absent. Six slots still carry a non-zero
+    // value in storage, nothing reads it, and surfacing a delay that is not
+    // applied would mislead rather than inform.
     address occupancyPolicy;
-    uint256 epochSeconds;
     uint256 occupiedSince;
     bool hasPendingPolicy;
     address pendingPolicy;

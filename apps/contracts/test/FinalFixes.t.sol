@@ -9,7 +9,7 @@ import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol"
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {Slot} from "../src/Slot.sol";
 import {SlotFactory} from "../src/SlotFactory.sol";
-import {SlotConfig, SlotInitParams} from "../src/interfaces/ISlot.sol";
+import {SlotConfig, SlotInitParams, SlotInfo} from "../src/interfaces/ISlot.sol";
 import {IOccupancyPolicy, OccupancyContext} from "../src/interfaces/IOccupancyPolicy.sol";
 
 contract FFMockERC20 is ERC20 {
@@ -221,6 +221,32 @@ contract FinalFixesTest is Test {
 
         vm.expectRevert(Slot.ModuleNotMutable.selector);
         s.proposeModuleUpdate(address(0));
+    }
+
+    /// @dev `getSlotInfo` must report a slot's whole current state. It used to
+    ///      omit `mutablePolicy` — the flag deciding whether occupancy terms can
+    ///      change — while advertising `epochSeconds`, which nothing reads.
+    function test_GetSlotInfo_ReportsMutabilityAndOmitsDeadState() public {
+        Slot s = Slot(factory.createSlot(
+            recipient,
+            IERC20(address(token)),
+            SlotConfig({mutableTax: false, mutableModule: false, mutablePolicy: true, manager: address(this)}),
+            _init()
+        ));
+
+        SlotInfo memory info = s.getSlotInfo();
+        assertTrue(info.mutablePolicy, "occupancy mutability must be reported");
+        assertFalse(info.mutableModule);
+        assertFalse(info.mutableTax);
+        assertEq(info.lastSettled, block.timestamp, "settlement clock reported");
+
+        // And it stays truthful once occupied.
+        _buy(s, alice, 10 ether, 100 ether);
+        vm.warp(block.timestamp + 1 days);
+        SlotInfo memory live = s.getSlotInfo();
+        assertEq(live.occupant, alice);
+        assertGt(live.taxOwed, 0);
+        assertEq(live.lastSettled, live.occupiedSince, "unsettled since the buy");
     }
 
     /// @dev A policy passed at creation lands immediately — no second call, no
