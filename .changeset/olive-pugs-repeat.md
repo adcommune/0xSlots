@@ -2,12 +2,23 @@
 "@0xslots/contracts": minor
 ---
 
-Publish the occupancy-policy ABIs. Breaking for anyone encoding calldata against the previous release.
+Publish the occupancy-policy ABIs.
 
-**Struct shapes changed — this is the part that breaks silently.** `SlotConfig` gained a third `bool`, `mutablePolicy`, so a caller still encoding two bools produces a tuple the factory rejects. `SlotInitParams` gained a trailing `occupancyPolicy` address. Both are ABI-level changes with no compile-time signal for JS consumers, so pin deliberately.
+**The one thing that breaks, and it breaks silently.** `createSlot` and `createSlots` keep their names and their arity — but two of their tuples changed shape:
 
-`getSlotInfo` returns 31 fields, up from 25, and the set is not a superset: it gained `mutablePolicy` (whether a manager can swap the occupancy policy — previously only knowable from the subgraph) and `lastSettled` (when the tax clock last stopped, which cannot be derived from `taxOwed`), and dropped `epochSeconds`. Epoch scheduling was removed; six slots still carry a value in storage that nothing reads, and reporting a delay that is never applied would mislead.
+- `SlotConfig` gained a third bool, `mutablePolicy`, before `manager`: `(bool,bool,address)` → `(bool,bool,bool,address)`
+- `SlotInitParams` gained a trailing `occupancyPolicy` address: `(uint256,address,uint256,uint256)` → `(uint256,address,uint256,uint256,address)`
 
-Factory surface: `createSlotV3` and its siblings collapse into `createSlot`/`createSlots`, which always call the stable current initializer. Versioning now lives in `reinitializer(n)` and nowhere else — not in function names. `migrateSlots` is gone (a completed migration). Added `setPolicyVerified`, `verifiedPolicies`, `upgradeBeacon`, and a `policyFactory` ABI for the new `IPolicyFactory` interface.
+Same function name, different calldata. Nothing about this surfaces as a type error for a JS consumer holding an older ABI — the call encodes fine and the factory rejects it at runtime. This is the reason to upgrade deliberately rather than incidentally.
 
-Also adds the deployed Base Sepolia addresses for both term-policy factories and the starter policies they made.
+`mutablePolicy` is separate from `mutableModule` on purpose. Swapping what a slot *does* and swapping whether it can be *taken from you* are different promises, and a holder who accepted the first has not accepted the second.
+
+**Additions.** `getSlotInfo` grows from 25 fields to 31, a pure superset — `mutablePolicy`, `lastSettled`, `occupancyPolicy`, `occupiedSince`, `hasPendingPolicy`, `pendingPolicy`. `lastSettled` is the one financial fact a caller could not previously derive: `taxOwed` alone does not say when the clock last stopped.
+
+New on `Slot`: `occupancyPolicy`, `proposePolicyUpdate`, `pendingPolicyUpdate`, `occupiedSince`, `mutablePolicy`, `setOperator`, `isOperator`, `claim`, `withdrawableOf`. New events: `PolicyUpdateProposed`, `PolicyUpdateApplied`, `OperatorSet`, `TaxPaid`, `RefundCredited`, `RefundClaimed`.
+
+New on `SlotFactory`: `setPolicyVerified`, `verifiedPolicies`, `upgradeBeacon`, plus `PolicyVerified` and `BeaconUpgraded`. A new `policyFactory` ABI covers the `IPolicyFactory` interface (`policyKind()` / `verify()`).
+
+**Removals.** `Slot.initializeV2` and `SlotFactory.migrateSlots` — both completed migrations. Versioning now lives in `reinitializer(n)` and nowhere else, not in function names.
+
+Also adds the Base Sepolia addresses for both term-policy factories and the starter policies they deployed.
