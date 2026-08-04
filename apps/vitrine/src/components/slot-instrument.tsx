@@ -255,7 +255,7 @@ export function SlotInstrument() {
 
       <p className="mt-3 font-mono text-[10px] leading-relaxed text-slate">
         Illustrative figures. Drag the price, then take the slot from its
-        occupant — that is the only way anyone ever gets one.
+        occupant.
       </p>
     </div>
   );

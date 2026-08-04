@@ -7,13 +7,12 @@ const HEADLINE = ["Property", "you cannot", "hoard"];
 
 export function Hero() {
   return (
-    <section
-      id="top"
-      className="relative overflow-hidden border-b-2 border-ink"
-    >
+    <section className="relative overflow-hidden">
       <ParcelField className="absolute inset-0 h-full w-full" />
 
-      <div className="relative mx-auto grid max-w-6xl items-center gap-14 px-4 py-16 md:px-6 md:py-24 lg:grid-cols-[1.05fr_minmax(0,380px)] lg:gap-20">
+      {/* The page is only this, so it holds the screen: one viewport minus
+          the sticky header, with the row centred inside it. */}
+      <div className="relative mx-auto grid min-h-[calc(100svh-3.5rem)] max-w-6xl content-center items-center gap-14 px-4 py-16 md:px-6 md:py-20 lg:grid-cols-[1.05fr_minmax(0,380px)] lg:gap-20">
         <div>
           <p
             className="eyebrow animate-raise"
@@ -42,17 +41,9 @@ export function Hero() {
             price, any time.
           </p>
 
-          <p
-            className="mt-3 max-w-md animate-raise leading-relaxed text-slate"
-            style={{ animationDelay: "500ms" }}
-          >
-            That is the entire protocol. No auctions to win, no renewals to
-            miss, no seat held by someone who stopped caring.
-          </p>
-
           <div
             className="mt-9 flex animate-raise flex-wrap gap-3"
-            style={{ animationDelay: "580ms" }}
+            style={{ animationDelay: "500ms" }}
           >
             <ButtonLink
               href={links.explorer}
