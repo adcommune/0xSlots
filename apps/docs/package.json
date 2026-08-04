@@ -4,8 +4,9 @@
   "type": "module",
   "scripts": {
     "dev": "vocs dev",
-    "build": "vocs build",
-    "preview": "vocs preview"
+    "//": "outDir is relative to Vocs' rootDir, which resolves to the folder holding pages/ — here apps/docs/docs. The default therefore emitted to apps/docs/docs/dist, one level deeper than Railway's static builder copies from (/app/apps/docs/dist) and than turbo's `dist/**` outputs glob, so the deploy failed with 'not found' and turbo cached nothing. It is a CLI flag, not a vocs.config.ts key. `vocs preview` takes no options and always serves rootDir/dist, so it gets its own build at that path.",
+    "build": "vocs build --outDir ../dist",
+    "preview": "vocs build --outDir dist && vocs preview"
   },
   "dependencies": {
     "react": "^19.0.0",
