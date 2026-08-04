@@ -9,6 +9,11 @@ export default defineConfig({
   // always lived in docs/pages.
   srcDir: "docs",
 
+  // vocs 2.x defaults to `dynamic`, which emits an SSR bundle and zero HTML.
+  // Railway serves this site as static files, so that deployed green and then
+  // 502'd on every request. `full-static` prerenders every route back to HTML.
+  renderStrategy: "full-static",
+
   title: "0xSlots",
   description: "Collectively Owned Slots Protocol",
   ogImageUrl:
