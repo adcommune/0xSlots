@@ -4,14 +4,19 @@
   "type": "module",
   "scripts": {
     "dev": "vocs dev",
-    "//": "outDir is relative to Vocs' rootDir, which resolves to the folder holding pages/ — here apps/docs/docs. The default therefore emitted to apps/docs/docs/dist, one level deeper than Railway's static builder copies from (/app/apps/docs/dist) and than turbo's `dist/**` outputs glob, so the deploy failed with 'not found' and turbo cached nothing. It is a CLI flag, not a vocs.config.ts key. `vocs preview` takes no options and always serves rootDir/dist, so it gets its own build at that path.",
-    "build": "vocs build --outDir ../dist",
-    "preview": "vocs build --outDir dist && vocs preview"
+    "build": "vocs build",
+    "preview": "vocs preview",
+    "//start": "vocs 2.x emits a Waku RSC server app, not a static site — dist/ holds an SSR bundle and zero HTML. This is what the host must run.",
+    "start": "node dist/serve-node.js"
   },
   "dependencies": {
+    "@vocs/twoslash-rust": "^0.1.0",
+    "mermaid": "^11.13.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "vocs": "^1.0.0-alpha.62"
+    "vite": "^8.1.5",
+    "vocs": "^2.8.2",
+    "waku": "1.0.0-beta.8"
   },
   "devDependencies": {
     "typescript": "^5.7.0"

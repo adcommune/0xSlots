@@ -1,6 +1,14 @@
-import { defineConfig } from "vocs";
+// vocs 2.x: `defineConfig` moved to the `vocs/config` subpath. The bare `vocs`
+// entry pulls in the React component tree, whose `~icons` imports are Vite
+// virtual modules that Node cannot resolve while loading this file.
+import { defineConfig } from "vocs/config";
 
 export default defineConfig({
+  // vocs 2.x resolves pages as rootDir/srcDir/pagesDir and defaults srcDir to
+  // "src" (the Waku convention it is now built on). This project's pages have
+  // always lived in docs/pages.
+  srcDir: "docs",
+
   title: "0xSlots",
   description: "Collectively Owned Slots Protocol",
   ogImageUrl:
