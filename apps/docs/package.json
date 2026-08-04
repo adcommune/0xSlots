@@ -9,9 +9,13 @@
     "preview": "vocs build --outDir dist && vocs preview"
   },
   "dependencies": {
+    "@vocs/twoslash-rust": "^0.1.0",
+    "mermaid": "^11.13.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "vocs": "^1.0.0-alpha.62"
+    "vite": "^8.1.5",
+    "vocs": "^2.8.2",
+    "waku": "1.0.0-beta.8"
   },
   "devDependencies": {
     "typescript": "^5.7.0"
