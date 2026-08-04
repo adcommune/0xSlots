@@ -2,68 +2,75 @@ import { Callout } from 'vocs'
 
 # Overview
 
+0xSlots is a property primitive for scarce onchain assets.
 
-0xSlots is a **property primitive** for scarce onchain assets, based on a Harberger-tax-style model.
+It introduces **slots**: positions that are always priced and always
+contestable. You set your own price, you pay tax on it continuously, and anyone
+can buy it from you at that price whenever they like.
 
-It introduces slots: onchain positions that are **always priced** and **always contestable**.
+- Set it too high → the tax gets expensive.
+- Set it too low → someone takes it.
+- Set it honestly → you keep it.
 
-Each holder sets their own price and pays an ongoing fee based on that self-assessed value. But that price is not just informational, it is a standing sell offer. Anyone can buy the slot at that declared price, at any time.
+There is no fourth option, and that is the whole design. Idle property becomes
+costly to hold, and positions drift toward whoever actually values them.
 
-- Set the price too high, and the ongoing cost becomes expensive.
-- Set it too low, and someone takes it.
-- Set it fairly, and you keep control.
+The tax goes to a **recipient** fixed when the slot is created — a creator, a
+community, a protocol, a public good. Scarce digital property stops being idle
+control and becomes an ongoing revenue stream pointed at something.
 
-This creates continuous pressure toward **fair** pricing and **productive** ownership. Passive property becomes costly to hold, while valuable positions tend to flow toward the people who value them most.
+## Why not just own it
 
-**Revenue** can be directed to a creator, community, protocol, or public good, turning scarce digital property into an ongoing source of aligned revenue instead of idle control.
+The NFT era demonstrated what absolute ownership does to digital property. No
+cost to hold and no pressure to use means the rational move is to hoard and
+wait. Price mattered more than what the thing did; builders competed for
+attention rather than utility.
 
----
+The problem was never the technology. It was that ownership had no ongoing
+obligation attached.
 
-## How it works
+0xSlots is the middle ground — neither communal nor absolute. Ownership is
+continuous, contestable, and tied to actually using the thing.
 
-![How 0xSlots works](/hand-drawn-diagram.jpg)
+## What a slot is
 
-Think of it like [Splits](https://splits.org) but for collective ownership.
+A single contract, immutable by default, that:
 
-### Slots
+- funds **one recipient**
+- in **one currency**
+- at **one tax rate**
+- with at most **one utility module** and **one occupancy policy**
 
-Slots are smart contracts that are single use & immutable by default.
+Want a different configuration? Deploy another. Slots are cheap and disposable
+by design — there is no admin panel, because there is nothing to administer.
 
-- They fund **one recipient**
-- Use a **single currency**
-- At a **tax percentage** *(optionally mutable)*
-- Implement a **single module** *(optionally mutable)*
+<Callout type="info">
+Think [Splits](https://splits.org), but for collective ownership rather than
+collective revenue.
+</Callout>
 
-If you want a different configuration, just deploy another.
+## Slots are fertile ground
 
-Slots hold a minimum deposit of currency (defined at launch by the user, protocol minimum: 1 day) that is the source of tax collections (which can be triggered by anyone). At creation you can also define a bounty % of the tax being collected to incentivize liquidations.
+A slot starts empty. It is a position — nothing more.
 
-### Modules
+What makes it valuable is what gets built on it. A **module** defines the rights
+holding it grants: ad space, a name, access, publishing, revenue share.
+**The slot is the plot; the module is the crop.**
 
-Modules are what can bring extra value to a slot.
+An **occupancy policy** sets the terms of tenancy: whether you get guaranteed
+time before you can be bought out, whether there is a price floor, whether a
+queue decides who is next.
 
-They're smart contracts that implement custom logic and are triggered by slot events (ownership transfer, price update, release). 
+Each slot is a small, bounded space of productive ownership. Not a walled garden
+you lock people out of — a public garden you tend. The market decides whether
+you are tending it well enough to keep it.
 
-They can also require a cut of the tax revenue a slot generates through `feePercentage()` & `feeRecipient()`.
+## Where to go next
 
-
-## Conclusion: Slots as Fertile Ground
-
-A slot starts empty. It's a position — nothing more.
-
-What makes it valuable is what the developpers do with it. Modules attached to a slot define the rights it grants: ad space, access, governance weight, revenue share, anything. **The slot is the plot; the module is the crop**.
-
-Each slot becomes a small, bounded space of productive ownership. Not a walled garden you lock people out of — a public garden you tend. The market decides if you're tending it well enough to keep it.
-
-This is the primitive. What grows on it is up to you.
-
----
-
-## Quick Links
-
-- [Getting Started](/getting-started) — Install the SDK and create your first slot
-- [Protocol](/protocol) — Architecture, tax system, roles, and modules
-- [SDK Reference](/sdk/client) — `SlotsClient` API
-- [React Hooks](/sdk/react) — wagmi hooks for React apps
-- [Contracts](/contracts) — Addresses and ABIs
-- [Subgraph](/subgraph) — GraphQL queries
+| | |
+|---|---|
+| [How a slot works](/concepts/slots) | The mechanism, end to end |
+| [Occupancy](/concepts/occupancy) | Softening *when* a slot changes hands |
+| [Utility modules](/concepts/modules) | Giving a slot a purpose |
+| [Getting Started](/getting-started) | Install the SDK, create your first slot |
+| [Deployments](/deployments) | Addresses on Base and Base Sepolia |

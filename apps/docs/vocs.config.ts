@@ -40,17 +40,32 @@ export default defineConfig({
       link: "https://t.me/+AQ3SdkC0SCM4NTdk",
     },
   ],
+  // Concepts explain WHY and reference states WHAT. The old single
+  // "Architecture" page tried to do both at once and became unreadable.
   sidebar: [
     {
       text: "Introduction",
       items: [
-        // { text: "Vision", link: "/vision" },
         { text: "Overview", link: "/overview" },
+        { text: "Vision", link: "/vision" },
         { text: "Getting Started", link: "/getting-started" },
-        {
-          text: "Architecture",
-          link: "/protocol",
-        },
+      ],
+    },
+    {
+      text: "Concepts",
+      items: [
+        { text: "How a slot works", link: "/concepts/slots" },
+        { text: "Occupancy", link: "/concepts/occupancy" },
+        { text: "Utility modules", link: "/concepts/modules" },
+      ],
+    },
+    {
+      text: "Contract reference",
+      items: [
+        { text: "SlotFactory", link: "/reference/factory" },
+        { text: "Slot", link: "/reference/slot" },
+        { text: "Occupancy policies", link: "/reference/policies" },
+        { text: "Utility modules", link: "/reference/modules" },
       ],
     },
     {
@@ -60,13 +75,9 @@ export default defineConfig({
         { text: "React Hooks", link: "/sdk/react" },
       ],
     },
-    // {
-    //   text: "Modules",
-    //   items: [{ text: "Adland", link: "/modules/adland" }],
-    // },
     {
-      text: "Contracts",
-      link: "/contracts",
+      text: "Deployments",
+      link: "/deployments",
     },
     {
       text: "Subgraph",

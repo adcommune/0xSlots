@@ -1,0 +1,92 @@
+# Utility modules
+
+See [Utility modules](/concepts/modules) for what these are for.
+
+## ISlotsModule
+
+```solidity
+interface ISlotsModule is IERC165 {
+    function name() external view returns (string memory);
+    function version() external view returns (string memory);
+
+    function onTransfer(uint256 slotId, address from, address to) external;
+    function onPriceUpdate(uint256 slotId, uint256 oldPrice, uint256 newPrice) external;
+    function onRelease(uint256 slotId, address from) external;
+    function onSettle(
+        uint256 slotId,
+        address occupant,
+        uint256 owed,
+        uint256 paid
+    ) external;
+
+    function feeBps() external view returns (uint256);
+    function feeRecipient() external view returns (address);
+    function moduleURI() external view returns (string memory);
+}
+```
+
+`slotId` is always `0` — one slot is one contract, so the calling slot is
+identified by `msg.sender`. Key your state off that.
+
+## Hooks
+
+| Hook | Fires when |
+|---|---|
+| `onTransfer` | occupancy moves, after state settles |
+| `onPriceUpdate` | occupant self-assesses |
+| `onRelease` | occupant leaves, or is liquidated |
+| `onSettle` | tax is charged |
+
+### onSettle
+
+The economic hook. The other three report *who holds the slot*; this reports
+*that money moved*.
+
+- `paid` is what was actually taken. **Use this for accounting.**
+- `owed` is what was due. `owed - paid` is non-zero exactly when the occupant
+  has run out of deposit, which is a useful distress signal.
+
+They diverge because a charge is capped by the remaining deposit. Reconstructing
+contributions from price × time computes `owed`, and someone can exploit that
+deliberately: declare a huge price with a tiny deposit, accrue enormous `owed`,
+pay almost nothing.
+
+Unlike the other hooks, `onSettle` fires **mid-transaction** — from inside the
+settlement that every mutating call begins with. The slot is in its
+pre-operation state; during a `buy`, `occupant()` still returns the outgoing
+occupant. Reentry into the same slot is blocked, but treat anything you read as
+in flux.
+
+## Failure is silent
+
+Module calls are gas-capped and their failures are swallowed. A module that
+reverts emits `ModuleCallFailed` and the slot proceeds.
+
+So a module must never be the source of truth for anything financial — if a call
+is dropped, nothing tells it. Reduce over the **`TaxPaid` event** instead, which
+always fires regardless of what the module did.
+
+## Fees
+
+```solidity
+function feeBps() external view returns (uint256);       // e.g. 500 = 5%
+function feeRecipient() external view returns (address);
+```
+
+Skimmed from tax when it is collected; the remainder goes to the slot's
+recipient. Both are read from the module at collection time, so a module with no
+valid fee recipient simply takes nothing.
+
+## Shipped modules
+
+### MetadataModule
+
+Stores a URI and structured metadata per slot, set by the occupant and cleared
+on release. The general-purpose module for "holding this slot means this content
+appears here" — ads, listings, profiles.
+
+Takes no fee.
+
+### FeedPostModule
+
+Grants the occupant the right to post into a feed. Takes no fee.

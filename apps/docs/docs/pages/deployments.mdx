@@ -1,0 +1,71 @@
+import { Callout } from 'vocs'
+
+# Deployments
+
+## Base Mainnet — 8453
+
+| Contract | Address |
+|---|---|
+| SlotFactory | `0xbf2F890E8F5CCCB3A1D7c5030dBC1843B9E36B0e` |
+| MinimumTenurePolicyFactory | `0xE322cDADB8fd511788F0fA25BffD794b7A946125` |
+| MinimumPricePolicyFactory | `0xF1cA0Fe72269AaEf1E5e34bfF484269f18e1b777` |
+| FeedPostModule | `0xe92BE44E3D77be84E2aC4D6da9FFDaC0FCa67f72` |
+| FeedRouter | `0xCfFA953EfC77591463a9560211bC783b5aaF3A4a` |
+| FeedSocialGroup | `0x5b524d7A1E7449963c42aEaFfAE751573e22F314` |
+
+## Base Sepolia — 84532
+
+| Contract | Address |
+|---|---|
+| SlotFactory | `0x6D87C1647f228Baf8DE0374FCd7FdEBF6900fdFF` |
+| MinimumTenurePolicyFactory | `0x51650AB1c3aBc6614A38c622A322535b16cD764e` |
+| MinimumPricePolicyFactory | `0x83d86EDBC62187180A4f94A3099a98ABaa1dfe0c` |
+| BatchCollector | `0xd3c7090C2F89c5132C3f91DD1da4bCffEAe10e13` |
+| FeedPostModule | `0x17b663b7C779B64f339ab916aB734A6a4f0b075E` |
+| FeedRouter | `0x93E67283Cbb4bE7b86FeBbb9620e72777715C710` |
+| FeedHub | `0xE4c0c374E3233b5174a1600AF1321cDa9b6B5cF8` |
+| ERC721Slots | `0x65e88189ac09527c5F7da0296ef33C77E5a6BE27` |
+
+<Callout type="warning">
+Use the SlotFactory listed here and nothing else. A slot created through a
+factory the subgraph does not index is **invisible to every consumer** — and it
+fails silently, because the transaction itself succeeds.
+</Callout>
+
+## Resolving a policy
+
+Policy factories are listed in the order a resolver should try them. Ask each
+one whether an address is theirs until one says yes:
+
+```ts
+import { POLICY_FACTORIES } from "@0xslots/contracts";
+
+for (const factory of POLICY_FACTORIES[chainId] ?? []) {
+  if (await verify(factory, policyAddress)) {
+    // genuine policy — read its terms and format them
+  }
+}
+```
+
+Factories predating `IPolicyFactory` are deliberately absent from that list.
+They have no `verify()`, so slots still pointing at their policies read as
+unrecognised — the honest answer rather than a guess.
+
+## ABIs
+
+```ts
+import {
+  slotAbi,
+  slotFactoryAbi,
+  metadataModuleAbi,
+  minimumTenurePolicyFactoryAbi,
+} from "@0xslots/contracts";
+```
+
+Addresses are exported too, so you rarely need to hardcode one:
+
+```ts
+import { getSlotsHubAddress, POLICY_FACTORIES } from "@0xslots/contracts";
+
+const factory = getSlotsHubAddress(8453);
+```
