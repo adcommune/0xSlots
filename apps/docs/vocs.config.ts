@@ -19,12 +19,15 @@ export default defineConfig({
   ogImageUrl:
     "https://vocs.dev/api/og?logo=%logo&title=%title&description=%description",
   iconUrl: "/logo.png",
-  theme: {
-    accentColor: "#000000",
-  },
-  font: {
-    google: "Roboto",
-  },
+
+  // 2.x moved this to the top level; it used to be `theme.accentColor`. The old
+  // shape type-errors but the build tolerated it, so the accent silently fell
+  // back to the default. `light-dark()` gives the dark scheme a visible accent —
+  // a flat #000000 disappears against a dark background.
+  accentColor: "light-dark(#000000, #ffffff)",
+
+  // `font` was removed in 2.x — there is no config-level font option any more.
+  // Override the CSS variables in a custom stylesheet if the default is wrong.
   topNav: [
     { text: "Overview", link: "/overview" },
     { text: "SDK", link: "/sdk/client" },
