@@ -6,7 +6,7 @@
     "dev": "vocs dev",
     "build": "vocs build",
     "preview": "vocs preview",
-    "//start": "vocs 2.x emits a Waku RSC server app, not a static site — dist/ holds an SSR bundle and zero HTML. This is what the host must run.",
+    "//start": "vocs 2.x emits a Waku RSC server app, not a static site \u2014 dist/ holds an SSR bundle and zero HTML. This is what the host must run.",
     "start": "node dist/serve-node.js"
   },
   "dependencies": {
@@ -20,5 +20,13 @@
   },
   "devDependencies": {
     "typescript": "^5.7.0"
+  },
+  "packageManager": "pnpm@10.33.0",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "es5-ext",
+      "vue-demi"
+    ]
   }
 }
