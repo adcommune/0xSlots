@@ -4,42 +4,25 @@ import { Callout } from 'vocs'
 
 0xSlots is a property primitive for scarce onchain assets.
 
-It introduces **slots**: positions that are always priced and always
-contestable. You set your own price, you pay tax on it continuously, and anyone
-can buy it from you at that price whenever they like.
+A **slot** is a position that is always priced and always contestable. You set
+your own price, pay tax on it continuously, and anyone can buy it from you at
+that price at any time.
 
-- Set it too high → the tax gets expensive.
-- Set it too low → someone takes it.
-- Set it honestly → you keep it.
+- Too high → the tax gets expensive.
+- Too low → someone takes it.
+- Honest → you keep it.
 
-There is no fourth option, and that is the whole design. Idle property becomes
-costly to hold, and positions drift toward whoever actually values them.
+There is no fourth option. That is the whole design.
 
-The tax goes to a **recipient** fixed when the slot is created — a creator, a
-community, a protocol, a public good. Scarce digital property stops being idle
-control and becomes an ongoing revenue stream pointed at something.
-
-## Why not just own it
-
-The NFT era demonstrated what absolute ownership does to digital property. No
-cost to hold and no pressure to use means the rational move is to hoard and
-wait. Price mattered more than what the thing did; builders competed for
-attention rather than utility.
-
-The problem was never the technology. It was that ownership had no ongoing
-obligation attached.
-
-0xSlots is the middle ground — neither communal nor absolute. Ownership is
-continuous, contestable, and tied to actually using the thing.
+The tax flows to a **recipient** fixed when the slot is created — a creator, a
+community, a public good. Idle property becomes costly to hold, and positions
+drift toward whoever actually values them.
 
 ## What a slot is
 
-A single contract, immutable by default, that:
-
-- funds **one recipient**
-- in **one currency**
-- at **one tax rate**
-- with at most **one utility module** and **one occupancy policy**
+One contract, immutable by default, that funds **one recipient** in **one
+currency** at **one tax rate**, with at most one utility module and one
+occupancy policy.
 
 Want a different configuration? Deploy another. Slots are cheap and disposable
 by design — there is no admin panel, because there is nothing to administer.
@@ -49,28 +32,24 @@ Think [Splits](https://splits.org), but for collective ownership rather than
 collective revenue.
 </Callout>
 
-## Slots are fertile ground
+## The slot is the plot
 
-A slot starts empty. It is a position — nothing more.
+A slot starts empty. It is a position and nothing more.
 
 What makes it valuable is what gets built on it. A **module** defines the rights
-holding it grants: ad space, a name, access, publishing, revenue share.
-**The slot is the plot; the module is the crop.**
+holding it grants — ad space, a name, access, publishing. An **occupancy
+policy** sets the terms of tenancy — guaranteed time, a price floor, a queue.
 
-An **occupancy policy** sets the terms of tenancy: whether you get guaranteed
-time before you can be bought out, whether there is a price floor, whether a
-queue decides who is next.
+The slot is the plot; the module is the crop. Not a walled garden you lock
+people out of — a public garden you tend, where the market decides whether you
+are tending it well enough to keep it.
 
-Each slot is a small, bounded space of productive ownership. Not a walled garden
-you lock people out of — a public garden you tend. The market decides whether
-you are tending it well enough to keep it.
-
-## Where to go next
+## Start here
 
 | | |
 |---|---|
+| [Vision](/vision) | Why Harberger, and why almost nobody has used it |
 | [How a slot works](/concepts/slots) | The mechanism, end to end |
-| [Occupancy](/concepts/occupancy) | Softening *when* a slot changes hands |
+| [Occupancy](/concepts/occupancy) | Controlling when a slot changes hands |
 | [Utility modules](/concepts/modules) | Giving a slot a purpose |
 | [Getting Started](/getting-started) | Install the SDK, create your first slot |
-| [Deployments](/deployments) | Addresses on Base and Base Sepolia |
