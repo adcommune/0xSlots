@@ -10,9 +10,11 @@ import { HomePage } from 'vocs'
     <img src="/hero.jpg" alt="0xSlots" style={{ maxWidth: '100%', borderRadius: '12px' }} />
   </div>
   <HomePage.Tagline>A property primitive for scarce onchain assets</HomePage.Tagline>
-  <HomePage.Description>
-    Slots that are **always priced** and **always contestable**. Fair pricing, productive ownership, aligned revenue.
-  </HomePage.Description>
+  {/* Kept on one line and inside the tag: MDX turns an indented block into its
+      own <p>, and HomePage.Description already renders one. The resulting
+      nested <p> is invalid HTML, which the browser reparents — producing a
+      hydration mismatch on every load of this page. */}
+  <HomePage.Description>Slots that are <strong>always priced</strong> and <strong>always contestable</strong>. Fair pricing, productive ownership, aligned revenue.</HomePage.Description>
   <HomePage.Buttons>
     <HomePage.Button href="/overview" variant="accent">Get Started</HomePage.Button>
     <HomePage.Button href="https://github.com/nezz0746/0xSlots">GitHub</HomePage.Button>
