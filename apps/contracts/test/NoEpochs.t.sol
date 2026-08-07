@@ -66,7 +66,7 @@ contract NoEpochsTest is Test {
     function _init() internal pure returns (SlotInitParams memory) {
         return SlotInitParams({
             taxPercentage: 100,
-            module: address(0),
+            utility: address(0),
             liquidationBountyBps: 500,
             minDepositSeconds: 0,
             occupancyPolicy: address(0)
@@ -77,7 +77,7 @@ contract NoEpochsTest is Test {
         return Slot(factory.createSlot(
             recipient,
             IERC20(address(token)),
-            SlotConfig({mutableTax: false, mutableModule: false, mutablePolicy: false, manager: address(0)}),
+            SlotConfig({mutableTax: false, mutableUtility: false, mutablePolicy: false, manager: address(0)}),
             _init()));
     }
 

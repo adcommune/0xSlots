@@ -35,13 +35,13 @@ contract CreateTestSlot is BaseScript {
 
         SlotConfig memory config = SlotConfig({
             mutableTax: false,
-            mutableModule: false, mutablePolicy: false,
+            mutableUtility: false, mutablePolicy: false,
             manager: address(0)
         });
 
         SlotInitParams memory initParams = SlotInitParams({
             taxPercentage: 100, // 1%
-            module: address(0),
+            utility: address(0),
             liquidationBountyBps: 0,
             minDepositSeconds: 0,
             occupancyPolicy: address(0)

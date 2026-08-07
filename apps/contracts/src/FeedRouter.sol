@@ -21,6 +21,9 @@ interface ISlot {
     function currency() external view returns (IERC20);
     function price() external view returns (uint256);
     function occupant() external view returns (address);
+    /// Deprecated selector, deliberately. FeedRouter is deployed separately
+    /// from the beacon, so it must keep calling something every slot answers
+    /// both before and after the utility rename.
     function module() external view returns (address);
 }
 

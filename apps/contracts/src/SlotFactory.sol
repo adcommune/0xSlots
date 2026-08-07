@@ -8,7 +8,7 @@ import {UUPSUpgradeable} from "@openzeppelin/contracts/proxy/utils/UUPSUpgradeab
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import {Slot} from "./Slot.sol";
 import {SlotConfig, SlotInitParams, ISlotEvents} from "./interfaces/ISlot.sol";
-import {ISlotsModule} from "./interfaces/ISlotsModule.sol";
+import {IUtility} from "./interfaces/IUtility.sol";
 import {IOccupancyPolicy} from "./interfaces/IOccupancyPolicy.sol";
 
 /// @title SlotFactory — Deploy Harberger-taxed slots via Beacon Proxy
@@ -47,7 +47,7 @@ contract SlotFactory is UUPSUpgradeable {
     );
 
     event ModuleVerified(
-        address indexed module,
+        address indexed utility,
         bool verified,
         string name,
         string version,
@@ -68,10 +68,10 @@ contract SlotFactory is UUPSUpgradeable {
     /// @notice The UpgradeableBeacon that all slot proxies point to
     UpgradeableBeacon public beacon;
 
-    /// @notice Verified modules registry (informational, non-blocking)
-    mapping(address => bool) public verifiedModules;
+    /// @notice Verified utilities registry (informational, non-blocking)
+    mapping(address => bool) public verifiedUtilities;
 
-    /// @notice Factory admin (can upgrade factory, upgrade beacon, verify modules)
+    /// @notice Factory admin (can upgrade factory, upgrade beacon, verify utilities)
     address public admin;
 
     bool private _initialized;
@@ -89,7 +89,7 @@ contract SlotFactory is UUPSUpgradeable {
     }
 
     /// @notice Initialize the factory (called once via proxy)
-    /// @param _admin Admin address (owns beacon + can upgrade factory + verify modules)
+    /// @param _admin Admin address (owns beacon + can upgrade factory + verify utilities)
     /// @param _slotImplementation Address of the Slot implementation contract
     function initialize(address _admin, address _slotImplementation) external {
         if (_initialized) revert AlreadyInitialized();
@@ -163,20 +163,24 @@ contract SlotFactory is UUPSUpgradeable {
     // MODULE REGISTRY (informational, non-blocking)
     // ═══════════════════════════════════════════════════════════
 
-    /// @notice Mark a module as verified/unverified (admin only)
-    function setModuleVerified(
-        address _module,
+    /// @notice Mark a utility as verified/unverified (admin only)
+    function setUtilityVerified(
+        address _utility,
         bool verified
-    ) external onlyAdmin {
-        ISlotsModule mod = ISlotsModule(_module);
+    ) public onlyAdmin {
+        // NOTE: must be IUtility's id — the ISlotsModule alias interface is
+        // empty, and ERC165 ids exclude inherited members, so its own id is
+        // meaningless. IUtility's id equals the historical ISlotsModule id
+        // (same selectors), which is what deployed utilities answer to.
+        IUtility mod = IUtility(_utility);
         // Verify it implements the interface
         require(
-            mod.supportsInterface(type(ISlotsModule).interfaceId),
-            "not ISlotsModule"
+            mod.supportsInterface(type(IUtility).interfaceId),
+            "not IUtility"
         );
-        verifiedModules[_module] = verified;
+        verifiedUtilities[_utility] = verified;
         emit ModuleVerified(
-            _module,
+            _utility,
             verified,
             mod.name(),
             mod.version(),
@@ -185,9 +189,27 @@ contract SlotFactory is UUPSUpgradeable {
         );
     }
 
-    /// @notice Check if a module is verified
-    function isModuleVerified(address module) external view returns (bool) {
-        return verifiedModules[module];
+    /// @notice Check if a utility is verified
+    function isUtilityVerified(address _utility) external view returns (bool) {
+        return verifiedUtilities[_utility];
+    }
+
+    // ── deprecated names ────────────────────────────────────────
+    // Selectors deployed callers and old ABIs hold. Remove next major.
+
+    /// @notice Deprecated name for `setUtilityVerified`.
+    function setModuleVerified(address _utility, bool verified) external {
+        setUtilityVerified(_utility, verified);
+    }
+
+    /// @notice Deprecated name for `isUtilityVerified`.
+    function isModuleVerified(address _utility) external view returns (bool) {
+        return verifiedUtilities[_utility];
+    }
+
+    /// @notice Deprecated name for `verifiedUtilities`.
+    function verifiedModules(address _utility) external view returns (bool) {
+        return verifiedUtilities[_utility];
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -279,7 +301,7 @@ contract SlotFactory is UUPSUpgradeable {
         SlotConfig memory config,
         SlotInitParams memory initParams
     ) internal view {
-        if (config.mutableTax || config.mutableModule || config.mutablePolicy) {
+        if (config.mutableTax || config.mutableUtility || config.mutablePolicy) {
             if (config.manager == address(0))
                 revert InvalidConfig_ManagerRequired();
         } else {
@@ -288,9 +310,9 @@ contract SlotFactory is UUPSUpgradeable {
         }
         if (initParams.taxPercentage == 0) revert InvalidTaxPercentage();
 
-        // Reject non-contract module addresses (e.g. EOA, wrong-chain address).
+        // Reject non-contract utility addresses (e.g. EOA, wrong-chain address).
         // Without this check, getSlotInfo() will revert on the resulting slot.
-        if (initParams.module != address(0) && initParams.module.code.length == 0)
+        if (initParams.utility != address(0) && initParams.utility.code.length == 0)
             revert InvalidModule_NoCode();
     }
 

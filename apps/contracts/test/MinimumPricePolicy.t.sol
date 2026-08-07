@@ -65,10 +65,10 @@ contract MinimumPricePolicyTest is Test {
         return Slot(factory.createSlot(
             recipient,
             currency,
-            SlotConfig({mutableTax: false, mutableModule: false, mutablePolicy: false, manager: address(0)}),
+            SlotConfig({mutableTax: false, mutableUtility: false, mutablePolicy: false, manager: address(0)}),
             SlotInitParams({
                 taxPercentage: 100,
-                module: address(0),
+                utility: address(0),
                 liquidationBountyBps: 500,
                 minDepositSeconds: 0,
             occupancyPolicy: policy

@@ -11,7 +11,7 @@ import {IFeed} from "../src/interfaces/IFeed.sol";
 import {SlotConfig, SlotInitParams, SlotInfo} from "../src/interfaces/ISlot.sol";
 
 /// @notice Empty contract — just needs deployed code so its address can be
-///         compared against `ISlotView(slot).getSlotInfo().module`.
+///         compared against `ISlotView(slot).getSlotInfo().utility`.
 contract MockFeedModule {}
 
 /// @notice Minimal stand-in for a real Slot: stores the module it was
@@ -24,12 +24,12 @@ contract MockSlot {
     }
 
     function getSlotInfo() external view returns (SlotInfo memory info) {
-        info.module = module;
+        info.utility = module;
     }
 }
 
 /// @notice Minimal stand-in for SlotFactoryV3.createSlots — deploys `count`
-///         MockSlots wired to `initParams.module` and records the
+///         MockSlots wired to `initParams.utility` and records the
 ///         recipient/currency/taxPercentage/bounty/minDeposit it was called with.
 contract MockSlotFactory {
     address public lastRecipient;
@@ -54,7 +54,7 @@ contract MockSlotFactory {
         callCount++;
         slots = new address[](count);
         for (uint256 i = 0; i < count; i++) {
-            slots[i] = address(new MockSlot(initParams.module));
+            slots[i] = address(new MockSlot(initParams.utility));
         }
     }
 }

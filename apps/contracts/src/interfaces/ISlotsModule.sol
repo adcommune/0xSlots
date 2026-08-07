@@ -2,6 +2,22 @@
 pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
+/// @title ISlotsModule — deprecated name for `IUtility`
+/// @notice Kept so utilities that `import {ISlotsModule}` keep compiling. New
+///         code should implement `IUtility`; the two are ABI-identical, so a
+///         contract written against either satisfies the other on chain.
+///
+/// @dev Declared in full rather than as `interface ISlotsModule is IUtility {}`.
+///      An ERC165 interfaceId is the XOR of an interface's OWN function
+///      selectors and ignores inherited ones, so the empty-inheriting version
+///      computed `0x00000000`. A utility recompiled against it would answer
+///      `supportsInterface` with a bogus id and fail `setUtilityVerified`,
+///      even though every one of its functions was correct. Duplicating the
+///      declarations keeps `type(ISlotsModule).interfaceId` equal to
+///      `type(IUtility).interfaceId` — and equal to what utilities already
+///      deployed on Base computed at their own compile time.
+///
+///      Delete in the next major version.
 interface ISlotsModule is IERC165 {
   function name() external view returns (string memory);
 
@@ -17,28 +33,6 @@ interface ISlotsModule is IERC165 {
 
   function onRelease(uint256 slotId, address from) external;
 
-  /// @notice Tax was taken from `occupant`'s deposit.
-  /// @dev The economic counterpart to the three occupancy hooks above, which
-  ///      only report WHO holds the slot and at what price — never that money
-  ///      moved. Modules doing revenue share, rebates, loyalty or contribution
-  ///      accounting need this one.
-  ///
-  ///      `paid` is capped by the remaining deposit and is the only sound basis
-  ///      for accounting. `owed - paid` is non-zero exactly when the occupant
-  ///      has run dry, which is a useful distress signal.
-  ///
-  ///      Do NOT rely on this hook for anything whose correctness matters:
-  ///      module calls are gas-capped and failures are swallowed (see
-  ///      `Slot._notifyModule`). The `TaxPaid` event is the authoritative
-  ///      record and always fires. This hook is for reacting, not for being the
-  ///      source of truth.
-  ///
-  ///      CALLED MID-TRANSACTION. Unlike `onTransfer`/`onRelease`, which fire
-  ///      after their entry point has settled, this fires from `_accrue` inside
-  ///      `_settle()` — the first statement of every mutating function. The slot
-  ///      is in its PRE-operation state: during `buy()`, `occupant()` still
-  ///      returns the outgoing occupant. Reentry into the slot is blocked by
-  ///      `nonReentrant`, but treat any state you read here as in-flux.
   function onSettle(
     uint256 slotId,
     address occupant,
@@ -46,12 +40,9 @@ interface ISlotsModule is IERC165 {
     uint256 paid
   ) external;
 
-  /// @notice Module fee in basis points (e.g. 500 = 5%), taken from collected tax
   function feeBps() external view returns (uint256);
 
-  /// @notice Address that receives module fees (EOA, multisig, Splits, etc.)
   function feeRecipient() external view returns (address);
 
-  /// @notice Module metadata URI (e.g. ipfs://Qm... pointing to JSON with image, description)
   function moduleURI() external view returns (string memory);
 }

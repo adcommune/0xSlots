@@ -6,7 +6,7 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
 import {Multicall} from "@openzeppelin/contracts/utils/Multicall.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {ISlotsModule} from "./interfaces/ISlotsModule.sol";
+import {IUtility} from "./interfaces/IUtility.sol";
 import {IOccupancyPolicy, OccupancyContext} from "./interfaces/IOccupancyPolicy.sol";
 import {SlotConfig, SlotInitParams, PendingUpdate, SlotInfo, ISlotEvents, EVT_BOUGHT, EVT_RELEASED, EVT_LIQUIDATED, EVT_PRICE_UPDATED, EVT_DEPOSITED, EVT_WITHDRAWN, EVT_TAX_COLLECTED, EVT_SETTLED} from "./interfaces/ISlot.sol";
 import {SlotFactory} from "./SlotFactory.sol";
@@ -59,7 +59,7 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     address public recipient; // slot 0
     IERC20 public currency; // slot 1, offset 0
     bool public mutableTax; // slot 1, offset 20
-    bool public mutableModule; // slot 1, offset 21 — the UTILITY module
+    bool public mutableUtility; // slot 1, offset 21
     bool public mutablePolicy; // slot 1, offset 22 — the OCCUPANCY policy
     address public manager; // slot 2
 
@@ -67,7 +67,7 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     address private _occupant; // slot 3
     uint256 private _price; // slot 4
     uint256 public taxPercentage; // slot 5
-    address public module; // slot 6
+    address public utility; // slot 6
     uint256 public liquidationBountyBps; // slot 7
     uint256 public minDepositSeconds; // slot 8
 
@@ -138,7 +138,7 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
 
     /// @notice Set up a slot. Called by `SlotFactory` in the proxy constructor.
     /// @dev The only initializer, and the only place a slot's terms are set.
-    ///      Everything arrives at once — recipient, currency, tax, module,
+    ///      Everything arrives at once — recipient, currency, tax, utility,
     ///      occupancy policy, factory — so there is no window in which a slot
     ///      exists half-configured and no version to track.
     ///
@@ -165,12 +165,12 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         recipient = _recipient;
         currency = _currency;
         mutableTax = _config.mutableTax;
-        mutableModule = _config.mutableModule;
+        mutableUtility = _config.mutableUtility;
         mutablePolicy = _config.mutablePolicy;
         manager = _config.manager;
 
         taxPercentage = _init.taxPercentage;
-        module = _init.module;
+        utility = _init.utility;
         liquidationBountyBps = _init.liquidationBountyBps;
         minDepositSeconds = _init.minDepositSeconds;
         occupancyPolicy = _init.occupancyPolicy;
@@ -275,9 +275,9 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
 
         if (refund > 0) _payOrCredit(prev, refund);
 
-        _notifyModule(
+        _notifyUtility(
             "onTransfer",
-            abi.encodeCall(ISlotsModule.onTransfer, (0, prev, account))
+            abi.encodeCall(IUtility.onTransfer, (0, prev, account))
         );
 
         emit Bought(account, prev, currentPrice, depositAmount, selfAssessedPrice);
@@ -295,7 +295,7 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         uint256 refund = _deposit;
 
         // Flush collected tax to recipient. Routed through `_distributeTax` so
-        // a module fee is honoured here exactly as it is in `collect()` and
+        // a utility fee is honoured here exactly as it is in `collect()` and
         // `liquidate()` — a voluntary exit is not a fee holiday.
         uint256 pendingTax = collectedTax;
         if (pendingTax > 0) {
@@ -315,9 +315,9 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
 
         if (refund > 0) _payOrCredit(prev, refund);
 
-        _notifyModule(
+        _notifyUtility(
             "onRelease",
-            abi.encodeCall(ISlotsModule.onRelease, (0, prev))
+            abi.encodeCall(IUtility.onRelease, (0, prev))
         );
 
         emit Released(prev, refund);
@@ -354,9 +354,9 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         // Ensure remaining deposit still meets minimum after price change
         _enforceMinDepositExisting(newPrice);
 
-        _notifyModule(
+        _notifyUtility(
             "onPriceUpdate",
-            abi.encodeCall(ISlotsModule.onPriceUpdate, (0, oldPrice, newPrice))
+            abi.encodeCall(IUtility.onPriceUpdate, (0, oldPrice, newPrice))
         );
 
         emit PriceUpdated(oldPrice, newPrice);
@@ -422,7 +422,7 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
             collectedTax -= bounty;
         }
 
-        // Flush remaining collected tax to recipient (minus module fee if any)
+        // Flush remaining collected tax to recipient (minus utility fee if any)
         uint256 remainingTax = collectedTax;
         if (remainingTax > 0) {
             collectedTax = 0;
@@ -443,9 +443,9 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         // the liquidation itself.
         if (bounty > 0) _payOrCredit(msg.sender, bounty);
 
-        _notifyModule(
+        _notifyUtility(
             "onRelease",
-            abi.encodeCall(ISlotsModule.onRelease, (0, prev))
+            abi.encodeCall(IUtility.onRelease, (0, prev))
         );
 
         emit Liquidated(msg.sender, prev, bounty);
@@ -467,7 +467,7 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         emit RefundClaimed(account, amount);
     }
 
-    /// @notice Flush accumulated tax to recipient (minus module fee if any)
+    /// @notice Flush accumulated tax to recipient (minus utility fee if any)
     function collect() external nonReentrant {
         _settle();
         uint256 amount = collectedTax;
@@ -493,20 +493,26 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         emit TaxUpdateProposed(newPct);
     }
 
-    /// @notice Propose a new module (applied on next ownership transition)
-    function proposeModuleUpdate(address newModule) external onlyManager {
-        if (!mutableModule) revert ModuleNotMutable();
-        if (newModule != address(0) && newModule.code.length == 0)
+    /// @notice Propose a new utility (applied on next ownership transition)
+    function proposeUtilityUpdate(address newUtility) public onlyManager {
+        if (!mutableUtility) revert ModuleNotMutable();
+        if (newUtility != address(0) && newUtility.code.length == 0)
             revert InvalidModule_NoCode();
 
-        pendingUpdate.newModule = newModule;
-        pendingUpdate.hasModuleUpdate = true;
+        pendingUpdate.newUtility = newUtility;
+        pendingUpdate.hasUtilityUpdate = true;
 
-        emit ModuleUpdateProposed(newModule);
+        emit ModuleUpdateProposed(newUtility);
+    }
+
+    /// @notice Deprecated name for `proposeUtilityUpdate`. Kept so the selector
+    ///         deployed callers hold keeps working across the upgrade.
+    function proposeModuleUpdate(address newUtility) external {
+        proposeUtilityUpdate(newUtility);
     }
 
     /// @notice Propose a new occupancy policy (applied on next ownership transition)
-    /// @dev Gated on `mutablePolicy`, NOT `mutableModule`. Swapping what a slot
+    /// @dev Gated on `mutablePolicy`, NOT `mutableUtility`. Swapping what a slot
     ///      does and swapping whether it can be taken from you are different
     ///      promises, and a holder who accepted the first has not accepted the
     ///      second.
@@ -523,7 +529,7 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     function cancelPendingUpdates() external onlyManager {
         if (
             !pendingUpdate.hasTaxUpdate &&
-            !pendingUpdate.hasModuleUpdate &&
+            !pendingUpdate.hasUtilityUpdate &&
             !pendingPolicyUpdate.hasPolicyUpdate
         ) revert NoPendingUpdate();
         delete pendingUpdate;
@@ -586,19 +592,34 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         return pendingUpdate;
     }
 
+    // ── deprecated getters ──────────────────────────────────────
+    // The storage moved to clearer names (`utility`, `mutableUtility`); these
+    // keep the selectors that deployed callers and old ABIs hold. Remove in
+    // the next major version.
+
+    /// @notice Deprecated name for `utility()`.
+    function module() external view returns (address) {
+        return utility;
+    }
+
+    /// @notice Deprecated name for `mutableUtility()`.
+    function mutableModule() external view returns (bool) {
+        return mutableUtility;
+    }
+
     /// @notice Returns complete slot state in a single call
     function getSlotInfo() external view returns (SlotInfo memory info) {
         info.recipient = recipient;
         info.currency = address(currency);
         info.manager = manager;
         info.mutableTax = mutableTax;
-        info.mutableModule = mutableModule;
+        info.mutableUtility = mutableUtility;
         info.mutablePolicy = mutablePolicy;
 
         info.occupant = occupant();
         info.price = price();
         info.taxPercentage = taxPercentage;
-        info.module = module;
+        info.utility = utility;
         info.liquidationBountyBps = liquidationBountyBps;
         info.minDepositSeconds = minDepositSeconds;
 
@@ -609,22 +630,22 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         info.secondsUntilLiquidation = secondsUntilLiquidation();
         info.insolvent = isInsolvent();
 
-        // Module info — guard with code-size check to avoid reverts when
-        // module address has no deployed code (try/catch does not catch
+        // Utility info — guard with code-size check to avoid reverts when
+        // the utility address has no deployed code (try/catch does not catch
         // ABI-decode failures from empty returndata).
-        if (module != address(0) && module.code.length > 0) {
-            ISlotsModule mod = ISlotsModule(module);
-            try mod.name() returns (string memory n) { info.moduleName = n; } catch {}
-            try mod.version() returns (string memory v) { info.moduleVersion = v; } catch {}
-            try mod.feeBps() returns (uint256 f) { info.moduleFeeBps = f; } catch {}
-            try mod.feeRecipient() returns (address r) { info.moduleFeeRecipient = r; } catch {}
-            try mod.moduleURI() returns (string memory u) { info.moduleURI = u; } catch {}
+        if (utility != address(0) && utility.code.length > 0) {
+            IUtility mod = IUtility(utility);
+            try mod.name() returns (string memory n) { info.utilityName = n; } catch {}
+            try mod.version() returns (string memory v) { info.utilityVersion = v; } catch {}
+            try mod.feeBps() returns (uint256 f) { info.utilityFeeBps = f; } catch {}
+            try mod.feeRecipient() returns (address r) { info.utilityFeeRecipient = r; } catch {}
+            try mod.moduleURI() returns (string memory u) { info.utilityURI = u; } catch {}
         }
 
         info.hasPendingTax = pendingUpdate.hasTaxUpdate;
         info.pendingTaxPercentage = pendingUpdate.newTaxPercentage;
-        info.hasPendingModule = pendingUpdate.hasModuleUpdate;
-        info.pendingModule = pendingUpdate.newModule;
+        info.hasPendingUtility = pendingUpdate.hasUtilityUpdate;
+        info.pendingUtility = pendingUpdate.newUtility;
 
         info.occupancyPolicy = occupancyPolicy;
         info.occupiedSince = occupiedSince;
@@ -686,9 +707,9 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
             // a buy charges the OUTGOING occupant for their own tenure.
             address payer = _occupant;
             emit TaxPaid(payer, owed, paid);
-            _notifyModule(
+            _notifyUtility(
                 "onSettle",
-                abi.encodeCall(ISlotsModule.onSettle, (0, payer, owed, paid))
+                abi.encodeCall(IUtility.onSettle, (0, payer, owed, paid))
             );
         }
     }
@@ -704,19 +725,19 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
             delete pendingPolicyUpdate;
         }
 
-        if (!pendingUpdate.hasTaxUpdate && !pendingUpdate.hasModuleUpdate)
+        if (!pendingUpdate.hasTaxUpdate && !pendingUpdate.hasUtilityUpdate)
             return;
 
         uint256 newTax = taxPercentage;
-        address newMod = module;
+        address newMod = utility;
 
         if (pendingUpdate.hasTaxUpdate) {
             newTax = pendingUpdate.newTaxPercentage;
             taxPercentage = newTax;
         }
-        if (pendingUpdate.hasModuleUpdate) {
-            newMod = pendingUpdate.newModule;
-            module = newMod;
+        if (pendingUpdate.hasUtilityUpdate) {
+            newMod = pendingUpdate.newUtility;
+            utility = newMod;
         }
 
         delete pendingUpdate;
@@ -778,7 +799,7 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         }
     }
 
-    /// @dev Query module fee and split tax between module and recipient.
+    /// @dev Query the utility fee and split tax between utility and recipient.
     ///
     ///      Both legs pay through `_payOrCredit`. `recipient` is chosen by
     ///      whoever creates the slot and is never validated beyond being
@@ -791,24 +812,24 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     ///      unconditional, which is this protocol's first invariant, and leaves
     ///      the recipient whole via `claim()` whenever they can receive again.
     function _distributeTax(uint256 amount) internal {
-        uint256 moduleFee = 0;
+        uint256 utilityFee = 0;
         uint256 feeBps_ = 0;
-        if (module != address(0)) {
-            (bool ok, bytes memory data) = module.staticcall(
+        if (utility != address(0)) {
+            (bool ok, bytes memory data) = utility.staticcall(
                 abi.encodeWithSignature("feeBps()")
             );
             if (ok && data.length >= 32) {
                 uint256 bps = abi.decode(data, (uint256));
                 if (bps > 0 && bps <= BASIS_POINTS) {
                     feeBps_ = bps;
-                    moduleFee = (amount * bps) / BASIS_POINTS;
+                    utilityFee = (amount * bps) / BASIS_POINTS;
                 }
             }
         }
-        if (moduleFee > 0) {
-            // Send fee to module's designated recipient
+        if (utilityFee > 0) {
+            // Send fee to the utility's designated recipient
             address feeTarget = address(0);
-            (bool recipientOk, bytes memory recipientData) = module.staticcall(
+            (bool recipientOk, bytes memory recipientData) = utility.staticcall(
                 abi.encodeWithSignature("feeRecipient()")
             );
             if (recipientOk && recipientData.length >= 32) {
@@ -816,18 +837,18 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
             }
             if (feeTarget == address(0)) {
                 // No valid recipient — skip fee, send all to recipient
-                moduleFee = 0;
+                utilityFee = 0;
             } else {
-                _payOrCredit(feeTarget, moduleFee);
-                emit ModuleFeePaid(module, moduleFee, feeBps_);
+                _payOrCredit(feeTarget, utilityFee);
+                emit ModuleFeePaid(utility, utilityFee, feeBps_);
             }
         }
-        _payOrCredit(recipient, amount - moduleFee);
+        _payOrCredit(recipient, amount - utilityFee);
     }
 
-    function _notifyModule(string memory name, bytes memory data) internal {
-        if (module == address(0)) return;
-        (bool ok, ) = module.call{gas: 500_000}(data);
+    function _notifyUtility(string memory name, bytes memory data) internal {
+        if (utility == address(0)) return;
+        (bool ok, ) = utility.call{gas: 500_000}(data);
         if (!ok) emit ModuleCallFailed(name);
     }
 
