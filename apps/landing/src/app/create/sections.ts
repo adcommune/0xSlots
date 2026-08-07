@@ -119,12 +119,10 @@ export function scrollToSection(id: SectionId) {
     ?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-/** The distinct sections currently holding a validation error, in page order. */
-export function sectionsWithErrors(
-  errors: Record<string, unknown>,
-): SectionMeta[] {
+/** The distinct sections owning these schema field names, in page order. */
+export function sectionsForFields(fields: readonly string[]): SectionMeta[] {
   const hit = new Set<SectionId>();
-  for (const field of Object.keys(errors)) {
+  for (const field of fields) {
     const id = FIELD_SECTION[field];
     if (id) hit.add(id);
   }

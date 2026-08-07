@@ -1,7 +1,7 @@
 import { AlertCircle } from "lucide-react";
 import { useFormContext } from "react-hook-form";
-import type { CreateSlotFormValues } from "../schema";
-import { type SectionId, sectionsWithErrors } from "../sections";
+import { type CreateSlotFormValues, createSlotSchema } from "../schema";
+import { type SectionId, sectionsForFields } from "../sections";
 
 /**
  * Which sections are blocking submission, and a way to get to them.
@@ -10,11 +10,21 @@ import { type SectionId, sectionsWithErrors } from "../sections";
  * step without passing through the others, so a disabled Create button was
  * self-explanatory. On one scroll you can walk straight past a broken field
  * and find the button dead with no stated reason.
+ *
+ * Parses the schema rather than reading `formState.errors`: react-hook-form
+ * only commits an error once its field has been touched, so `errors` is empty
+ * on a form nobody has filled in — precisely when this is most needed. The
+ * schema knows what is missing whether or not anyone has typed yet.
  */
 export function ErrorSummary({ onJump }: { onJump: (id: SectionId) => void }) {
   const form = useFormContext<CreateSlotFormValues>();
-  const { errors } = form.formState;
-  const sections = sectionsWithErrors(errors);
+  const values = form.watch();
+  const result = createSlotSchema.safeParse(values);
+  const sections = result.success
+    ? []
+    : sectionsForFields(
+        result.error.issues.map((issue) => String(issue.path[0] ?? "")),
+      );
 
   if (sections.length === 0) return null;
 

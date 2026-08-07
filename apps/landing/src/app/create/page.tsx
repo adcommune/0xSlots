@@ -110,13 +110,10 @@ export default function CreatePage() {
     moduleResolved.isResolving ||
     managerResolved.isResolving;
 
-  // Set default preset currency when chain changes
-  useEffect(() => {
-    const tokens = getChainTokens(selectedChainId);
-    if (tokens.length > 0) {
-      form.setValue("presetCurrency", tokens[0].address);
-    }
-  }, [selectedChainId, form]);
+  // The chain's default currency is seeded by SectionCurrency, next to the
+  // FormField that registers `presetCurrency`. Seeding it from here silently
+  // did nothing: react-hook-form re-syncs unregistered fields back to their
+  // schema default during mount, so the write was undone before first paint.
 
   useEffect(() => {
     if (isSuccess) {
