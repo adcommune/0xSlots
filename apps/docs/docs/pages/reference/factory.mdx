@@ -1,0 +1,77 @@
+# SlotFactory
+
+Deploys slots as BeaconProxies sharing one implementation. Addresses are
+assigned at deploy time, not derived from config — `createSlots` can deploy many
+slots with identical parameters, so a slot is identified by its address.
+
+```solidity
+function createSlot(
+    address recipient,
+    IERC20 currency,
+    SlotConfig memory config,
+    SlotInitParams memory initParams
+) external returns (address slot);
+
+function createSlots(
+    address recipient,
+    IERC20 currency,
+    SlotConfig memory config,
+    SlotInitParams memory initParams,
+    uint256 count
+) external returns (address[] memory slots);
+```
+
+## SlotConfig
+
+What, if anything, a manager may change later.
+
+```solidity
+struct SlotConfig {
+    bool mutableTax;      // the tax rate
+    bool mutableModule;   // the UTILITY module — what the slot does
+    bool mutablePolicy;   // the OCCUPANCY policy — who may take it, and when
+    address manager;      // address(0) if every flag is false
+}
+```
+
+Three independent flags because they are three different promises. A slot can
+offer a swappable module on occupancy terms that never change — and a slot
+advertising "the module may change" cannot quietly also reserve the right to
+change who is allowed to take it.
+
+## SlotInitParams
+
+```solidity
+struct SlotInitParams {
+    uint256 taxPercentage;        // basis points per 30 days (100 = 1%)
+    address module;               // utility module, address(0) for none
+    uint256 liquidationBountyBps; // share of collected tax paid to liquidators
+    uint256 minDepositSeconds;    // deposit must cover this much tax
+    address occupancyPolicy;      // IOccupancyPolicy, address(0) for instant buy
+}
+```
+
+`minDepositSeconds` is the guard against a buyer declaring a huge price with no
+means to pay for it: the deposit must cover that many seconds of tax at the
+declared price.
+
+## Curation
+
+```solidity
+function setModuleVerified(address module, bool verified, ...) external; // admin
+function isModuleVerified(address module) external view returns (bool);
+function setPolicyVerified(address policy, bool verified) external;      // admin
+```
+
+A display signal only. Unverified modules and policies work identically — they
+simply carry no endorsement, and the explorer says so.
+
+## Operations
+
+```solidity
+function collectAll(address[] calldata slots) external;  // batch tax collection
+function upgradeBeacon(address newImplementation) external;  // admin
+```
+
+`upgradeBeacon` moves every slot at once — they all share one implementation.
+Storage is strictly append-only for that reason.

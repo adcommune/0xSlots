@@ -15,7 +15,7 @@ import { normalizeDecimal, truncateAddress } from "@/utils";
 import { AddressInput } from "../address-input";
 import type { CreateSlotFormValues } from "../schema";
 
-export function StepRecipient() {
+export function SectionRecipient() {
   const { address } = useAccount();
   const form = useFormContext<CreateSlotFormValues>();
   const recipientMode = form.watch("recipientMode");
@@ -31,13 +31,12 @@ export function StepRecipient() {
   });
 
   return (
-    <div>
+    <>
       <FormField
         control={form.control}
         name="recipientMode"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Recipient</FormLabel>
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
@@ -248,7 +247,7 @@ export function StepRecipient() {
           />
         </div>
       )}
-    </div>
+    </>
   );
 }
 

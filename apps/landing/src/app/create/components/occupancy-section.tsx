@@ -1,7 +1,6 @@
 "use client";
 
 import { getChainTokens } from "@0xslots/sdk";
-import { ShieldCheck } from "lucide-react";
 import { useFormContext } from "react-hook-form";
 import {
   FormDescription,
@@ -59,29 +58,16 @@ export function OccupancySection() {
   const custom = useErc20Check(currencyMode === "custom" ? customCurrency : "");
   const currencySymbol =
     currencyMode === "preset" ? presetToken?.symbol : custom.data?.symbol;
-  const minPriceValue = form.watch("minPriceValue");
 
   return (
-    <div className="space-y-4">
-      <div>
-        <p className="text-sm font-medium">Occupancy</p>
-        <p className="text-xs text-muted-foreground mt-1">
-          When this slot can be taken from whoever holds it. Leave the policy at
-          None for instant buy — anyone can take it at its declared price, in
-          the next block.
-        </p>
-      </div>
-
+    <>
       {/* ── Policy ── */}
       <FormField
         control={form.control}
         name="occupancyPolicyMode"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="flex items-center gap-1.5">
-              <ShieldCheck className="size-3.5 text-violet-500" /> Occupancy
-              policy
-            </FormLabel>
+            <FormLabel>Occupancy policy</FormLabel>
             <Select onValueChange={field.onChange} value={field.value}>
               <SelectTrigger>
                 <SelectValue />
@@ -262,6 +248,6 @@ export function OccupancySection() {
           )}
         />
       )}
-    </div>
+    </>
   );
 }

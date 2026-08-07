@@ -1,4 +1,3 @@
-import { Sparkles } from "lucide-react";
 import { useFormContext } from "react-hook-form";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -12,9 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { AddressInput } from "../address-input";
 import type { CreateSlotFormValues } from "../schema";
-import { OccupancySection } from "./occupancy-section";
 
-export function StepExtra() {
+export function SectionPermissions() {
   const form = useFormContext<CreateSlotFormValues>();
   const mutableTax = form.watch("mutableTax");
   const mutableModule = form.watch("mutableModule");
@@ -25,7 +23,7 @@ export function StepExtra() {
     <>
       {/* Mutability & Manager */}
       <div>
-        <p className="text-sm font-medium mb-4">Mutability & Manager</p>
+        <p className="text-sm font-medium mb-4">Mutability</p>
 
         <div className="flex gap-6">
           <FormField
@@ -111,20 +109,13 @@ export function StepExtra() {
 
       <Separator />
 
-      <OccupancySection />
-
-      <Separator />
-
       {/* Liquidation Bounty */}
       <FormField
         control={form.control}
         name="liquidationBountyPercent"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="flex items-center gap-1.5">
-              <Sparkles className="size-3.5 text-amber-500" /> Liquidation
-              Bounty
-            </FormLabel>
+            <FormLabel>Liquidation Bounty</FormLabel>
             <div className="relative">
               <Input
                 {...field}

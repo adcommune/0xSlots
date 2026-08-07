@@ -15,6 +15,16 @@ export interface TokenInfo {
    * that dead end.
    */
   faucet?: boolean;
+  /**
+   * Slug naming this token's logo asset — `"usdc"`, `"weth"`.
+   *
+   * Deliberately not a URL or a path. This package is published and has more
+   * than one consumer; a `/tokens/usdc.svg` would encode one app's `public/`
+   * layout into shared data, and a CDN URL would put a third-party host in
+   * every consumer's render path. The slug names the asset and lets each
+   * consumer decide where it lives.
+   */
+  logo?: string;
 }
 
 /**
@@ -32,12 +42,23 @@ export const CHAIN_TOKENS: Record<SlotsChain, TokenInfo[]> = {
       symbol: "USDCf",
       decimals: 6,
       faucet: true,
+      logo: "usdc",
     },
     {
       address: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
       name: "USD Coin",
       symbol: "USDC",
       decimals: 6,
+      logo: "usdc",
+    },
+    // The OP-stack WETH predeploy — the same address on every OP-stack chain.
+    // No faucet, but wrapping testnet ETH at it is a single call.
+    {
+      address: "0x4200000000000000000000000000000000000006",
+      name: "Wrapped Ether",
+      symbol: "WETH",
+      decimals: 18,
+      logo: "weth",
     },
   ],
   [SlotsChain.BASE]: [
@@ -46,6 +67,16 @@ export const CHAIN_TOKENS: Record<SlotsChain, TokenInfo[]> = {
       name: "USD Coin",
       symbol: "USDC",
       decimals: 6,
+      logo: "usdc",
+    },
+    // Appended, never first: `getDefaultToken` returns [0], so USDC stays the
+    // default and an untouched create form produces the slot it always did.
+    {
+      address: "0x4200000000000000000000000000000000000006",
+      name: "Wrapped Ether",
+      symbol: "WETH",
+      decimals: 18,
+      logo: "weth",
     },
   ],
 };

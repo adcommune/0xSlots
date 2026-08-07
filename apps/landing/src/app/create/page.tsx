@@ -3,13 +3,11 @@
 import { getChainTokens } from "@0xslots/sdk";
 import { SplitV2Type } from "@0xsplits/splits-sdk/types";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Check, ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { type Address, getAddress, isAddress, zeroAddress } from "viem";
 import { useAccount, useSwitchChain } from "wagmi";
 import { PageHeader } from "@/components/page-header";
-import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { useChain } from "@/context/chain";
 import { useNavigation } from "@/context/navigation";
@@ -18,10 +16,14 @@ import { useSplitClient } from "@/hooks/use-split-client";
 import { resolveEnsAddress } from "@/lib/ens";
 import { toRawUnits } from "@/utils";
 import { useResolveAddress } from "./address-input";
+import { FormSection } from "./components/form-section";
 import { MobileBottomBar } from "./components/mobile-bottom-bar";
-import { StepExtra } from "./components/step-extra";
-import { StepParameters } from "./components/step-parameters";
-import { StepRecipient } from "./components/step-recipient";
+import { OccupancySection } from "./components/occupancy-section";
+import { SectionCurrency } from "./components/section-currency";
+import { SectionEconomics } from "./components/section-economics";
+import { SectionModule } from "./components/section-module";
+import { SectionPermissions } from "./components/section-permissions";
+import { SectionRecipient } from "./components/section-recipient";
 import { SummaryCard } from "./components/summary-card";
 import { useErc20Check } from "./hooks/use-erc20-check";
 import {
@@ -31,12 +33,7 @@ import {
   percentToBps,
   toSeconds,
 } from "./schema";
-
-const STEPS = [
-  { n: 1, label: "Recipient" },
-  { n: 2, label: "Parameters" },
-  { n: 3, label: "Extra" },
-] as const;
+import { SECTION } from "./sections";
 
 export default function CreatePage() {
   const { push } = useNavigation();
@@ -54,8 +51,6 @@ export default function CreatePage() {
   } = useSlotAction();
   const splitClient = useSplitClient();
   const [slotCount, setSlotCount] = useState(1);
-
-  const [step, setStep] = useState(1);
   const [creatingSplit, setCreatingSplit] = useState(false);
 
   const form = useForm<CreateSlotFormValues>({
@@ -115,13 +110,10 @@ export default function CreatePage() {
     moduleResolved.isResolving ||
     managerResolved.isResolving;
 
-  // Set default preset currency when chain changes
-  useEffect(() => {
-    const tokens = getChainTokens(selectedChainId);
-    if (tokens.length > 0) {
-      form.setValue("presetCurrency", tokens[0].address);
-    }
-  }, [selectedChainId, form]);
+  // The chain's default currency is seeded by SectionCurrency, next to the
+  // FormField that registers `presetCurrency`. Seeding it from here silently
+  // did nothing: react-hook-form re-syncs unregistered fields back to their
+  // schema default during mount, so the write was undone before first paint.
 
   useEffect(() => {
     if (isSuccess) {
@@ -298,95 +290,32 @@ export default function CreatePage() {
             className="flex gap-6 items-start"
           >
             {/* Left: Form */}
+            {/* No divide-y: FormSection carries border-t first:border-t-0, so
+                the first section sits flush against the card's own border. */}
             <div className="flex-1 min-w-0 rounded-lg border">
-              {/* Card header */}
-              <div className="bg-muted/50 border-b px-2 md:px-4 py-3">
-                <h2 className="text-sm font-semibold">
-                  Step {step} of 3 —{" "}
-                  {step === 1
-                    ? "Recipient"
-                    : step === 2
-                      ? "Parameters"
-                      : "Extra"}
-                </h2>
-              </div>
+              <FormSection meta={SECTION.recipient}>
+                <SectionRecipient />
+              </FormSection>
 
-              {/* Step indicator */}
-              <div className="px-3 md:px-6 pt-2 md:pt-5 pb-1">
-                <div className="flex items-center">
-                  {STEPS.map(({ n, label }, i) => (
-                    <div
-                      key={n}
-                      className="flex items-center flex-1 last:flex-none"
-                    >
-                      <button
-                        type="button"
-                        onClick={() => n <= step && setStep(n)}
-                        className={`flex items-center gap-2 ${n <= step ? "cursor-pointer" : "cursor-default"}`}
-                      >
-                        <span
-                          className={`size-6 rounded-full flex items-center justify-center text-xs font-medium transition-colors ${
-                            n === step
-                              ? "bg-primary text-primary-foreground"
-                              : n < step
-                                ? "bg-primary/15 text-primary"
-                                : "bg-muted text-muted-foreground"
-                          }`}
-                        >
-                          {n < step ? <Check className="size-3" /> : n}
-                        </span>
-                        <span
-                          className={`text-xs hidden sm:inline ${n === step ? "font-medium" : "text-muted-foreground"}`}
-                        >
-                          {label}
-                        </span>
-                      </button>
-                      {i < 2 && (
-                        <div
-                          className={`flex-1 h-px mx-3 ${n < step ? "bg-primary/30" : "bg-border"}`}
-                        />
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <FormSection meta={SECTION.currency}>
+                <SectionCurrency />
+              </FormSection>
 
-              {/* Step content */}
-              <div
-                key={step}
-                className="p-3 md:p-6 space-y-6 animate-in fade-in duration-200"
-              >
-                {step === 1 && <StepRecipient />}
-                {step === 2 && <StepParameters />}
-                {step === 3 && <StepExtra />}
+              <FormSection meta={SECTION.economics}>
+                <SectionEconomics />
+              </FormSection>
 
-                {/* Navigation */}
-                <div className="flex justify-between pt-2">
-                  {step > 1 ? (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setStep(step - 1)}
-                    >
-                      <ChevronLeft className="size-4 mr-1" />
-                      Back
-                    </Button>
-                  ) : (
-                    <div />
-                  )}
-                  {step < 3 && (
-                    <Button
-                      type="button"
-                      size="sm"
-                      onClick={() => setStep(step + 1)}
-                    >
-                      Next
-                      <ChevronRight className="size-4 ml-1" />
-                    </Button>
-                  )}
-                </div>
-              </div>
+              <FormSection meta={SECTION.module}>
+                <SectionModule />
+              </FormSection>
+
+              <FormSection meta={SECTION.occupancy}>
+                <OccupancySection />
+              </FormSection>
+
+              <FormSection meta={SECTION.permissions}>
+                <SectionPermissions />
+              </FormSection>
             </div>
 
             <SummaryCard
@@ -398,7 +327,6 @@ export default function CreatePage() {
             />
 
             <MobileBottomBar
-              step={step}
               slotCount={slotCount}
               setSlotCount={setSlotCount}
               submitState={submitState}
