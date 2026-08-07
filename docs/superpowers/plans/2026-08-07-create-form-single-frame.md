@@ -12,12 +12,18 @@
 
 ## Global Constraints
 
-- **No test framework exists** in `apps/landing` or `packages/sdk` — no vitest, no jest, no test files. Do not introduce one; it is out of scope. Verification is: `pnpm check`, a typecheck/build, a runtime assertion against built SDK output where applicable, and browser verification via the preview tools against the `landing` dev server (`.claude/launch.json`, port 3200).
+- **No test framework exists** in `apps/landing` or `packages/sdk` — no vitest, no jest, no test files. Do not introduce one; it is out of scope. Verification is: a path-scoped `npx biome check` (see below), a typecheck/build, a runtime assertion against built SDK output where applicable, and browser verification via the preview tools against the `landing` dev server (`.claude/launch.json`, port 3200).
 - **The submitted transaction must not change.** `onSubmit` in `page.tsx` keeps calling the same four SDK helpers with the same arguments. No edits to `apps/landing/src/app/create/schema.ts` — field names, validation rules and default values are frozen.
 - **WETH address is `0x4200000000000000000000000000000000000006`** on both Base (8453) and Base Sepolia (84532). Verified by `eth_call`: `symbol()` → `WETH`, `decimals()` → `18`, `name()` → `Wrapped Ether`.
 - **WETH goes last** in each chain's token array. `getDefaultToken` returns index `[0]`, so an untouched form must still create exactly the slot it creates today.
 - **Plain `<img>` for logos**, following the repo's existing convention in `apps/landing/src/components/ens-identity.tsx:44` — including the `// eslint-disable-next-line @next/next/no-img-element` comment above it.
-- **Run `pnpm check:fix` before every commit.** Biome owns formatting; hand-formatted code will fail `pnpm check`.
+- **Never run `pnpm check:fix` or `pnpm check` at the repo root.** Biome's config includes `**`, so a root run descends into the `apps/contracts/lib/openzeppelin-*` submodules (and their nested `forge-std`) and reformats vendored code, along with generated deployment JSON and `pages.gen.ts`. The root check is also *already red* on that vendored code, so it can never be used as a pass/fail gate. Format and check only the paths you touched:
+
+  ```bash
+  npx biome check --write <the files this task changed>
+  ```
+
+  Confirm with `git status --short` after every such run that nothing outside your task's file list was modified.
 - Commit after every task. Use conventional commit prefixes as the repo does (`feat(create):`, `refactor(create):`, `feat(sdk):`).
 
 ---
@@ -202,8 +208,7 @@ It is also the first 18-decimal currency the protocol has offered. Nothing neede
 - [ ] **Step 6: Format, check and commit**
 
 ```bash
-pnpm check:fix
-pnpm check
+npx biome check --write packages/sdk/src/tokens.ts .changeset/weth-and-token-logos.md
 git add packages/sdk/src/tokens.ts .changeset/weth-and-token-logos.md
 git commit -m "feat(sdk): offer WETH on Base and Base Sepolia, name token logos"
 ```
@@ -306,8 +311,7 @@ Expected: build succeeds. `TokenLogo` has no consumers yet, so this only proves 
 - [ ] **Step 5: Format, check and commit**
 
 ```bash
-pnpm check:fix
-pnpm check
+npx biome check --write apps/landing/public/tokens apps/landing/src/components/token-logo.tsx
 git add apps/landing/public/tokens apps/landing/src/components/token-logo.tsx
 git commit -m "feat(create): vendor USDC and WETH logos, add TokenLogo"
 ```
@@ -536,8 +540,7 @@ Expected: build succeeds. No consumers yet.
 - [ ] **Step 4: Format, check and commit**
 
 ```bash
-pnpm check:fix
-pnpm check
+npx biome check --write apps/landing/src/app/create/sections.ts apps/landing/src/app/create/components/form-section.tsx
 git add apps/landing/src/app/create/sections.ts apps/landing/src/app/create/components/form-section.tsx
 git commit -m "feat(create): section metadata and the FormSection wrapper"
 ```
@@ -964,8 +967,7 @@ Expected: build succeeds. `step-parameters.tsx` still exists and is still what `
 - [ ] **Step 5: Format, check and commit**
 
 ```bash
-pnpm check:fix
-pnpm check
+npx biome check --write apps/landing/src/app/create/components/section-currency.tsx apps/landing/src/app/create/components/section-economics.tsx apps/landing/src/app/create/components/section-module.tsx
 git add apps/landing/src/app/create/components/section-currency.tsx apps/landing/src/app/create/components/section-economics.tsx apps/landing/src/app/create/components/section-module.tsx
 git commit -m "feat(create): split parameters into currency, economics and module sections"
 ```
@@ -1045,8 +1047,7 @@ Expected: build succeeds. Note that the running wizard is briefly in a mixed sta
 - [ ] **Step 5: Format, check and commit**
 
 ```bash
-pnpm check:fix
-pnpm check
+npx biome check --write apps/landing/src/app/create/components/section-recipient.tsx apps/landing/src/app/create/components/section-permissions.tsx apps/landing/src/app/create/components/occupancy-section.tsx
 git add apps/landing/src/app/create/components/section-recipient.tsx apps/landing/src/app/create/components/section-permissions.tsx apps/landing/src/app/create/components/occupancy-section.tsx
 git commit -m "refactor(create): rename step components to sections, hoist occupancy heading"
 ```
@@ -1396,12 +1397,11 @@ Add the error summary in the `DrawerFooter`, above the `SubmitButton`:
 - [ ] **Step 6: Build and commit the whole change**
 
 ```bash
-pnpm check:fix
-pnpm check
+npx biome check --write apps/landing/src/app/create
 pnpm build:landing
 ```
 
-Expected: all three succeed.
+Expected: both succeed. `git status --short` should show changes only under `apps/landing/src/app/create`.
 
 ```bash
 git add -A apps/landing/src/app/create
