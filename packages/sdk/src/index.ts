@@ -43,5 +43,8 @@ export {
   getChainTokens,
   getDefaultToken,
   getFaucetToken,
+  isNativeCurrency,
+  NATIVE_CURRENCY,
+  NATIVE_CURRENCY_ADDRESS,
   type TokenInfo,
 } from "./tokens";

@@ -53,13 +53,13 @@ contract BatchCollectTest is Test {
 
         config = SlotConfig({
             mutableTax: false,
-            mutableModule: false, mutablePolicy: false,
+            mutableUtility: false, mutablePolicy: false,
             manager: address(0)
         });
 
         initParams = SlotInitParams({
             taxPercentage: 1000, // 10%
-            module: address(0),
+            utility: address(0),
             liquidationBountyBps: 0,
             minDepositSeconds: 86400, // 1 day
             occupancyPolicy: address(0)

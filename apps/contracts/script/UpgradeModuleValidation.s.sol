@@ -13,7 +13,7 @@ import {SlotFactory} from "../src/SlotFactory.sol";
  * Fixes:
  *   - Slot.getSlotInfo() reverting when `module` has no deployed code
  *     (retroactively repairs slots already pointing at codeless addresses)
- *   - Slot.proposeModuleUpdate() rejects codeless newModule
+ *   - Slot.proposeUtilityUpdate() rejects codeless newUtility
  *   - SlotFactory._validateConfig() rejects codeless module at creation
  *
  * Usage:

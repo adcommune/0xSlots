@@ -29,7 +29,9 @@
     "clean": "rm -rf dist generated",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
-    "prepublishOnly": "pnpm run build"
+    "prepublishOnly": "pnpm run build",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@0xslots/contracts": "workspace:*",
@@ -45,7 +47,8 @@
     "@types/node": "^20.10.8",
     "@types/react": "^19",
     "tsup": "^8.0.0",
-    "typescript": "^5.4.4"
+    "typescript": "^5.4.4",
+    "vitest": "^2.1.9"
   },
   "peerDependencies": {
     "@tanstack/react-query": ">=5",

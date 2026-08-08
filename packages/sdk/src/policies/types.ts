@@ -65,4 +65,19 @@ export interface VouchedPolicy {
   minPrice?: bigint;
   /** Currency a price floor is denominated in. */
   currency?: Address;
+  /**
+   * Listed only so it can still be NAMED, never offered as a new choice.
+   *
+   * This is the difference between the two reasons an entry exists. A policy
+   * whose factory has since been superseded can no longer be derived — the
+   * current factory predicts a different address, so the provenance check
+   * rightly refuses it — but slots already pointing at it must keep rendering
+   * a label rather than a bare address.
+   *
+   * `getVouchedPolicy` still returns these, so naming works. The picker
+   * accessors (`vouchedPoliciesForChain`, `searchVouchedPolicies`) omit them,
+   * so nobody is offered terms whose replacement already exists at a different
+   * address — which would otherwise show the same floor twice.
+   */
+  superseded?: boolean;
 }
