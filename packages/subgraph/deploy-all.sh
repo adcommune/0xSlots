@@ -42,8 +42,25 @@ for NETWORK in "${NETWORKS[@]}"; do
   echo "📡 $NETWORK → $STUDIO_NAME ($VERSION)"
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-  # Generate subgraph.yaml from template
-  pnpm exec mustache "config/${NETWORK}.json" subgraph.template.yaml > subgraph.yaml
+  # Generate subgraph.yaml from template.
+  #
+  # Rendered to a temp file and checked before it replaces the real manifest.
+  # `pnpm exec` nested inside a `pnpm run` script prints workspace warnings on
+  # STDOUT — standalone it uses stderr — so a bare `> subgraph.yaml` silently
+  # captured one as line 1 and `graph codegen` died on a YAMLException about a
+  # document separator, which points nowhere near the actual cause.
+  RENDERED=$(mktemp)
+  pnpm exec mustache "config/${NETWORK}.json" subgraph.template.yaml > "$RENDERED"
+
+  if ! head -1 "$RENDERED" | grep -q '^specVersion:'; then
+    echo "✗ Rendered manifest for $NETWORK does not start with specVersion." >&2
+    echo "  Something wrote to stdout ahead of mustache. First 3 lines:" >&2
+    head -3 "$RENDERED" >&2
+    rm -f "$RENDERED"
+    exit 1
+  fi
+
+  mv "$RENDERED" subgraph.yaml
   echo "✓ Generated subgraph.yaml"
 
   # Codegen + build
