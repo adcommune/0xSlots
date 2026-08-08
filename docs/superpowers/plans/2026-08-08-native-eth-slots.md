@@ -57,8 +57,9 @@ Expected: compiles cleanly, all tests PASS. Note the exact test count in the sum
 
 - [ ] **Step 4: Commit**
 
+`git rm` already staged both deletions, so commit without re-adding. **Do not use `git add -A`** — `apps/contracts/cache/solidity-files-cache.json` is a tracked build artifact that forge rewrites on every run, and it must not be swept into these commits.
+
 ```bash
-git add -A
 git commit -m "refactor(contracts): drop SlotsRouter and IPermit2
 
 Built to paper over ERC-20 approval friction with Permit2. Native ETH
@@ -1029,13 +1030,18 @@ Expected: all PASS. A clean build matters because `via_ir = true` and stale arti
 
 - [ ] **Step 2: Confirm no storage layout drift**
 
+The baseline was captured **before Task 1 began**, at the commit the branch started from. Using a stashing approach here instead would be fragile: `apps/contracts/cache/solidity-files-cache.json` is a tracked file that forge rewrites on every run, so `git stash`/`pop` races with the build.
+
 Run:
 ```bash
-forge inspect Slot storage-layout > /tmp/slot-layout-new.txt
-git stash && forge inspect Slot storage-layout > /tmp/slot-layout-old.txt && git stash pop
-diff /tmp/slot-layout-old.txt /tmp/slot-layout-new.txt
+forge inspect Slot storage-layout > "$LAYOUT_DIR/slot-layout-after.txt"
+diff "$LAYOUT_DIR/slot-layout-before.txt" "$LAYOUT_DIR/slot-layout-after.txt" \
+  && echo "OK: storage layout unchanged"
 ```
-Expected: **no differences**. Any diff means a storage variable was added or reordered, which would corrupt every live slot on upgrade — stop and report it.
+
+(`LAYOUT_DIR` is the scratchpad path recorded in Step 0 of Task 1.)
+
+Expected: **no differences**, then `OK: storage layout unchanged`. Any diff means a storage variable was added or reordered, which would corrupt every live slot on upgrade — stop and report it.
 
 - [ ] **Step 3: Confirm Slot has no receive/fallback**
 
