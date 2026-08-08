@@ -9,7 +9,7 @@ import {MetadataModule} from "../src/modules/MetadataModule.sol";
 import {Slot} from "../src/Slot.sol";
 import {SlotFactory} from "../src/SlotFactory.sol";
 import {SlotConfig, SlotInitParams} from "../src/interfaces/ISlot.sol";
-import {ISlotsModule} from "../src/interfaces/ISlotsModule.sol";
+import {IUtility} from "../src/interfaces/IUtility.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 contract MockERC20 is ERC20 {
@@ -78,12 +78,12 @@ contract MetadataModuleTest is Test {
     function _createSlotWithModule() internal returns (Slot) {
         SlotConfig memory config = SlotConfig({
             mutableTax: true,
-            mutableModule: true, mutablePolicy: false,
+            mutableUtility: true, mutablePolicy: false,
             manager: manager
         });
         SlotInitParams memory init = SlotInitParams({
             taxPercentage: 100,
-            module: address(module),
+            utility: address(module),
             liquidationBountyBps: 500,
             minDepositSeconds: 86400,
             occupancyPolicy: address(0)
@@ -130,7 +130,7 @@ contract MetadataModuleTest is Test {
     }
 
     function test_supportsISlotsModule() public view {
-        assertTrue(module.supportsInterface(type(ISlotsModule).interfaceId));
+        assertTrue(module.supportsInterface(type(IUtility).interfaceId));
     }
 
     function test_supportsIERC165() public view {

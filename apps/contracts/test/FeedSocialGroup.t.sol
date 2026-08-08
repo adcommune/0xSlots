@@ -76,12 +76,12 @@ contract FeedSocialGroupTest is Test {
         // ── Slot using FeedPostModule ──
         SlotConfig memory cfg = SlotConfig({
             mutableTax: false,
-            mutableModule: false, mutablePolicy: false,
+            mutableUtility: false, mutablePolicy: false,
             manager: address(0)
         });
         SlotInitParams memory init = SlotInitParams({
             taxPercentage: 100,         // 1%/month
-            module: address(feedModule),
+            utility: address(feedModule),
             liquidationBountyBps: 0,
             minDepositSeconds: 0,
             occupancyPolicy: address(0)

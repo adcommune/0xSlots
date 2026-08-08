@@ -9,7 +9,7 @@ import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {Slot} from "../src/Slot.sol";
 import {SlotFactory} from "../src/SlotFactory.sol";
 import {SlotConfig, SlotInitParams} from "../src/interfaces/ISlot.sol";
-import {ISlotsModule} from "../src/interfaces/ISlotsModule.sol";
+import {IUtility} from "../src/interfaces/IUtility.sol";
 
 contract TAMockERC20 is ERC20 {
     constructor() ERC20("Mock", "MCK") { _mint(msg.sender, 1_000_000 ether); }
@@ -18,7 +18,7 @@ contract TAMockERC20 is ERC20 {
 
 /// @dev The shape a launchpad would use: a per-address ledger of tax actually
 ///      paid, built only from `onSettle`.
-contract LedgerModule is ISlotsModule {
+contract LedgerModule is IUtility {
     mapping(address => uint256) public paidBy;
     mapping(address => uint256) public owedBy;
     uint256 public total;
@@ -43,13 +43,13 @@ contract LedgerModule is ISlotsModule {
     function onPriceUpdate(uint256, uint256, uint256) external override {}
     function onRelease(uint256, address) external override {}
     function supportsInterface(bytes4 id) external pure returns (bool) {
-        return id == type(ISlotsModule).interfaceId || id == type(IERC165).interfaceId;
+        return id == type(IUtility).interfaceId || id == type(IERC165).interfaceId;
     }
 }
 
 /// @dev Reverts on every hook. Proves a broken module cannot brick a slot, and
 ///      that the `TaxPaid` event survives regardless.
-contract RevertingModule is ISlotsModule {
+contract RevertingModule is IUtility {
     function onSettle(uint256, address, uint256, uint256) external pure override {
         revert("nope");
     }
@@ -62,7 +62,7 @@ contract RevertingModule is ISlotsModule {
     function onPriceUpdate(uint256, uint256, uint256) external override {}
     function onRelease(uint256, address) external override {}
     function supportsInterface(bytes4 id) external pure returns (bool) {
-        return id == type(ISlotsModule).interfaceId || id == type(IERC165).interfaceId;
+        return id == type(IUtility).interfaceId || id == type(IERC165).interfaceId;
     }
 }
 
@@ -121,10 +121,10 @@ contract TaxAttributionTest is Test {
         return Slot(factory.createSlot(
             recipient,
             IERC20(address(token)),
-            SlotConfig({mutableTax: false, mutableModule: false, mutablePolicy: false, manager: address(0)}),
+            SlotConfig({mutableTax: false, mutableUtility: false, mutablePolicy: false, manager: address(0)}),
             SlotInitParams({
                 taxPercentage: 1000, // 10%/month
-                module: module,
+                utility: module,
                 liquidationBountyBps: 500,
                 minDepositSeconds: 0,
             occupancyPolicy: address(0)

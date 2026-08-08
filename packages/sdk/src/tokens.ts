@@ -1,5 +1,6 @@
 import type { Address } from "viem";
 import { SlotsChain } from "./client";
+import { NATIVE_CURRENCY_ADDRESS } from "./native";
 
 export interface TokenInfo {
   address: Address;
@@ -26,6 +27,26 @@ export interface TokenInfo {
    */
   logo?: string;
 }
+
+/**
+ * Re-exported so consumers have one place to look for currency concerns. The
+ * definitions live in `./native` because `client.ts` needs them too, and
+ * importing them from here would close a cycle — see that module's note.
+ *
+ * `address(0)` is a sound sentinel because `Slot.initialize` rejected it
+ * outright before native support existed, so no slot predating that change can
+ * be holding it.
+ */
+export { isNativeCurrency, NATIVE_CURRENCY_ADDRESS } from "./native";
+
+/** Native ETH presented as a token, so consumers need no second code path. */
+export const NATIVE_CURRENCY: TokenInfo = {
+  address: NATIVE_CURRENCY_ADDRESS,
+  name: "Ether",
+  symbol: "ETH",
+  decimals: 18,
+  logo: "eth",
+};
 
 /**
  * Predetermined tokens available per chain for slot creation.
@@ -60,6 +81,10 @@ export const CHAIN_TOKENS: Record<SlotsChain, TokenInfo[]> = {
       decimals: 18,
       logo: "weth",
     },
+    // Appended, never first — same rule as WETH above. `getDefaultToken`
+    // returns [0], so USDC stays the default and an untouched create form
+    // produces the slot it always did.
+    NATIVE_CURRENCY,
   ],
   [SlotsChain.BASE]: [
     {
@@ -78,6 +103,7 @@ export const CHAIN_TOKENS: Record<SlotsChain, TokenInfo[]> = {
       decimals: 18,
       logo: "weth",
     },
+    NATIVE_CURRENCY,
   ],
 };
 

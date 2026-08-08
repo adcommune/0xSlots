@@ -86,13 +86,13 @@ contract DeployFeed is BaseScript {
         for (uint256 i = 0; i < slots.length; i++) {
             SlotConfig memory config = SlotConfig({
                 mutableTax: true,
-                mutableModule: false, mutablePolicy: false,
+                mutableUtility: false, mutablePolicy: false,
                 manager: vm.addr(deployerPrivateKey)
             });
 
             SlotInitParams memory initParams = SlotInitParams({
                 taxPercentage: slots[i].taxBps,
-                module: feedModule,
+                utility: feedModule,
                 liquidationBountyBps: slots[i].liquidationBountyBps,
                 minDepositSeconds: slots[i].minDepositSeconds,
             occupancyPolicy: address(0)

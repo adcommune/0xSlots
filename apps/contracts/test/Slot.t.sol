@@ -7,7 +7,7 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {Slot} from "../src/Slot.sol";
 import {SlotFactory} from "../src/SlotFactory.sol";
 import {SlotConfig, SlotInitParams, PendingUpdate, SlotInfo} from "../src/interfaces/ISlot.sol";
-import {ISlotsModule} from "../src/interfaces/ISlotsModule.sol";
+import {IUtility} from "../src/interfaces/IUtility.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
@@ -20,8 +20,8 @@ contract MockERC20 is ERC20 {
     }
 }
 
-/// @dev Minimal ISlotsModule implementation used to test module wiring.
-contract MockModule is ISlotsModule {
+/// @dev Minimal IUtility implementation used to test module wiring.
+contract MockModule is IUtility {
     function name() external pure returns (string memory) { return "MockModule"; }
     function version() external pure returns (string memory) { return "1.0.0"; }
     function feeBps() external pure returns (uint256) { return 0; }
@@ -32,7 +32,7 @@ contract MockModule is ISlotsModule {
     function onRelease(uint256, address) external {}
     function onSettle(uint256, address, uint256, uint256) external {}
     function supportsInterface(bytes4 id) external pure returns (bool) {
-        return id == type(ISlotsModule).interfaceId || id == type(IERC165).interfaceId;
+        return id == type(IUtility).interfaceId || id == type(IERC165).interfaceId;
     }
 }
 
@@ -68,7 +68,7 @@ contract SlotV3Test is Test {
     function _defaultConfig() internal view returns (SlotConfig memory) {
         return SlotConfig({
             mutableTax: true,
-            mutableModule: false, mutablePolicy: false,
+            mutableUtility: false, mutablePolicy: false,
             manager: manager
         });
     }
@@ -76,7 +76,7 @@ contract SlotV3Test is Test {
     function _immutableConfig() internal pure returns (SlotConfig memory) {
         return SlotConfig({
             mutableTax: false,
-            mutableModule: false, mutablePolicy: false,
+            mutableUtility: false, mutablePolicy: false,
             manager: address(0)
         });
     }
@@ -84,7 +84,7 @@ contract SlotV3Test is Test {
     function _defaultInit() internal pure returns (SlotInitParams memory) {
         return SlotInitParams({
             taxPercentage: 100, // 1%
-            module: address(0),
+            utility: address(0),
             liquidationBountyBps: 500, // 5%
             minDepositSeconds: 86400, // 1 day
             occupancyPolicy: address(0)
@@ -117,7 +117,7 @@ contract SlotV3Test is Test {
         assertEq(slot.recipient(), recipient);
         assertEq(address(slot.currency()), address(token));
         assertEq(slot.mutableTax(), true);
-        assertEq(slot.mutableModule(), false);
+        assertEq(slot.mutableUtility(), false);
         assertEq(slot.manager(), manager);
         assertEq(slot.taxPercentage(), 100);
         assertEq(slot.occupant(), address(0));
@@ -157,7 +157,7 @@ contract SlotV3Test is Test {
     function test_immutableConfig_managerMustBeZero() public {
         SlotConfig memory config = SlotConfig({
             mutableTax: false,
-            mutableModule: false, mutablePolicy: false,
+            mutableUtility: false, mutablePolicy: false,
             manager: manager // should fail
         });
         vm.expectRevert(SlotFactory.InvalidConfig_ManagerMustBeZero.selector);
@@ -167,7 +167,7 @@ contract SlotV3Test is Test {
     function test_mutableConfig_managerRequired() public {
         SlotConfig memory config = SlotConfig({
             mutableTax: true,
-            mutableModule: false, mutablePolicy: false,
+            mutableUtility: false, mutablePolicy: false,
             manager: address(0) // should fail
         });
         vm.expectRevert(SlotFactory.InvalidConfig_ManagerRequired.selector);
@@ -466,7 +466,7 @@ contract SlotV3Test is Test {
 
         vm.prank(alice);
         vm.expectRevert(Slot.NotManager.selector);
-        slot.proposeModuleUpdate(makeAddr("module"));
+        slot.proposeUtilityUpdate(makeAddr("module"));
     }
 
     function test_onlyManagerCanPropose() public {
@@ -524,7 +524,7 @@ contract SlotV3Test is Test {
     function _initWithModule(address module) internal pure returns (SlotInitParams memory) {
         return SlotInitParams({
             taxPercentage: 100,
-            module: module,
+            utility: module,
             liquidationBountyBps: 500,
             minDepositSeconds: 86400,
             occupancyPolicy: address(0)
@@ -566,29 +566,29 @@ contract SlotV3Test is Test {
             _initWithModule(address(mod))
         );
         Slot slot = Slot(addr);
-        assertEq(slot.module(), address(mod));
+        assertEq(slot.utility(), address(mod));
 
         // getSlotInfo should not revert and should return the module metadata.
         SlotInfo memory info = slot.getSlotInfo();
-        assertEq(info.module, address(mod));
-        assertEq(info.moduleName, "MockModule");
-        assertEq(info.moduleVersion, "1.0.0");
+        assertEq(info.utility, address(mod));
+        assertEq(info.utilityName, "MockModule");
+        assertEq(info.utilityVersion, "1.0.0");
     }
 
     function test_createSlot_acceptsZeroModule() public {
         // Sanity check: address(0) remains valid (means "no module").
         Slot slot = _createSlot(_defaultConfig());
-        assertEq(slot.module(), address(0));
+        assertEq(slot.utility(), address(0));
 
         SlotInfo memory info = slot.getSlotInfo();
-        assertEq(info.module, address(0));
-        assertEq(info.moduleName, "");
+        assertEq(info.utility, address(0));
+        assertEq(info.utilityName, "");
     }
 
     function test_proposeModuleUpdate_rejectsCodelessModule() public {
         SlotConfig memory config = SlotConfig({
             mutableTax: false,
-            mutableModule: true, mutablePolicy: false,
+            mutableUtility: true, mutablePolicy: false,
             manager: manager
         });
         Slot slot = _createSlot(config);
@@ -596,42 +596,42 @@ contract SlotV3Test is Test {
         address eoa = makeAddr("noCodeModule");
         vm.prank(manager);
         vm.expectRevert(Slot.InvalidModule_NoCode.selector);
-        slot.proposeModuleUpdate(eoa);
+        slot.proposeUtilityUpdate(eoa);
     }
 
     function test_proposeModuleUpdate_acceptsContractModule() public {
         SlotConfig memory config = SlotConfig({
             mutableTax: false,
-            mutableModule: true, mutablePolicy: false,
+            mutableUtility: true, mutablePolicy: false,
             manager: manager
         });
         Slot slot = _createSlot(config);
         MockModule mod = new MockModule();
 
         vm.prank(manager);
-        slot.proposeModuleUpdate(address(mod));
+        slot.proposeUtilityUpdate(address(mod));
 
         PendingUpdate memory update = slot.getPendingUpdate();
-        assertTrue(update.hasModuleUpdate);
-        assertEq(update.newModule, address(mod));
+        assertTrue(update.hasUtilityUpdate);
+        assertEq(update.newUtility, address(mod));
     }
 
     function test_proposeModuleUpdate_acceptsZeroToClearModule() public {
-        // Clearing the module (newModule = address(0)) must remain allowed,
+        // Clearing the module (newUtility = address(0)) must remain allowed,
         // otherwise managers can't undo a module assignment.
         SlotConfig memory config = SlotConfig({
             mutableTax: false,
-            mutableModule: true, mutablePolicy: false,
+            mutableUtility: true, mutablePolicy: false,
             manager: manager
         });
         Slot slot = _createSlot(config);
 
         vm.prank(manager);
-        slot.proposeModuleUpdate(address(0));
+        slot.proposeUtilityUpdate(address(0));
 
         PendingUpdate memory update = slot.getPendingUpdate();
-        assertTrue(update.hasModuleUpdate);
-        assertEq(update.newModule, address(0));
+        assertTrue(update.hasUtilityUpdate);
+        assertEq(update.newUtility, address(0));
     }
 
     function test_getSlotInfo_doesNotRevertWhenModuleCodeWiped() public {
@@ -656,9 +656,9 @@ contract SlotV3Test is Test {
 
         // Must not revert.
         SlotInfo memory info = slot.getSlotInfo();
-        assertEq(info.module, modAddr);
-        assertEq(info.moduleName, "");
-        assertEq(info.moduleVersion, "");
-        assertEq(info.moduleFeeBps, 0);
+        assertEq(info.utility, modAddr);
+        assertEq(info.utilityName, "");
+        assertEq(info.utilityVersion, "");
+        assertEq(info.utilityFeeBps, 0);
     }
 }

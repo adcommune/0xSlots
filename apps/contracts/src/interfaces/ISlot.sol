@@ -23,15 +23,15 @@ uint8 constant EVT_SETTLED = 8;
 /// @notice Immutable identity config — determines CREATE2 address
 /// @notice What, if anything, a manager may change after creation.
 /// @dev Three independent flags because they gate three different kinds of
-///      promise. `mutableModule` covers the UTILITY module — what the slot
+///      promise. `mutableUtility` covers the utility — what the slot
 ///      does. `mutablePolicy` covers the OCCUPANCY policy — whether forced sale
 ///      applies and on what terms. Someone may reasonably want a swappable ad
-///      module on immutable occupancy terms; conflating the two would make that
-///      inexpressible, and would let a slot advertising "module can change"
+///      utility on immutable occupancy terms; conflating the two would make that
+///      inexpressible, and would let a slot advertising "utility can change"
 ///      silently also reserve the right to change who can take it.
 struct SlotConfig {
     bool mutableTax;
-    bool mutableModule;
+    bool mutableUtility;
     bool mutablePolicy;
     address manager; // address(0) if every flag is false
 }
@@ -39,7 +39,7 @@ struct SlotConfig {
 /// @notice Initial values set at creation
 struct SlotInitParams {
     uint256 taxPercentage;        // basis points (100 = 1%)
-    address module;               // hook contract, address(0) for none
+    address utility;              // hook contract, address(0) for none
     uint256 liquidationBountyBps; // basis points, default 0
     uint256 minDepositSeconds;    // minimum deposit to cover N seconds of tax
     address occupancyPolicy;      // IOccupancyPolicy, address(0) for instant buy
@@ -52,13 +52,13 @@ struct SlotInfo {
     address currency;
     address manager;
     bool mutableTax;
-    bool mutableModule;
+    bool mutableUtility;
     bool mutablePolicy;
     // State
     address occupant;
     uint256 price;
     uint256 taxPercentage;
-    address module;
+    address utility;
     uint256 liquidationBountyBps;
     uint256 minDepositSeconds;
     // Financials (live-computed)
@@ -70,17 +70,17 @@ struct SlotInfo {
     uint256 lastSettled;
     uint256 secondsUntilLiquidation;
     bool insolvent;
-    // Module info (populated if module != address(0))
-    string moduleName;
-    string moduleVersion;
-    uint256 moduleFeeBps;
-    address moduleFeeRecipient;
-    string moduleURI;
+    // Utility info (populated if utility != address(0))
+    string utilityName;
+    string utilityVersion;
+    uint256 utilityFeeBps;
+    address utilityFeeRecipient;
+    string utilityURI;
     // Pending updates
     bool hasPendingTax;
     uint256 pendingTaxPercentage;
-    bool hasPendingModule;
-    address pendingModule;
+    bool hasPendingUtility;
+    address pendingUtility;
     // Occupancy
     //
     // `epochSeconds` is deliberately absent. Six slots still carry a non-zero
@@ -92,12 +92,12 @@ struct SlotInfo {
     address pendingPolicy;
 }
 
-/// @notice Pending update for tax or module (applied on next ownership transition)
+/// @notice Pending update for tax or utility (applied on next ownership transition)
 struct PendingUpdate {
     uint256 newTaxPercentage;
-    address newModule;
+    address newUtility;
     bool hasTaxUpdate;
-    bool hasModuleUpdate;
+    bool hasUtilityUpdate;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -137,7 +137,7 @@ interface ISlotEvents {
 
     event TaxCollected(address indexed recipient, uint256 amount);
 
-    event ModuleFeePaid(address indexed module, uint256 amount, uint256 feeBps);
+    event ModuleFeePaid(address indexed utility, uint256 amount, uint256 feeBps);
 
     event Settled(uint256 taxOwed, uint256 taxPaid, uint256 depositRemaining);
 
@@ -154,7 +154,7 @@ interface ISlotEvents {
     ///      occupant is going insolvent. Anything reconstructing contributions
     ///      from `price x time` computes `taxOwed` and will over-credit.
     ///
-    ///      Gross of the module fee, which is skimmed later in `_distributeTax`.
+    ///      Gross of the utility fee, which is skimmed later in `_distributeTax`.
     event TaxPaid(
         address indexed occupant,
         uint256 taxOwed,
@@ -163,11 +163,11 @@ interface ISlotEvents {
 
     event TaxUpdateProposed(uint256 newPercentage);
 
-    event ModuleUpdateProposed(address newModule);
+    event ModuleUpdateProposed(address newUtility);
 
     event PendingUpdateCancelled();
 
-    event PendingUpdateApplied(uint256 newTaxPercentage, address newModule);
+    event PendingUpdateApplied(uint256 newTaxPercentage, address newUtility);
 
     event LiquidationBountyUpdated(uint256 newBps);
 

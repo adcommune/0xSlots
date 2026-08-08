@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {ISlotsModule} from "../interfaces/ISlotsModule.sol";
+import {IUtility} from "../interfaces/IUtility.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {UUPSUpgradeable} from "@openzeppelin-upgradeable/contracts/proxy/utils/UUPSUpgradeable.sol";
 import {OwnableUpgradeable} from "@openzeppelin-upgradeable/contracts/access/OwnableUpgradeable.sol";
@@ -14,7 +14,7 @@ contract MetadataModule is
     Initializable,
     UUPSUpgradeable,
     OwnableUpgradeable,
-    ISlotsModule
+    IUtility
 {
     /// @notice slot address => URI
     mapping(address => string) public tokenURI;
@@ -92,7 +92,7 @@ contract MetadataModule is
         bytes4 interfaceId
     ) external pure override returns (bool) {
         return
-            interfaceId == type(ISlotsModule).interfaceId ||
+            interfaceId == type(IUtility).interfaceId ||
             interfaceId == type(IERC165).interfaceId;
     }
 

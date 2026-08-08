@@ -76,7 +76,7 @@ contract FinalFixesTest is Test {
     function _init() internal pure returns (SlotInitParams memory) {
         return SlotInitParams({
             taxPercentage: 100,
-            module: address(0),
+            utility: address(0),
             liquidationBountyBps: 500,
             minDepositSeconds: 0,
             occupancyPolicy: address(0)
@@ -87,7 +87,7 @@ contract FinalFixesTest is Test {
         return Slot(factory.createSlot(
             recipient,
             IERC20(address(token)),
-            SlotConfig({mutableTax: false, mutableModule: false, mutablePolicy: false, manager: address(0)}),
+            SlotConfig({mutableTax: false, mutableUtility: false, mutablePolicy: false, manager: address(0)}),
             _init()
         ));
     }
@@ -101,7 +101,7 @@ contract FinalFixesTest is Test {
         s = Slot(factory.createSlot(
             recipient,
             IERC20(address(token)),
-            SlotConfig({mutableTax: false, mutableModule: false, mutablePolicy: false, manager: address(0)}),
+            SlotConfig({mutableTax: false, mutableUtility: false, mutablePolicy: false, manager: address(0)}),
             _init()));
         vm.store(
             address(s),
@@ -143,7 +143,7 @@ contract FinalFixesTest is Test {
         s.initialize(
             attacker,
             IERC20(address(token)),
-            SlotConfig({mutableTax: false, mutableModule: false, mutablePolicy: false, manager: address(0)}),
+            SlotConfig({mutableTax: false, mutableUtility: false, mutablePolicy: false, manager: address(0)}),
             _init(),
             attacker
         );
@@ -156,7 +156,7 @@ contract FinalFixesTest is Test {
     ///      cannot be given one afterwards by anyone — not the attacker, not
     ///      the admin, not the factory — because no path exists to do it.
     function test_Policy_CannotBeInstalledRetroactively() public {
-        Slot s = _slot(); // created with no policy, mutableModule false
+        Slot s = _slot(); // created with no policy, mutableUtility false
         FFDenyAllPolicy deny = new FFDenyAllPolicy();
 
         // No manager exists on an immutable slot, so `onlyManager` refuses
@@ -178,7 +178,7 @@ contract FinalFixesTest is Test {
         Slot s = Slot(factory.createSlot(
             recipient,
             IERC20(address(token)),
-            SlotConfig({mutableTax: false, mutableModule: false, mutablePolicy: true, manager: address(this)}),
+            SlotConfig({mutableTax: false, mutableUtility: false, mutablePolicy: true, manager: address(this)}),
             _init()
         ));
 
@@ -191,18 +191,18 @@ contract FinalFixesTest is Test {
     /// @dev The two flags gate different promises and must not be one flag.
     ///      A slot may reasonably want a swappable ad module on occupancy terms
     ///      that are fixed forever — the common case, and the one that was
-    ///      inexpressible while `proposePolicyUpdate` read `mutableModule`.
+    ///      inexpressible while `proposePolicyUpdate` read `mutableUtility`.
     function test_MutableModule_DoesNotImplyMutablePolicy() public {
         FFDenyAllPolicy p = new FFDenyAllPolicy();
         Slot s = Slot(factory.createSlot(
             recipient,
             IERC20(address(token)),
-            SlotConfig({mutableTax: false, mutableModule: true, mutablePolicy: false, manager: address(this)}),
+            SlotConfig({mutableTax: false, mutableUtility: true, mutablePolicy: false, manager: address(this)}),
             _init()
         ));
 
         // The module may move...
-        s.proposeModuleUpdate(address(0));
+        s.proposeUtilityUpdate(address(0));
 
         // ...but the occupancy terms may not.
         vm.expectRevert(Slot.PolicyNotMutable.selector);
@@ -215,12 +215,12 @@ contract FinalFixesTest is Test {
         Slot s = Slot(factory.createSlot(
             recipient,
             IERC20(address(token)),
-            SlotConfig({mutableTax: false, mutableModule: false, mutablePolicy: true, manager: address(this)}),
+            SlotConfig({mutableTax: false, mutableUtility: false, mutablePolicy: true, manager: address(this)}),
             _init()
         ));
 
         vm.expectRevert(Slot.ModuleNotMutable.selector);
-        s.proposeModuleUpdate(address(0));
+        s.proposeUtilityUpdate(address(0));
     }
 
     /// @dev `getSlotInfo` must report a slot's whole current state. It used to
@@ -230,13 +230,13 @@ contract FinalFixesTest is Test {
         Slot s = Slot(factory.createSlot(
             recipient,
             IERC20(address(token)),
-            SlotConfig({mutableTax: false, mutableModule: false, mutablePolicy: true, manager: address(this)}),
+            SlotConfig({mutableTax: false, mutableUtility: false, mutablePolicy: true, manager: address(this)}),
             _init()
         ));
 
         SlotInfo memory info = s.getSlotInfo();
         assertTrue(info.mutablePolicy, "occupancy mutability must be reported");
-        assertFalse(info.mutableModule);
+        assertFalse(info.mutableUtility);
         assertFalse(info.mutableTax);
         assertEq(info.lastSettled, block.timestamp, "settlement clock reported");
 
@@ -260,7 +260,7 @@ contract FinalFixesTest is Test {
         Slot s = Slot(factory.createSlot(
             recipient,
             IERC20(address(token)),
-            SlotConfig({mutableTax: false, mutableModule: false, mutablePolicy: false, manager: address(0)}),
+            SlotConfig({mutableTax: false, mutableUtility: false, mutablePolicy: false, manager: address(0)}),
             init
         ));
 
@@ -309,7 +309,7 @@ contract FinalFixesTest is Test {
         s = Slot(factory.createSlot(
             recipient,
             IERC20(address(blk)),
-            SlotConfig({mutableTax: false, mutableModule: false, mutablePolicy: false, manager: address(0)}),
+            SlotConfig({mutableTax: false, mutableUtility: false, mutablePolicy: false, manager: address(0)}),
             _init()));
         if (epoch != 0) {
             vm.store(

@@ -90,7 +90,7 @@ contract OccupancyPolicyTest is Test {
     function _init() internal pure returns (SlotInitParams memory) {
         return SlotInitParams({
             taxPercentage: 100,
-            module: address(0),
+            utility: address(0),
             liquidationBountyBps: 500,
             minDepositSeconds: 86400,
             occupancyPolicy: address(0)
@@ -98,7 +98,7 @@ contract OccupancyPolicyTest is Test {
     }
 
     function _immutableConfig() internal pure returns (SlotConfig memory) {
-        return SlotConfig({mutableTax: false, mutableModule: false, mutablePolicy: false, manager: address(0)});
+        return SlotConfig({mutableTax: false, mutableUtility: false, mutablePolicy: false, manager: address(0)});
     }
 
     /// No policy attached — behaviour must be byte-for-byte as today.
@@ -165,8 +165,8 @@ contract OccupancyPolicyTest is Test {
     }
 
     function test_ProposePolicyUpdate_AppliesOnTransition() public {
-        // mutablePolicy, not mutableModule — the two are separate promises.
-        SlotConfig memory cfg = SlotConfig({mutableTax: false, mutableModule: false, mutablePolicy: true, manager: manager});
+        // mutablePolicy, not mutableUtility — the two are separate promises.
+        SlotConfig memory cfg = SlotConfig({mutableTax: false, mutableUtility: false, mutablePolicy: true, manager: manager});
         address s = factory.createSlot(recipient, IERC20(address(token)), cfg, _init());
 
         vm.startPrank(alice);

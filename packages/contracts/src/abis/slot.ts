@@ -51,7 +51,7 @@ export const slotAbi = [
       },
     ],
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "payable",
   },
   {
     type: "function",
@@ -896,7 +896,7 @@ export const slotAbi = [
       },
     ],
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "payable",
   },
   {
     type: "function",
@@ -1441,6 +1441,16 @@ export const slotAbi = [
   {
     type: "error",
     name: "CannotBuyFromYourself",
+    inputs: [],
+  },
+  {
+    type: "error",
+    name: "InvalidValue",
+    inputs: [],
+  },
+  {
+    type: "error",
+    name: "TransferFailed",
     inputs: [],
   },
   {

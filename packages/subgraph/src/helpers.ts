@@ -80,12 +80,29 @@ export function getOrCreateCurrency(address: Address): Currency {
   const id = address.toHexString();
   let currency = Currency.load(id);
   if (!currency) {
+    currency = new Currency(id);
+
+    // The native-ETH sentinel. Restated here rather than imported: mappings
+    // are AssemblyScript compiled to WASM and cannot read the TypeScript
+    // constant in packages/sdk. Two definitions, one convention — a change to
+    // the sentinel must touch both.
+    //
+    // Handled before any contract call: name/symbol/decimals all revert
+    // against address(0), which would otherwise store an unnamed currency and
+    // render every native slot without a label.
+    if (address.equals(Address.zero())) {
+      currency.name = "Ether";
+      currency.symbol = "ETH";
+      currency.decimals = 18;
+      currency.save();
+      return currency;
+    }
+
     const erc20 = ERC20.bind(address);
     const nameResult = erc20.try_name();
     const symbolResult = erc20.try_symbol();
     const decimalsResult = erc20.try_decimals();
 
-    currency = new Currency(id);
     currency.name = nameResult.reverted ? null : nameResult.value;
     currency.symbol = symbolResult.reverted ? null : symbolResult.value;
     currency.decimals = decimalsResult.reverted ? 18 : decimalsResult.value;

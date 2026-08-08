@@ -19,7 +19,7 @@ struct OccupancyContext {
 
 /// @title IOccupancyPolicy
 /// @notice Authoritative, fail-closed veto over slot occupancy transitions.
-/// @dev Contrast with ISlotsModule, which is advisory and fail-open. A policy
+/// @dev Contrast with IUtility, which is advisory and fail-open. A policy
 ///      that reverts BLOCKS the action. A policy may never move funds, change
 ///      the price, or redirect the buyer — it answers yes/no and nothing else.
 ///      `liquidate()` and `release()` are never routed through a policy.

@@ -1,8 +1,12 @@
 import type { Address } from "viem";
+import { NATIVE_CURRENCY_ADDRESS } from "../native";
 import type { VouchedPolicy } from "./types";
 
 /** Circle USDC on Base — what the mainnet price floors are denominated in. */
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" as Address;
+
+/** The native-ETH sentinel, for floors denominated in ETH rather than a token. */
+const NATIVE_CURRENCY = NATIVE_CURRENCY_ADDRESS as Address;
 
 /**
  * Policies the protocol vouches for, keyed by lowercase address.
@@ -47,11 +51,12 @@ export const VOUCHED_POLICIES: Record<string, VouchedPolicy> = {
 
   // ── Base mainnet — the starter set deployed with the policy factories ────
   //
-  // Present for reason 1, not reason 2: every one of these IS derivable, and
-  // `resolvePolicy` names them from the chain without help. They are listed so
-  // the create form's "Verified policy" picker has something to offer on
-  // mainnet — an editorial shortlist, not a naming fallback. Deleting them
-  // costs the picker, never a label.
+  // The TENURE entries below are present for reason 1, not reason 2: they are
+  // derivable, and `resolvePolicy` names them from the chain without help.
+  // They are listed so the create form's "Verified policy" picker has
+  // something to offer on mainnet. Deleting them costs the picker, never a
+  // label. `MinimumTenurePolicyFactory` has not been redeployed, so they are
+  // unaffected by the price-factory move below.
   "0x45b848850b386f1356ee95024a87cf42fbcd6f59": {
     chainId: 8453,
     tenureSeconds: 3600,
@@ -76,10 +81,23 @@ export const VOUCHED_POLICIES: Record<string, VouchedPolicy> = {
     description:
       "Nobody can buy the occupant out for 7 days after they take the slot. Liquidation still works if they stop paying.",
   },
+  // ── Price floors from the SUPERSEDED factory (0xF1cA0Fe7…) ───────────────
+  //
+  // These two flipped from reason 1 to reason 2 on 2026-08-08. The price
+  // factory was redeployed to accept `address(0)`, and since a factory is the
+  // CREATE2 deployer for everything it makes, the current factory predicts
+  // different addresses and `resolvePolicy`'s provenance check correctly
+  // refuses to name these.
+  //
+  // The policy contracts themselves are unchanged and still deployed, so any
+  // slot pointing at one keeps working. Removing these entries does not break
+  // those slots — it makes them render as bare addresses, which is the same
+  // regression already documented for the Base Sepolia tenure policy above.
   "0x0e1cdb54224b0ad085a1ef875783425f5cb84b89": {
     chainId: 8453,
     minPrice: 1_000_000n,
     currency: USDC_BASE,
+    superseded: true,
     label: "$1 minimum price (USDC)",
     impact: "near-pure",
     description:
@@ -89,10 +107,52 @@ export const VOUCHED_POLICIES: Record<string, VouchedPolicy> = {
     chainId: 8453,
     minPrice: 10_000_000n,
     currency: USDC_BASE,
+    superseded: true,
     label: "$10 minimum price (USDC)",
     impact: "near-pure",
     description:
       "Nobody may declare below 10 USDC on this slot. Forced sale is not delayed at all — anyone can still take it at any moment, provided they declare at least the floor.",
+  },
+
+  // ── Price floors from the CURRENT factory (0xe218F2e7…), Base mainnet ────
+  //
+  // Reason 1, like the tenure policies: all four are derivable and
+  // `resolvePolicy` names them unaided. Listed for the picker.
+  "0x6e5d1a33311ffbeceb58ad6f37e2161ced7ae95b": {
+    chainId: 8453,
+    minPrice: 1_000_000n,
+    currency: USDC_BASE,
+    label: "$1 minimum price (USDC)",
+    impact: "near-pure",
+    description:
+      "Nobody may declare below 1 USDC on this slot. Forced sale is not delayed at all — anyone can still take it at any moment, provided they declare at least the floor.",
+  },
+  "0xe6e0d13d7e7153842ccf5faadb8ae019b61a2cba": {
+    chainId: 8453,
+    minPrice: 10_000_000n,
+    currency: USDC_BASE,
+    label: "$10 minimum price (USDC)",
+    impact: "near-pure",
+    description:
+      "Nobody may declare below 10 USDC on this slot. Forced sale is not delayed at all — anyone can still take it at any moment, provided they declare at least the floor.",
+  },
+  "0x3eebb2aa85df93cb043c3262374bee785e2e8fe8": {
+    chainId: 8453,
+    minPrice: 1_000_000_000_000_000n,
+    currency: NATIVE_CURRENCY,
+    label: "0.001 ETH minimum price",
+    impact: "near-pure",
+    description:
+      "Nobody may declare below 0.001 ETH on this slot. Forced sale is not delayed at all — anyone can still take it at any moment, provided they declare at least the floor.",
+  },
+  "0xd758f62d2edf4b0d8dc4444847ed45f913621eff": {
+    chainId: 8453,
+    minPrice: 10_000_000_000_000_000n,
+    currency: NATIVE_CURRENCY,
+    label: "0.01 ETH minimum price",
+    impact: "near-pure",
+    description:
+      "Nobody may declare below 0.01 ETH on this slot. Forced sale is not delayed at all — anyone can still take it at any moment, provided they declare at least the floor.",
   },
 };
 
@@ -129,18 +189,25 @@ export function getVouchedPolicy(
   return { ...entry, address: key };
 }
 
-/** Vouched policies available on a given chain, for a picker. */
+/**
+ * Vouched policies available on a given chain, for a picker.
+ *
+ * Superseded entries are omitted: they exist so old slots keep their labels,
+ * not so anyone picks them again. `getVouchedPolicy` still resolves them.
+ */
 export function vouchedPoliciesForChain(chainId: number): VouchedPolicyEntry[] {
   return Object.entries(VOUCHED_POLICIES)
-    .filter(([, p]) => p.chainId === chainId)
+    .filter(([, p]) => p.chainId === chainId && !p.superseded)
     .map(([address, p]) => ({ ...p, address }));
 }
 
 /**
  * Vouched policies on a chain whose label or description matches `query`.
  *
- * Substring, case-insensitive; an empty query returns everything on the chain,
- * so a picker can use this for both its initial list and its filtered one.
+ * Substring, case-insensitive; an empty query returns everything offerable on
+ * the chain, so a picker can use this for both its initial list and its
+ * filtered one. Superseded entries are excluded, inherited from
+ * `vouchedPoliciesForChain`.
  */
 export function searchVouchedPolicies(
   chainId: number,
