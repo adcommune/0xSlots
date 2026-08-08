@@ -28,6 +28,36 @@ export interface TokenInfo {
 }
 
 /**
+ * The sentinel a slot uses to denominate its market in native ETH.
+ *
+ * `Slot.initialize` rejected `address(0)` outright before native support
+ * existed, so no slot predating that change can be holding it — which is what
+ * makes it a sound sentinel rather than an ambiguous default.
+ */
+export const NATIVE_CURRENCY_ADDRESS =
+  "0x0000000000000000000000000000000000000000" as const;
+
+/**
+ * Whether `address` denominates a slot in native ETH.
+ *
+ * Accepts `undefined` deliberately: every call site in the app holds a
+ * possibly-unloaded address, and making each one guard separately is how one
+ * gets missed.
+ */
+export function isNativeCurrency(address: Address | undefined): boolean {
+  return address?.toLowerCase() === NATIVE_CURRENCY_ADDRESS;
+}
+
+/** Native ETH presented as a token, so consumers need no second code path. */
+export const NATIVE_CURRENCY: TokenInfo = {
+  address: NATIVE_CURRENCY_ADDRESS,
+  name: "Ether",
+  symbol: "ETH",
+  decimals: 18,
+  logo: "eth",
+};
+
+/**
  * Predetermined tokens available per chain for slot creation.
  * The first token in each array is the default.
  */
@@ -60,6 +90,10 @@ export const CHAIN_TOKENS: Record<SlotsChain, TokenInfo[]> = {
       decimals: 18,
       logo: "weth",
     },
+    // Appended, never first — same rule as WETH above. `getDefaultToken`
+    // returns [0], so USDC stays the default and an untouched create form
+    // produces the slot it always did.
+    NATIVE_CURRENCY,
   ],
   [SlotsChain.BASE]: [
     {
@@ -78,6 +112,7 @@ export const CHAIN_TOKENS: Record<SlotsChain, TokenInfo[]> = {
       decimals: 18,
       logo: "weth",
     },
+    NATIVE_CURRENCY,
   ],
 };
 
