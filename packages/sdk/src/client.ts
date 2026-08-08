@@ -21,6 +21,10 @@ import { SlotsError } from "./errors";
 import { getSdk } from "./generated/graphql";
 import { FeedModuleClient } from "./modules/feed";
 import { MetadataModuleClient } from "./modules/metadata";
+// Only ever called from a function body, never at module-init time — which is
+// what keeps the cycle with `./tokens` (which needs `SlotsChain` from here to
+// build CHAIN_TOKENS) benign.
+import { isNativeCurrency } from "./tokens";
 
 // ─── GraphQL Meta ─────────────────────────────────────────────────────────────
 
@@ -642,7 +646,8 @@ export class SlotsClient {
   // ═══════════════════════════════════════════════════════════════════════════
 
   /**
-   * Buy a slot (or force-buy an occupied one). Handles ERC-20 approval automatically.
+   * Buy a slot (or force-buy an occupied one).
+   * Handles ERC-20 approval automatically; native ETH slots pay by value.
    * @param params - Buy parameters (slot address, deposit amount, self-assessed price).
    * @returns Transaction hash.
    * @throws {SlotsError} If depositAmount or selfAssessedPrice is not positive, or the transaction fails.
@@ -659,7 +664,7 @@ export class SlotsClient {
     });
     const approvalAmount = currentPrice + params.depositAmount;
 
-    return this.withAllowance(params.slot, approvalAmount, {
+    return this.withPayment(params.slot, approvalAmount, {
       to: params.slot,
       abi: slotAbi,
       functionName: "buy",
@@ -686,7 +691,7 @@ export class SlotsClient {
 
   /**
    * Top up deposit on a slot. Anyone can pay to extend the occupant's deposit.
-   * Handles ERC-20 approval automatically.
+   * Handles ERC-20 approval automatically; native ETH slots pay by value.
    * @param slot - The slot contract address.
    * @param amount - The amount to deposit (must be > 0).
    * @returns Transaction hash.
@@ -694,7 +699,7 @@ export class SlotsClient {
    */
   async topUp(slot: Address, amount: bigint): Promise<Hash> {
     this.assertPositive(amount, "amount");
-    return this.withAllowance(slot, amount, {
+    return this.withPayment(slot, amount, {
       to: slot,
       abi: slotAbi,
       functionName: "topUp",
@@ -876,10 +881,14 @@ export class SlotsClient {
   // ─── Internals ──────────────────────────────────────────────────────────────
 
   /**
-   * Approve → confirm on-chain → execute call sequentially.
-   * Skips approval if the existing allowance already covers the amount.
+   * Send `call`, paying `amount` the way this slot's currency requires.
+   *
+   * Native slots hold no allowance to grant, so the value rides on the
+   * transaction itself. ERC-20 slots keep the approve → confirm on-chain →
+   * execute sequence, skipping the approval when the existing allowance
+   * already covers the amount.
    */
-  private async withAllowance(
+  private async withPayment(
     spender: Address,
     amount: bigint,
     call: {
@@ -894,6 +903,20 @@ export class SlotsClient {
       abi: slotAbi,
       functionName: "currency",
     });
+
+    if (isNativeCurrency(currency)) {
+      // No allowance exists to read or grant. The contract requires
+      // msg.value to equal `amount` exactly.
+      return this.wallet.writeContract({
+        address: call.to,
+        abi: call.abi,
+        functionName: call.functionName,
+        args: call.args as any,
+        value: amount,
+        account: this.account,
+        chain: this.chain,
+      });
+    }
 
     const allowance = await this.publicClient.readContract({
       address: currency,
@@ -926,7 +949,7 @@ export class SlotsClient {
       );
       if (confirmed < amount) {
         throw new SlotsError(
-          "withAllowance",
+          "withPayment",
           "Approval confirmed but on-chain allowance is still insufficient after retries",
         );
       }
