@@ -48,7 +48,11 @@ contract MinimumPricePolicyFactory is IPolicyFactory {
         address currency,
         uint256 minPrice
     ) external returns (address policy) {
-        if (currency == address(0)) revert InvalidCurrency();
+        // `address(0)` is the native-ETH sentinel and denotes 18 decimals
+        // unambiguously, so the decimals rationale for binding a currency is
+        // satisfied, not bypassed. Any other address must be a real contract.
+        if (currency != address(0) && currency.code.length == 0)
+            revert InvalidCurrency();
         // A zero floor is the same as having no policy, but installed it would
         // still cost a call on every buy. Reject it as a misconfiguration.
         if (minPrice == 0) revert InvalidFloor();

@@ -219,9 +219,21 @@ contract MinimumPricePolicyTest is Test {
         policyFactory.getOrDeploy(address(usdc), 0);
     }
 
-    function test_Factory_RejectsZeroCurrency() public {
+    /// @dev `address(0)` used to be rejected here. It is now the native-ETH
+    ///      sentinel, and it denotes 18 decimals unambiguously — which is the
+    ///      only thing binding a currency to the floor was ever protecting
+    ///      against, so the guarantee survives rather than being dropped.
+    function test_Factory_AcceptsNativeCurrency() public {
+        address policy = policyFactory.getOrDeploy(address(0), FLOOR);
+        assertEq(address(MinimumPricePolicy(policy).currency()), address(0));
+        assertEq(MinimumPricePolicy(policy).minPrice(), FLOOR);
+    }
+
+    /// @dev The rejection that replaced it: a non-zero currency must be a real
+    ///      contract. This case previously slipped through.
+    function test_Factory_RejectsCodelessCurrency() public {
         vm.expectRevert(MinimumPricePolicyFactory.InvalidCurrency.selector);
-        policyFactory.getOrDeploy(address(0), FLOOR);
+        policyFactory.getOrDeploy(makeAddr("notAToken"), FLOOR);
     }
 
     // ── Introspection ───────────────────────────────────────────────────────

@@ -8,6 +8,8 @@ import {Slot} from "../src/Slot.sol";
 import {SlotFactory} from "../src/SlotFactory.sol";
 import {SlotConfig, SlotInitParams} from "../src/interfaces/ISlot.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import {MinimumPricePolicyFactory} from "../src/policies/MinimumPricePolicyFactory.sol";
+import {MinimumPricePolicy} from "../src/policies/MinimumPricePolicy.sol";
 
 contract MockERC20 is ERC20 {
     constructor() ERC20("Mock", "MCK") {
@@ -436,5 +438,44 @@ contract NativeEthTest is Test {
 
         assertEq(slot.price(), 20 ether);
         _assertBalanceInvariant(slot, _actors());
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // PRICE FLOOR ON A NATIVE SLOT
+    // ═══════════════════════════════════════════════════════════
+
+    function test_native_minimumPriceFloor() public {
+        MinimumPricePolicyFactory policyFactory = new MinimumPricePolicyFactory();
+        address policy = policyFactory.getOrDeploy(address(0), 5 ether);
+
+        SlotInitParams memory init = _init();
+        init.occupancyPolicy = policy;
+        Slot slot = Slot(factory.createSlot(recipient, IERC20(address(0)), _config(), init));
+
+        // Below the floor is rejected.
+        vm.deal(alice, 1 ether);
+        vm.prank(alice);
+        vm.expectRevert(
+            abi.encodeWithSelector(MinimumPricePolicy.PriceBelowFloor.selector, 5 ether)
+        );
+        slot.buy{value: 1 ether}(alice, 1 ether, 4 ether);
+
+        // At or above the floor is accepted.
+        _buyNative(slot, alice, 1 ether, 5 ether);
+        assertEq(slot.price(), 5 ether);
+    }
+
+    function test_native_tokenBoundPolicyRejectsNativeSlot() public {
+        MinimumPricePolicyFactory policyFactory = new MinimumPricePolicyFactory();
+        address policy = policyFactory.getOrDeploy(address(token), 5 ether);
+
+        SlotInitParams memory init = _init();
+        init.occupancyPolicy = policy;
+        Slot slot = Slot(factory.createSlot(recipient, IERC20(address(0)), _config(), init));
+
+        vm.deal(alice, 1 ether);
+        vm.prank(alice);
+        vm.expectRevert(MinimumPricePolicy.WrongCurrency.selector);
+        slot.buy{value: 1 ether}(alice, 1 ether, 10 ether);
     }
 }
