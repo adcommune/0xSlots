@@ -1,7 +1,7 @@
 # Native ETH slots — design
 
 **Date:** 2026-08-08
-**Status:** Draft, pending review
+**Status:** Implemented — beacon upgrade pending
 **Scope:** `apps/contracts` (`Slot.sol`, `MinimumPricePolicyFactory.sol`; deletes `SlotsRouter.sol` + `IPermit2.sol`)
 **Builds on:** [V3_SPEC.md](../../V3_SPEC.md), [occupancy policies design](2026-07-29-occupancy-policies-design.md)
 
