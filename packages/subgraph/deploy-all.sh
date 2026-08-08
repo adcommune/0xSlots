@@ -112,9 +112,20 @@ echo "  Studio, with signal auto-migration ON. Publishing alone does not"
 echo "  route queries: an indexer must allocate to the new deployment and"
 echo "  sync it from startBlock first."
 echo ""
-echo "  Track that per network with:"
+echo "  Track that per network. The gateway needs an API key AND a POST body —"
+echo "  a plain GET returns 'auth error: missing authorization header'."
+echo ""
+echo "    export SUBGRAPH_API_KEY=..."
 for ROW in "${SUMMARY[@]}"; do
   IFS='|' read -r N S H <<< "$ROW"
-  [ "$H" != "(not found in output)" ] &&
-    echo "    curl https://gateway.thegraph.com/api/deployments/id/$H"
+  [ "$H" != "(not found in output)" ] || continue
+  echo ""
+  echo "    # $N"
+  echo "    curl -s -X POST https://gateway.thegraph.com/api/deployments/id/$H \\"
+  echo "      -H \"Authorization: Bearer \$SUBGRAPH_API_KEY\" \\"
+  echo "      -H 'Content-Type: application/json' \\"
+  echo "      -d '{\"query\":\"{ _meta { block { number } } hasIndexingErrors } }\"}'"
 done
+echo ""
+echo "  Errors until an indexer has the deployment; then _meta.block climbs"
+echo "  toward the chain head as it syncs."
