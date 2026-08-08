@@ -72,6 +72,22 @@ contract NativeEthTest is Test {
         return Slot(factory.createSlot(recipient, IERC20(address(token)), _config(), _init()));
     }
 
+    /// @dev Buys a native slot, dealing the buyer exactly what they owe.
+    ///      Vacant slots cost only the deposit; occupied ones also cost price.
+    function _buyNative(
+        Slot slot,
+        address buyer,
+        uint256 depositAmt,
+        uint256 selfPrice
+    ) internal {
+        uint256 owed = slot.occupant() == address(0)
+            ? depositAmt
+            : depositAmt + slot.price();
+        vm.deal(buyer, owed);
+        vm.prank(buyer);
+        slot.buy{value: owed}(buyer, depositAmt, selfPrice);
+    }
+
     // ═══════════════════════════════════════════════════════════
     // SENTINEL
     // ═══════════════════════════════════════════════════════════
@@ -87,5 +103,106 @@ contract NativeEthTest is Test {
         address notAToken = makeAddr("notAToken");
         vm.expectRevert(Slot.InvalidCurrency.selector);
         factory.createSlot(recipient, IERC20(notAToken), _config(), _init());
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // INBOUND
+    // ═══════════════════════════════════════════════════════════
+
+    function test_native_buyRecordsDeposit() public {
+        Slot slot = _createNativeSlot();
+        _buyNative(slot, alice, 1 ether, 10 ether);
+
+        assertEq(slot.occupant(), alice);
+        assertEq(slot.price(), 10 ether);
+        assertEq(slot.deposit(), 1 ether);
+        assertEq(address(slot).balance, 1 ether);
+    }
+
+    function test_native_buyRejectsWrongValue() public {
+        Slot slot = _createNativeSlot();
+        vm.deal(alice, 5 ether);
+
+        vm.prank(alice);
+        vm.expectRevert(Slot.InvalidValue.selector);
+        slot.buy{value: 0.5 ether}(alice, 1 ether, 10 ether); // too little
+
+        vm.prank(alice);
+        vm.expectRevert(Slot.InvalidValue.selector);
+        slot.buy{value: 2 ether}(alice, 1 ether, 10 ether);   // too much
+    }
+
+    function test_tokenSlot_rejectsValue() public {
+        Slot slot = _createTokenSlot();
+        vm.deal(alice, 1 ether);
+
+        vm.prank(alice);
+        vm.expectRevert(Slot.InvalidValue.selector);
+        slot.buy{value: 1 wei}(alice, 1 ether, 10 ether);
+    }
+
+    function test_native_topUp() public {
+        Slot slot = _createNativeSlot();
+        _buyNative(slot, alice, 1 ether, 10 ether);
+
+        vm.deal(bob, 2 ether);
+        vm.prank(bob);
+        slot.topUp{value: 2 ether}(2 ether);
+
+        assertEq(slot.deposit(), 3 ether);
+        assertEq(address(slot).balance, 3 ether);
+    }
+
+    function test_native_topUpRejectsMismatch() public {
+        Slot slot = _createNativeSlot();
+        _buyNative(slot, alice, 1 ether, 10 ether);
+
+        vm.deal(bob, 2 ether);
+        vm.prank(bob);
+        vm.expectRevert(Slot.InvalidValue.selector);
+        slot.topUp{value: 1 ether}(2 ether);
+    }
+
+    function test_native_hasNoReceiveFunction() public {
+        Slot slot = _createNativeSlot();
+        vm.deal(alice, 1 ether);
+
+        vm.prank(alice);
+        (bool ok, ) = address(slot).call{value: 1 ether}("");
+        assertFalse(ok, "slot must not accept unaccounted ETH");
+        assertEq(address(slot).balance, 0);
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // OUTBOUND
+    // ═══════════════════════════════════════════════════════════
+
+    function test_native_withdrawRoundTrip() public {
+        Slot slot = _createNativeSlot();
+        _buyNative(slot, alice, 5 ether, 10 ether);
+
+        // minDepositSeconds is 1 day at 1%/30d on a 10 ether price,
+        // so the floor is tiny and 1 ether is comfortably withdrawable.
+        uint256 before = alice.balance;
+        vm.prank(alice);
+        slot.withdraw(1 ether);
+
+        assertEq(alice.balance, before + 1 ether);
+        assertEq(slot.deposit(), 4 ether);
+        assertEq(address(slot).balance, 4 ether);
+    }
+
+    function test_native_evictionRefundsOutgoingOccupant() public {
+        Slot slot = _createNativeSlot();
+        _buyNative(slot, alice, 1 ether, 10 ether);
+
+        uint256 before = alice.balance;
+        _buyNative(slot, bob, 1 ether, 12 ether);
+
+        // Alice gets her remaining deposit plus the sale price, pushed
+        // inline because an EOA fits well inside the 30k cap.
+        assertEq(slot.occupant(), bob);
+        assertGt(alice.balance, before);
+        assertEq(slot.withdrawableOf(alice), 0);
     }
 }

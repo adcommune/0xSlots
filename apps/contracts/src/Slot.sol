@@ -227,9 +227,13 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         address account,
         uint256 depositAmount,
         uint256 selfAssessedPrice
-    ) external nonReentrant {
+    ) external payable nonReentrant {
         if (selfAssessedPrice == 0) revert InvalidPrice();
         if (account == address(0)) revert InvalidRecipient();
+
+        // Fails fast: the ERC-20 case needs no computed amount, and letting a
+        // stray-value call run the policy check first would only waste gas.
+        if (!_isNative() && msg.value != 0) revert InvalidValue();
 
         // Settle first so the policy is asked about current, not stale, state.
         // Stage 2 relies on this ordering too — see Task 6.
@@ -254,7 +258,12 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         uint256 owedByBuyer = prev == address(0)
             ? depositAmount
             : currentPrice + depositAmount;
-        if (owedByBuyer > 0) {
+        if (_isNative()) {
+            // The value is already held by this contract; there is nothing to
+            // pull. This check cannot move to the top of the function because
+            // `owedByBuyer` is only known after `_settle()` and the policy.
+            if (msg.value != owedByBuyer) revert InvalidValue();
+        } else if (owedByBuyer > 0) {
             currency.safeTransferFrom(msg.sender, address(this), owedByBuyer);
         }
 
@@ -386,10 +395,13 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     ///      `_occupant` stale (possibly address(0), when the slot was bought
     ///      out of vacancy), so a raw read would refuse to fund an occupancy
     ///      that every getter already reports as live.
-    function topUp(uint256 amount) external nonReentrant {
+    function topUp(uint256 amount) external payable nonReentrant {
         if (occupant() == address(0)) revert NotOccupant();
+        if (msg.value != (_isNative() ? amount : 0)) revert InvalidValue();
         _settle();
-        currency.safeTransferFrom(msg.sender, address(this), amount);
+        if (!_isNative()) {
+            currency.safeTransferFrom(msg.sender, address(this), amount);
+        }
         _deposit += amount;
         emit Deposited(msg.sender, amount);
         _emitProtocolEvent(EVT_DEPOSITED, abi.encode(msg.sender, amount));
@@ -405,7 +417,16 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         if (remaining < minDep) revert InsufficientDeposit();
 
         _deposit = remaining;
-        currency.safeTransfer(msg.sender, amount);
+        // Uncapped and revert-on-failure: this is caller-initiated, so a
+        // failure affects only the caller. It is also what makes the 30k cap
+        // in `_payOrCredit` safe — a recipient too gas-hungry for the capped
+        // push is credited, then collects here with all the gas it needs.
+        if (_isNative()) {
+            (bool ok, ) = msg.sender.call{value: amount}("");
+            if (!ok) revert TransferFailed();
+        } else {
+            currency.safeTransfer(msg.sender, amount);
+        }
         emit Withdrawn(msg.sender, amount);
         _emitProtocolEvent(EVT_WITHDRAWN, abi.encode(msg.sender, amount));
     }
@@ -476,7 +497,12 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         uint256 amount = withdrawableOf[account];
         if (amount == 0) revert NothingToClaim();
         withdrawableOf[account] = 0;
-        currency.safeTransfer(account, amount);
+        if (_isNative()) {
+            (bool ok, ) = account.call{value: amount}("");
+            if (!ok) revert TransferFailed();
+        } else {
+            currency.safeTransfer(account, amount);
+        }
         emit RefundClaimed(account, amount);
     }
 
@@ -805,13 +831,24 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     function _payOrCredit(address to, uint256 amount) internal {
         if (amount == 0) return;
 
-        address token = address(currency);
         bool paid;
-        if (token.code.length > 0) {
-            (bool ok, bytes memory data) = token.call(
-                abi.encodeCall(IERC20.transfer, (to, amount))
-            );
-            paid = ok && (data.length == 0 || abi.decode(data, (bool)));
+        if (_isNative()) {
+            // Gas-capped deliberately. Unlike an ERC-20 transfer, a native send
+            // runs the recipient's code — and this fires inside SOMEONE ELSE'S
+            // transaction (a buy, a liquidation). Uncapped, an outgoing occupant
+            // with a gas-burning `receive()` could make their own eviction
+            // expensive and unreliable. 30k covers an EOA (2300) and a typical
+            // Safe (~20k); anything greedier degrades to a claimable credit,
+            // which `claim()` then delivers at full gas.
+            (paid, ) = to.call{value: amount, gas: 30_000}("");
+        } else {
+            address token = address(currency);
+            if (token.code.length > 0) {
+                (bool ok, bytes memory data) = token.call(
+                    abi.encodeCall(IERC20.transfer, (to, amount))
+                );
+                paid = ok && (data.length == 0 || abi.decode(data, (bool)));
+            }
         }
 
         if (!paid) {
