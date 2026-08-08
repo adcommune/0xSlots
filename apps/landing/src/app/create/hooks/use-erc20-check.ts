@@ -1,5 +1,6 @@
 "use client";
 
+import { isNativeCurrency, NATIVE_CURRENCY } from "@0xslots/sdk";
 import { useQuery } from "@tanstack/react-query";
 import { type Address, erc20Abi, getAddress, isAddress } from "viem";
 import { usePublicClient } from "wagmi";
@@ -30,6 +31,17 @@ export function useErc20Check(rawAddress: string) {
     staleTime: Number.POSITIVE_INFINITY,
     queryFn: async () => {
       if (!checksummed || !publicClient) throw new Error("No address");
+
+      // The native sentinel is not a contract — answer without an RPC round
+      // trip rather than issuing three calls that all revert.
+      if (isNativeCurrency(checksummed)) {
+        return {
+          name: NATIVE_CURRENCY.name,
+          symbol: NATIVE_CURRENCY.symbol,
+          decimals: NATIVE_CURRENCY.decimals,
+          address: checksummed,
+        };
+      }
 
       const [name, symbol, decimals] = await Promise.all([
         publicClient.readContract({
