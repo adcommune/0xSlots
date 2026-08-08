@@ -21,10 +21,7 @@ import { SlotsError } from "./errors";
 import { getSdk } from "./generated/graphql";
 import { FeedModuleClient } from "./modules/feed";
 import { MetadataModuleClient } from "./modules/metadata";
-// Only ever called from a function body, never at module-init time — which is
-// what keeps the cycle with `./tokens` (which needs `SlotsChain` from here to
-// build CHAIN_TOKENS) benign.
-import { isNativeCurrency } from "./tokens";
+import { isNativeCurrency } from "./native";
 
 // ─── GraphQL Meta ─────────────────────────────────────────────────────────────
 
