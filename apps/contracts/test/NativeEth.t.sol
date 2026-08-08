@@ -331,4 +331,110 @@ contract NativeEthTest is Test {
 
         assertGt(slot.withdrawableOf(address(burner)), 0, "credit must survive");
     }
+
+    // ═══════════════════════════════════════════════════════════
+    // LIFECYCLE + INVARIANT
+    // ═══════════════════════════════════════════════════════════
+
+    /// @dev Every wei the slot holds is attributed to exactly one of three
+    ///      places. This holds only because Slot has no `receive()`: nothing
+    ///      can enter without being recorded. `withdrawableOf` is not
+    ///      enumerable, so the known actors are summed explicitly.
+    function _assertBalanceInvariant(Slot slot, address[] memory credited) internal view {
+        uint256 credits;
+        for (uint256 i = 0; i < credited.length; i++) {
+            credits += slot.withdrawableOf(credited[i]);
+        }
+        assertEq(
+            address(slot).balance,
+            slot.deposit() + slot.collectedTax() + credits,
+            "balance must equal deposit + collectedTax + credits"
+        );
+    }
+
+    function _actors() internal view returns (address[] memory a) {
+        a = new address[](4);
+        a[0] = alice;
+        a[1] = bob;
+        a[2] = recipient;
+        a[3] = liquidator;
+    }
+
+    function test_native_releaseRefundsAndFlushesTax() public {
+        Slot slot = _createNativeSlot();
+        _buyNative(slot, alice, 1 ether, 10 ether);
+
+        vm.warp(block.timestamp + 15 days);
+
+        uint256 recipientBefore = recipient.balance;
+        uint256 aliceBefore = alice.balance;
+
+        vm.prank(alice);
+        slot.release();
+
+        assertEq(slot.occupant(), address(0));
+        assertTrue(slot.isVacant());
+        assertGt(recipient.balance, recipientBefore, "tax must flush to recipient");
+        assertGt(alice.balance, aliceBefore, "remaining deposit must refund");
+        _assertBalanceInvariant(slot, _actors());
+    }
+
+    function test_native_liquidatePaysBounty() public {
+        Slot slot = _createNativeSlot();
+        _buyNative(slot, alice, 1 ether, 10 ether);
+
+        // Run the deposit dry. 1% per 30 days on a 10 ether price is
+        // 0.1 ether per 30 days, so a 1 ether deposit lasts ~300 days.
+        vm.warp(block.timestamp + 5000 days);
+        assertTrue(slot.isInsolvent());
+
+        uint256 bountyBefore = liquidator.balance;
+        vm.prank(liquidator);
+        slot.liquidate();
+
+        assertEq(slot.occupant(), address(0));
+        assertGt(liquidator.balance, bountyBefore, "bounty must be paid in ETH");
+        _assertBalanceInvariant(slot, _actors());
+    }
+
+    function test_native_collectFlushesTax() public {
+        Slot slot = _createNativeSlot();
+        _buyNative(slot, alice, 1 ether, 10 ether);
+
+        vm.warp(block.timestamp + 10 days);
+
+        uint256 before = recipient.balance;
+        slot.collect();
+
+        assertGt(recipient.balance, before);
+        assertEq(slot.collectedTax(), 0);
+        _assertBalanceInvariant(slot, _actors());
+    }
+
+    function test_native_taxChargesOutgoingOccupant() public {
+        Slot slot = _createNativeSlot();
+        _buyNative(slot, alice, 1 ether, 10 ether);
+
+        vm.warp(block.timestamp + 10 days);
+
+        // Buying charges the OUTGOING occupant for their own tenure, so
+        // alice's deposit funds the tax, not bob's.
+        _buyNative(slot, bob, 1 ether, 12 ether);
+
+        assertEq(slot.occupant(), bob);
+        assertEq(slot.deposit(), 1 ether, "bob's deposit must be untouched");
+        assertGt(slot.collectedTax(), 0, "alice's tenure must be charged");
+        _assertBalanceInvariant(slot, _actors());
+    }
+
+    function test_native_selfAssessWorks() public {
+        Slot slot = _createNativeSlot();
+        _buyNative(slot, alice, 1 ether, 10 ether);
+
+        vm.prank(alice);
+        slot.selfAssess(20 ether);
+
+        assertEq(slot.price(), 20 ether);
+        _assertBalanceInvariant(slot, _actors());
+    }
 }

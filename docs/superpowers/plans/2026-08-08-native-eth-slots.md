@@ -774,7 +774,7 @@ Append inside `contract NativeEthTest`:
     ///      places. This holds only because Slot has no `receive()`: nothing
     ///      can enter without being recorded. `withdrawableOf` is not
     ///      enumerable, so the known actors are summed explicitly.
-    function _assertBalanceInvariant(Slot slot, address[] memory credited) internal {
+    function _assertBalanceInvariant(Slot slot, address[] memory credited) internal view {
         uint256 credits;
         for (uint256 i = 0; i < credited.length; i++) {
             credits += slot.withdrawableOf(credited[i]);
