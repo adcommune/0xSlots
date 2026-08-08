@@ -97,8 +97,14 @@ export const MINIMUM_TENURE_POLICY_FACTORY: Partial<
 export const MINIMUM_PRICE_POLICY_FACTORY: Partial<
   Record<number, `0x${string}`>
 > = {
-  [baseSepolia.id]: "0x83d86EDBC62187180A4f94A3099a98ABaa1dfe0c",
-  [base.id]: "0xF1cA0Fe72269AaEf1E5e34bfF484269f18e1b777",
+  // Redeployed 2026-08-08 to accept `address(0)` — a floor denominated in
+  // native ETH. The factory is not upgradeable, so this is new bytecode at a
+  // new address, and every policy it predicts moved with it. Floors made by
+  // the previous factories (0x83d86EDB… / 0xF1cA0Fe7…) still work on the slots
+  // using them, but no longer verify here; they are named from the SDK's
+  // vouched list instead.
+  [baseSepolia.id]: "0x6a1F9D1F78CD63cd969d500994CB333027A22844",
+  [base.id]: "0xe218F2e710D2B686fD4524236F3B79EC06E92091",
 };
 
 /**
