@@ -51,6 +51,14 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     error NotFactory();
     error NothingToClaim();
 
+    /// @notice `msg.value` did not match what this slot's currency mode expects.
+    /// @dev Native slots require exact value; ERC-20 slots require none. The
+    ///      ERC-20 direction is what stops ETH being stranded in a token slot.
+    error InvalidValue();
+
+    /// @notice An uncapped native send failed in `withdraw` or `claim`.
+    error TransferFailed();
+
     // ═══════════════════════════════════════════════════════════
     // STORAGE — KEEP ORDER, APPEND ONLY
     // ═══════════════════════════════════════════════════════════
@@ -154,7 +162,12 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
         address _factory
     ) external initializer {
         if (_recipient == address(0)) revert InvalidRecipient();
-        if (address(_currency) == address(0)) revert InvalidCurrency();
+        // `address(0)` is the native-ETH sentinel — deliberately valid. Any
+        // other address must actually be a contract: a codeless non-zero
+        // currency used to pass this check and produce a slot whose every
+        // transfer silently no-ops.
+        if (address(_currency) != address(0) && address(_currency).code.length == 0)
+            revert InvalidCurrency();
         if (_init.taxPercentage == 0) revert InvalidTaxPercentage();
         if (_init.liquidationBountyBps > BASIS_POINTS)
             revert InvalidLiquidationBounty();
@@ -763,6 +776,14 @@ contract Slot is ISlotEvents, Initializable, ReentrancyGuard, Multicall {
     function _enforceMinDepositExisting(uint256 price_) internal view {
         uint256 minDep = _minDepositFor(price_);
         if (_deposit < minDep) revert InsufficientDeposit();
+    }
+
+    /// @dev True when this slot's market is denominated in native ETH.
+    ///      `address(0)` is a sound sentinel because `initialize` rejected it
+    ///      outright before native support existed, so no slot predating this
+    ///      change can be holding it.
+    function _isNative() internal view returns (bool) {
+        return address(currency) == address(0);
     }
 
     /// @dev Pay `to`, and if the currency refuses, credit them instead so the
