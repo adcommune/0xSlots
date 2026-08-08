@@ -18,6 +18,49 @@ contract MockERC20 is ERC20 {
     }
 }
 
+/// @dev Burns every wei of gas forwarded to it. Models an occupant trying to
+///      make their own eviction fail. Can never receive ETH by any means —
+///      which is the point: it must still not be able to block a buy.
+contract GasBurner {
+    function buyInto(Slot slot, uint256 dep, uint256 price) external payable {
+        slot.buy{value: msg.value}(address(this), dep, price);
+    }
+
+    receive() external payable {
+        while (true) {}
+    }
+}
+
+/// @dev Needs far more than the 30k push cap but succeeds at full gas.
+///      Models a legitimate smart-contract occupant: credited on eviction,
+///      paid on claim.
+contract GasHog {
+    uint256[] private junk;
+
+    function buyInto(Slot slot, uint256 dep, uint256 price) external payable {
+        slot.buy{value: msg.value}(address(this), dep, price);
+    }
+
+    receive() external payable {
+        // Four cold SSTOREs — roughly 80k gas, comfortably over the 30k cap
+        // and comfortably under a full-gas claim.
+        for (uint256 i = 0; i < 4; i++) junk.push(i);
+    }
+}
+
+/// @dev Rejects ETH outright. The simplest form of an unpayable recipient,
+///      distinct from GasBurner in that it fails immediately rather than by
+///      exhausting gas — both must degrade to a credit.
+contract RevertingReceiver {
+    function buyInto(Slot slot, uint256 dep, uint256 price) external payable {
+        slot.buy{value: msg.value}(address(this), dep, price);
+    }
+
+    receive() external payable {
+        revert("no ETH thanks");
+    }
+}
+
 contract NativeEthTest is Test {
     SlotFactory factory;
     MockERC20 token;
@@ -204,5 +247,88 @@ contract NativeEthTest is Test {
         assertEq(slot.occupant(), bob);
         assertGt(alice.balance, before);
         assertEq(slot.withdrawableOf(alice), 0);
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // ADVERSARIAL RECEIVERS
+    // ═══════════════════════════════════════════════════════════
+
+    function test_native_gasBurnerCannotBlockEviction() public {
+        Slot slot = _createNativeSlot();
+        GasBurner burner = new GasBurner();
+
+        vm.deal(address(burner), 1 ether);
+        burner.buyInto{value: 1 ether}(slot, 1 ether, 10 ether);
+        assertEq(slot.occupant(), address(burner));
+
+        // The eviction must succeed despite the burner's hostile receive().
+        //
+        // The explicit gas bound is load-bearing, NOT decoration. Forge's
+        // default test gas limit is i64::MAX, and the 63/64 rule leaves the
+        // outer frame 1/64 of whatever remains — which at that limit is still
+        // enormous. Without a realistic bound the buy would survive even with
+        // an uncapped push, and this test would pass for the wrong reason.
+        // 2M gas models an ordinary transaction.
+        uint256 owed = 1 ether + slot.price();
+        vm.deal(alice, owed);
+        vm.prank(alice);
+        slot.buy{value: owed, gas: 2_000_000}(alice, 1 ether, 12 ether);
+
+        assertEq(slot.occupant(), alice);
+        assertGt(slot.withdrawableOf(address(burner)), 0, "refund must be credited");
+    }
+
+    function test_native_revertingReceiverIsCredited() public {
+        Slot slot = _createNativeSlot();
+        RevertingReceiver rejecter = new RevertingReceiver();
+
+        vm.deal(address(rejecter), 1 ether);
+        rejecter.buyInto{value: 1 ether}(slot, 1 ether, 10 ether);
+
+        _buyNative(slot, alice, 1 ether, 12 ether);
+
+        assertEq(slot.occupant(), alice);
+        assertGt(
+            slot.withdrawableOf(address(rejecter)),
+            0,
+            "a reverting recipient must degrade to a credit, not fail the buy"
+        );
+    }
+
+    function test_native_gasHogIsCreditedThenClaims() public {
+        Slot slot = _createNativeSlot();
+        GasHog hog = new GasHog();
+
+        vm.deal(address(hog), 1 ether);
+        hog.buyInto{value: 1 ether}(slot, 1 ether, 10 ether);
+
+        _buyNative(slot, alice, 1 ether, 12 ether);
+
+        // Too gas-hungry for the 30k push, so it was credited...
+        uint256 credited = slot.withdrawableOf(address(hog));
+        assertGt(credited, 0, "hog must be credited, not paid inline");
+
+        // ...and claim(), which is uncapped, delivers it.
+        uint256 before = address(hog).balance;
+        slot.claim(address(hog));
+
+        assertEq(address(hog).balance, before + credited);
+        assertEq(slot.withdrawableOf(address(hog)), 0);
+    }
+
+    function test_native_gasBurnerClaimReverts() public {
+        Slot slot = _createNativeSlot();
+        GasBurner burner = new GasBurner();
+
+        vm.deal(address(burner), 1 ether);
+        burner.buyInto{value: 1 ether}(slot, 1 ether, 10 ether);
+        _buyNative(slot, alice, 1 ether, 12 ether);
+
+        // A contract that burns ALL gas can never receive ETH by any mechanism.
+        // claim() reverts rather than silently zeroing the credit.
+        vm.expectRevert(Slot.TransferFailed.selector);
+        slot.claim(address(burner));
+
+        assertGt(slot.withdrawableOf(address(burner)), 0, "credit must survive");
     }
 }
